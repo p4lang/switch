@@ -13,10 +13,13 @@ BUILD_DIRS := $(BUILD_DIR)
 srcs_C:=
 srcs_CXX:=
 
-MODULES_DIR :=
-MODULES_NAMES :=
+THIS_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
 
-include module.mk
+$(TARGET)_TARGET := $(THIS_DIR)$(TARGET)
+
+include $(THIS_DIR)module.mk
+
+$(TARGET)_PUBLIC_INCS := $(INCS)
 
 CFLAGS += $(COMMON_FLAGS)
 CPPFLAGS += $(COMMON_FLAGS)
