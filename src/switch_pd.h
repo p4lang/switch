@@ -1,0 +1,679 @@
+/*
+Copyright 2013-present Barefoot Networks, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+
+//
+//  switch_pd_api.h
+//  switch_api
+//
+//  Created on 7/29/14.
+//  Copyright (c) 2014 bn. All rights reserved.
+//
+
+#ifndef _switch_pd_api_
+#define _switch_pd_api_
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+#include <switchapi/switch_base_types.h>
+#include <switchapi/switch_handle.h>
+#include <switchapi/switch_status.h>
+#include <switchapi/switch_tunnel.h>
+#include <switchapi/switch_stp.h>
+#include <switchapi/switch_vrf.h>
+#include <switchapi/switch_sup.h>
+#include <switchapi/switch_protocol.h>
+#include <switchapi/switch_acl.h>
+#include <switchapi/switch_neighbor.h>
+#include "switch_interface_int.h"
+#include "switch_sup_int.h"
+#include "switch_vlan_int.h"
+#include "switch_l2_int.h"
+#include "switch_l3_int.h"
+#include "switch_mcast_int.h"
+#include "switch_port_int.h"
+#include "switch_defines.h"
+
+p4_pd_status_t
+switch_pd_client_init();
+
+/* Dmac table PD API's */
+p4_pd_status_t
+switch_pd_dmac_table_add_entry(switch_device_t device,
+                           switch_api_mac_entry_t *mac_entry,
+                           uint16_t nhop_index,
+                           uint16_t mgid_index,
+                           uint32_t aging_time,
+                           switch_interface_info_t *intf_info,
+                           p4_pd_entry_hdl_t *entry_hdl);
+p4_pd_status_t
+switch_pd_dmac_table_update_entry(switch_device_t device,
+                           switch_api_mac_entry_t *mac_entry,
+                           uint16_t nhop_index,
+                           uint16_t mgid_index,
+                           switch_interface_info_t *intf_info,
+                           p4_pd_entry_hdl_t entry_hdl);
+p4_pd_status_t
+switch_pd_dmac_table_delete_entry(switch_device_t device,
+                              p4_pd_entry_hdl_t entry_hdl);
+
+/* Smac table PD API's */
+p4_pd_status_t
+switch_pd_smac_table_add_entry(switch_device_t device,
+                           switch_api_mac_entry_t *mac_entry,
+                           switch_interface_info_t *intf_info,
+                           p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_smac_table_update_entry(switch_device_t device,
+                           switch_api_mac_entry_t *mac_entry,
+                           switch_interface_info_t *intf_info,
+                           p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t
+switch_pd_smac_table_delete_entry(switch_device_t device,
+                              p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t
+switch_pd_mac_table_set_learning_timeout(switch_device_t device, uint32_t timeout);
+
+p4_pd_status_t
+switch_pd_nexthop_table_add_entry(switch_device_t device,
+                              uint16_t nhop,
+                              switch_interface_info_t *intf_info,
+                              p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_nexthop_table_delete_entry(switch_device_t device,
+                                 p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t switch_pd_ecmp_group_create(switch_device_t device, p4_pd_grp_hdl_t *p4_pd_group_hdl);
+p4_pd_status_t switch_pd_ecmp_group_delete(switch_device_t device, p4_pd_grp_hdl_t p4_pd_group_hdl);
+p4_pd_status_t switch_pd_ecmp_member_add(switch_device_t device, p4_pd_grp_hdl_t p4_pd_group_hdl, 
+                    uint16_t nhop_index, switch_interface_info_t *intf_info,
+                    p4_pd_mbr_hdl_t *mbr_hdl);
+p4_pd_status_t switch_pd_ecmp_member_delete(switch_device_t device, p4_pd_grp_hdl_t p4_pd_group_hdl, 
+            p4_pd_mbr_hdl_t mbr_hdl);
+
+p4_pd_status_t switch_pd_ecmp_group_table_add_entry_with_selector(switch_device_t device,
+                               uint16_t ecmp_index, p4_pd_grp_hdl_t p4_pd_group_hdl,
+                               p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_ecmp_group_table_delete_entry(switch_device_t device,
+                             p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_entry_hdl_t
+switch_pd_ip_fib_add_entry(switch_device_t device,
+                           switch_handle_t vrf,
+                           switch_ip_addr_t *ipaddr,
+                           bool ecmp,
+                           switch_handle_t nexthop,
+                           p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_entry_hdl_t
+switch_pd_ip_fib_update_entry(switch_device_t device,
+                           switch_handle_t vrf,
+                           switch_ip_addr_t *ipaddr,
+                           bool ecmp,
+                           switch_handle_t nexthop,
+                           p4_pd_entry_hdl_t entry_hdl);
+p4_pd_status_t
+switch_pd_ip_fib_delete_entry(switch_device_t device,
+                               switch_ip_addr_t *ip_addr,
+                               p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_entry_hdl_t
+switch_pd_inner_rmac_table_add_entry(switch_device_t device,
+                                switch_handle_t rmac_group,
+                                switch_mac_addr_t *mac,
+                                p4_pd_entry_hdl_t *entry_hdl);
+p4_pd_status_t
+switch_pd_inner_rmac_table_delete_entry(switch_device_t device,
+                                    p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_entry_hdl_t
+switch_pd_outer_rmac_table_add_entry(switch_device_t device,
+                                switch_handle_t rmac_group,
+                                switch_mac_addr_t *mac,
+                                p4_pd_entry_hdl_t *entry_hdl);
+p4_pd_status_t
+switch_pd_outer_rmac_table_delete_entry(switch_device_t device,
+                                    p4_pd_entry_hdl_t entry_hdl);
+p4_pd_status_t
+switch_pd_src_vtep_table_add_entry(switch_device_t device,
+                              switch_ip_encap_t *ip_encap,
+                              p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_src_vtep_table_delete_entry(switch_device_t device,
+                                 switch_ip_encap_t *ip_encap,
+                                 p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t
+switch_pd_dest_vtep_table_add_entry(switch_device_t device,
+                               switch_ip_encap_t *ip_encap,
+                               p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_dest_vtep_table_delete_entry(switch_device_t device,
+                                  switch_ip_encap_t *ip_encap,
+                                  p4_pd_entry_hdl_t entry_hdl);
+p4_pd_status_t
+switch_pd_tunnel_rewrite_table_add_entry(switch_device_t device, uint16_t tunnel_index,
+                                    uint16_t sip_index, uint16_t dip_index,
+                                    uint16_t smac_index, uint16_t dmac_index,
+                                    p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_tunnel_rewrite_table_delete_entry(switch_device_t device, p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t
+switch_pd_tunnel_table_add_entry(switch_device_t device,
+                             switch_encap_type_t encap_type,
+                             uint16_t tunnel_vni,
+                             switch_bd_info_t *bd_info,
+                             switch_ip_encap_t *ip_encap,
+                             switch_handle_t bd_handle,
+                             p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_tunnel_table_delete_entry(switch_device_t device,
+                               p4_pd_entry_hdl_t entry_hdl);
+
+
+p4_pd_status_t
+switch_pd_egress_vni_table_add_entry(switch_device_t device,
+                                    switch_handle_t egress_bd,
+                                    uint16_t tunnel_vni,
+                                    uint8_t tunnel_type,
+                                    p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_egress_vni_table_delete_entry(switch_device_t device_id,
+                                       p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t
+switch_pd_tunnel_src_rewrite_table_add_entry(switch_device_t device,
+                                        uint16_t tunnel_src_index,
+                                        switch_ip_encap_t *ip_encap,
+                                        p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_tunnel_src_rewrite_table_delete_entry(switch_device_t device,
+                                           p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t
+switch_pd_tunnel_dst_rewrite_table_add_entry(switch_device_t device,
+                                        uint16_t tunnel_dst_index,
+                                        switch_ip_encap_t *ip_encap,
+                                        p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_tunnel_dst_rewrite_table_delete_entry(switch_device_t device,
+                                           p4_pd_entry_hdl_t entry_hdl);
+p4_pd_status_t
+switch_pd_tunnel_smac_rewrite_table_add_entry(switch_device_t device,
+                                         uint16_t smac_index,
+                                         switch_mac_addr_t *mac,
+                                         p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_tunnel_smac_rewrite_table_delete_entry(switch_device_t device,
+                                            p4_pd_entry_hdl_t entry_hdl);
+p4_pd_status_t
+switch_pd_tunnel_dmac_rewrite_table_add_entry(switch_device_t device,
+                                         uint16_t dmac_index,
+                                         switch_mac_addr_t *mac,
+                                         p4_pd_entry_hdl_t *entry_hdl);
+p4_pd_status_t
+switch_pd_tunnel_dmac_rewrite_table_delete_entry(switch_device_t device,
+                                            p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t
+switch_pd_bd_table_add_entry(switch_device_t device,
+                        uint16_t bd,
+                        switch_bd_info_t *bd_info,
+                        p4_pd_mbr_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_bd_table_update_entry(switch_device_t device,
+                           uint16_t outer_bd,
+                           switch_bd_info_t *bd_info,
+                           p4_pd_mbr_hdl_t entry_hdl);
+
+p4_pd_status_t
+switch_pd_bd_table_delete_entry(switch_device_t device,
+                           p4_pd_mbr_hdl_t entry_hdl);
+
+p4_pd_status_t
+switch_pd_port_vlan_mapping_table_add_entry(switch_device_t device,
+                                        switch_vlan_t vlan_id0,
+                                        switch_vlan_t vlan_id1,
+                                        switch_interface_info_t *info,
+                                        p4_pd_mbr_hdl_t bd_hdl,
+                                        p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_port_vlan_mapping_table_delete_entry(switch_device_t device,
+                                           p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t
+switch_pd_egress_vlan_xlate_table_add_entry(switch_device_t device, switch_port_t port,
+                                       uint16_t egress_bd, switch_vlan_t vlan_id,
+                                       p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_egress_vlan_xlate_table_delete_entry(switch_device_t device, p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t
+switch_pd_port_mapping_table_add_entry(switch_device_t device,
+                                   switch_port_t port_id,
+                                   switch_ifindex_t ifindex,
+                                   p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_port_mapping_table_delete_entry(switch_device_t device,
+                                      p4_pd_entry_hdl_t entry_hdl);
+
+/*
+ * Rewrite table
+ */
+p4_pd_status_t
+switch_pd_rewrite_table_unicast_rewrite_add_entry(switch_device_t device, uint16_t nhop_index,
+                                             uint16_t smac_index, switch_mac_addr_t dmac,
+                                             switch_ip_addr_type_t addr_type,
+                                             p4_pd_entry_hdl_t *entry_hdl);
+p4_pd_status_t
+switch_pd_rewrite_table_unicast_rewrite_update_entry(switch_device_t device, uint16_t nhop_index,
+                                                uint16_t smac_index, switch_mac_addr_t dmac,
+                                                switch_ip_addr_type_t addr_type,
+                                                p4_pd_entry_hdl_t entry_hdl);
+p4_pd_status_t
+switch_pd_rewrite_table_tunnel_rewrite_add_entry(switch_device_t device, uint16_t nhop_index,
+                                            uint16_t smac_index, uint16_t outer_bd,
+                                            switch_ip_addr_type_t addr_type, switch_mac_addr_t dmac,
+                                            uint16_t tunnel_index, switch_encap_type_t encap_type,
+                                            p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_rewrite_table_tunnel_rewrite_update_entry(switch_device_t device, uint16_t nhop_index,
+                                              uint16_t smac_index, uint16_t outer_bd,
+                                              switch_ip_addr_type_t addr_type, switch_mac_addr_t dmac,
+                                              uint16_t tunnel_index, switch_encap_type_t encap_type,
+                                              p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t
+switch_pd_rewrite_table_delete_entry(switch_device_t device,
+                                 p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t switch_pd_lag_group_create(switch_device_t device, p4_pd_grp_hdl_t *p4_pd_group_hdl);
+p4_pd_status_t switch_pd_lag_group_delete(switch_device_t device, p4_pd_grp_hdl_t p4_pd_group_hdl);
+p4_pd_status_t switch_pd_lag_member_add(switch_device_t device, p4_pd_grp_hdl_t p4_pd_group_hdl, 
+            unsigned int port, p4_pd_mbr_hdl_t *mbr_hdl);
+p4_pd_status_t switch_pd_lag_member_delete(switch_device_t device, p4_pd_grp_hdl_t p4_pd_group_hdl, 
+            p4_pd_mbr_hdl_t mbr_hdl);
+p4_pd_status_t
+switch_pd_lag_group_table_add_entry(switch_device_t device,
+                                switch_ifindex_t ifindex,
+                                unsigned int port,
+                                p4_pd_mbr_hdl_t *mbr_hdl,
+                                p4_pd_entry_hdl_t *entry_hdl);
+p4_pd_status_t
+switch_pd_lag_group_table_add_entry_with_selector(switch_device_t device,
+                                switch_ifindex_t ifindex,
+                                p4_pd_grp_hdl_t p4_pd_group_hdl,
+                                p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_lag_group_table_delete_entry(switch_device_t device,
+                             p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t
+switch_pd_mac_rewrite_table_add_entry(switch_device_t device, uint8_t *smac);
+
+p4_pd_status_t
+switch_pd_sup_rewrite_add_entry(switch_device_t device,
+                            switch_port_t port_id);
+p4_pd_status_t
+switch_pd_rid_table_add_entry(switch_device_t device,
+                          uint16_t rid,
+                          uint32_t bd,
+                          bool outer_replica,
+                          uint32_t nhop_index,
+                          p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_rid_table_delete_entry(switch_device_t device,
+                             p4_pd_entry_hdl_t entry_hdl);
+
+
+p4_pd_status_t
+switch_pd_spanning_tree_table_add_entry(switch_device_t device,
+                                    uint16_t stp_group,
+                                    switch_ifindex_t ifindex,
+                                    switch_stp_state_t stp_state,
+                                    p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_spanning_tree_table_update_entry(switch_device_t device,
+                                      uint16_t stp_group,
+                                      switch_ifindex_t ifindex,
+                                      switch_stp_state_t stp_state,
+                                      p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t
+switch_pd_spanning_tree_table_delete_entry(switch_device_t device,
+                                       p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t
+switch_pd_urpf_bd_table_add_entry(switch_device_t device,
+                              uint16_t urpf_group,
+                              uint16_t bd_index,
+                              p4_pd_entry_hdl_t *entry_hdl);
+p4_pd_status_t
+switch_pd_urpf_bd_table_delete_entry(switch_device_t device,
+                                 p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t
+switch_pd_urpf_add_entry(switch_device_t device,
+                    switch_vrf_id_t vrf_id,
+                    switch_ip_addr_t *ip_addr,
+                    uint16_t urpf_group,
+                    p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_urpf_update_entry(switch_device_t device,
+                       switch_vrf_id_t vrf_id,
+                       switch_ip_addr_t *ip_addr,
+                       uint16_t urpf_group,
+                       p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t
+switch_pd_urpf_delete_entry(switch_device_t device,
+                       switch_vrf_id_t vrf_id,
+                       switch_ip_addr_t *ip_addr,
+                       p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t
+switch_pd_mcast_mgrp_tree_create(switch_device_t device, uint16_t mgid_index,
+                            switch_mcast_info_t *mcast_info);
+p4_pd_status_t
+switch_pd_mcast_mgrp_tree_delete(switch_device_t device,
+                             switch_mcast_info_t *mcast_info);
+
+p4_pd_status_t
+switch_pd_mcast_l1_add_entry(switch_device_t device, switch_mcast_l1_node_t *l1_node);
+
+p4_pd_status_t
+switch_pd_mcast_l1_delete_entry(switch_device_t device, switch_mcast_l1_node_t *l1_node);
+
+p4_pd_status_t
+switch_pd_mcast_l2_add_entry(switch_device_t device, switch_mcast_l1_node_t *l1_node);
+
+p4_pd_status_t
+switch_pd_mcast_l2_delete_entry(switch_device_t device, switch_mcast_l1_node_t *l1_node);
+
+p4_pd_status_t
+switch_pd_mcast_ecmp_group_create(switch_device_t device, switch_mcast_l1_node_t *ecmp_node);
+
+p4_pd_status_t
+switch_pd_mcast_ecmp_group_delete(switch_device_t device, switch_mcast_l1_node_t *ecmp_node);
+
+p4_pd_status_t
+switch_pd_mcast_mgid_table_add_entry(switch_device_t device, mc_mgrp_hdl_t mgid,
+                                 switch_mcast_l1_node_t *l1_node);
+
+p4_pd_status_t
+switch_pd_mcast_mgid_table_ecmp_add_entry(switch_device_t device, uint16_t mgid,
+                                      switch_mcast_l1_node_t *l1_node);
+p4_pd_status_t
+switch_pd_mcast_lag_port_map_update(switch_device_t device, uint16_t lag_index,
+                               uint8_t *port_map);
+
+p4_pd_status_t
+switch_pd_mpls_table_add_entry(switch_device_t device, switch_mpls_encap_t *mpls_encap,
+                          uint32_t bd_index, uint32_t label,
+                          uint16_t egress_ifindex, p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_mpls_table_delete_entry(switch_device_t device, p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t
+switch_pd_tunnel_rewrite_table_mpls_add_entry(switch_device_t device, uint32_t tunnel_index,
+                                       uint16_t smac_index, uint16_t dmac_index,
+                                       switch_mpls_encap_t *mpls_encap,
+                                       p4_pd_entry_hdl_t *entry_hdl);
+p4_pd_status_t
+switch_pd_rewrite_table_mpls_rewrite_add_entry(switch_device_t device, uint16_t nhop_index,
+                                          uint16_t tunnel_index, switch_neighbor_type_t neigh_type,
+                                          uint16_t smac_index, switch_mac_addr_t dmac,
+                                          uint32_t label, uint8_t header_count,
+                                          p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_ipv4_acl_table_add_entry(switch_device_t device, uint16_t if_label,
+                            uint16_t bd_label, uint16_t priority,
+                            switch_acl_ip_key_value_pair_t *ip_acl,
+                            switch_acl_ip_action_t action,
+                            p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_ipv4_acl_table_delete_entry(switch_device_t device, p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t
+switch_pd_ipv6_acl_table_add_entry(switch_device_t device, uint16_t if_label,
+                            uint16_t bd_label, uint16_t priority,
+                            switch_acl_ipv6_key_value_pair_t *ipv6_acl,
+                            switch_acl_ipv6_action_t action,
+                            p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_ipv6_acl_table_delete_entry(switch_device_t device, p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t
+switch_pd_ipv4_racl_table_add_entry(switch_device_t device, uint16_t if_label,
+                            uint16_t bd_label, uint16_t priority,
+                            switch_acl_ip_racl_key_value_pair_t *ip_racl,
+                            switch_acl_ip_action_t action,
+                            p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_ipv4_racl_table_delete_entry(switch_device_t device, p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t
+switch_pd_ipv6_racl_table_add_entry(switch_device_t device, uint16_t if_label,
+                            uint16_t bd_label, uint16_t priority,
+                            switch_acl_ipv6_racl_key_value_pair_t *ip_racl,
+                            switch_acl_ipv6_action_t action,
+                            p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_ipv6_racl_table_delete_entry(switch_device_t device, p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t
+switch_pd_mac_acl_table_add_entry(switch_device_t device, uint16_t if_label,
+                            uint16_t bd_label, uint16_t priority,
+                            switch_acl_mac_key_value_pair_t *mac_acl,
+                            switch_acl_mac_action_t action,
+                            p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_mac_acl_table_delete_entry(switch_device_t device, p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t
+switch_pd_qos_acl_table_add_entry(switch_device_t device, uint16_t if_label,
+                            uint16_t bd_label, uint16_t priority,
+                            switch_acl_qos_key_value_pair_t *qos_acl,
+                            switch_acl_mac_action_t action,
+                            p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_qos_acl_table_delete_entry(switch_device_t device, p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t
+switch_pd_system_acl_table_add_entry(switch_device_t device,
+                        uint16_t if_label, uint16_t bd_label,
+                        uint16_t priority,
+                        switch_acl_system_key_value_pair_t *system_acl,
+                        switch_acl_system_action_t action_type,
+                        switch_acl_action_params_t *action_params,
+                        p4_pd_entry_hdl_t *entry_hdl);
+p4_pd_status_t
+switch_pd_system_acl_table_delete_entry(switch_device_t device, p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t
+switch_pd_egress_lag_table_add_entry(switch_device_t device,
+                                     switch_port_t port_id,
+                                     switch_ifindex_t ifindex,
+                                     p4_pd_entry_hdl_t *entry_hdl);
+p4_pd_status_t
+switch_pd_egress_lag_table_delete_entry(switch_device_t device,
+                                        p4_pd_entry_hdl_t entry_hdl);
+
+//TODO: Add delete entry for outer_mac table
+
+// Default Entries
+p4_pd_status_t
+switch_pd_validate_outer_ethernet_add_default_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_validate_outer_ip_add_default_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_storm_control_table_add_default_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_outer_rmac_table_add_default_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_src_vtep_table_add_default_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_dest_vtep_table_add_default_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_validate_packet_table_add_default_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_acl_table_add_default_entry(switch_device_t device);
+
+switch_status_t
+switch_pd_inner_rmac_table_add_default_entry(switch_device_t device);
+
+switch_status_t
+switch_pd_fwd_result_table_add_default_entry(switch_device_t device);
+
+switch_status_t
+switch_pd_nexthop_table_add_default_entry(switch_device_t device);
+
+switch_status_t
+switch_pd_lag_table_add_default_entry(switch_device_t device);
+
+switch_status_t
+switch_pd_rid_table_add_default_entry(switch_device_t device);
+
+switch_status_t
+switch_pd_replica_type_table_add_default_entry(switch_device_t device);
+
+switch_status_t
+switch_pd_mac_table_add_default_entry(switch_device_t device);
+
+switch_status_t
+switch_pd_egress_bd_map_table_add_default_entry(switch_device_t device);
+
+switch_status_t
+switch_pd_egress_vni_table_add_default_entry(switch_device_t device);
+
+switch_status_t
+switch_pd_ip_fib_add_default_entry(switch_device_t device);
+
+switch_status_t
+switch_pd_ip_urpf_add_default_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_tunnel_smac_rewrite_table_add_default_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_tunnel_dmac_rewrite_table_add_default_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_tunnel_rewrite_table_add_default_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_fwd_result_table_add_init_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_rewrite_table_add_default_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_mtu_table_add_default_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_egress_vlan_xlate_table_add_default_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_sup_rewrite_add_default_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_egress_acl_add_default_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_vlan_decap_table_add_default_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_mac_rewrite_table_add_default_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_tunnel_src_rewrite_table_add_default_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_tunnel_dst_rewrite_table_add_default_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_tunnel_table_add_default_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_bd_stats_table_add_default_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_learn_notify_table_add_init_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_tunnel_encap_tables_init_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_tunnel_decap_tables_init_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_validate_outer_ethernet_table_init_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_vlan_decap_table_init_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_validate_mpls_packet_table_init_entry(switch_device_t device);
+
+switch_status_t
+switch_pd_egress_lag_table_add_default_entry(switch_device_t device);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

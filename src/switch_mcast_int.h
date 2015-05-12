@@ -1,0 +1,162 @@
+/*
+Copyright 2013-present Barefoot Networks, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+//
+//  switch_mcast_int.h
+//  switch_api
+//
+//  Created on 7/28/14.
+//  Copyright (c) 2014 bn. All rights reserved.
+//
+
+#include "switch_port_int.h"
+#include "switch_lag_int.h"
+#include "switchapi/switch_mcast.h"
+
+#ifndef switch_mcast_internal_h
+#define switch_mcast_internal_h
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+#define SWITCH_MCAST_RID_HASH_KEY_SIZE 24 
+
+typedef uint16_t switch_rid_t;
+typedef uint32_t mc_mgrp_hdl_t;
+
+#define SWITCH_PORT_ARRAY_SIZE ((SWITCH_API_MAX_PORTS + 7)/8)
+typedef uint8_t switch_mc_port_map_t[SWITCH_PORT_ARRAY_SIZE];
+#define SWITCH_LAG_ARRAY_SIZE ((SWITCH_API_MAX_LAG + 7)/8)
+typedef uint8_t switch_mc_lag_map_t[SWITCH_LAG_ARRAY_SIZE];
+
+#define SWITCH_MC_PORT_MAP_CLEAR_(pm, port)                              \
+  do {                                                                   \
+      int    _port_p = (port);                                           \
+      switch_mc_port_map_t *_port_pm = &(pm);                            \
+      if (_port_p >= SWITCH_API_MAX_PORTS) break;                        \
+      size_t _port_i = (_port_p)/8;                                      \
+      int _port_j = (_port_p) % 8;                                       \
+      (*_port_pm)[_port_i] &= ~(1 << _port_j);                           \
+  } while (0);
+
+#define SWITCH_MC_PORT_MAP_SET_(pm, port)                                \
+  do {                                                                   \
+      int    _port_p = (port);                                           \
+      switch_mc_port_map_t *_port_pm = &(pm);                            \
+      if (_port_p >= SWITCH_API_MAX_PORTS) break;                        \
+      size_t _port_i = (_port_p)/8;                                      \
+      int _port_j = (_port_p) % 8;                                       \
+      (*_port_pm)[_port_i] |= (1 << _port_j);                            \
+  } while (0);
+
+#define SWITCH_MC_LAG_MAP_CLEAR_(pm, lag)                                \
+  do {                                                                   \
+    int    _lag_p = (lag);                                               \
+    switch_mc_lag_map_t *_lag_pm = &(pm);                                \
+    if (_lag_p >= SWITCH_API_MAX_LAG) break;                             \
+    size_t _lag_i = (_lag_p)/8;                                          \
+    int    _lag_j = (_lag_p)%8;                                          \
+    (*_lag_pm)[_lag_i] &= ~(1 << _lag_j);                                \
+  } while (0);
+
+#define SWITCH_MC_LAG_MAP_SET_(pm, lag)                                  \
+  do {                                                                   \
+    int    _lag_p = (lag);                                               \
+    switch_mc_lag_map_t *_lag_pm = &(pm);                                \
+    if (_lag_p >= SWITCH_API_MAX_LAG) break;                             \
+    size_t _lag_i = (_lag_p)/8;                                          \
+    int    _lag_j = (_lag_p)%8;                                          \
+    (*_lag_pm)[_lag_i] |= (1 << _lag_j);                                 \
+  } while (0);
+
+typedef enum switch_l1_node_type_ {
+    SWITCH_NODE_TYPE_SINGLE = 1,
+} switch_l1_node_type_t;
+
+typedef struct switch_l1_info_ {
+    mc_l1_node_hdl_t l1_hdl;
+    mc_l2_node_hdl_t l2_hdl;
+    switch_rid_t rid;
+    switch_mc_port_map_t port_map;
+    switch_mc_lag_map_t lag_map;
+    p4_pd_entry_hdl_t rid_hw_entry;
+} switch_l1_info_t;
+
+typedef struct switch_mcast_l1_node_ {
+    tommy_node node;
+    switch_l1_node_type_t node_type;
+    union {
+        switch_l1_info_t l1_info;
+    } u;
+} switch_mcast_l1_node_t;
+
+typedef struct switch_mcast_info_ {
+    mc_mgrp_hdl_t mgrp_hdl;
+    tommy_list l1_list;
+} switch_mcast_info_t;
+
+typedef struct switch_mcast_rid_key_ {
+    switch_handle_t mgid_handle;
+    switch_handle_t bd_handle;
+    switch_handle_t intf_handle;
+} switch_mcast_rid_key_t;
+
+typedef struct switch_mcast_rid_ {
+    switch_mcast_rid_key_t rid_key;
+    uint16_t rid;
+    tommy_hashtable_node node;
+} switch_mcast_rid_t;
+
+#define SWITCH_MCAST_L2_LAG_MAP(l1_node) \
+    l1_node->u.l1_info.lag_map
+
+#define SWITCH_MCAST_L2_PORT_MAP(l1_node) \
+    l1_node->u.l1_info.port_map
+
+#define SWITCH_MCAST_L1_RID(l1_node) \
+    l1_node->u.l1_info.rid
+
+#define SWITCH_MCAST_L1_RID_HW_ENTRY(l1_node) \
+    l1_node->u.l1_info.rid_hw_entry
+
+#define SWITCH_MCAST_L1_INFO_L1_HDL(l1_node) \
+    l1_node->u.l1_info.l1_hdl
+
+#define SWITCH_MCAST_L1_INFO_L2_HDL(l1) \
+    l1_node->u.l1_info.l2_hdl
+
+#define SWITCH_MCAST_L1_INFO_PORT_MAP(l1_node) \
+    l1_node->u.l1_info.port_map
+
+#define SWITCH_MCAST_L1_INFO_LAG_MAP(l1_node) \
+    l1_node->u.l1_info.lag_map
+
+/* MCAST Internal API's */
+switch_status_t switch_mcast_init();
+switch_status_t switch_mcast_free();
+uint16_t switch_mcast_rid_allocate();
+void switch_mcast_rid_free(uint16_t rid);
+switch_handle_t switch_api_mcast_index_allocate();
+switch_status_t switch_api_mcast_index_delete(switch_handle_t mgid_handle);
+switch_mcast_info_t * switch_mcast_tree_get(switch_handle_t mgid_handle);
+switch_status_t switch_multicast_update_lag_port_map(switch_device_t device, switch_handle_t lag_handle);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
