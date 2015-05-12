@@ -31,7 +31,7 @@ limitations under the License.
 
 #define CPU_PORT_ID                    64
 
-#define SWITCH_API_MAX_PORTS 288
+#define SWITCH_API_MAX_PORTS 256
 
 #ifdef __cplusplus
 extern "C" {

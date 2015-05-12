@@ -4609,9 +4609,9 @@ switch_pd_lag_table_add_default_entry(switch_device_t device)
     p4_pd_device.device_id = device;
     p4_pd_device.dev_pipe_id = SWITCH_DEV_PIPE_ID;
     
-    status = p4_pd_dc_lag_action_profile_add_member_with_nop(g_sess_hdl,
-                                                                  p4_pd_device,
-                                                                  &mbr_hdl);
+    status = p4_pd_dc_lag_action_profile_add_member_with_set_lag_miss(g_sess_hdl,
+                                                                      p4_pd_device,
+                                                                      &mbr_hdl);
 
     status = p4_pd_dc_lag_group_set_default_entry(g_sess_hdl,
                                                        p4_pd_device,
