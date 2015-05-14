@@ -14,14 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//
-//  switch_vlan.c
-//  switch_api
-//
-//  Created on 6/30/14.
-//  Copyright (c) 2014 bn. All rights reserved.
-//
-
 #include "switchapi/switch_id.h"
 #include "switchapi/switch_vlan.h"
 #include "switchapi/switch_interface.h"
@@ -680,7 +672,7 @@ switch_api_vlan_ports_add(switch_handle_t vlan_handle,
 
         status = switch_api_multicast_member_add(device, info->uuc_mc_index,
                                              vlan_handle,
-                                             interface_handle, port_count);
+                                             port_count, interface_handle);
 
 #endif
         count++;
@@ -748,7 +740,7 @@ switch_api_vlan_ports_remove(switch_handle_t vlan_handle,
                 status = switch_api_multicast_member_delete(device,
                                              info->uuc_mc_index,
                                              vlan_handle,
-                                             interface_handle, port_count);
+                                             port_count, interface_handle);
 #endif
                 tommy_list_remove_existing(&(info->members), &(vlan_member->node));
                 switch_free(vlan_member);

@@ -14,15 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//
-//  switch_nhop.c
-//
-//
-//  Created on 6/23/14.
-//
-//
-
-// #include "switch_port.h"
 #include "switchapi/switch_handle.h"
 #include "switchapi/switch_l3.h"
 #include "switchapi/switch_neighbor.h"

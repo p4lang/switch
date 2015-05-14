@@ -14,15 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//
-//  switch_l2.h
-//  switch_api
-//
-//  Created on 7/29/14.
-//  Copyright (c) 2014 bn. All rights reserved.
-//
-
-
 #include "switchapi/switch_base_types.h"
 #include "switchapi/switch_handle.h"
 #include "switchapi/switch_status.h"

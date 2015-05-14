@@ -14,14 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//
-//  switch_tunnel.h
-//  switch_api 
-//
-//  Created on 8/24/14.
-//  Copyright (c) 2014 Barefoot Networks. All rights reserved.
-//
-
 #ifndef _switch_tunnel_h_
 #define _switch_tunnel_h_
 

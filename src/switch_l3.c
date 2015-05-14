@@ -14,12 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//
-//  switch_l3.c
-//
-//  Created on 6/23/14.
-//
-
 #include "switchapi/switch_handle.h"
 #include "switchapi/switch_lag.h"
 #include "switchapi/switch_l3.h"

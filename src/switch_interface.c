@@ -14,14 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//
-//  switch_interface.c
-//
-//
-//  Created on 6/23/14.
-//
-//
-
 #include "switchapi/switch_base_types.h"
 #include "switchapi/switch_interface.h"
 #include "switchapi/switch_l3.h"

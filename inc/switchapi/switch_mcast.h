@@ -14,14 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//
-//  switch_mcast.h
-//  switch_api
-//
-//  Created on 7/28/14.
-//  Copyright (c) 2014 bn. All rights reserved.
-//
-
 #ifndef _switch_mcast_h_
 #define _switch_mcast_h_
 
@@ -56,28 +48,28 @@ switch_status_t switch_api_multicast_tree_delete(switch_handle_t mgid_handle);
  @param device - device that programs the tree
  @param mgid_handle - Handle that uniquely identifies multicast tree
  @param vlan_handle - Handle that uniquely identifies a vlan.
- @param interface_handle - List of interfaces to be added to multicast tree
  @param intf_handle_count - Count of interface members
+ @param interface_handle - List of interfaces to be added to multicast tree
 */
 switch_status_t switch_api_multicast_member_add(switch_device_t device,
                                         switch_handle_t mgid_handle,
                                         switch_handle_t vlan_handle,
-                                        switch_handle_t *interface_handle,
-                                        uint16_t intf_handle_count);
+                                        uint16_t intf_handle_count,
+                                        switch_handle_t *interface_handle);
 
 /**
  Delete a list of members to multicast tree
  @param device - device that programs the tree
  @param mgid_handle - Handle that uniquely identifies multicast tree
  @param vlan_handle - Handle that uniquely identifies a vlan.
- @param interface_handle - List of interfaces to be deleted from multicast tree
  @param intf_handle_count - Count of interface members
+ @param interface_handle - List of interfaces to be deleted from multicast tree
 */
 switch_status_t switch_api_multicast_member_delete(switch_device_t device,
                                            switch_handle_t mgid_handle,
                                            switch_handle_t vlan_handle,
-                                           switch_handle_t *interface_handle,
-                                           uint16_t intf_handle_count);
+                                           uint16_t intf_handle_count,
+                                           switch_handle_t *interface_handle);
 
 /** @} */ // end of mcast API
 

@@ -491,10 +491,10 @@ service switch_api_rpc {
 
     switcht_status_t switcht_api_multicast_member_add(1: switcht_device_t device, 2: switcht_handle_t mgid_handle,
                                               3: switcht_handle_t tenant_bd_handle,
-                                              4: list<switcht_handle_t> interface_handle, 5: i32 intf_handle_count);
+                                              4: i32 intf_handle_count, 5: list<switcht_handle_t> interface_handle);
 
     switcht_status_t switcht_api_multicast_member_delete(1: switcht_device_t device, 2: switcht_handle_t mgid_handle,
                                               3: switcht_handle_t tenant_bd_handle,
-                                              4: list<switcht_handle_t> interface_handle, 5: i32 intf_handle_count);
+                                              4: i32 intf_handle_count, 5: list<switcht_handle_t> interface_handle);
 }
 

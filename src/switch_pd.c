@@ -14,14 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//
-//  switch_pd.c
-//  switch_api
-//
-//  Created on 7/29/14.
-//  Copyright (c) 2014 bn. All rights reserved.
-// 
-//
 #include "p4features.h"
 #include "switch_pd.h"
 #include "switch_log.h"

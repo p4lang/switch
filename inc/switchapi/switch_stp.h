@@ -14,14 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//
-//  switch_stp.h
-//  switch_api
-//
-//  Created on 10/20/14.
-//  Copyright (c) 2014 bn. All rights reserved.
-//  
-
 #ifndef _switch_stp_h_
 #define _switch_stp_h_
 

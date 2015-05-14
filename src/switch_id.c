@@ -14,14 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//
-//  switch_id.c
-//
-//
-//  Created on 6/20/14.
-//
-//
-
 #include "switchapi/switch_id.h"
 #include <string.h>
 

@@ -14,14 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//
-//  switch_lag.h
-//  switch_api
-//
-//  Created on 6/30/14.
-//  Copyright (c) 2014 bn. All rights reserved.
-//
-
 #ifndef _switch_lag_h_
 #define _switch_lag_h_
 

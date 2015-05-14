@@ -14,16 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-
-//
-//  switch_status.h
-//
-//
-//  Created on 11/05/14.
-//
-//
-
-
 #ifndef _switch_status_h
 #define _switch_status_h
 

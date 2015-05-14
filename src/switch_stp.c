@@ -14,14 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//
-// switch_stp.c
-// switch_Stp
-//
-// Create on 10/20/14.
-// Copyright (c) 2014 bn. All rights reserved.
-//
-
 #include "switchapi/switch_id.h"
 #include "switchapi/switch_stp.h"
 #include "switchapi/switch_port.h"
@@ -369,12 +361,12 @@ switch_stp_update_flood_list(switch_device_t device, switch_handle_t stg_handle,
         switch (state) {
             case SWITCH_PORT_STP_STATE_FORWARDING:
                 status = switch_api_multicast_member_add(device, bd_info->uuc_mc_index,
-                                                     vlan_handle, &intf_handle, 1);
+                                                     vlan_handle, 1, &intf_handle);
                 break;
             case SWITCH_PORT_STP_STATE_BLOCKING:
             case SWITCH_PORT_STP_STATE_NONE:
                 status = switch_api_multicast_member_delete(device, bd_info->uuc_mc_index,
-                                                     vlan_handle, &intf_handle, 1);
+                                                     vlan_handle, 1, &intf_handle);
                 break;
 
             default:

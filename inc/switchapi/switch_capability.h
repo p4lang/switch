@@ -14,14 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//
-//  switch_capability.h
-//  switch_api
-//
-//  Created on 7/28/14.
-//  Copyright (c) 2014 bn. All rights reserved.
-//
-
 #ifndef _switch_capability_h
 #define _switch_capability_h
 

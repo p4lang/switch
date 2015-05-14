@@ -14,14 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//
-//  switch_utils.c
-//
-//
-//  Created on 6/23/14.
-//
-//
-
 #include "switchapi/switch_utils.h"
 
 #define SWITCH_L3_HASH_TABLE_SIZE (64*1024)

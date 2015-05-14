@@ -14,14 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//
-//  switch_protocol.h
-//  switch_api 
-//
-//  Created on 8/24/14.
-//  Copyright (c) 2014 Barefoot Networks. All rights reserved.
-//
-
 #ifndef _switch_protocol_h
 #define _switch_protocol_h
 

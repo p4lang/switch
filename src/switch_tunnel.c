@@ -14,14 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//
-//  switch_tunnel.c
-//  switch_api 
-//
-//  Created on 8/24/14.
-//  Copyright (c) 2014 Barefoot Networks. All rights reserved.
-//
-
 #include "switchapi/switch_interface.h"
 #include "switchapi/switch_tunnel.h"
 #include "switchapi/switch_l3.h"
@@ -601,7 +593,7 @@ switch_api_logical_network_member_add_basic(switch_handle_t bd_handle, switch_ha
 
     if (SWITCH_INTF_FLOOD_ENABLED(intf_info)) {
         status = switch_api_multicast_member_add(device, bd_info->uuc_mc_index,
-                                             bd_handle, &intf_handle, 1);
+                                             bd_handle, 1, &intf_handle);
     }
     if (status != SWITCH_STATUS_SUCCESS) {
         SWITCH_API_ERROR("%s:%d: Unable to add interface %lx to flood list of ln %lx",
@@ -720,7 +712,7 @@ switch_api_logical_network_member_add_enhanced(switch_handle_t bd_handle, switch
     }
     if (SWITCH_INTF_FLOOD_ENABLED(intf_info)) {
         status = switch_api_multicast_member_add(device, bd_info->uuc_mc_index,
-                                             bd_handle, &intf_handle, 1);
+                                             bd_handle, 1, &intf_handle);
         if (status != SWITCH_STATUS_SUCCESS) {
             SWITCH_API_ERROR("%s:%d: Unable to add interface %lx to flood list of ln %lx",
                          __FUNCTION__, __LINE__, intf_handle, bd_handle);
@@ -799,7 +791,7 @@ switch_api_logical_network_member_remove_basic(switch_handle_t bd_handle, switch
     }
     if (SWITCH_INTF_FLOOD_ENABLED(intf_info)) {
         status = switch_api_multicast_member_delete(device, bd_info->uuc_mc_index,
-                                                bd_handle, &intf_handle, 1);
+                                                bd_handle, 1, &intf_handle);
     }
     if (status != SWITCH_STATUS_SUCCESS) {
         SWITCH_API_ERROR("%s:%d: Unable to add interface %lx to flood list of ln %lx",
@@ -888,7 +880,7 @@ switch_api_logical_network_member_remove_enhanced(switch_handle_t bd_handle, swi
     }
     if (SWITCH_INTF_FLOOD_ENABLED(intf_info)) {
         status = switch_api_multicast_member_delete(device, bd_info->uuc_mc_index,
-                                                bd_handle, &intf_handle, 1);
+                                                bd_handle, 1, &intf_handle);
         if (status != SWITCH_STATUS_SUCCESS) {
             SWITCH_API_ERROR("%s:%d: Unable to remove interface %lx from flood list of ln %lx",
                          __FUNCTION__, __LINE__, intf_handle, bd_handle);

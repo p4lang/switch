@@ -751,7 +751,7 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     return switch_api_multicast_tree_delete(mgid_handle);
   }
 
-  switcht_status_t switcht_api_multicast_member_add(const switcht_device_t device, const switcht_handle_t mgid_handle, const switcht_handle_t tenant_bd_handle, const std::vector<switcht_handle_t> & interface_handle, const int32_t intf_handle_count) {
+  switcht_status_t switcht_api_multicast_member_add(const switcht_device_t device, const switcht_handle_t mgid_handle, const switcht_handle_t tenant_bd_handle, const int32_t intf_handle_count, const std::vector<switcht_handle_t> & interface_handle) {
     // Your implementation goes here
     printf("switcht_api_multicast_member_add\n");
     switch_status_t status=0;
@@ -762,12 +762,12 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
         interface_list[i] = (switch_handle_t) *it;
     }
     status = switch_api_multicast_member_add(device, mgid_handle, tenant_bd_handle,
-                                         interface_list, intf_handle_count);
+                                         intf_handle_count, interface_list);
     free(interface_list);
     return status;
   }
 
-  switcht_status_t switcht_api_multicast_member_delete(const switcht_device_t device, const switcht_handle_t mgid_handle, const switcht_handle_t tenant_bd_handle, const std::vector<switcht_handle_t> & interface_handle, const int32_t intf_handle_count) {
+  switcht_status_t switcht_api_multicast_member_delete(const switcht_device_t device, const switcht_handle_t mgid_handle, const switcht_handle_t tenant_bd_handle, const int32_t intf_handle_count, const std::vector<switcht_handle_t> & interface_handle) {
     // Your implementation goes here
     printf("switcht_api_multicast_member_delete\n");
     switch_status_t status=0;
@@ -778,7 +778,7 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
         interface_list[i] = (switch_handle_t) *it;
     }
     status = switch_api_multicast_member_delete(device, mgid_handle, tenant_bd_handle,
-                                         interface_list, intf_handle_count);
+                                         intf_handle_count, interface_list);
     free(interface_list);
     return status;
   }
