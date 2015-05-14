@@ -1,7 +1,7 @@
-Semantic Library Features
+Switchapi Library Features
 =========================
 
-Below is the list of features supported by the semantic library
+List of supported features
 ---------------------------------------------------------------
 
 1. Basic L2 switching: VLAN flooding and STP support
