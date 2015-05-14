@@ -14,14 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//
-//  switch_handle.h
-//
-//
-//  Created on 6/20/14.
-//
-//
-
 #ifndef _switch_handle_h_
 #define _switch_handle_h_
 

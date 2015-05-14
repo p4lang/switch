@@ -14,14 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//
-//  switch_defines.h
-//  switch_api
-//
-//  Created on 7/28/14.
-//  Copyright (c) 2014 bn. All rights reserved.
-//
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */

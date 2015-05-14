@@ -14,14 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//
-//  switch_interface.h
-//
-//
-//  Created on 6/23/14.
-//
-//
-
 #ifndef _switch_interface_h_
 #define _switch_interface_h_
 

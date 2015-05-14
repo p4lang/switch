@@ -14,14 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//
-//  switch_mcast.c
-//  switch_api
-//
-//  Created on 7/28/14.
-//  Copyright (c) 2014 bn. All rights reserved.
-//
-
 #include "switchapi/switch_base_types.h"
 #include "switchapi/switch_handle.h"
 #include "switchapi/switch_status.h"
@@ -363,8 +355,8 @@ switch_status_t
 switch_api_multicast_member_add(switch_device_t device,
                                 switch_handle_t mgid_handle,
                                 switch_handle_t bd_handle,
-                                switch_handle_t *interface_handle,
-                                uint16_t intf_handle_count)
+                                uint16_t intf_handle_count,
+                                switch_handle_t *interface_handle)
 {
     switch_mcast_info_t               *mcast_info = NULL;
     switch_mcast_rid_t                *rid_info = NULL;
@@ -458,8 +450,8 @@ switch_status_t
 switch_api_multicast_member_delete(switch_device_t device,
                                    switch_handle_t mgid_handle,
                                    switch_handle_t bd_handle,
-                                   switch_handle_t *interface_handle,
-                                   uint16_t intf_handle_count)
+                                   uint16_t intf_handle_count,
+                                   switch_handle_t *interface_handle)
 {
     switch_mcast_info_t               *mcast_info = NULL;
     switch_mcast_rid_t                *rid_info = NULL;

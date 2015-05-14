@@ -14,14 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//
-//  switch_mcast_int.h
-//  switch_api
-//
-//  Created on 7/28/14.
-//  Copyright (c) 2014 bn. All rights reserved.
-//
-
 #include "switch_port_int.h"
 #include "switch_lag_int.h"
 #include "switchapi/switch_mcast.h"

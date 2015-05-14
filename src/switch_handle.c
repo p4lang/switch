@@ -14,14 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//
-//  switch_handle.c
-//
-//
-//  Created on 6/20/14.
-//
-//
-
 #include "switchapi/switch_handle.h"
 #include "switchapi/switch_status.h"
 

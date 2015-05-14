@@ -14,15 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-
-//
-//  switch_pd_api.h
-//  switch_api
-//
-//  Created on 7/29/14.
-//  Copyright (c) 2014 bn. All rights reserved.
-//
-
 #ifndef _switch_pd_api_
 #define _switch_pd_api_
 

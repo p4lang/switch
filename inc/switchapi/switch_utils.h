@@ -14,14 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//
-//  switch_utils.h
-//
-//
-//  Created on 6/23/14.
-//
-//
-
 #ifndef _switch_utils_h_
 #define _switch_utils_h_
 

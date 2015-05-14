@@ -14,14 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//
-//  switch_port.h
-//  switch_api
-//
-//  Created  on 7/29/14.
-//  Copyright (c) 2014 bn. All rights reserved.
-//
-
 #ifndef _switch_port_h_
 #define _switch_port_h_
 

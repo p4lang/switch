@@ -13,15 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
-//
-//  switch_acl.c
-//
-//
-//  Created on 11/17/14.
-//
-//
-
 #include "p4features.h"
 #include "switchapi/switch_handle.h"
 #include "switchapi/switch_status.h"

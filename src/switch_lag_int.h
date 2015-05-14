@@ -14,14 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//
-//  switch_lag_int.h
-//  switch_api
-//
-//  Created on 6/30/14.
-//  Copyright (c) 2014 bn. All rights reserved.
-//
-
 #include "switchapi/switch_id.h"
 #include "switchapi/switch_handle.h"
 #include "switchapi/switch_lag.h"
