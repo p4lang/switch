@@ -1,28 +1,47 @@
-Switchapi Library Features
-=========================
+SwitchAPI
+=========
 
-List of supported features
----------------------------------------------------------------
+The switchapi library exposes a higher level API on top of lower level resource management API auto-generated from the switch.p4 program in p4factory repository.
+Refer to p4factory/targets/switch/README.md for more details on switch.p4 program.
 
-1. Basic L2 switching: VLAN flooding and STP support
-2. Basic L3 Routing: IPv4 and IPv6 and VRF support
-3. Support for LAG
-4. Support for ECMP
-5. Tunnels: Support for VXLAN and NVGRE (including L2/L3 Gateway), Geneve, and GRE 
-6. Basic ACL: Support for MAC and IP ACLs
+    +-----+    +-----+   +-----+  +-----+
+    |App 1|    |App j|   |App n|  |App q|
+    |     |... |     |...|     |..|     | 
+    +-----+    +-----+   +-----+  +-----+
+       |        |          |  |     |
+    +-----------------------+ |     |
+    |      Switch API       | |     |
+    |                       | |     |
+    +-----------------------+---------+
+    |      Resource Mgmt. API         |
+    | (auto-gen. from switch.p4)      |
+    +---------------------------------+
+    |        Soft Switch              |
+    |  (compiled from switch.p4)      |
+    +---------------------------------+ 
+
+Supported Features
+------------------
+
+1. Basic L2 switching: VLAN flooding and STP
+2. Basic L3 Routing: IPv4, IPv6 and VRF
+3. LAG
+4. ECMP
+5. Tunneling: VXLAN and NVGRE (including L2/L3 Gateway), Geneve, and GRE 
+6. Basic ACL: MAC and IP ACLs
 7. Unicast RPF check
-8. MPLS support - LER, LSR, IPVPN
+8. MPLS: LER, LSR, IPVPN
 
-
-Soon to follow
---------------
+Upcoming Features
+-----------------
 
 1. Learning on Tunnels and VPLS
-2. Build/Makefile changes to make switchapi loadable library
-3. Support for Mirroring
-4. Complete multicast support - IP, PIM-SM
-5. NAT support
-6. Generic Host API - Rx/Tx packets
-7. Counters/Statistics support
-8. Storm control and Ingress Policers support
-9. QoS support
+
+Documentation
+-------------
+
+To generate doxygen documentation for switchapi
+
+    make doc
+
+or view a hosted version at http://p4lang.github.io/switchapi

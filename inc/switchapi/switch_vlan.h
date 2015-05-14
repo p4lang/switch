@@ -123,9 +123,6 @@ typedef struct switch_logical_network_ {
     unsigned int member_count;                /**< Count of members */
 
     uint16_t bd_label;                        /**< acl label for vlan */
-    uint8_t ipv4_multicast_mode;              /**< v4 multicast mode */
-    uint8_t ipv6_multicast_mode;              /**< v6 multicast mode */
-    uint8_t mrpf_group;                       /**< multicast rpf group */
 } switch_logical_network_t;
 
 /** @defgroup VLAN VLAN configuration API
