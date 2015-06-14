@@ -28,6 +28,9 @@ extern "C" {
 
 #define SWITCH_API_VLAN_DEFAULT_AGE_INTERVAL (10)
 
+#define SWITCH_VLAN_PORT_HASH_KEY_SIZE 16 
+#define SWITCH_VLAN_PORT_HASH_TABLE_SIZE 4096
+
 /** member of logcal network */
 typedef struct {
     tommy_node node;            /**< linked list node */
@@ -58,6 +61,17 @@ typedef struct switch_bd_info_ {
     switch_ip_encap_pd_hdl_t ip_encap_hdl;
 #endif
 } switch_bd_info_t;
+
+typedef struct switch_vlan_port_key_ {
+    switch_handle_t vlan_handle;
+    switch_handle_t port_lag_handle;
+} switch_vlan_port_key_t;
+
+typedef struct switch_vlan_port_info_ {
+    switch_vlan_port_key_t vlan_port_key;
+    tommy_hashtable_node node;
+    switch_handle_t intf_handle;
+} switch_vlan_port_info_t;
 
 #define SWITCH_LN_IPV4_UNICAST_ENABLED(ln) \
     ln->ln_info.flags.ipv4_unicast_enabled
@@ -113,6 +127,8 @@ switch_status_t switch_api_vlan_xlate_add(switch_handle_t bd_handle, switch_hand
 switch_status_t switch_api_vlan_xlate_remove(switch_handle_t bd_handle, switch_handle_t intf_handle, switch_vlan_t vlan_id);
 switch_ln_member_t *
 switch_api_logical_network_search_member(switch_handle_t bd_handle, switch_handle_t intf_handle);
+switch_status_t switch_intf_handle_get(switch_handle_t vlan_handle, switch_handle_t port_lag_handle,
+                                       switch_handle_t *intf_handle);
 
 #ifdef __cplusplus
 }

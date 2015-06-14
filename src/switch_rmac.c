@@ -347,6 +347,7 @@ switch_smac_rewrite_add_entry(switch_mac_addr_t *mac)
     smac_entry->smac_index = smac_index;
     smac_entry->ref_count = 1;
     tommy_hashtable_insert(&smac_rewrite_table, &(smac_entry->node), smac_entry, hash);
+    switch_pd_mac_rewrite_table_add_entry(smac_index, mac->mac_addr);
     return smac_index;
 }
 

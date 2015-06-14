@@ -29,12 +29,10 @@ extern "C" {
  *  @{
  */ // begin of VRF API
 
-/** Virtual Routing Instance identifier */
-typedef unsigned int switch_vrf_id_t;
-    
 /** VRF information */
 typedef struct switch_vrf_info_ {
     switch_vrf_id_t vrf_id;      /**< user VRF */
+    switch_mac_addr_t mac;       /**< mac address */
     struct {
         uint8_t v4_enabled;      /**< v4 enable */
         uint8_t v6_enabled;      /**< v6 enable */

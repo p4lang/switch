@@ -90,11 +90,30 @@ switch_api_stp_group_create(switch_device_t device,
 switch_status_t
 switch_api_stp_group_delete(switch_handle_t stg_handle)
 {
-    switch_stp_info_t *stp_info = NULL;
+    switch_stp_info_t                 *stp_info = NULL;
+    tommy_node                        *node = NULL;
+    switch_stp_port_entry_t           *port_entry = NULL;
+    switch_stp_vlan_entry_t           *vlan_entry = NULL;
+    switch_device_t                    device = SWITCH_DEV_ID;
 
     stp_info = switch_api_stp_get_internal(stg_handle);
     if (!stp_info) {
         return SWITCH_STATUS_INVALID_HANDLE;
+    }
+
+    node = tommy_list_head(&(stp_info->port_list));
+    while (node) {
+        port_entry = node->data;
+        node = node->next;
+        switch_api_stp_port_state_set(device, stg_handle,
+                          port_entry->intf_handle,
+                          SWITCH_PORT_STP_STATE_NONE);
+    }
+    node = tommy_list_head(&(stp_info->vlan_list));
+    while (node) {
+        vlan_entry = node->data;
+        node = node->next;
+        switch_api_stp_group_vlan_remove(stg_handle, vlan_entry->vlan_handle);
     }
     switch_stg_handle_delete(stg_handle);
     return SWITCH_STATUS_SUCCESS;
@@ -181,13 +200,17 @@ switch_api_stp_group_vlan_remove(switch_handle_t stg_handle,
 
 switch_status_t
 switch_api_stp_port_state_set(switch_device_t device, switch_handle_t stg_handle,
-                              switch_handle_t interface_handle, switch_stp_state_t state)
+                              switch_handle_t handle, switch_stp_state_t state)
 {
     switch_stp_info_t                 *stp_info = NULL;
     switch_interface_info_t           *intf_info = NULL;
     switch_stp_port_entry_t           *port_entry = NULL;
     tommy_node                        *node = NULL;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+    switch_port_info_t                *port_info = NULL;
+    switch_lag_info_t                 *lag_info = NULL;
+    switch_handle_t                    intf_handle; 
+    switch_handle_type_t               handle_type = 0;
     bool                               new_entry = FALSE;
 
     stp_info = switch_api_stp_get_internal(stg_handle);
@@ -195,7 +218,18 @@ switch_api_stp_port_state_set(switch_device_t device, switch_handle_t stg_handle
         return SWITCH_STATUS_INVALID_HANDLE;
     }
 
-    intf_info = switch_api_interface_get(interface_handle);
+    handle_type = switch_handle_get_type(handle);
+    intf_handle = handle;
+    if (handle_type == SWITCH_HANDLE_TYPE_PORT) {
+       port_info = switch_api_port_get_internal((switch_port_t)handle); 
+       intf_handle = port_info->intf_handle;
+    }
+    if (handle_type == SWITCH_HANDLE_TYPE_LAG) {
+        lag_info = switch_api_lag_get_internal(handle);
+        intf_handle = lag_info->intf_handle;
+    }
+
+    intf_info = switch_api_interface_get(intf_handle);
     if (!intf_info) {
         return SWITCH_STATUS_INVALID_INTERFACE;
     }
@@ -207,7 +241,7 @@ switch_api_stp_port_state_set(switch_device_t device, switch_handle_t stg_handle
     node = tommy_list_head(&stp_info->port_list);
     while (node) {
         port_entry = node->data;
-        if (port_entry->intf_handle == interface_handle) {
+        if (port_entry->intf_handle == intf_handle) {
             port_entry->intf_state = state;
             break;
         }
@@ -218,7 +252,7 @@ switch_api_stp_port_state_set(switch_device_t device, switch_handle_t stg_handle
         if (!node) {
             return SWITCH_STATUS_ITEM_NOT_FOUND;
         }
-        status = switch_stp_update_flood_list(device, stg_handle, interface_handle, state);
+        status = switch_stp_update_flood_list(device, stg_handle, intf_handle, state);
         status = switch_pd_spanning_tree_table_delete_entry(device, port_entry->hw_entry);
         tommy_list_remove_existing(&(stp_info->port_list), &(port_entry->node));
         switch_free(port_entry);
@@ -227,13 +261,13 @@ switch_api_stp_port_state_set(switch_device_t device, switch_handle_t stg_handle
             new_entry = TRUE;
             port_entry = switch_malloc(sizeof(switch_stp_port_entry_t), 1);
             memset(port_entry, 0, sizeof(switch_stp_port_entry_t));
-            port_entry->intf_handle = interface_handle;
+            port_entry->intf_handle = intf_handle;
             port_entry->intf_state = state;
             tommy_list_insert_head(&(stp_info->port_list),
                                    &(port_entry->node), port_entry);
         }
 
-        status = switch_stp_update_flood_list(device, stg_handle, interface_handle, state);
+        status = switch_stp_update_flood_list(device, stg_handle, intf_handle, state);
 
         if (new_entry) {
             status = switch_pd_spanning_tree_table_add_entry(device,
@@ -254,19 +288,34 @@ switch_api_stp_port_state_set(switch_device_t device, switch_handle_t stg_handle
 
 switch_status_t
 switch_api_stp_port_state_get(switch_device_t device, switch_handle_t stg_handle,
-                              switch_handle_t interface_handle, switch_stp_state_t *state)
+                              switch_handle_t handle, switch_stp_state_t *state)
 {
     switch_stp_info_t                 *stp_info = NULL;
     switch_interface_info_t           *intf_info = NULL;
     switch_stp_port_entry_t           *port_entry = NULL;
     tommy_node                        *node = NULL;
+    switch_port_info_t                *port_info = NULL;
+    switch_lag_info_t                 *lag_info = NULL;
+    switch_handle_t                    intf_handle = 0; 
+    switch_handle_type_t               handle_type = 0;
 
     stp_info = switch_api_stp_get_internal(stg_handle);
     if (!stp_info) {
         return SWITCH_STATUS_INVALID_HANDLE;
     }
 
-    intf_info = switch_api_interface_get(interface_handle);
+    handle_type = switch_handle_get_type(handle);
+    intf_handle = handle;
+    if (handle_type == SWITCH_HANDLE_TYPE_PORT) {
+       port_info = switch_api_port_get_internal((switch_port_t)handle); 
+       intf_handle = port_info->intf_handle;
+    }
+    if (handle_type == SWITCH_HANDLE_TYPE_LAG) {
+        lag_info = switch_api_lag_get_internal(handle);
+        intf_handle = lag_info->intf_handle;
+    }
+
+    intf_info = switch_api_interface_get(intf_handle);
     if (!intf_info) {
         return SWITCH_STATUS_INVALID_INTERFACE;
     }
@@ -279,7 +328,7 @@ switch_api_stp_port_state_get(switch_device_t device, switch_handle_t stg_handle
     node = tommy_list_head(&(stp_info->port_list));
     while (node) {
         port_entry = node->data;
-        if (port_entry->intf_handle == interface_handle) {
+        if (port_entry->intf_handle == intf_handle) {
             *state = port_entry->intf_state;
             break;
         }
@@ -294,20 +343,35 @@ switch_api_stp_port_state_get(switch_device_t device, switch_handle_t stg_handle
 
 switch_status_t
 switch_api_stp_port_state_clear(switch_device_t device, switch_handle_t stg_handle,
-                                switch_handle_t interface_handle)
+                                switch_handle_t handle)
 {
     switch_stp_info_t                 *stp_info = NULL;
     switch_interface_info_t           *intf_info = NULL;
     switch_stp_port_entry_t           *port_entry = NULL;
     tommy_node                        *node = NULL;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+    switch_port_info_t                *port_info = NULL;
+    switch_lag_info_t                 *lag_info = NULL;
+    switch_handle_t                    intf_handle = 0; 
+    switch_handle_type_t               handle_type = 0;
 
     stp_info = switch_api_stp_get_internal(stg_handle);
     if (!stp_info) {
         return SWITCH_STATUS_INVALID_HANDLE;
     }
 
-    intf_info = switch_api_interface_get(interface_handle);
+    handle_type = switch_handle_get_type(handle);
+    intf_handle = handle;
+    if (handle_type == SWITCH_HANDLE_TYPE_PORT) {
+       port_info = switch_api_port_get_internal((switch_port_t)handle); 
+       intf_handle = port_info->intf_handle;
+    }
+    if (handle_type == SWITCH_HANDLE_TYPE_LAG) {
+        lag_info = switch_api_lag_get_internal(handle);
+        intf_handle = lag_info->intf_handle;
+    }
+
+    intf_info = switch_api_interface_get(intf_handle);
     if (!intf_info) {
         return SWITCH_STATUS_INVALID_INTERFACE;
     }
@@ -319,7 +383,7 @@ switch_api_stp_port_state_clear(switch_device_t device, switch_handle_t stg_hand
     node = tommy_list_head(&(stp_info->port_list));
     while (node) {
         port_entry = node->data;
-        if (port_entry->intf_handle == interface_handle) {
+        if (port_entry->intf_handle == intf_handle) {
             break;
         }
         node = node->next;

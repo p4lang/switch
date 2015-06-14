@@ -93,7 +93,7 @@ switch_mac_insert_into_interface_list(switch_mac_info_t *mac_info)
     void                              *temp = NULL;
 
     mac_entry = &mac_info->mac_entry;
-    JLG(mac_intf_list, intf_mac_hdl_array, mac_entry->vlan_handle);
+    JLG(temp, intf_mac_hdl_array, mac_entry->handle);
     if (!temp) {
         mac_intf_list = switch_malloc(sizeof(switch_mac_intf_list_t), 1);
         if (!mac_intf_list) {
@@ -102,7 +102,7 @@ switch_mac_insert_into_interface_list(switch_mac_info_t *mac_info)
         }
         tommy_list_init(&(mac_intf_list->mac_entries));
         mac_intf_list->num_entries = 0;
-        JLI(temp, intf_mac_hdl_array, mac_entry->vlan_handle);
+        JLI(temp, intf_mac_hdl_array, mac_entry->handle);
         *(unsigned long *)temp = (unsigned long) mac_intf_list;
     }
     mac_intf_list = (switch_mac_intf_list_t *) (*(unsigned long *)temp);
@@ -426,6 +426,7 @@ switch_api_mac_table_entry_add(switch_device_t device,
     uint16_t                           nhop_index = 0;
     uint16_t                           mgid_index = 0;
     uint32_t                           aging_time = 0;
+    switch_handle_t                    intf_handle = 0;
 
     handle_type = switch_handle_get_type(mac_entry->handle);
 
@@ -436,8 +437,24 @@ switch_api_mac_table_entry_add(switch_device_t device,
     }
 
     switch(handle_type) {
+        case SWITCH_HANDLE_TYPE_PORT:
+        case SWITCH_HANDLE_TYPE_LAG:
+            status = switch_intf_handle_get(mac_entry->vlan_handle, mac_entry->handle, &intf_handle);
+            if (status != SWITCH_STATUS_SUCCESS) {
+                SWITCH_API_ERROR("%s:%d: unable to add mac to fdb",
+                                 __FUNCTION__, __LINE__);
+                return status;
+            }
+            i_info = switch_api_interface_get(intf_handle);
+            if (!i_info) {
+                SWITCH_API_ERROR("%s:%d: invalid interface!", __FUNCTION__, __LINE__);
+                return SWITCH_STATUS_INVALID_INTERFACE;
+            }
+            break;
         case SWITCH_HANDLE_TYPE_INTERFACE:
-            i_info = switch_api_interface_get(mac_entry->handle);
+            mac_entry->mac_action = TRUE;
+            intf_handle = mac_entry->handle;
+            i_info = switch_api_interface_get(intf_handle);
             if (!i_info) {
                 SWITCH_API_ERROR("%s:%d: invalid interface!", __FUNCTION__, __LINE__);
                 return SWITCH_STATUS_INVALID_INTERFACE;
@@ -445,12 +462,13 @@ switch_api_mac_table_entry_add(switch_device_t device,
         break;
 
         case SWITCH_HANDLE_TYPE_NHOP:
+            mac_entry->mac_action = TRUE;
             nhop_info = switch_nhop_get(mac_entry->handle);
             if (!nhop_info) {
                 return SWITCH_STATUS_INVALID_NHOP;
             }
             spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
-            i_info = switch_api_interface_get(spath_info->interface_handle);
+            i_info = switch_api_interface_get(spath_info->nhop_key.intf_handle);
             if (!i_info) {
                 return SWITCH_STATUS_INVALID_INTERFACE;
             }
@@ -458,10 +476,11 @@ switch_api_mac_table_entry_add(switch_device_t device,
         break;
 
         case SWITCH_HANDLE_TYPE_MGID:
+            mac_entry->mac_action = TRUE;
             mgid_index = handle_to_id(mac_entry->handle);
         break;
         default:
-            SWITCH_API_ERROR("%s:%d: invalid nexthop!", __FUNCTION__, __LINE__);
+            SWITCH_API_ERROR("%s:%d: invalid handle!\n", __FUNCTION__, __LINE__);
             return SWITCH_STATUS_INVALID_HANDLE;
     }
 
@@ -531,6 +550,7 @@ switch_api_mac_table_entry_update(switch_device_t device,
     switch_handle_type_t               handle_type = 0;
     uint16_t                           nhop_index = 0;
     uint16_t                           mgid_index = 0;
+    switch_handle_t                    intf_handle = 0;
 
     mac_info = switch_mac_table_entry_find(mac_entry);
     if (!mac_info) {
@@ -539,8 +559,22 @@ switch_api_mac_table_entry_update(switch_device_t device,
 
     handle_type = switch_handle_get_type(mac_entry->handle);
     switch(handle_type) {
-        case SWITCH_HANDLE_TYPE_INTERFACE:
+        case SWITCH_HANDLE_TYPE_PORT:
+        case SWITCH_HANDLE_TYPE_LAG:
+            status = switch_intf_handle_get(mac_entry->vlan_handle, mac_entry->handle, &intf_handle);
+            if (status != SWITCH_STATUS_SUCCESS) {
+                SWITCH_API_ERROR("%s:%d: unable to update mac to fdb",
+                                 __FUNCTION__, __LINE__);
+                return status;
+            }
             i_info = switch_api_interface_get(mac_entry->handle);
+            if (!i_info) {
+                return SWITCH_STATUS_INVALID_INTERFACE;
+            }
+            break;
+        case SWITCH_HANDLE_TYPE_INTERFACE:
+            intf_handle = mac_entry->handle;
+            i_info = switch_api_interface_get(intf_handle);
             if (!i_info) {
                 return SWITCH_STATUS_INVALID_INTERFACE;
             }
@@ -552,7 +586,7 @@ switch_api_mac_table_entry_update(switch_device_t device,
                 return SWITCH_STATUS_INVALID_NHOP;
             }
             spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
-            i_info = switch_api_interface_get(spath_info->interface_handle);
+            i_info = switch_api_interface_get(spath_info->nhop_key.intf_handle);
             if (!i_info) {
                 return SWITCH_STATUS_INVALID_INTERFACE;
             }
@@ -707,7 +741,7 @@ switch_api_mac_table_entries_delete_by_vlan(switch_handle_t vlan_handle)
 }
 
 switch_status_t
-switch_api_mac_table_entries_delete_by_interface(switch_handle_t interface_handle)
+switch_api_mac_table_entries_delete_by_interface(switch_handle_t handle)
 {
     switch_mac_intf_list_t            *mac_intf_list = NULL;
     switch_mac_info_t                 *mac_info = NULL;
@@ -715,8 +749,23 @@ switch_api_mac_table_entries_delete_by_interface(switch_handle_t interface_handl
     void                              *temp = NULL;
     switch_device_t                    device = SWITCH_DEV_ID;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+    switch_handle_t                    intf_handle = 0;
+    switch_port_info_t                *port_info = NULL;
+    switch_lag_info_t                 *lag_info = NULL;
+    switch_handle_type_t               handle_type = 0;
 
-    JLG(temp, intf_mac_hdl_array, interface_handle);
+    handle_type = switch_handle_get_type(handle);
+    intf_handle = handle;
+    if (handle_type == SWITCH_HANDLE_TYPE_PORT) {
+       port_info = switch_api_port_get_internal((switch_port_t)handle); 
+       intf_handle = port_info->intf_handle;
+    }
+    if (handle_type == SWITCH_HANDLE_TYPE_LAG) {
+        lag_info = switch_api_lag_get_internal(handle);
+        intf_handle = lag_info->intf_handle;
+    }
+
+    JLG(temp, intf_mac_hdl_array, intf_handle);
     if (!temp) {
         SWITCH_API_TRACE("%s:%d: No macs to delete!", __FUNCTION__, __LINE__);
         return SWITCH_STATUS_SUCCESS;
@@ -727,6 +776,51 @@ switch_api_mac_table_entries_delete_by_interface(switch_handle_t interface_handl
     while (node) {
         mac_info = node->data;
         node = node->next;
+        status = switch_api_mac_table_entry_delete(device, &mac_info->mac_entry);
+    }
+    return status;
+}
+
+switch_status_t
+switch_api_mac_table_entries_delete_by_interface_vlan(switch_handle_t handle,
+                                                      switch_handle_t vlan_handle)
+{
+    switch_mac_vlan_list_t            *mac_vlan_list = NULL;
+    switch_mac_info_t                 *mac_info = NULL;
+    tommy_node                        *node = NULL;
+    void                              *temp = NULL;
+    switch_device_t                    device = SWITCH_DEV_ID;
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+    switch_handle_t                    intf_handle = 0;
+    switch_port_info_t                *port_info = NULL;
+    switch_lag_info_t                 *lag_info = NULL;
+    switch_handle_type_t               handle_type = 0;
+
+    JLG(temp, vlan_mac_hdl_array, vlan_handle);
+    if (!temp) {
+        SWITCH_API_TRACE("%s:%d: No macs to delete!", __FUNCTION__, __LINE__);
+        return SWITCH_STATUS_SUCCESS;
+    }
+
+    handle_type = switch_handle_get_type(handle);
+    intf_handle = handle;
+    if (handle_type == SWITCH_HANDLE_TYPE_PORT) {
+       port_info = switch_api_port_get_internal((switch_port_t)handle); 
+       intf_handle = port_info->intf_handle;
+    }
+    if (handle_type == SWITCH_HANDLE_TYPE_LAG) {
+        lag_info = switch_api_lag_get_internal(handle);
+        intf_handle = lag_info->intf_handle;
+    }
+
+    mac_vlan_list = (switch_mac_vlan_list_t *) (*(unsigned long *)temp);
+    node = tommy_list_head(&(mac_vlan_list->mac_entries));
+    while (node) {
+        mac_info = node->data;
+        node = node->next;
+        if (intf_handle != mac_info->mac_entry.handle) {
+            continue;
+        }
         status = switch_api_mac_table_entry_delete(device, &mac_info->mac_entry);
     }
     return status;

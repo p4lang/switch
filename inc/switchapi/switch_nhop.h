@@ -24,18 +24,26 @@ limitations under the License.
 extern "C" {
 #endif /* __cplusplus */
 
+/** Nexthop type */
 typedef enum switch_nhop_index_type_ {
     SWITCH_NHOP_INDEX_TYPE_NONE,
     SWITCH_NHOP_INDEX_TYPE_ONE_PATH,
     SWITCH_NHOP_INDEX_TYPE_ECMP
 } switch_nhop_index_type_t;
 
+/** Nexthop Key */
+typedef struct switch_nhop_key_ {
+    switch_handle_t intf_handle;          /**< interface handle */
+    switch_ip_addr_t ip_addr;             /**< ip address */
+    bool ip_addr_valid;                   /**< ip address valid */
+} switch_nhop_key_t;
+
 /**
  Create a Nexthop
  @param device - device to program the nexthop
- @param intf_handle - Interface to be associated with the nexthop
+ @param nhop_key- Interface to be associated with the nexthop and nexthop ip
 */
-switch_handle_t switch_api_nhop_create(switch_device_t device, switch_handle_t intf_handle);
+switch_handle_t switch_api_nhop_create(switch_device_t device, switch_nhop_key_t *nhop_key);
 
 /**
  Delete a Nexthop
@@ -79,6 +87,21 @@ switch_status_t switch_api_ecmp_member_delete(switch_device_t device, switch_han
 */
 switch_handle_t switch_api_ecmp_create_with_members(switch_device_t device, uint32_t member_count,
                                             switch_handle_t *intf_handle);
+/*
+ Return nexthop handle from (intf_handle, ip address)
+ @param nhop_key- Interface to be associated with the nexthop and nexthop ip
+ */
+switch_handle_t switch_api_nhop_handle_get(switch_nhop_key_t *nhop_key);
+
+/*
+ Get neighbor handle from nexthop handle
+ @param nhop_handle nexthop handle
+ */
+switch_handle_t switch_api_neighbor_handle_get(switch_handle_t nhop_handle);
+
+/*
+ * Dump all nexthops
+ */
 switch_status_t switch_api_nhop_print_all(void);
 
 #ifdef __cplusplus

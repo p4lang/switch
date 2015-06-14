@@ -34,6 +34,7 @@ typedef struct switch_port_info_ {
     switch_api_port_info_t api_port_info;
     switch_ifindex_t ifindex;
     switch_handle_t intf_handle;
+    switch_handle_t port_handle;
 #ifdef SWITCH_PD
     p4_pd_entry_hdl_t hw_entry;             /* port mapping entry */
     p4_pd_entry_hdl_t lg_entry;             /* Lag group entry */

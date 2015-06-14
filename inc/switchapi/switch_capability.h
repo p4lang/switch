@@ -31,8 +31,9 @@ extern "C" {
 
 // Switch
 
-#define SWITCH_API_DEFAULT_VLAN      1                   /**< system default vlan */
-#define SWITCH_API_DEFAULT_VRF       1                   /**< system default vrf */
+#define SWITCH_API_DEFAULT_VLAN          1                   /**< system default vlan */
+#define SWITCH_API_DEFAULT_VRF           1                   /**< system default vrf */
+#define SWITCH_API_MAX_DEFAULT_PORTS     256                 /**< system default ports */
 
 /** switch operational status */
 typedef enum switch_oper_status_ {
@@ -62,6 +63,7 @@ typedef enum switch_ecmp_hash_fields_ {
 /** switch attributes */
 typedef enum switch_capability_attr_ {
     SWITCH_ATTR_PORT_NUMBER,
+    SWITCH_ATTR_PORT_LIST,
     SWITCH_ATTR_MAX_VRF,
     SWITCH_ATTR_ON_LINK_ROUTE_SUPPORTED,
     SWITCH_ATTR_OPER_STATUS,
@@ -82,35 +84,31 @@ typedef enum switch_capability_attr_ {
 } switch_capability_attr_t;
 
 /** switch capability info */
-typedef struct switch_api_info_ {
-    uint16_t max_ports;                          /**< max ports in the switch */
-    uint16_t max_lags;                           /**< max lag supported */
-    uint16_t max_port_per_lag;                   /**< max ports per lag */
-    uint16_t max_vrf;                            /**< max vrf supported */
-    uint16_t max_stp_groups;                     /**< max spanning tree group */
-    uint16_t max_tunnels;                        /**< max tunnels */
-    uint16_t max_span_sessions;                  /**< max span sessions */
-} switch_api_info_t;
+typedef struct switch_api_capability_ {
+    switch_vlan_t default_vlan;                                  /**< default vlan */
+    switch_vrf_id_t default_vrf;                                 /**< default vrf */
+    switch_mac_addr_t switch_mac;                                /**< default switch mac */
+    uint16_t max_ports;                                          /**< max ports in the switch */
+    uint16_t max_lags;                                           /**< max lag supported */
+    uint16_t max_port_per_lag;                                   /**< max ports per lag */
+    uint16_t max_vrf;                                            /**< max vrf supported */
+    uint16_t max_stp_groups;                                     /**< max spanning tree group */
+    uint16_t max_tunnels;                                        /**< max tunnels */
+    uint16_t max_span_sessions;                                  /**< max span sessions */
+    switch_handle_t port_list[SWITCH_API_MAX_DEFAULT_PORTS];     /**< list of ports */
+} switch_api_capability_t;
 
 /**
- Set switch attribute
- @param attr_type - attribute type
- @param value - value of the attribute
+ Sets switch capability attributes
+ @param api_capability switch capability attributes
  */
-switch_status_t switch_api_capability_attribute_set(switch_capability_attr_t attr_type, uint64_t value);
+switch_status_t switch_api_capability_set(switch_api_capability_t *api_capability);
 
 /**
- Get switch attribute
- @param attr_type - attribute type
- @param value - value of the attribute
+ Returns all switch capability attributes
+ @param api_capability switch capability attributes
  */
-switch_status_t switch_api_capability_attribute_get(switch_capability_attr_t attr_type, uint64_t *value);
-
-/**
- Returns switch capabilities - TBD
- @param switch_info struct to hold switch capabilities
- */
-switch_status_t switch_api_capability_capabilities_get(switch_api_info_t *switch_info);
+switch_status_t switch_api_capability_get(switch_api_capability_t *api_capability);
 
 /** @} */ // end of switch API
 

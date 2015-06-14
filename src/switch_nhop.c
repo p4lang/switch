@@ -22,6 +22,7 @@ limitations under the License.
 #include "switchapi/switch_nhop.h"
 #include "switch_nhop_int.h"
 #include "switch_pd.h"
+#include "switch_utils.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,6 +31,7 @@ extern "C" {
 // Next hop related BEGIN
 static void *switch_nhop_array;
 static switch_api_id_allocator *ecmp_select;
+static tommy_hashtable switch_nhop_hash_table;
 
 switch_status_t
 switch_nhop_init()
@@ -37,6 +39,7 @@ switch_nhop_init()
     switch_nhop_array = NULL;
     ecmp_select = switch_api_id_allocator_new(64 * 1024/ 32);
     switch_handle_type_init(SWITCH_HANDLE_TYPE_NHOP, (16*1024));
+    tommy_hashtable_init(&switch_nhop_hash_table, SWITCH_NHOP_HASH_TABLE_SIZE);
     switch_nhop_create();
     return SWITCH_STATUS_SUCCESS;
 }
@@ -71,15 +74,119 @@ switch_nhop_delete(switch_handle_t handle)
     return SWITCH_STATUS_SUCCESS;
 }
 
+static inline void
+switch_nhop_hash_key_init(uchar *key, switch_nhop_key_t *nhop_key,
+                             uint32_t *len, uint32_t *hash)
+{
+    *len=0;
+    memset(key, 0, SWITCH_NHOP_HASH_KEY_SIZE);
+    memcpy(key, (uchar *) &nhop_key->intf_handle, sizeof(switch_handle_t));
+    *len += sizeof(switch_handle_t);
+    key[*len] = nhop_key->ip_addr.type;
+    *len += 4;
+    if(nhop_key->ip_addr.type == SWITCH_API_IP_ADDR_V4) {
+        *(unsigned int *)(&key[*len]) = nhop_key->ip_addr.ip.v4addr;
+        *len += 16;
+    }
+    else {
+        memcpy(&key[*len], nhop_key->ip_addr.ip.v6addr, 16);
+        *len += 16;
+    }
+    key[*len] = nhop_key->ip_addr.prefix_len;
+    *len += 4;
+    *hash = MurmurHash2(key, *len, 0x98761234);
+}
+
+static inline int
+switch_nhop_hash_cmp(const void *key1, const void *key2)
+{
+    return memcmp(key1, key2, SWITCH_NHOP_HASH_KEY_SIZE);
+}
+
+static switch_status_t
+switch_nhop_insert_hash(switch_spath_info_t *spath_info,
+                        switch_nhop_key_t *nhop_key,
+                        switch_handle_t nhop_handle)
+{
+    switch_nhop_key_t                 *temp_nhop_key = NULL;
+    unsigned char                      key[SWITCH_NHOP_HASH_KEY_SIZE];
+    uint32_t                           len = 0;
+    uint32_t                           hash = 0;
+
+    temp_nhop_key = &spath_info->nhop_key;
+    memset(temp_nhop_key, 0, sizeof(switch_nhop_key_t));
+    memcpy(temp_nhop_key, nhop_key, sizeof(switch_nhop_key_t));
+    spath_info->nhop_handle = nhop_handle;
+    switch_nhop_hash_key_init(key, temp_nhop_key, &len, &hash);
+    tommy_hashtable_insert(&switch_nhop_hash_table,
+                           &(spath_info->node),
+                           spath_info, hash);
+    return SWITCH_STATUS_SUCCESS;
+}
+
+static switch_status_t
+switch_nhop_delete_hash(switch_spath_info_t *spath_info)
+{
+    switch_nhop_key_t                 *temp_nhop_key = NULL;
+    unsigned char                      key[SWITCH_NHOP_HASH_KEY_SIZE];
+    uint32_t                           len = 0;
+    uint32_t                           hash = 0;
+
+    temp_nhop_key = &spath_info->nhop_key;
+    if (!temp_nhop_key->ip_addr_valid) {
+        return SWITCH_STATUS_SUCCESS;
+    }
+    switch_nhop_hash_key_init(key, temp_nhop_key, &len, &hash);
+    spath_info = tommy_hashtable_remove(&switch_nhop_hash_table,
+                                        switch_nhop_hash_cmp,
+                                        key, hash);
+    if (!spath_info) {
+        return SWITCH_STATUS_ITEM_NOT_FOUND;
+    }
+    return SWITCH_STATUS_SUCCESS;
+}
+
 switch_handle_t
-switch_api_nhop_create(switch_device_t device, switch_handle_t intf_handle)
+switch_api_nhop_handle_get(switch_nhop_key_t *nhop_key)
+{
+    switch_spath_info_t               *spath_info = NULL;
+    unsigned char                      key[SWITCH_NHOP_HASH_KEY_SIZE];
+    uint32_t                           len = 0;
+    uint32_t                           hash = 0;
+
+    switch_nhop_hash_key_init(key, nhop_key, &len, &hash);
+    spath_info = tommy_hashtable_search(&switch_nhop_hash_table,
+                                      switch_nhop_hash_cmp,
+                                      key, hash);
+    if (!spath_info) {
+        return SWITCH_API_INVALID_HANDLE;
+    }
+    return spath_info->nhop_handle;
+}
+
+switch_handle_t
+switch_api_neighbor_handle_get(switch_handle_t nhop_handle)
+{
+    switch_nhop_info_t                *nhop_info = NULL;
+    switch_spath_info_t               *spath_info = NULL;
+
+    nhop_info = switch_nhop_get(nhop_handle);
+    if (!nhop_info) {
+        return SWITCH_STATUS_INVALID_NHOP;
+    }
+    spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
+    return spath_info->neighbor_handle;
+}
+
+switch_handle_t
+switch_api_nhop_create(switch_device_t device, switch_nhop_key_t *nhop_key)
 {
     switch_handle_t                    nhop_handle;
     switch_nhop_info_t                *nhop_info = NULL;
     switch_interface_info_t           *intf_info = NULL;
     switch_spath_info_t               *spath_info = NULL;
 
-    intf_info = switch_api_interface_get(intf_handle);
+    intf_info = switch_api_interface_get(nhop_key->intf_handle);
     if (!intf_info) {
         return SWITCH_STATUS_INVALID_INTERFACE;
     }
@@ -88,7 +195,8 @@ switch_api_nhop_create(switch_device_t device, switch_handle_t intf_handle)
     nhop_info = switch_nhop_get(nhop_handle);
     nhop_info->type = SWITCH_NHOP_INDEX_TYPE_ONE_PATH;
     spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
-    spath_info->interface_handle = intf_handle;
+    spath_info->nhop_key.intf_handle = nhop_key->intf_handle;
+
     intf_info->nhop_handle = nhop_handle;
 
 #ifdef SWITCH_PD
@@ -101,6 +209,9 @@ switch_api_nhop_create(switch_device_t device, switch_handle_t intf_handle)
         switch_pd_urpf_bd_table_add_entry(device, handle_to_id(nhop_handle),
                                      handle_to_id(intf_info->bd_handle),
                                      &spath_info->urpf_hw_entry);
+    }
+    if (nhop_key->ip_addr_valid) {
+        switch_nhop_insert_hash(spath_info, nhop_key, nhop_handle);
     }
 #endif
     return nhop_handle;
@@ -119,7 +230,7 @@ switch_api_nhop_delete(switch_device_t device, switch_handle_t nhop_handle)
     }
 
     spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
-    intf_info = switch_api_interface_get(spath_info->interface_handle);
+    intf_info = switch_api_interface_get(spath_info->nhop_key.intf_handle);
     if (!intf_info) {
         return SWITCH_STATUS_INVALID_INTERFACE;
     }
@@ -129,6 +240,7 @@ switch_api_nhop_delete(switch_device_t device, switch_handle_t nhop_handle)
         switch_pd_urpf_bd_table_delete_entry(device, spath_info->urpf_hw_entry);
     }
 #endif
+    switch_nhop_delete_hash(spath_info);
     switch_nhop_delete(nhop_handle);
     UNUSED(nhop_info);
     return SWITCH_STATUS_SUCCESS;
@@ -203,7 +315,7 @@ switch_api_ecmp_create_with_members(switch_device_t device,
         }
 
         spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
-        intf_info = switch_api_interface_get(spath_info->interface_handle);
+        intf_info = switch_api_interface_get(spath_info->nhop_key.intf_handle);
         if (!intf_info) {
             return SWITCH_STATUS_INVALID_INTERFACE;
         }
@@ -279,7 +391,7 @@ switch_api_ecmp_member_add(switch_device_t device, switch_handle_t ecmp_handle, 
         return SWITCH_STATUS_NO_MEMORY;
     }
     ecmp_member->nhop_handle = nhop_handle;
-    intf_info = switch_api_interface_get(spath_info->interface_handle);
+    intf_info = switch_api_interface_get(spath_info->nhop_key.intf_handle);
     if (!intf_info) {
             return SWITCH_STATUS_INVALID_INTERFACE;
     }
@@ -340,7 +452,7 @@ switch_api_ecmp_member_delete(switch_device_t device, switch_handle_t ecmp_handl
     if (!node) {
         return SWITCH_STATUS_ITEM_NOT_FOUND;
     }
-    intf_info = switch_api_interface_get(spath_info->interface_handle);
+    intf_info = switch_api_interface_get(spath_info->nhop_key.intf_handle);
     if (!intf_info) {
             return SWITCH_STATUS_INVALID_INTERFACE;
     }
@@ -379,7 +491,7 @@ switch_api_nhop_print_entry(switch_handle_t nhop_handle)
     if (nhop_info->type == SWITCH_NHOP_INDEX_TYPE_ONE_PATH) {
         spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
         printf("\ntype : single path");
-        printf("\nintf_handle %x", (unsigned int) spath_info->interface_handle);
+        printf("\nintf_handle %x", (unsigned int) spath_info->nhop_key.intf_handle);
     } else {
         ecmp_info = &(SWITCH_NHOP_ECMP_INFO(nhop_info));
         printf("\ntype : ecmp path");

@@ -262,10 +262,16 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     return switch_api_l3_interface_address_delete(interface_handle, vrf, &lip_addr);
   }
 
-  switcht_handle_t switcht_api_nhop_create(const switcht_device_t device, const switcht_handle_t interface_handle) {
+  switcht_handle_t switcht_api_nhop_create(const switcht_device_t device, const switcht_nhop_key_t& nhop_key) {
     // Your implementation goes here
     printf("switcht_api_nhop_create\n");
-    return switch_api_nhop_create(device, interface_handle);
+    switch_nhop_key_t lnhop_key;
+    memset(&lnhop_key, 0, sizeof(switch_nhop_key_t));
+    lnhop_key.intf_handle = nhop_key.intf_handle;
+    if (nhop_key.ip_addr_valid) {
+        switch_parse_ip_address(nhop_key.ip_addr, &lnhop_key.ip_addr);
+    }
+    return switch_api_nhop_create(device, &lnhop_key);
   }
 
   switcht_status_t switcht_api_nhop_delete(const switcht_handle_t handle) {
@@ -603,16 +609,20 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     return switch_api_logical_network_member_remove(network_handle, interface_handle);
   }
 
-  switcht_status_t switcht_api_vlan_ports_add(const switcht_handle_t vlan_handle, const switcht_interface_handle_t interface_handle) {
+  switcht_status_t switcht_api_vlan_ports_add(const switcht_handle_t vlan_handle, const switcht_vlan_port_t& vlan_port) {
     printf("switcht_api_add_ports_to_vlan\n");
-    switch_handle_t intf_handle = (switch_handle_t) (interface_handle);
-    return (switch_api_vlan_ports_add(vlan_handle, 1, &intf_handle));
+    switch_vlan_port_t lvlan_port;
+    lvlan_port.handle = vlan_port.handle;
+    lvlan_port.tagging_mode = (switch_vlan_tagging_mode_t)vlan_port.tagging_mode;
+    return (switch_api_vlan_ports_add(vlan_handle, 1, &lvlan_port));
   }
 
-  switcht_status_t switcht_api_vlan_ports_remove(const switcht_handle_t vlan_handle, const switcht_interface_handle_t interface_handle) {
+  switcht_status_t switcht_api_vlan_ports_remove(const switcht_handle_t vlan_handle, const switcht_vlan_port_t& vlan_port) {
     printf("switcht_api_remove_ports_from_vlan\n");
-    switch_handle_t intf_handle = (switch_handle_t) (interface_handle);
-    return (switch_api_vlan_ports_remove(vlan_handle, 1, &intf_handle));
+    switch_vlan_port_t lvlan_port;
+    lvlan_port.handle = vlan_port.handle;
+    lvlan_port.tagging_mode = (switch_vlan_tagging_mode_t) vlan_port.tagging_mode;
+    return (switch_api_vlan_ports_remove(vlan_handle, 1, &lvlan_port));
   }
 
   switcht_handle_t switcht_api_stp_group_create(const switcht_device_t device, const switcht_stp_mode_t stp_mode) {

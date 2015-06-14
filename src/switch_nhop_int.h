@@ -20,6 +20,9 @@ limitations under the License.
 
 #define MAX_ECMP_GROUP_SIZE     (64)
 
+#define SWITCH_NHOP_HASH_TABLE_SIZE 4096
+#define SWITCH_NHOP_HASH_KEY_SIZE  32
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -46,7 +49,10 @@ typedef struct switch_ecmp_info_
 
 typedef struct switch_spath_info_
 {
-    switch_handle_t interface_handle;
+    switch_nhop_key_t nhop_key;
+    tommy_node node;
+    switch_handle_t nhop_handle;
+    switch_handle_t neighbor_handle;
 #ifdef SWITCH_PD
     p4_pd_entry_hdl_t hw_entry;
     p4_pd_entry_hdl_t urpf_hw_entry;

@@ -54,6 +54,7 @@ typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
 typedef unsigned long switch_port_t;
 typedef unsigned char switch_device_t;
+typedef unsigned int switch_vrf_id_t;
 
     
 /** Direction - ingress, egress or both */

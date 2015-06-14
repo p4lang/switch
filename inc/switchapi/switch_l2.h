@@ -58,12 +58,19 @@ typedef enum switch_mac_attr_ {
     SWITCH_MAC_ATTR_CUSTOM_RANGE_BASE = 0x10000000
 } switch_mac_attr_t;
 
+/** Mac action */
+typedef enum switch_mac_action_ {
+    SWITCH_MAC_ACTION_DROP,
+    SWITCH_MAC_ACTION_FORWARD
+} switch_mac_action_t;
+
 /** Mac entry */
 typedef struct switch_api_mac_entry_ {
     switch_handle_t vlan_handle;                                 /**< vlan handle */
     switch_mac_addr_t mac;                                       /**< mac address */
     switch_handle_t handle;                                      /**< Interface or nexthop handle */
     switch_mac_entry_type_t entry_type;                          /**< entry type */
+    switch_mac_action_t mac_action;                              /**< mac action */
 } switch_api_mac_entry_t;
 
 /**
@@ -159,7 +166,8 @@ switch_status_t switch_api_mac_table_entries_delete_by_vlan(switch_handle_t vlan
  @param interface_handle idenfies the interface
  @param vlan_handle idenifes the VLAN (domain)
 */
-switch_status_t switch_api_mac_table_entries_delete_by_interface_vlan(switch_handle_t interface_handle, switch_handle_t vlan_handle);
+switch_status_t switch_api_mac_table_entries_delete_by_interface_vlan(switch_handle_t interface_handle,
+                                                                      switch_handle_t vlan_handle);
 
 /**
  Register a calback function for mac learning

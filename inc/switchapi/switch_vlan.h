@@ -26,6 +26,8 @@ limitations under the License.
 extern "C" {
 #endif /* __cplusplus */
 
+#define SWITCH_API_MAX_VLANS 4096
+
 /** Logical Network Type */
 typedef enum {
     SWITCH_LOGICAL_NETWORK_TYPE_NONE,               /**< Unitialized domain type */
@@ -101,12 +103,18 @@ typedef enum _switch_vlan_stat_counter_t
     SWITCH_VLAN_STAT_IF_OUT_QLEN
 } switch_vlan_stat_counter_t;
 
+/** vlan port info */
+typedef struct switch_vlan_port_ {
+    switch_handle_t handle;                    /**< port or interface handle */
+    switch_vlan_tagging_mode_t tagging_mode;   /**< tagging mode */
+} switch_vlan_port_t;
+
 /** Logical Network information */
 typedef struct switch_logical_network_ {
-    switch_logical_network_type_t type;           /**< Type of logical network */
-    switch_handle_t vrf_handle;                   /**< VRF of domain */
-    switch_handle_t rmac_handle;            /**< RMAC Group */
-    switch_encap_info_t encap_info;               /**< Logical network encap */
+    switch_logical_network_type_t type;       /**< Type of logical network */
+    switch_handle_t vrf_handle;               /**< VRF of domain */
+    switch_handle_t rmac_handle;              /**< RMAC Group */
+    switch_encap_info_t encap_info;           /**< Logical network encap */
 
     struct {
         uint8_t ipv4_unicast_enabled:1;       /**< v4 unicast enabled */
@@ -118,7 +126,7 @@ typedef struct switch_logical_network_ {
         uint8_t core_bd:1;                    /**< code or edge vlan */
     } flags;                                  /**< vlan flags */
 
-    switch_vlan_flood_type_t flood_type;          /**< flood type */
+    switch_vlan_flood_type_t flood_type;      /**< flood type */
     unsigned int age_interval;                /**< age interval for VLAN */
     unsigned int member_count;                /**< Count of members */
 
@@ -271,25 +279,26 @@ switch_status_t switch_api_vlan_aging_interval_set(switch_handle_t vlan_handle, 
   @param value - Value of mac age interval
 */
 switch_status_t switch_api_vlan_aging_interval_get(switch_handle_t vlan_handle, uint64_t *value);
+
 /**
   Add ports to vlan. By default, ports will be added to the flood list
   based on the flood type.
   @param vlan_handle - Vlan handle that identifies vlan uniquely
   @param port_count - Number of ports to be added to vlan
-  @param interface_handle - List of interfaces
+  @param vlan_port - List of interfaces/ports/lags
 */
-switch_status_t switch_api_vlan_ports_add(switch_handle_t vlan_handle, uint8_t port_count,
-                                  switch_handle_t *interface_handle);
+switch_status_t switch_api_vlan_ports_add(switch_handle_t vlan_handle, uint16_t port_count,
+                                  switch_vlan_port_t *vlan_port);
 
 /**
   Remove ports from vlan. By default, ports will be removed from flood list
   based on the flood type.
   @param vlan_handle - Vlan handle that identifies vlan uniquely
   @param port_count - Number of ports to be removed from vlan
-  @param interface_handle - List of interfaces
+  @param vlan_port- List of interfaces/ports/lags
 */
-switch_status_t switch_api_vlan_ports_remove(switch_handle_t vlan_handle, uint8_t port_count,
-                                     switch_handle_t *interface_handle);
+switch_status_t switch_api_vlan_ports_remove(switch_handle_t vlan_handle, uint16_t port_count,
+                                  switch_vlan_port_t  *vlan_port);
 
 
 /**
@@ -307,6 +316,21 @@ switch_handle_t switch_api_logical_network_create(switch_device_t device,
 */
 switch_status_t switch_api_logical_network_delete(switch_device_t device, switch_handle_t network_handle);
 
+/**
+ Set vlan id to vlan handle mapping
+ @param vlan_id vlan id
+ @param vlan_handle vlan handle
+*/
+switch_status_t switch_api_vlan_id_to_handle_set(switch_vlan_t vlan_id,
+                                                 switch_handle_t vlan_handle);
+
+/**
+ Get vlan id to vlan handle mapping
+ @param vlan_id vlan id
+ @param vlan_handle vlan handle
+*/
+switch_status_t switch_api_vlan_id_to_handle_get(switch_vlan_t vlan_id,
+                                                 switch_handle_t *vlan_handle);
 /**
  Dump vlan table
  */

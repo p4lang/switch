@@ -50,6 +50,7 @@ switch_port_init()
                                      SWITCH_PORT_ID(port_info),
                                      port_info->ifindex,
                                      &(port_info->eg_lag_entry));
+        port_info->port_handle = id_to_handle(SWITCH_HANDLE_TYPE_PORT, index);
 #endif
     }
     return SWITCH_STATUS_SUCCESS;
@@ -58,6 +59,7 @@ switch_port_init()
 switch_port_info_t *
 switch_api_port_get_internal(switch_port_t port)
 {
+    port = handle_to_id(port);
     return &switch_port_info[port];
 }
 

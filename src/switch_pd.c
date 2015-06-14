@@ -60,49 +60,58 @@ switch_pd_dmac_table_add_entry(switch_device_t device,
     match_spec.ingress_metadata_bd = handle_to_id(mac_entry->vlan_handle);
     memcpy(match_spec.l2_metadata_lkp_mac_da, &mac_entry->mac, ETH_LEN);
 
-    if (mgid_index) {
-        p4_pd_dc_dmac_multicast_hit_action_spec_t action_spec;
-        memset(&action_spec, 0, sizeof(p4_pd_dc_dmac_multicast_hit_action_spec_t));
-        action_spec.action_mc_index = mgid_index;
-        status = p4_pd_dc_dmac_table_add_with_dmac_multicast_hit(g_sess_hdl,
-                                                           p4_pd_device,
-                                                           &match_spec,
-                                                           &action_spec,
-                                                           aging_time,
-                                                           entry_hdl);
-    } else {
-        switch(SWITCH_INTF_TYPE(intf_info)) {
-            case SWITCH_API_INTERFACE_L2_VLAN_ACCESS:
-            case SWITCH_API_INTERFACE_L2_VLAN_TRUNK:
-            case SWITCH_API_INTERFACE_L2_PORT_VLAN:
-            {
-                p4_pd_dc_dmac_hit_action_spec_t hit_action_spec;
-                memset(&hit_action_spec, 0, sizeof(p4_pd_dc_dmac_hit_action_spec_t));
-                hit_action_spec.action_ifindex = intf_info->ifindex;
-                status = p4_pd_dc_dmac_table_add_with_dmac_hit(g_sess_hdl,
+    if (mac_entry->mac_action == SWITCH_MAC_ACTION_FORWARD) {
+        if (mgid_index) {
+            p4_pd_dc_dmac_multicast_hit_action_spec_t action_spec;
+            memset(&action_spec, 0, sizeof(p4_pd_dc_dmac_multicast_hit_action_spec_t));
+            action_spec.action_mc_index = mgid_index;
+            status = p4_pd_dc_dmac_table_add_with_dmac_multicast_hit(g_sess_hdl,
+                                                               p4_pd_device,
+                                                               &match_spec,
+                                                               &action_spec,
+                                                               aging_time,
+                                                               entry_hdl);
+        } else {
+            switch(SWITCH_INTF_TYPE(intf_info)) {
+                case SWITCH_API_INTERFACE_L2_VLAN_ACCESS:
+                case SWITCH_API_INTERFACE_L2_VLAN_TRUNK:
+                case SWITCH_API_INTERFACE_L2_PORT_VLAN:
+                {
+                    p4_pd_dc_dmac_hit_action_spec_t hit_action_spec;
+                    memset(&hit_action_spec, 0, sizeof(p4_pd_dc_dmac_hit_action_spec_t));
+                    hit_action_spec.action_ifindex = intf_info->ifindex;
+                    status = p4_pd_dc_dmac_table_add_with_dmac_hit(g_sess_hdl,
                                                             p4_pd_device,
                                                             &match_spec,
                                                             &hit_action_spec,
                                                             aging_time,
                                                             entry_hdl);
-            }
-            break;
-            case SWITCH_API_INTERFACE_TUNNEL:
-            {
-                p4_pd_dc_dmac_redirect_nexthop_action_spec_t nhop_action_spec;
-                memset(&nhop_action_spec, 0, sizeof(p4_pd_dc_dmac_redirect_nexthop_action_spec_t));
-                nhop_action_spec.action_nexthop_index = nhop_index;
-                status = p4_pd_dc_dmac_table_add_with_dmac_redirect_nexthop(g_sess_hdl,
+                }
+                break;
+                case SWITCH_API_INTERFACE_TUNNEL:
+                {
+                    p4_pd_dc_dmac_redirect_nexthop_action_spec_t nhop_action_spec;
+                    memset(&nhop_action_spec, 0, sizeof(p4_pd_dc_dmac_redirect_nexthop_action_spec_t));
+                    nhop_action_spec.action_nexthop_index = nhop_index;
+                    status = p4_pd_dc_dmac_table_add_with_dmac_redirect_nexthop(g_sess_hdl,
                                                                           p4_pd_device,
                                                                           &match_spec,
                                                                           &nhop_action_spec,
                                                                           aging_time,
                                                                           entry_hdl);
+                }
+                break;
+                default:
+                    status = SWITCH_STATUS_INVALID_INTERFACE;
             }
-            break;
-            default:
-                status = SWITCH_STATUS_INVALID_INTERFACE;
         }
+    } else {
+        status = p4_pd_dc_dmac_table_add_with_dmac_drop(g_sess_hdl,
+                                                        p4_pd_device,
+                                                        &match_spec,
+                                                        aging_time,
+                                                        entry_hdl);
+
     }
 #endif /* P4_L2_DISABLE */
     p4_pd_complete_operations(g_sess_hdl);

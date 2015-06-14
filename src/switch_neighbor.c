@@ -21,6 +21,7 @@ limitations under the License.
 #include "switchapi/switch_utils.h"
 #include "switch_neighbor_int.h"
 #include "switch_tunnel_int.h"
+#include "switch_nhop_int.h"
 #include "switch_interface_int.h"
 #include "switch_pd.h"
 #include "switch_log.h"
@@ -293,6 +294,8 @@ switch_handle_t
 switch_api_neighbor_entry_add(switch_device_t device, switch_api_neighbor_t *neighbor)
 {
     switch_neighbor_info_t            *neighbor_info = NULL;
+    switch_nhop_info_t                *nhop_info = NULL;
+    switch_spath_info_t               *spath_info = NULL;
     switch_interface_info_t           *intf_info = NULL;
     switch_handle_t                    handle;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
@@ -309,6 +312,12 @@ switch_api_neighbor_entry_add(switch_device_t device, switch_api_neighbor_t *nei
 
 #ifdef SWITCH_PD
     if (neighbor->nhop_handle) {
+        nhop_info = switch_nhop_get(neighbor->nhop_handle);
+        if (!nhop_info) {
+            return SWITCH_STATUS_INVALID_HANDLE;
+        }
+        spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
+        spath_info->neighbor_handle = handle;
         status = switch_api_neighbor_entry_add_rewrite(device, neighbor_info);
     } else {
         status = switch_api_neighbor_entry_add_tunnel_rewrite(device, neighbor_info);
@@ -323,7 +332,9 @@ switch_api_neighbor_entry_add(switch_device_t device, switch_api_neighbor_t *nei
 switch_status_t
 switch_api_neighbor_entry_remove(switch_device_t device, switch_handle_t neighbor_handle)
 {
-    switch_neighbor_info_t *neighbor_info = NULL;
+    switch_neighbor_info_t            *neighbor_info = NULL;
+    switch_nhop_info_t                *nhop_info = NULL;
+    switch_spath_info_t               *spath_info = NULL;
 
     neighbor_info = switch_neighbor_info_get(neighbor_handle);
     if (!neighbor_info) {
@@ -331,6 +342,12 @@ switch_api_neighbor_entry_remove(switch_device_t device, switch_handle_t neighbo
     }
 #ifdef SWITCH_PD
     if (neighbor_info->neighbor.nhop_handle) {
+        nhop_info = switch_nhop_get(neighbor_info->neighbor.nhop_handle);
+        if (!nhop_info) {
+            return SWITCH_STATUS_INVALID_HANDLE;
+        }
+        spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
+        spath_info->neighbor_handle = 0;
         switch_pd_rewrite_table_delete_entry(device, neighbor_info->rewrite_entry);
     } else {
         switch_dmac_rewrite_delete_hash(&neighbor_info->neighbor.mac_addr);

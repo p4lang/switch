@@ -38,19 +38,15 @@ typedef struct switch_ip_encap_pd_hdl_ {
 
 /** Interface information */
 typedef struct switch_interface_info_ {
-    switch_device_t device;                 /**< For now, just one device */
+    switch_device_t device;                          /**< For now, just one device */
     switch_ifindex_t ifindex;
     switch_api_interface_info_t api_intf_info;
     switch_ip_encap_pd_hdl_t ip_encap_hdl;
-    // L2
-    //switch_handle_t nhop;                   /**< nhop handle valid for L2 */
-    // L3
-    unsigned int ip_addr_count;         /**< number of IP addresses on interface */
-    tommy_list ip_addr;                 /**< List of IP addresses */
-    unsigned int acl_label;             /**< ACL label */
-    switch_handle_t bd_handle;              /**< L3 Port Implicit BD Handle */
-    switch_handle_t ln_bd_handle;           /**< Logical network BD Handle */
-    // Can an interface contain set of nhop handles ?
+    unsigned int ip_addr_count;                      /**< number of IP addresses on interface */
+    tommy_list ip_addr;                              /**< List of IP addresses */
+    unsigned int acl_label;                          /**< ACL label */
+    switch_handle_t bd_handle;                       /**< L3 Port Implicit BD Handle */
+    switch_handle_t ln_bd_handle;                    /**< Logical network BD Handle */
     switch_handle_t nhop_handle;
     uint32_t rid;
 #ifdef SWITCH_PD
@@ -78,6 +74,9 @@ typedef struct switch_interface_info_ {
 
 #define SWITCH_INTF_PORT_HANDLE(info) \
     info->api_intf_info.u.port_lag_handle
+
+#define SWITCH_INTF_VLAN_ID(info) \
+    info->api_intf_info.u.vlan_id
 
 #define SWITCH_INTF_PV_PORT_HANDLE(info) \
     info->api_intf_info.u.port_vlan.port_lag_handle

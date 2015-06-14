@@ -20,8 +20,10 @@ limitations under the License.
 #include "switchapi/switch_vlan.h"
 #include "switchapi/switch_vrf.h"
 #include "switchapi/switch_capability.h"
+#include "switchapi/switch_rmac.h"
 #include "switch_pd.h"
 #include "switch_capability_int.h"
+#include "switch_rmac_int.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,19 +35,28 @@ int
 switch_capability_init()
 {
     switch_device_t device = SWITCH_DEV_ID;
+    switch_api_capability_t *api_switch_info = NULL;
+    switch_port_info_t *port_info = NULL;
+    int index = 0;
 
     switch_info = switch_malloc(sizeof(switch_capability_info_t), 1);
+    api_switch_info = &switch_info->api_switch_info;
     memset(switch_info, 0, sizeof(switch_capability_info_t));
+    memset(api_switch_info, 0, sizeof(switch_api_capability_t));
 
     // Create Default VLAN
-    switch_api_capability_attribute_set(SWITCH_ATTR_DEFAULT_VLAN_ID,
-                                        SWITCH_API_DEFAULT_VLAN);
-    switch_info->default_vlan = switch_api_vlan_create(device, SWITCH_API_DEFAULT_VLAN);
+    api_switch_info->default_vlan = SWITCH_API_DEFAULT_VLAN;
+    switch_info->default_vlan_handle = switch_api_vlan_create(device, SWITCH_API_DEFAULT_VLAN);
 
     // Create Default Vrf
-    switch_api_capability_attribute_set(SWITCH_ATTR_DEFAULT_VRF_ID,
-                                        SWITCH_API_DEFAULT_VRF);
-    switch_info->default_vrf = switch_api_vrf_create(device, SWITCH_API_DEFAULT_VRF);
+    api_switch_info->default_vrf = SWITCH_API_DEFAULT_VRF;
+    switch_info->default_vrf_handle = switch_api_vrf_create(device, SWITCH_API_DEFAULT_VRF);
+
+    api_switch_info->max_ports = SWITCH_API_MAX_DEFAULT_PORTS;
+    for (index = 0; index < SWITCH_API_MAX_DEFAULT_PORTS; index++) {
+        port_info = switch_api_port_get_internal((switch_port_t)index);
+        api_switch_info->port_list[index] = port_info->port_handle;
+    }
     return SWITCH_STATUS_SUCCESS;
 }
 
@@ -61,49 +72,38 @@ switch_api_default_vrf_internal()
     return switch_info->default_vrf_handle;
 }
 
-switch_status_t
-switch_api_capability_attribute_set(switch_capability_attr_t attr_type, uint64_t value)
+switch_handle_t
+switch_api_capability_rmac_handle_get()
 {
+    return switch_info->rmac_handle;
+}
+
+uint16_t
+switch_api_capability_smac_index_get()
+{
+    return switch_info->smac_index;
+}
+
+switch_status_t
+switch_api_capability_set(switch_api_capability_t *api_switch_info) {
+    switch_device_t device = SWITCH_DEV_ID;
     switch_status_t status = SWITCH_STATUS_SUCCESS;
+    switch_mac_addr_t mac;
 
-    if (!switch_info) {
-        return SWITCH_STATUS_SUCCESS;
-    }
-
-    switch(attr_type) {
-        case SWITCH_ATTR_DEFAULT_VLAN_ID:
-            switch_info->default_vlan = value;
-        break;
-
-        case SWITCH_ATTR_DEFAULT_VRF_ID:
-            switch_info->default_vrf = value;
-        break;
-
-        default:
-            status = SWITCH_STATUS_SUCCESS;
+    memset(&mac, 0, sizeof(switch_mac_addr_t));
+    if (memcmp(&api_switch_info->switch_mac, &mac, ETH_LEN) != 0) {
+        memcpy(&switch_info->api_switch_info.switch_mac, &api_switch_info->switch_mac, ETH_LEN);
+        switch_info->rmac_handle = switch_api_router_mac_group_create();
+        status = switch_api_router_mac_add(device, switch_info->rmac_handle, &api_switch_info->switch_mac);
+        switch_info->smac_index = switch_smac_rewrite_add_entry(&api_switch_info->switch_mac);
     }
     return status;
 }
-    
+
 switch_status_t
-switch_api_capability_attribute_get(switch_capability_attr_t attr_type, uint64_t *value)
-{
-    switch_status_t status = SWITCH_STATUS_SUCCESS;
-
-    *value = 0;
-    switch(attr_type) {
-        case SWITCH_ATTR_DEFAULT_VLAN_ID:
-            *value = switch_info->default_vlan;
-        break;
-
-        case SWITCH_ATTR_DEFAULT_VRF_ID:
-            *value = switch_info->default_vrf;
-        break;
-
-        default:
-            status = SWITCH_STATUS_SUCCESS;
-    }
-    return status;
+switch_api_capability_get(switch_api_capability_t *api_switch_info) {
+    memcpy(api_switch_info, &switch_info->api_switch_info, sizeof(switch_api_capability_t));
+    return SWITCH_STATUS_SUCCESS;
 }
 
 #ifdef __cplusplus

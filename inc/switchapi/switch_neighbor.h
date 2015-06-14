@@ -59,11 +59,11 @@ typedef struct switch_api_neighbor_ {
     switch_handle_t vrf_handle;             /**< vrf instance */
     switch_ip_addr_t ip_addr;               /**< IP address */
     switch_handle_t nhop_handle;            /**< Next hop handle for neighbor */
-    switch_handle_t interface;    /**< interface on which address is */
+    switch_handle_t interface;              /**< interface on which address is */
     switch_vlan_t vlan;                     /**< Override VLAN */
     switch_mac_addr_t mac_addr;             /**< MAC of destination */
-    uint32_t mpls_label;                /**< Mpls label for swap and swap-push */
-    uint8_t header_count;               /**< Header count for swap-push and push */
+    uint32_t mpls_label;                    /**< Mpls label for swap and swap-push */
+    uint8_t header_count;                   /**< Header count for swap-push and push */
 } switch_api_neighbor_t;
 
 /**

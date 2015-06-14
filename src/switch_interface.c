@@ -25,6 +25,7 @@ limitations under the License.
 #include "switch_pd.h"
 #include "switch_sup_int.h"
 #include "switch_log.h"
+#include "switch_capability_int.h"
 
 #include <string.h>
 
@@ -138,6 +139,7 @@ switch_api_interface_create_l3(switch_handle_t intf_handle, switch_interface_inf
     switch_lag_info_t                 *lag_info = NULL;
     switch_api_interface_info_t       *api_intf_info = NULL;
     switch_vlan_t                      vlan_id = 0;
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
 
     tommy_list_init(&(intf_info->ip_addr));
     api_intf_info = &intf_info->api_intf_info;
@@ -150,6 +152,9 @@ switch_api_interface_create_l3(switch_handle_t intf_handle, switch_interface_inf
         case SWITCH_API_INTERFACE_L3_PORT_VLAN:
             vlan_id = SWITCH_INTF_PV_VLAN_ID(intf_info);
             break;
+
+        case SWITCH_API_INTERFACE_L3_VLAN:
+            vlan_id = SWITCH_INTF_VLAN_ID(intf_info);
 
         default:
             SWITCH_API_ERROR("%s:%d: unsupported interface type!", __FUNCTION__, __LINE__);
@@ -171,17 +176,20 @@ switch_api_interface_create_l3(switch_handle_t intf_handle, switch_interface_inf
     memset(ln_info, 0, sizeof(switch_logical_network_t));
     ln_info->type = SWITCH_LOGICAL_NETWORK_TYPE_L3;
     ln_info->vrf_handle = api_intf_info->vrf_handle;
-    ln_info->rmac_handle = api_intf_info->rmac_handle;
     ln_info->flags.ipv4_unicast_enabled = TRUE;
     ln_info->flags.ipv6_unicast_enabled = TRUE;
+    if (!api_intf_info->rmac_handle) {
+        api_intf_info->rmac_handle = switch_api_capability_rmac_handle_get();
+    }
+    ln_info->rmac_handle = api_intf_info->rmac_handle;
     intf_info->bd_handle = switch_api_logical_network_create(device, ln_info);
     switch_api_interface_ipv4_urpf_mode_set(intf_handle, api_intf_info->ipv4_urpf_mode);
     bd_info = switch_bd_get(intf_info->bd_handle);
-    switch_pd_port_vlan_mapping_table_add_entry(device, vlan_id, 0,
+    status = switch_pd_port_vlan_mapping_table_add_entry(device, vlan_id, 0,
                                            intf_info,
                                            bd_info->bd_entry,
                                            &(intf_info->pv_entry));
-    return SWITCH_STATUS_SUCCESS;
+    return status;
 }
     
 switch_handle_t

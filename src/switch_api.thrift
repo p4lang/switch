@@ -363,6 +363,17 @@ struct switcht_acl_ipv6racl_key_value_pair_t {
     3: i64 mask;
 }
 
+struct switcht_vlan_port_t {
+    1: switcht_handle_t handle;
+    2: i16 tagging_mode;
+}
+
+struct switcht_nhop_key_t {
+    1: switcht_handle_t intf_handle;
+    2: switcht_ip_addr_t ip_addr;
+    3: bool ip_addr_valid;
+}
+
 typedef i32 switcht_acl_action_t
 
 service switch_api_rpc {
@@ -399,7 +410,7 @@ service switch_api_rpc {
     switcht_status_t switcht_api_l3_interface_address_delete(1:switcht_interface_handle_t interface_handle, 2:switcht_handle_t vrf, 3:switcht_ip_addr_t ip_addr);
 
     /* next hop */
-    switcht_handle_t switcht_api_nhop_create(1:switcht_device_t device, 2:switcht_handle_t interface_handle);
+    switcht_handle_t switcht_api_nhop_create(1:switcht_device_t device, 2:switcht_nhop_key_t nhop_key);
     switcht_status_t switcht_api_nhop_delete(1:switcht_handle_t handle);
     switcht_status_t switcht_api_nhop_print_all();
     
@@ -415,8 +426,8 @@ service switch_api_rpc {
 
     /* VLAN */
     switcht_handle_t switcht_api_vlan_create(1:switcht_device_t device, 2:switcht_vlan_t vlan_id);
-    switcht_status_t switcht_api_vlan_ports_add(1: switcht_handle_t vlan_handle, 2: switcht_interface_handle_t interface_handle);
-    switcht_status_t switcht_api_vlan_ports_remove(1:switcht_handle_t vlan_handle, 2:switcht_interface_handle_t interface_handle);
+    switcht_status_t switcht_api_vlan_ports_add(1: switcht_handle_t vlan_handle, 2: switcht_vlan_port_t port_vlan);
+    switcht_status_t switcht_api_vlan_ports_remove(1:switcht_handle_t vlan_handle, 2: switcht_vlan_port_t port_vlan);
     switcht_status_t switcht_api_vlan_delete(1:switcht_handle_t vlan_handle);
     switcht_status_t switcht_api_vlan_print_all();
 

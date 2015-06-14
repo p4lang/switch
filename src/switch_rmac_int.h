@@ -47,6 +47,8 @@ switch_status_t switch_router_mac_init(void);
 switch_status_t switch_router_mac_free(void);
 switch_rmac_info_t * switch_api_rmac_info_get_internal(switch_handle_t rmac_handle);
  
+uint16_t switch_smac_rewrite_add_entry(switch_mac_addr_t *mac);
+switch_status_t switch_smac_rewrite_delete_entry(switch_mac_addr_t *mac);
 #ifdef __cplusplus
 }
 #endif

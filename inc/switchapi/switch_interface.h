@@ -53,8 +53,8 @@ typedef enum switch_interface_type_ {
 
 /** Restrict VLAN behavior on a particular port (RoCE like) */
 typedef struct switch_port_vlan_ {
-    switch_handle_t port_lag_handle;               /**< Port or lag */
-    switch_vlan_t vlan_id;                         /**< VLAN id on port */
+    switch_handle_t port_lag_handle;                  /**< Port or lag */
+    switch_vlan_t vlan_id;                            /**< VLAN id on port */
 } switch_port_vlan_t;
 
 /** Interface attributes */
@@ -70,31 +70,31 @@ typedef enum switch_intf_attr_ {
 
 /** Interface information */
 typedef struct switch_api_interface_info_ {
-    switch_interface_type_t type;              /**< type of interface */
+    switch_interface_type_t type;                  /**< type of interface */
     union {
         switch_handle_t port_lag_handle;           /**< Port or LAG handle */
-        switch_vlan_t vlan_id;                 /**< SVI Inteface */
-        switch_port_vlan_t port_vlan;          /**< L3 sub Interface */
+        switch_vlan_t vlan_id;                     /**< SVI Inteface */
+        switch_port_vlan_t port_vlan;              /**< L3 sub Interface */
         switch_tunnel_info_t tunnel_info;          /**< Tunnel handle */
-    } u;                                       /**< Base information */
+    } u;                                           /**< Base information */
 
     struct {
-        uint8_t core_intf:1;                   /**< interface flags */
-        uint8_t flood_enabled:1;                /**< Add to flood list (only for tunnels) */
-    } flags;                                   /**< interface flags struct */
+        uint8_t core_intf:1;                       /**< interface flags */
+        uint8_t flood_enabled:1;                   /**< Add to flood list (only for tunnels) */
+    } flags;                                       /**< interface flags struct */
     // L2
     switch_handle_t native_vlan;                   /**< native vlan id */
     // L3
-    bool ipv4_unicast_enabled;                 /**< IPv4 unicast enabled */
-    bool ipv6_unicast_enabled;                 /**< IPv6 unicast enabled */
-    uint8_t ipv4_mcast_mode;                   /**< IPv4 multicast mode */
-    uint8_t ipv6_mcast_mode;                   /**< IPV6 multicast mode */
+    bool ipv4_unicast_enabled;                     /**< IPv4 unicast enabled */
+    bool ipv6_unicast_enabled;                     /**< IPv6 unicast enabled */
+    uint8_t ipv4_mcast_mode;                       /**< IPv4 multicast mode */
+    uint8_t ipv6_mcast_mode;                       /**< IPV6 multicast mode */
     switch_urpf_mode_t ipv4_urpf_mode;             /**< IPv4 urpf mode */
     switch_urpf_mode_t ipv6_urpf_mode;             /**< IPv6 urpf mode */
-    unsigned char nat_mode;                    /**< nat mode */
+    unsigned char nat_mode;                        /**< nat mode */
     switch_handle_t vrf_handle;                    /**< vrf handle */
     switch_mac_addr_t mac;                         /**< Mac address associated with interface */
-    switch_handle_t rmac_handle;             /**< rmac group id */
+    switch_handle_t rmac_handle;                   /**< rmac group id */
 } switch_api_interface_info_t;
 
 /**
