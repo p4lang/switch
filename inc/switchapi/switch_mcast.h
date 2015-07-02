@@ -39,9 +39,10 @@ switch_handle_t switch_api_multicast_tree_create(switch_device_t device);
 
 /**
   Delete a multicast tree
+  @param device - device that programs the tree
   @param mgid_handle - Handle that uniquely identifies multicast tree
 */
-switch_status_t switch_api_multicast_tree_delete(switch_handle_t mgid_handle);
+switch_status_t switch_api_multicast_tree_delete(switch_device_t device, switch_handle_t mgid_handle);
 
 /**
  Add a list of members to multicast tree

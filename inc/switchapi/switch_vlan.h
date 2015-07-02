@@ -147,17 +147,18 @@ typedef struct switch_logical_network_ {
 
 /**
  VLAN create
- @param device device on which to create VLAN
+ @param device device
  @param vlan_id Id of the VLAN
 */
 switch_handle_t switch_api_vlan_create(switch_device_t device, switch_vlan_t vlan_id);
 
 /**
  Delete VLAN
+ @param device device
  @param vlan_handle handle of VLAN returned by create
 */
 
-switch_status_t switch_api_vlan_delete(switch_handle_t vlan_handle);
+switch_status_t switch_api_vlan_delete(switch_device_t device, switch_handle_t vlan_handle);
 
 /**
   Set a value for an attribute. There is a list of attributes
@@ -283,22 +284,24 @@ switch_status_t switch_api_vlan_aging_interval_get(switch_handle_t vlan_handle, 
 /**
   Add ports to vlan. By default, ports will be added to the flood list
   based on the flood type.
+  @param device device
   @param vlan_handle - Vlan handle that identifies vlan uniquely
   @param port_count - Number of ports to be added to vlan
   @param vlan_port - List of interfaces/ports/lags
 */
-switch_status_t switch_api_vlan_ports_add(switch_handle_t vlan_handle, uint16_t port_count,
-                                  switch_vlan_port_t *vlan_port);
+switch_status_t switch_api_vlan_ports_add(switch_device_t device, switch_handle_t vlan_handle,
+                                          uint16_t port_count, switch_vlan_port_t *vlan_port);
 
 /**
   Remove ports from vlan. By default, ports will be removed from flood list
   based on the flood type.
+  @param device device
   @param vlan_handle - Vlan handle that identifies vlan uniquely
   @param port_count - Number of ports to be removed from vlan
   @param vlan_port- List of interfaces/ports/lags
 */
-switch_status_t switch_api_vlan_ports_remove(switch_handle_t vlan_handle, uint16_t port_count,
-                                  switch_vlan_port_t  *vlan_port);
+switch_status_t switch_api_vlan_ports_remove(switch_device_t device, switch_handle_t vlan_handle,
+                                             uint16_t port_count, switch_vlan_port_t  *vlan_port);
 
 
 /**

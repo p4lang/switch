@@ -36,13 +36,13 @@ extern "C" {
 static void *switch_interface_array;
 
 switch_status_t
-switch_interface_init(void)
+switch_interface_init(switch_device_t device)
 {
     return switch_handle_type_init(SWITCH_HANDLE_TYPE_INTERFACE, (16*1024));
 }
     
 switch_status_t
-switch_interface_free(void)
+switch_interface_free(switch_device_t device)
 {
     switch_handle_type_free(SWITCH_HANDLE_TYPE_INTERFACE);
     return SWITCH_STATUS_SUCCESS;
@@ -88,7 +88,8 @@ switch_api_interface_get_from_ifindex(switch_ifindex_t ifindex)
 }
 
 switch_status_t
-switch_api_interface_create_l2(switch_handle_t intf_handle, switch_interface_info_t *intf_info)
+switch_api_interface_create_l2(switch_device_t device, switch_handle_t intf_handle,
+                               switch_interface_info_t *intf_info)
 {
     switch_port_info_t                *port_info = NULL;
     switch_lag_info_t                 *lag_info = NULL;
@@ -128,9 +129,9 @@ switch_api_interface_create_l2(switch_handle_t intf_handle, switch_interface_inf
 }
 
 switch_status_t
-switch_api_interface_create_l3(switch_handle_t intf_handle, switch_interface_info_t *intf_info)
+switch_api_interface_create_l3(switch_device_t device, switch_handle_t intf_handle,
+                               switch_interface_info_t *intf_info)
 {
-    switch_device_t                    device = SWITCH_DEV_ID;
     switch_handle_t                    port_handle = 0;
     switch_logical_network_t           ln_info_tmp;
     switch_logical_network_t          *ln_info = NULL;
@@ -213,11 +214,11 @@ switch_api_interface_create(switch_device_t device, switch_api_interface_info_t 
         case SWITCH_API_INTERFACE_L2_VLAN_ACCESS:
         case SWITCH_API_INTERFACE_L2_VLAN_TRUNK:
         case SWITCH_API_INTERFACE_L2_PORT_VLAN:
-            switch_api_interface_create_l2(intf_handle, intf_info);
+            switch_api_interface_create_l2(device, intf_handle, intf_info);
         break;
         case SWITCH_API_INTERFACE_L3: // Pure L3 Port
         case SWITCH_API_INTERFACE_L3_PORT_VLAN: // L3 Sub-Intf
-            switch_api_interface_create_l3(intf_handle, intf_info);
+            switch_api_interface_create_l3(device, intf_handle, intf_info);
             break;
 
         case SWITCH_API_INTERFACE_TUNNEL: // L3 tunnel
@@ -244,10 +245,9 @@ switch_api_interface_create(switch_device_t device, switch_api_interface_info_t 
 }
     
 switch_status_t
-switch_api_interface_delete(switch_handle_t handle)
+switch_api_interface_delete(switch_device_t device, switch_handle_t handle)
 {
     switch_interface_info_t           *interface_info = NULL;
-    switch_device_t                    device = SWITCH_DEV_ID;
 
     interface_info = switch_api_interface_get(handle);
 

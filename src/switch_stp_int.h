@@ -35,7 +35,7 @@ typedef struct {
 
 typedef struct {
     tommy_node node;
-    switch_handle_t vlan_handle;
+    switch_handle_t bd_handle;
 } switch_stp_vlan_entry_t;
 
 typedef struct switch_stp_info_ {
@@ -44,8 +44,8 @@ typedef struct switch_stp_info_ {
 } switch_stp_info_t;
 
 /* Internal API's */
-switch_status_t switch_stp_init();
-switch_status_t switch_stp_free();
+switch_status_t switch_stp_init(switch_device_t device);
+switch_status_t switch_stp_free(switch_device_t device);
 switch_stp_info_t *switch_api_stp_get_internal(switch_handle_t stp_handle);
 switch_status_t switch_stp_update_flood_list(switch_device_t device, switch_handle_t stg_handle,
                                      switch_handle_t intf_handle, switch_stp_state_t state);

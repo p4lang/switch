@@ -46,8 +46,8 @@ typedef struct switch_acl_info_ {
     tommy_list  interface_list;
 } switch_acl_info_t;
 
-switch_status_t switch_acl_init();
-switch_status_t switch_acl_free();
+switch_status_t switch_acl_init(switch_device_t device);
+switch_status_t switch_acl_free(switch_device_t device);
 
 #ifdef __cplusplus
 }

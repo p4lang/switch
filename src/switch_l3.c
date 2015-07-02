@@ -55,7 +55,7 @@ prefix_to_v6_mask(unsigned int prefix, uint8_t *mask)
 }
 
 switch_status_t
-switch_l3_init(void)
+switch_l3_init(switch_device_t device)
 {
     // IP + VRF Hash table init (V4 only for now!)
     tommy_hashtable_init(&switch_l3_hash_table, SWITCH_L3_HASH_TABLE_SIZE);
@@ -64,7 +64,7 @@ switch_l3_init(void)
 }
 
 switch_status_t
-switch_l3_free(void)
+switch_l3_free(switch_device_t device)
 {
     tommy_hashtable_done(&switch_l3_hash_table);
     switch_handle_type_free(SWITCH_HANDLE_TYPE_URPF);
@@ -241,7 +241,8 @@ switch_l3_search_hash(switch_handle_t vrf, switch_ip_addr_t *ip_addr)
 }
 
 switch_status_t
-switch_api_l3_interface_address_add(switch_handle_t interface_handle,
+switch_api_l3_interface_address_add(switch_device_t device,
+                                    switch_handle_t interface_handle,
                                     switch_handle_t vrf_handle,
                                     switch_ip_addr_t *ip_addr)
 {
@@ -271,7 +272,8 @@ switch_api_l3_interface_address_add(switch_handle_t interface_handle,
 }
 
 switch_status_t
-switch_api_l3_interface_address_delete(switch_handle_t interface_handle,
+switch_api_l3_interface_address_delete(switch_device_t device,
+                                       switch_handle_t interface_handle,
                                        switch_handle_t vrf_handle,
                                        switch_ip_addr_t *ip_addr)
 {

@@ -24,10 +24,9 @@ static switch_port_info_t switch_port_info[SWITCH_API_MAX_PORTS];
 // port_table_delete(entry);
 
 switch_status_t
-switch_port_init()
+switch_port_init(switch_device_t device)
 {
     switch_port_info_t                *port_info = NULL;
-    switch_device_t                    device = SWITCH_DEV_ID;
     int                                index = 0;
 
     memset(switch_port_info, 0, sizeof(switch_port_info_t) * SWITCH_API_MAX_PORTS);
@@ -64,7 +63,7 @@ switch_api_port_get_internal(switch_port_t port)
 }
 
 switch_status_t
-switch_api_port_set(switch_api_port_info_t *api_port_info)
+switch_api_port_set(switch_device_t device, switch_api_port_info_t *api_port_info)
 {
     switch_port_info_t *port_info = switch_api_port_get_internal(api_port_info->port_number);
     // blindly overwrite the values - may need to get a modify later!

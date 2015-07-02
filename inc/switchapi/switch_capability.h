@@ -100,15 +100,17 @@ typedef struct switch_api_capability_ {
 
 /**
  Sets switch capability attributes
+ @param device device
  @param api_capability switch capability attributes
  */
-switch_status_t switch_api_capability_set(switch_api_capability_t *api_capability);
+switch_status_t switch_api_capability_set(switch_device_t device, switch_api_capability_t *api_capability);
 
 /**
  Returns all switch capability attributes
+ @param device device
  @param api_capability switch capability attributes
  */
-switch_status_t switch_api_capability_get(switch_api_capability_t *api_capability);
+switch_status_t switch_api_capability_get(switch_device_t device, switch_api_capability_t *api_capability);
 
 /** @} */ // end of switch API
 

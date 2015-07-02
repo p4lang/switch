@@ -56,9 +56,10 @@ switch_handle_t switch_api_lag_create(switch_device_t device);
     
 /**
  Link Aggregation Group deletion
+ @param device device to use
  @param lag_handle handle of group returned on creation
  */
-switch_status_t switch_api_lag_delete(switch_handle_t lag_handle);
+switch_status_t switch_api_lag_delete(switch_device_t device, switch_handle_t lag_handle);
 
 /**
  Link Aggregation Group member port add

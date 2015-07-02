@@ -32,7 +32,7 @@ static switch_api_id_allocator *lag_select;
 #define SWITCH_INITIAL_LAG_SIZE 16
     
 switch_status_t
-switch_lag_init(void)
+switch_lag_init(switch_device_t device)
 {
     switch_lag_array = NULL;
     lag_select = switch_api_id_allocator_new(64 * 1024/ 32);
@@ -40,7 +40,7 @@ switch_lag_init(void)
 }
     
 switch_status_t
-switch_lag_free(void)
+switch_lag_free(switch_device_t device)
 {
     switch_handle_type_free(SWITCH_HANDLE_TYPE_LAG);
     return SWITCH_STATUS_SUCCESS;
@@ -100,7 +100,7 @@ switch_api_lag_create(switch_device_t device)
 }
     
 switch_status_t
-switch_api_lag_delete(switch_handle_t lag_handle)
+switch_api_lag_delete(switch_device_t device, switch_handle_t lag_handle)
 {
     switch_lag_info_t *lag_info = NULL;
 

@@ -42,7 +42,7 @@ static tommy_hashtable switch_rid_hash_table;
 static switch_api_id_allocator *switch_rid_allocator;
 
 switch_status_t
-switch_mcast_init()
+switch_mcast_init(switch_device_t device)
 {
     switch_mcast_array = NULL;
     switch_handle_type_init(SWITCH_HANDLE_TYPE_MGID, SWITCH_MGID_TABLE_SIZE);
@@ -54,7 +54,7 @@ switch_mcast_init()
 }
 
 switch_status_t
-switch_mcast_switch_free()
+switch_mcast_switch_free(switch_device_t device)
 {
     switch_handle_type_free(SWITCH_HANDLE_TYPE_MGID);
     tommy_hashtable_done(&switch_rid_hash_table);
@@ -234,7 +234,7 @@ switch_api_multicast_tree_create(switch_device_t device)
 }
 
 switch_status_t
-switch_api_multicast_tree_delete(switch_handle_t mgid_handle)
+switch_api_multicast_tree_delete(switch_device_t device, switch_handle_t mgid_handle)
 {
     return switch_api_mcast_index_delete(mgid_handle);
 }

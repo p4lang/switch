@@ -40,23 +40,31 @@ typedef struct switch_mpls_info_ {
     p4_pd_entry_hdl_t tunnel_hw_entry;
 } switch_mpls_info_t;
 
-switch_status_t switch_tunnel_init();
-switch_status_t switch_tunnel_free();
+switch_status_t switch_tunnel_init(switch_device_t device);
+switch_status_t switch_tunnel_free(switch_device_t device);
 
 uint16_t switch_tunnel_src_vtep_index_get(switch_handle_t vrf, switch_ip_addr_t *ip_addr);
 uint16_t switch_tunnel_dst_vtep_index_get(switch_handle_t vrf, switch_ip_addr_t *ip_addr);
 
 switch_status_t
-switch_api_logical_network_member_add_basic(switch_handle_t bd_handle, switch_handle_t intf_handle);
+switch_api_logical_network_member_add_basic(switch_device_t device,
+                                            switch_handle_t bd_handle,
+                                            switch_handle_t intf_handle);
 
 switch_status_t
-switch_api_logical_network_member_remove_basic(switch_handle_t bd_handle, switch_handle_t intf_handle);
+switch_api_logical_network_member_remove_basic(switch_device_t device, 
+                                               switch_handle_t bd_handle,
+                                               switch_handle_t intf_handle);
 
 switch_status_t
-switch_api_logical_network_member_add_enhanced(switch_handle_t bd_handle, switch_handle_t intf_handle);
+switch_api_logical_network_member_add_enhanced(switch_device_t device,
+                                               switch_handle_t bd_handle,
+                                               switch_handle_t intf_handle);
 
 switch_status_t
-switch_api_logical_network_member_remove_enhanced(switch_handle_t bd_handle, switch_handle_t intf_handle);
+switch_api_logical_network_member_remove_enhanced(switch_device_t device,
+                                                  switch_handle_t bd_handle,
+                                                  switch_handle_t intf_handle);
 
 uint16_t switch_tunnel_get_tunnel_vni(switch_encap_info_t *encap_info); 
 

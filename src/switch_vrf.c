@@ -28,14 +28,14 @@ extern "C" {
 static void *switch_vrf_array;
 
 switch_status_t
-switch_vrf_init(void)
+switch_vrf_init(switch_device_t device)
 {
     switch_vrf_array = NULL;
     return switch_handle_type_init(SWITCH_HANDLE_TYPE_VRF, (16*1024));
 }
 
 switch_status_t
-switch_vrf_free(void)
+switch_vrf_free(switch_device_t device)
 {
     switch_handle_type_free(SWITCH_HANDLE_TYPE_VRF);
     return SWITCH_STATUS_SUCCESS;
@@ -75,7 +75,7 @@ switch_api_vrf_create(switch_device_t device, switch_vrf_id_t vrf_id)
 }
 
 switch_status_t
-switch_api_vrf_delete(switch_handle_t handle)
+switch_api_vrf_delete(switch_device_t device, switch_handle_t handle)
 {
     switch_vrf_info_t *vrf_info = NULL;
 

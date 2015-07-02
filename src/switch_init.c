@@ -41,23 +41,23 @@ switch_status_t
 switch_api_lib_init(switch_device_t device)
 {
     SWITCH_API_TRACE("Initializing switch api!!");
-    switch_pd_client_init();
-    switch_sup_init();
-    switch_router_mac_init();
-    switch_port_init();
-    switch_bd_init();
-    switch_lag_init();
-    switch_interface_init();
+    switch_pd_client_init(device);
+    switch_sup_init(device);
+    switch_router_mac_init(device);
+    switch_port_init(device);
+    switch_bd_init(device);
+    switch_lag_init(device);
+    switch_interface_init(device);
     switch_mac_table_init(device);
-    switch_l3_init();
-    switch_vrf_init();
-    switch_neighbor_init();
-    switch_nhop_init();
-    switch_mcast_init();
-    switch_capability_init();
-    switch_acl_init();
-    switch_stp_init();
-    switch_tunnel_init();
+    switch_l3_init(device);
+    switch_vrf_init(device);
+    switch_neighbor_init(device);
+    switch_nhop_init(device);
+    switch_mcast_init(device);
+    switch_capability_init(device);
+    switch_acl_init(device);
+    switch_stp_init(device);
+    switch_tunnel_init(device);
     return SWITCH_STATUS_SUCCESS;
 }
 
@@ -107,6 +107,9 @@ switch_api_init_default_entries(switch_device_t device)
     switch_pd_vlan_decap_table_init_entry(device);
     switch_pd_fwd_result_table_add_init_entry(device);
     switch_pd_validate_mpls_packet_table_init_entry(device);
+    switch_pd_fabric_header_table_init_entry(device);
+    switch_pd_egress_port_mapping_table_init_entry(device);
+    switch_pd_compute_multicast_hashes_init_entry(device);
     return SWITCH_STATUS_SUCCESS;
 }
 
@@ -128,8 +131,10 @@ switch_api_init_default_acl_entries(switch_device_t device)
     urpf_check_acl_kvp.field = SWITCH_ACL_SYSTEM_FIELD_URPF_CHECK;
     urpf_check_acl_kvp.value.urpf_check_fail = 1;
     urpf_check_acl_kvp.mask.u.mask = 0xFF;
-    switch_api_acl_rule_create(acl_handle, 1001, 1, &urpf_check_acl_kvp, SWITCH_ACL_ACTION_DROP, &action_params);
-    switch_api_acl_reference(acl_handle, 0);
+    switch_api_acl_rule_create(device, acl_handle, 1001, 1,
+                               &urpf_check_acl_kvp, SWITCH_ACL_ACTION_DROP,
+                               &action_params);
+    switch_api_acl_reference(device, acl_handle, 0);
 
     /*
      * System acl for ACL_DENY check failure
@@ -141,8 +146,10 @@ switch_api_init_default_acl_entries(switch_device_t device)
     acl_deny_acl_kvp.field = SWITCH_ACL_SYSTEM_FIELD_ACL_DENY;
     acl_deny_acl_kvp.value.acl_deny = 1;
     acl_deny_acl_kvp.mask.u.mask = 0xFF;
-    switch_api_acl_rule_create(acl_handle, 10000, 1, &acl_deny_acl_kvp, SWITCH_ACL_ACTION_DROP, &action_params);
-    switch_api_acl_reference(acl_handle, 0);
+    switch_api_acl_rule_create(device, acl_handle, 10000, 1,
+                               &acl_deny_acl_kvp, SWITCH_ACL_ACTION_DROP,
+                               &action_params);
+    switch_api_acl_reference(device, acl_handle, 0);
 
     //create an ACL to capture STP packets to CPU
     acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
@@ -156,8 +163,10 @@ switch_api_init_default_acl_entries(switch_device_t device)
     stp_acl_kvp.value.dest_mac.mac_addr[4] = 0x00;
     stp_acl_kvp.value.dest_mac.mac_addr[5] = 0x00;
     stp_acl_kvp.mask.u.mask = 0xFFFFFFFFFFFF;
-    switch_api_acl_rule_create(acl_handle, 1902, 1, &stp_acl_kvp, SWITCH_ACL_ACTION_REDIRECT_TO_CPU, &action_params);
-    switch_api_acl_reference(acl_handle, 0);
+    switch_api_acl_rule_create(device, acl_handle, 1902, 1,
+                               &stp_acl_kvp, SWITCH_ACL_ACTION_REDIRECT_TO_CPU,
+                               &action_params);
+    switch_api_acl_reference(device, acl_handle, 0);
 
     switch_acl_system_key_value_pair_t pim_acl_kvp;
     acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
@@ -165,8 +174,10 @@ switch_api_init_default_acl_entries(switch_device_t device)
     pim_acl_kvp.field = SWITCH_ACL_SYSTEM_FIELD_IP_PROTO;
     pim_acl_kvp.value.ip_proto = 103;
     pim_acl_kvp.mask.u.mask = 0xFFFF;
-    switch_api_acl_rule_create(acl_handle, 1903, 1, &pim_acl_kvp, SWITCH_ACL_ACTION_REDIRECT_TO_CPU, &action_params);
-    switch_api_acl_reference(acl_handle, 0);
+    switch_api_acl_rule_create(device, acl_handle, 1903, 1, &pim_acl_kvp,
+                               SWITCH_ACL_ACTION_REDIRECT_TO_CPU,
+                               &action_params);
+    switch_api_acl_reference(device, acl_handle, 0);
 
     switch_acl_system_key_value_pair_t igmp_acl_kvp;
     acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
@@ -174,8 +185,10 @@ switch_api_init_default_acl_entries(switch_device_t device)
     igmp_acl_kvp.field = SWITCH_ACL_SYSTEM_FIELD_IP_PROTO;
     igmp_acl_kvp.value.ip_proto = 2;
     igmp_acl_kvp.mask.u.mask = 0xFFFF;
-    switch_api_acl_rule_create(acl_handle, 1904, 1, &igmp_acl_kvp, SWITCH_ACL_ACTION_REDIRECT_TO_CPU, &action_params);
-    switch_api_acl_reference(acl_handle, 0);
+    switch_api_acl_rule_create(device, acl_handle, 1904, 1,
+                               &igmp_acl_kvp, SWITCH_ACL_ACTION_REDIRECT_TO_CPU,
+                               &action_params);
+    switch_api_acl_reference(device, acl_handle, 0);
 
     switch_acl_system_key_value_pair_t mcast_ipv4_catch_all;
     acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
@@ -183,8 +196,10 @@ switch_api_init_default_acl_entries(switch_device_t device)
     mcast_ipv4_catch_all.field = SWITCH_ACL_SYSTEM_FIELD_IPV4_DEST;
     mcast_ipv4_catch_all.value.ipv4_dest = 0xE0000000;
     mcast_ipv4_catch_all.mask.u.mask = 0xF0000000;
-    switch_api_acl_rule_create(acl_handle, 11000, 1, &mcast_ipv4_catch_all, SWITCH_ACL_ACTION_REDIRECT_TO_CPU, &action_params);
-    switch_api_acl_reference(acl_handle, 0);
+    switch_api_acl_rule_create(device, acl_handle, 11000, 1,
+                               &mcast_ipv4_catch_all, SWITCH_ACL_ACTION_REDIRECT_TO_CPU,
+                               &action_params);
+    switch_api_acl_reference(device, acl_handle, 0);
 
     // STP state == blocked, drop
     acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
@@ -192,16 +207,20 @@ switch_api_init_default_acl_entries(switch_device_t device)
     stp_acl_kvp.field = SWITCH_ACL_SYSTEM_FIELD_STP_STATE;
     stp_acl_kvp.value.stp_state = SWITCH_PORT_STP_STATE_BLOCKING;
     stp_acl_kvp.mask.u.mask = 0xFF;
-    switch_api_acl_rule_create(acl_handle, 11001, 1, &stp_acl_kvp, SWITCH_ACL_ACTION_DROP, &action_params);
-    switch_api_acl_reference(acl_handle, 0);
+    switch_api_acl_rule_create(device, acl_handle, 11001, 1,
+                               &stp_acl_kvp, SWITCH_ACL_ACTION_DROP,
+                               &action_params);
+    switch_api_acl_reference(device, acl_handle, 0);
     // STP state == learning, drop
     acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
     memset(&stp_acl_kvp, 0, sizeof(switch_acl_system_key_value_pair_t));
     stp_acl_kvp.field = SWITCH_ACL_SYSTEM_FIELD_STP_STATE;
     stp_acl_kvp.value.stp_state = SWITCH_PORT_STP_STATE_LEARNING;
     stp_acl_kvp.mask.u.mask = 0xFF;
-    switch_api_acl_rule_create(acl_handle, 11002, 1, &stp_acl_kvp, SWITCH_ACL_ACTION_DROP, &action_params);
-    switch_api_acl_reference(acl_handle, 0);
+    switch_api_acl_rule_create(device, acl_handle, 11002, 1,
+                               &stp_acl_kvp, SWITCH_ACL_ACTION_DROP,
+                               &action_params);
+    switch_api_acl_reference(device, acl_handle, 0);
     return SWITCH_STATUS_SUCCESS;
 }
 

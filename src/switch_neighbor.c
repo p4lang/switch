@@ -1,18 +1,10 @@
-/*
-Copyright 2013-present Barefoot Networks, Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+//
+//  switch_neighbor.c
+//  switch_api
+//
+//  Created on 7/28/14.
+//  Copyright (c) 2014 bn. All rights reserved.
+//
 
 #include "switchapi/switch_base_types.h"
 #include "switchapi/switch_handle.h"
@@ -21,7 +13,6 @@ limitations under the License.
 #include "switchapi/switch_utils.h"
 #include "switch_neighbor_int.h"
 #include "switch_tunnel_int.h"
-#include "switch_nhop_int.h"
 #include "switch_interface_int.h"
 #include "switch_pd.h"
 #include "switch_log.h"
@@ -37,7 +28,7 @@ static tommy_hashtable switch_dmac_rewrite_table;
 switch_api_id_allocator *dmac_rewrite_index_allocator = NULL;
     
 switch_status_t
-switch_neighbor_init(void)
+switch_neighbor_init(switch_device_t device)
 {
     switch_neighbor_array = NULL;
     tommy_hashtable_init(&switch_dmac_rewrite_table, SWITCH_DMAC_REWRITE_HASH_TABLE_SIZE);
@@ -46,7 +37,7 @@ switch_neighbor_init(void)
 }
 
 switch_status_t
-switch_neighbor_free(void)
+switch_neighbor_free(switch_device_t device)
 {
     switch_handle_type_free(SWITCH_HANDLE_TYPE_ARP);
     tommy_hashtable_done(&switch_dmac_rewrite_table);
@@ -107,14 +98,13 @@ switch_dmac_rewrite_search_hash(switch_mac_addr_t *mac)
 }
 
 static uint16_t
-switch_dmac_rewrite_insert_hash(switch_mac_addr_t *mac)
+switch_dmac_rewrite_insert_hash(switch_device_t device, switch_mac_addr_t *mac)
 {
     unsigned char                      key[SWITCH_DMAC_REWRITE_HASH_KEY_SIZE];
     unsigned int                       len = 0;
     uint32_t                           hash = 0;
     uint16_t                           mac_index = 0;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
-    switch_device_t                    device = SWITCH_DEV_ID;
     switch_dmac_rewrite_t             *dmac_rewrite = NULL;
 
     dmac_rewrite = switch_dmac_rewrite_search_hash(mac);
@@ -138,14 +128,13 @@ switch_dmac_rewrite_insert_hash(switch_mac_addr_t *mac)
 }
 
 static switch_status_t
-switch_dmac_rewrite_delete_hash(switch_mac_addr_t *mac)
+switch_dmac_rewrite_delete_hash(switch_device_t device, switch_mac_addr_t *mac)
 {
     switch_dmac_rewrite_t             *dmac_rewrite = NULL;
     unsigned char                      key[SWITCH_DMAC_REWRITE_HASH_KEY_SIZE];
     unsigned int                       len = 0;
     uint32_t                           hash = 0;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
-    switch_device_t                    device = SWITCH_DEV_ID;
 
     dmac_rewrite = switch_dmac_rewrite_search_hash(mac);
     if (!dmac_rewrite) {
@@ -169,7 +158,6 @@ switch_status_t
 switch_api_neighbor_entry_add_rewrite(switch_device_t device,
                                       switch_neighbor_info_t *neighbor_info)
 {
-    switch_ip_addr_type_t              addr_type;
     uint16_t                           smac_index = 0;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
     uint16_t                           nhop_index = 0;
@@ -178,16 +166,20 @@ switch_api_neighbor_entry_add_rewrite(switch_device_t device,
     switch_tunnel_info_t              *tunnel_info = NULL;
     uint16_t                           tunnel_index = 0;
     switch_encap_type_t                encap_type = 0;
-    uint16_t                           outer_bd = 0;
+    uint16_t                           bd = 0;
 
-    addr_type = SWITCH_NEIGHBOR_ADDR_TYPE(neighbor_info);
     neighbor = &neighbor_info->neighbor;
     nhop_index = handle_to_id(neighbor->nhop_handle);
-    
+
     intf_info = switch_api_interface_get(neighbor->interface);
     if (!intf_info) {
         SWITCH_API_ERROR("%s:%d invalid interface!", __FUNCTION__, __LINE__);
         return SWITCH_STATUS_INVALID_INTERFACE;
+    }
+    if (intf_info->ln_bd_handle) {
+        bd = handle_to_id(intf_info->ln_bd_handle);
+    } else {
+        bd = handle_to_id(intf_info->bd_handle);
     }
     if (neighbor->neigh_type == SWITCH_API_NEIGHBOR_MPLS_SWAP_L2VPN ||
         neighbor->neigh_type == SWITCH_API_NEIGHBOR_MPLS_SWAP_L3VPN ||
@@ -196,26 +188,29 @@ switch_api_neighbor_entry_add_rewrite(switch_device_t device,
         neighbor->neigh_type == SWITCH_API_NEIGHBOR_MPLS_PUSH_L2VPN ||
         neighbor->neigh_type == SWITCH_API_NEIGHBOR_MPLS_PUSH_L3VPN) {
         tunnel_index = handle_to_id(neighbor->interface);
-        status = switch_pd_rewrite_table_mpls_rewrite_add_entry(device, nhop_index,
-                                                           tunnel_index, neighbor->neigh_type, 
-                                                           smac_index, neighbor->mac_addr,
-                                                           neighbor->mpls_label, neighbor->header_count,
-                                                           &neighbor_info->rewrite_entry);
+        status = switch_pd_rewrite_table_mpls_rewrite_add_entry(
+            device, bd,
+            nhop_index, tunnel_index,
+            neighbor->neigh_type, smac_index, neighbor->mac_addr,
+            neighbor->mpls_label, neighbor->header_count,
+            &neighbor_info->rewrite_entry);
     } else if (SWITCH_INTF_TYPE(intf_info) == SWITCH_API_INTERFACE_TUNNEL) {
         tunnel_index = handle_to_id(neighbor->interface);
         tunnel_info = &(SWITCH_INTF_TUNNEL_INFO(intf_info));
         if (tunnel_info->encap_mode == SWITCH_API_TUNNEL_ENCAP_MODE_IP) {
             encap_type = SWITCH_INTF_TUNNEL_ENCAP_TYPE(intf_info);
-            status = switch_pd_rewrite_table_tunnel_rewrite_add_entry(device, nhop_index,
-                                                          smac_index, outer_bd,
-                                                          addr_type, neighbor->mac_addr,
-                                                          tunnel_index, encap_type,
-                                                          &neighbor_info->rewrite_entry);
+            status = switch_pd_rewrite_table_tunnel_rewrite_add_entry(
+                device, bd,
+                nhop_index, smac_index,
+                neighbor->mac_addr,
+                neighbor->neigh_type, neighbor->rw_type,
+                tunnel_index, encap_type,
+                &neighbor_info->rewrite_entry);
         }
     } else {
-        status = switch_pd_rewrite_table_unicast_rewrite_add_entry(device, nhop_index, smac_index,
-                                                          neighbor->mac_addr, addr_type,
-                                                          &neighbor_info->rewrite_entry);
+        status = switch_pd_rewrite_table_unicast_rewrite_add_entry(
+            device, bd, nhop_index, smac_index, neighbor->mac_addr,
+            neighbor->rw_type, &neighbor_info->rewrite_entry);
     }
 
     if (status != SWITCH_STATUS_SUCCESS) {
@@ -259,7 +254,7 @@ switch_api_neighbor_entry_add_tunnel_rewrite(switch_device_t device,
     }
 
     tunnel_info = &(SWITCH_INTF_TUNNEL_INFO(intf_info));
-    dmac_index = switch_dmac_rewrite_insert_hash(&neighbor->mac_addr);
+    dmac_index = switch_dmac_rewrite_insert_hash(device, &neighbor->mac_addr);
 
     if (tunnel_info->encap_mode == SWITCH_API_TUNNEL_ENCAP_MODE_IP) {
         ip_encap = &(SWITCH_INTF_TUNNEL_IP_ENCAP(intf_info));
@@ -294,8 +289,6 @@ switch_handle_t
 switch_api_neighbor_entry_add(switch_device_t device, switch_api_neighbor_t *neighbor)
 {
     switch_neighbor_info_t            *neighbor_info = NULL;
-    switch_nhop_info_t                *nhop_info = NULL;
-    switch_spath_info_t               *spath_info = NULL;
     switch_interface_info_t           *intf_info = NULL;
     switch_handle_t                    handle;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
@@ -312,12 +305,6 @@ switch_api_neighbor_entry_add(switch_device_t device, switch_api_neighbor_t *nei
 
 #ifdef SWITCH_PD
     if (neighbor->nhop_handle) {
-        nhop_info = switch_nhop_get(neighbor->nhop_handle);
-        if (!nhop_info) {
-            return SWITCH_STATUS_INVALID_HANDLE;
-        }
-        spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
-        spath_info->neighbor_handle = handle;
         status = switch_api_neighbor_entry_add_rewrite(device, neighbor_info);
     } else {
         status = switch_api_neighbor_entry_add_tunnel_rewrite(device, neighbor_info);
@@ -332,9 +319,7 @@ switch_api_neighbor_entry_add(switch_device_t device, switch_api_neighbor_t *nei
 switch_status_t
 switch_api_neighbor_entry_remove(switch_device_t device, switch_handle_t neighbor_handle)
 {
-    switch_neighbor_info_t            *neighbor_info = NULL;
-    switch_nhop_info_t                *nhop_info = NULL;
-    switch_spath_info_t               *spath_info = NULL;
+    switch_neighbor_info_t *neighbor_info = NULL;
 
     neighbor_info = switch_neighbor_info_get(neighbor_handle);
     if (!neighbor_info) {
@@ -342,15 +327,9 @@ switch_api_neighbor_entry_remove(switch_device_t device, switch_handle_t neighbo
     }
 #ifdef SWITCH_PD
     if (neighbor_info->neighbor.nhop_handle) {
-        nhop_info = switch_nhop_get(neighbor_info->neighbor.nhop_handle);
-        if (!nhop_info) {
-            return SWITCH_STATUS_INVALID_HANDLE;
-        }
-        spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
-        spath_info->neighbor_handle = 0;
         switch_pd_rewrite_table_delete_entry(device, neighbor_info->rewrite_entry);
     } else {
-        switch_dmac_rewrite_delete_hash(&neighbor_info->neighbor.mac_addr);
+        switch_dmac_rewrite_delete_hash(device, &neighbor_info->neighbor.mac_addr);
         switch_pd_tunnel_rewrite_table_delete_entry(device, neighbor_info->rewrite_entry);
     }
 #endif

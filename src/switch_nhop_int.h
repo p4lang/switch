@@ -78,8 +78,8 @@ typedef struct switch_nhop_info_
 #define SWITCH_NHOP_TYPE_IS_ECMP(nhop) \
     nhop->type == SWITCH_NHOP_INDEX_TYPE_ECMP
 
-switch_status_t switch_nhop_init();
-switch_status_t switch_nhop_free();
+switch_status_t switch_nhop_init(switch_device_t device);
+switch_status_t switch_nhop_free(switch_device_t device);
 switch_nhop_info_t *switch_nhop_get();
 switch_handle_t switch_nhop_create();
 

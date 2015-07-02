@@ -116,7 +116,7 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     return 0;
   }
 
-  switcht_status_t switcht_api_port_set(const switcht_port_info_t& port_info) {
+  switcht_status_t switcht_api_port_set(const switcht_device_t device, const switcht_port_info_t& port_info) {
     // Your implementation goes here
     switch_api_port_info_t port;
     port.port_number = port_info.port_number;
@@ -129,7 +129,7 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     port.igmp_snoop = port_info.igmp_snoop;
     port.urpf_mode = port_info.urpf_mode;
     printf("switcht_api_port_set\n");
-    return switch_api_port_set(&port);
+    return switch_api_port_set(device, &port);
   }
 
   switcht_status_t switcht_api_port_print_all() {
@@ -144,22 +144,22 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     return switch_api_vrf_create(device, vrf);
   }
 
-  switcht_status_t switcht_api_vrf_delete(const switcht_handle_t vrf_handle) {
+  switcht_status_t switcht_api_vrf_delete(const switcht_device_t device, const switcht_handle_t vrf_handle) {
     // Your implementation goes here
     printf("switcht_api_l3_vrf_delete\n");
-    return switch_api_vrf_delete(vrf_handle);
+    return switch_api_vrf_delete(device, vrf_handle);
   }
 
-  switcht_handle_t switcht_api_router_mac_group_create() {
+  switcht_handle_t switcht_api_router_mac_group_create(const switcht_device_t device) {
     // Your implementation goes here
     printf("switcht_api_router_mac_group_create\n");
-    return switch_api_router_mac_group_create();
+    return switch_api_router_mac_group_create(device);
   }
 
-  switcht_status_t switcht_api_router_mac_group_delete(const switcht_handle_t rmac_handle) {
+  switcht_status_t switcht_api_router_mac_group_delete(const switcht_device_t device, const switcht_handle_t rmac_handle) {
     // Your implementation goes here
     printf("switcht_api_router_mac_group_delete\n");
-    return switch_api_router_mac_group_delete(rmac_handle);
+    return switch_api_router_mac_group_delete(device, rmac_handle);
   }
 
   switcht_status_t switcht_api_router_mac_add(const switcht_device_t device, const switcht_handle_t rmac_handle, const switcht_mac_addr_t& mac) {
@@ -204,10 +204,10 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     return switch_api_interface_create(device, &i_info);
   }
 
-  void switcht_api_interface_delete(const switcht_interface_handle_t interface_handle) {
+  void switcht_api_interface_delete(const switcht_device_t device, const switcht_interface_handle_t interface_handle) {
     // Your implementation goes here
     printf("switcht_api_interface_delete\n");
-    switch_api_interface_delete(interface_handle);
+    switch_api_interface_delete(device, interface_handle);
   }
 
   switcht_status_t switcht_api_interface_print_all() {
@@ -246,20 +246,20 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     return switch_api_interface_ipv6_urpf_mode_set(interface_handle, (uint64_t) value);
   }
 
-  switcht_status_t switcht_api_l3_interface_address_add(const switcht_interface_handle_t interface_handle, const switcht_handle_t vrf, const switcht_ip_addr_t& ip_addr) {
+  switcht_status_t switcht_api_l3_interface_address_add(const switcht_device_t device, const switcht_interface_handle_t interface_handle, const switcht_handle_t vrf, const switcht_ip_addr_t& ip_addr) {
     // Your implementation goes here
     printf("switcht_api_l3_interface_address_add\n");
     switch_ip_addr_t lip_addr;
     switch_parse_ip_address(ip_addr, &lip_addr);
-    return switch_api_l3_interface_address_add(interface_handle, vrf, &lip_addr);;
+    return switch_api_l3_interface_address_add(device, interface_handle, vrf, &lip_addr);
   }
 
-  switcht_status_t switcht_api_l3_interface_address_delete(const switcht_interface_handle_t interface_handle, const switcht_handle_t vrf, const switcht_ip_addr_t& ip_addr) {
+  switcht_status_t switcht_api_l3_interface_address_delete(const switcht_device_t device, const switcht_interface_handle_t interface_handle, const switcht_handle_t vrf, const switcht_ip_addr_t& ip_addr) {
     // Your implementation goes here
     printf("switcht_api_l3_interface_address_delete\n");
     switch_ip_addr_t lip_addr;
     switch_parse_ip_address(ip_addr, &lip_addr);
-    return switch_api_l3_interface_address_delete(interface_handle, vrf, &lip_addr);
+    return switch_api_l3_interface_address_delete(device, interface_handle, vrf, &lip_addr);
   }
 
   switcht_handle_t switcht_api_nhop_create(const switcht_device_t device, const switcht_nhop_key_t& nhop_key) {
@@ -274,10 +274,10 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     return switch_api_nhop_create(device, &lnhop_key);
   }
 
-  switcht_status_t switcht_api_nhop_delete(const switcht_handle_t handle) {
+  switcht_status_t switcht_api_nhop_delete(const switcht_device_t device, const switcht_handle_t handle) {
     // Your implementation goes here
     printf("switcht_api_nhop_delete\n");
-    return switch_api_nhop_delete(0, handle);
+    return switch_api_nhop_delete(device, handle);
   }
 
   switcht_status_t switcht_api_nhop_print_all(void) {
@@ -289,11 +289,11 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   switcht_handle_t switcht_api_neighbor_entry_add(const switcht_device_t device, const switcht_neighbor_info_t& neighbor) {
     switch_api_neighbor_t lneighbor;
     lneighbor.neigh_type = (switch_neighbor_type_t) neighbor.neigh_type;
+    lneighbor.rw_type = (switch_neighbor_rw_type_t) neighbor.rw_type;
     lneighbor.nhop_handle = neighbor.nhop_handle;
     lneighbor.vlan = neighbor.vlan;
     lneighbor.interface = neighbor.interface_handle;
     switch_string_to_mac(neighbor.mac_addr, lneighbor.mac_addr.mac_addr);
-    switch_parse_ip_address(neighbor.ip_addr, &lneighbor.ip_addr);
     lneighbor.mpls_label = neighbor.mpls_label;
     lneighbor.header_count = neighbor.header_count;
     printf("switcht_api_neighbor_entry_add\n");
@@ -337,10 +337,10 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     return switch_api_vlan_create(device, vlan_id);
   }
 
-  switcht_status_t switcht_api_vlan_delete(const switcht_handle_t vlan_handle) {
+  switcht_status_t switcht_api_vlan_delete(const switcht_device_t device, const switcht_handle_t vlan_handle) {
     // Your implementation goes here
     printf("switcht_api_vlan_delete\n");
-    return switch_api_vlan_delete(vlan_handle);
+    return switch_api_vlan_delete(device, vlan_handle);
   }
 
   switcht_status_t switcht_api_vlan_print_all() {
@@ -410,22 +410,40 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     return switch_api_ecmp_create(device);
   }
 
-  switcht_status_t switcht_api_l3_ecmp_delete(const switcht_handle_t handle) {
+  switcht_status_t switcht_api_l3_ecmp_delete(const switcht_device_t device, const switcht_handle_t handle) {
     // Your implementation goes here
     printf("switcht_api_l3_ecmp_delete\n");
     return switch_api_ecmp_delete(0, handle);
   }
 
-  switcht_status_t switcht_api_l3_ecmp_member_add(const switcht_device_t device, const switcht_handle_t handle, const switcht_handle_t member) {
+  switcht_status_t switcht_api_l3_ecmp_member_add(const switcht_device_t device, const switcht_handle_t handle, const int16_t nhop_count, const std::vector<switcht_handle_t> & nhop_handle) {
     // Your implementation goes here
     printf("switcht_api_l3_ecmp_member_add\n");
-    return switch_api_ecmp_member_add(device, handle, member);
+    switch_status_t status=0;
+    std::vector<switcht_handle_t>::const_iterator it = nhop_handle.begin();
+
+    switch_handle_t *nhop_handle_list = (switch_handle_t *) malloc(sizeof(switch_handle_t) * nhop_handle.size());
+    for(uint32_t i = 0; i < nhop_handle.size(); i++, it++) {
+        nhop_handle_list[i] = (switch_handle_t) *it;
+    }
+    status = switch_api_ecmp_member_add(device, handle, nhop_count, nhop_handle_list);
+    free(nhop_handle_list);
+    return status;
   }
 
-  switcht_status_t switcht_api_l3_ecmp_member_delete(const switcht_device_t device, const switcht_handle_t handle, const switcht_handle_t member) {
+  switcht_status_t switcht_api_l3_ecmp_member_delete(const switcht_device_t device, const switcht_handle_t handle, const int16_t nhop_count, const std::vector<switcht_handle_t> & nhop_handle) {
     // Your implementation goes here
     printf("switcht_api_l3_ecmp_member_delete\n");
-    return switch_api_ecmp_member_delete(device, handle, member);
+    switch_status_t status=0;
+    std::vector<switcht_handle_t>::const_iterator it = nhop_handle.begin();
+
+    switch_handle_t *nhop_handle_list = (switch_handle_t *) malloc(sizeof(switch_handle_t) * nhop_handle.size());
+    for(uint32_t i = 0; i < nhop_handle.size(); i++, it++) {
+        nhop_handle_list[i] = (switch_handle_t) *it;
+    }
+    status = switch_api_ecmp_member_delete(device, handle, nhop_count, nhop_handle_list);
+    free(nhop_handle_list);
+    return status;
   }
 
   switcht_handle_t switcht_api_lag_create(const switcht_device_t device) {
@@ -434,10 +452,10 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     return switch_api_lag_create(device);
   }
 
-  switcht_status_t switcht_api_lag_delete(const switcht_handle_t lag_handle) {
+  switcht_status_t switcht_api_lag_delete(const switcht_device_t device, const switcht_handle_t lag_handle) {
     // Your implementation goes here
     printf("switcht_api_lag_delete\n");
-    return switch_api_lag_delete(lag_handle);
+    return switch_api_lag_delete(device, lag_handle);
   }
 
   switcht_status_t switcht_api_lag_member_add(const switcht_device_t device, const switcht_handle_t lag_handle, const switcht_direction_t side, const switcht_port_t port) {
@@ -591,38 +609,38 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     return switch_api_tunnel_interface_create(device, (switch_direction_t)direction, &ltun_info);
   }
 
-  switcht_status_t switcht_api_tunnel_interface_delete(const switcht_tunnel_handle_t tun_handle) {
+  switcht_status_t switcht_api_tunnel_interface_delete(const switcht_device_t device, const switcht_tunnel_handle_t tun_handle) {
     // Your implementation goes here
     printf("switcht_api_tunnel_interface_delete\n");
-    return switch_api_tunnel_interface_delete(tun_handle);
+    return switch_api_tunnel_interface_delete(device, tun_handle);
   }
 
-  switcht_status_t switcht_api_logical_network_member_add(const switcht_handle_t network_handle, const switcht_interface_handle_t interface_handle) {
+  switcht_status_t switcht_api_logical_network_member_add(const switcht_device_t device, const switcht_handle_t network_handle, const switcht_interface_handle_t interface_handle) {
     // Your implementation goes here
     printf("switcht_api_logical_network_add_member\n");
-    return switch_api_logical_network_member_add(network_handle, interface_handle);
+    return switch_api_logical_network_member_add(device, network_handle, interface_handle);
   }
 
-  switcht_status_t switcht_api_logical_network_member_remove(const switcht_handle_t network_handle, const switcht_interface_handle_t interface_handle) {
+  switcht_status_t switcht_api_logical_network_member_remove(const switcht_device_t device, const switcht_handle_t network_handle, const switcht_interface_handle_t interface_handle) {
     // Your implementation goes here
     printf("switcht_api_logical_network_delete_member\n");
-    return switch_api_logical_network_member_remove(network_handle, interface_handle);
+    return switch_api_logical_network_member_remove(device, network_handle, interface_handle);
   }
 
-  switcht_status_t switcht_api_vlan_ports_add(const switcht_handle_t vlan_handle, const switcht_vlan_port_t& vlan_port) {
+  switcht_status_t switcht_api_vlan_ports_add(const switcht_device_t device, const switcht_handle_t vlan_handle, const switcht_vlan_port_t& vlan_port) {
     printf("switcht_api_add_ports_to_vlan\n");
     switch_vlan_port_t lvlan_port;
     lvlan_port.handle = vlan_port.handle;
     lvlan_port.tagging_mode = (switch_vlan_tagging_mode_t)vlan_port.tagging_mode;
-    return (switch_api_vlan_ports_add(vlan_handle, 1, &lvlan_port));
+    return (switch_api_vlan_ports_add(device, vlan_handle, 1, &lvlan_port));
   }
 
-  switcht_status_t switcht_api_vlan_ports_remove(const switcht_handle_t vlan_handle, const switcht_vlan_port_t& vlan_port) {
+  switcht_status_t switcht_api_vlan_ports_remove(const switcht_device_t device, const switcht_handle_t vlan_handle, const switcht_vlan_port_t& vlan_port) {
     printf("switcht_api_remove_ports_from_vlan\n");
     switch_vlan_port_t lvlan_port;
     lvlan_port.handle = vlan_port.handle;
     lvlan_port.tagging_mode = (switch_vlan_tagging_mode_t) vlan_port.tagging_mode;
-    return (switch_api_vlan_ports_remove(vlan_handle, 1, &lvlan_port));
+    return (switch_api_vlan_ports_remove(device, vlan_handle, 1, &lvlan_port));
   }
 
   switcht_handle_t switcht_api_stp_group_create(const switcht_device_t device, const switcht_stp_mode_t stp_mode) {
@@ -630,19 +648,37 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     return switch_api_stp_group_create(device, (switch_stp_mode_t)stp_mode);
   }
 
-  switcht_status_t switcht_api_stp_group_delete(const switcht_handle_t stg_handle) {
+  switcht_status_t switcht_api_stp_group_delete(const switcht_device_t device, const switcht_handle_t stg_handle) {
     printf("switcht_api_stp_group_delete\n");
-    return switch_api_stp_group_delete(stg_handle);
+    return switch_api_stp_group_delete(device, stg_handle);
   }
 
-  switcht_status_t switcht_api_stp_group_vlan_add(const switcht_handle_t stg_handle, const switcht_handle_t vlan_handle) {
+  switcht_status_t switcht_api_stp_group_vlans_add(const switcht_device_t device, const switcht_handle_t stg_handle, const int16_t vlan_count, const std::vector<switcht_handle_t> & vlan_handle) {
     printf("switcht_api_stp_group_vlan_add\n");
-    return switch_api_stp_group_vlan_add(stg_handle, vlan_handle);
+    switch_status_t status=0;
+    std::vector<switcht_handle_t>::const_iterator it = vlan_handle.begin();
+
+    switch_handle_t *vlan_list = (switch_handle_t *) malloc(sizeof(switch_handle_t) * vlan_handle.size());
+    for(uint32_t i = 0; i < vlan_handle.size(); i++, it++) {
+        vlan_list[i] = (switch_handle_t) *it;
+    }
+    status = switch_api_stp_group_vlans_add(device, stg_handle, vlan_count, vlan_list);
+    free(vlan_list);
+    return status;
   }
 
-  switcht_status_t switcht_api_stp_group_vlan_remove(const switcht_handle_t stg_handle, const switcht_handle_t vlan_handle) {
+  switcht_status_t switcht_api_stp_group_vlans_remove(const switcht_device_t device, const switcht_handle_t stg_handle, const int16_t vlan_count, const std::vector<switcht_handle_t> & vlan_handle) {
     printf("switcht_api_stp_group_vlan_delete\n");
-    return switch_api_stp_group_vlan_remove(stg_handle, vlan_handle);
+    switch_status_t status=0;
+    std::vector<switcht_handle_t>::const_iterator it = vlan_handle.begin();
+
+    switch_handle_t *vlan_list = (switch_handle_t *) malloc(sizeof(switch_handle_t) * vlan_handle.size());
+    for(uint32_t i = 0; i < vlan_handle.size(); i++, it++) {
+        vlan_list[i] = (switch_handle_t) *it;
+    }
+    status = switch_api_stp_group_vlans_remove(device, stg_handle, vlan_count, vlan_list);
+    free(vlan_list);
+    return status;
   }
 
   switcht_status_t switcht_api_stp_group_print_all() {
@@ -667,12 +703,12 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     return switch_api_acl_list_create(device, (switch_acl_type_t)type);
   }
 
-  switcht_status_t switcht_api_acl_list_delete(const switcht_handle_t handle) {
+  switcht_status_t switcht_api_acl_list_delete(const switcht_device_t device, const switcht_handle_t handle) {
     printf("switcht_api_acl_list_delete\n");
-    return switch_api_acl_list_delete(handle);
+    return switch_api_acl_list_delete(device, handle);
   }
 
-  switcht_status_t switcht_api_acl_ip_rule_create(const switcht_handle_t acl_handle, const int32_t priority, const int32_t key_value_count, const std::vector<switcht_acl_ip_key_value_pair_t> & acl_kvp, const switcht_acl_action_t action, const int32_t action_params) {
+  switcht_status_t switcht_api_acl_ip_rule_create(const switcht_device_t device, const switcht_handle_t acl_handle, const int32_t priority, const int32_t key_value_count, const std::vector<switcht_acl_ip_key_value_pair_t> & acl_kvp, const switcht_acl_action_t action, const int32_t action_params) {
     printf("switcht_api_acl_ip_rule_create\n");
     switch_status_t status=0;
     std::vector<switcht_acl_ip_key_value_pair_t>::const_iterator f=acl_kvp.begin();
@@ -684,12 +720,12 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
         memcpy(&(((switch_acl_ip_key_value_pair_t *)fields+i)->value.ipv4_source), &v, sizeof(switch_acl_ip_value));
         ((switch_acl_ip_key_value_pair_t *)fields+i)->mask.u.mask = (switch_acl_ip_field_t)f->mask;
     }
-    status = switch_api_acl_rule_create(acl_handle, priority, key_value_count, fields, (switch_acl_action_t)action, (switch_acl_action_params_t *)&action_params);
+    status = switch_api_acl_rule_create(device, acl_handle, priority, key_value_count, fields, (switch_acl_action_t)action, (switch_acl_action_params_t *)&action_params);
     free(fields);
     return status;
   }
 
-  switcht_status_t switcht_api_acl_mirror_rule_create(const switcht_handle_t acl_handle, const int32_t priority, const int32_t key_value_count, const std::vector<switcht_acl_mirror_key_value_pair_t> & acl_kvp, const switcht_acl_action_t action, const int32_t action_params) {
+  switcht_status_t switcht_api_acl_mirror_rule_create(const switcht_device_t device, const switcht_handle_t acl_handle, const int32_t priority, const int32_t key_value_count, const std::vector<switcht_acl_mirror_key_value_pair_t> & acl_kvp, const switcht_acl_action_t action, const int32_t action_params) {
     printf("switcht_api_acl_mirror_rule_create\n");
     switch_status_t status=0;
     std::vector<switcht_acl_mirror_key_value_pair_t>::const_iterator f=acl_kvp.begin();
@@ -704,12 +740,12 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     }
     memset(&ap, 0, sizeof(switch_acl_action_params_t));
     ap.mirror.clone_spec = action_params;
-    status = switch_api_acl_rule_create(acl_handle, priority, key_value_count, fields, (switch_acl_action_t)action, &ap);
+    status = switch_api_acl_rule_create(device, acl_handle, priority, key_value_count, fields, (switch_acl_action_t)action, &ap);
     free(fields);
     return status;
   }
 
-  switcht_status_t switcht_api_acl_system_rule_create(const switcht_handle_t acl_handle, const int32_t priority, const int32_t key_value_count, const std::vector<switcht_acl_system_key_value_pair_t> & acl_kvp, const switcht_acl_action_t action, const int32_t action_params) {
+  switcht_status_t switcht_api_acl_system_rule_create(const switcht_device_t device, const switcht_handle_t acl_handle, const int32_t priority, const int32_t key_value_count, const std::vector<switcht_acl_system_key_value_pair_t> & acl_kvp, const switcht_acl_action_t action, const int32_t action_params) {
     printf("switcht_api_system_acl_rule_create\n");
     switch_status_t status=0;
     std::vector<switcht_acl_system_key_value_pair_t>::const_iterator f=acl_kvp.begin();
@@ -724,25 +760,25 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     }
     memset(&ap, 0, sizeof(switch_acl_action_params_t));
     ap.mirror.clone_spec = action_params;
-    status = switch_api_acl_rule_create(acl_handle, priority, key_value_count, fields, (switch_acl_action_t)action, &ap);
+    status = switch_api_acl_rule_create(device, acl_handle, priority, key_value_count, fields, (switch_acl_action_t)action, &ap);
     free(fields);
     return status;
   }
 
-  switcht_status_t switcht_api_acl_rule_delete(const switcht_handle_t acl_handle, const int32_t priority) {
+  switcht_status_t switcht_api_acl_rule_delete(const switcht_device_t device, const switcht_handle_t acl_handle, const int32_t priority) {
     printf("switcht_api_acl_rule_delete\n");
-    return switch_api_acl_rule_delete(acl_handle, priority);
+    return switch_api_acl_rule_delete(device, acl_handle, priority);
   }
 
-  switcht_status_t switcht_api_acl_reference(const switcht_handle_t acl_handle, const switcht_handle_t interface_handle) {
+  switcht_status_t switcht_api_acl_reference(const switcht_device_t device, const switcht_handle_t acl_handle, const switcht_handle_t interface_handle) {
     printf("switcht_api_acl_reference\n");
-    return switch_api_acl_reference(acl_handle, interface_handle);
+    return switch_api_acl_reference(device, acl_handle, interface_handle);
   }
 
-  switcht_status_t switcht_api_acl_remove(const switcht_handle_t acl_handle, const switcht_handle_t interface_handle) {
+  switcht_status_t switcht_api_acl_remove(const switcht_device_t device, const switcht_handle_t acl_handle, const switcht_handle_t interface_handle) {
     // Your implementation goes here
     printf("switcht_api_acl_remove\n");
-    return switch_api_acl_remove(acl_handle, interface_handle);
+    return switch_api_acl_remove(device, acl_handle, interface_handle);
   }
   switcht_status_t switcht_api_sup_rewrite_init(const switcht_device_t device, const int32_t port_id) {
     printf("switcht_api_sup_rewrite_init\n");
@@ -755,10 +791,10 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     return switch_api_multicast_tree_create(device);
   }
 
-  switcht_status_t switcht_api_multicast_tree_delete(const switcht_handle_t mgid_handle) {
+  switcht_status_t switcht_api_multicast_tree_delete(const switcht_device_t device, const switcht_handle_t mgid_handle) {
     // Your implementation goes here
     printf("switcht_api_multicast_tree_delete\n");
-    return switch_api_multicast_tree_delete(mgid_handle);
+    return switch_api_multicast_tree_delete(device, mgid_handle);
   }
 
   switcht_status_t switcht_api_multicast_member_add(const switcht_device_t device, const switcht_handle_t mgid_handle, const switcht_handle_t tenant_bd_handle, const int32_t intf_handle_count, const std::vector<switcht_handle_t> & interface_handle) {

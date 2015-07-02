@@ -29,7 +29,7 @@ extern "C" {
 switch_sup_info_t *sup_info = NULL;
 
 switch_status_t
-switch_sup_init() {
+switch_sup_init(switch_device_t device) {
     sup_info = switch_malloc(sizeof(switch_sup_info_t), 1);
     if (!sup_info) {
         return SWITCH_STATUS_NO_MEMORY;

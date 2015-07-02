@@ -29,7 +29,7 @@ extern "C" {
 static void *switch_stp_instance_array;
 
 switch_status_t
-switch_stp_init()
+switch_stp_init(switch_device_t device)
 {
     switch_stp_instance_array = NULL;
     switch_handle_type_init(SWITCH_HANDLE_TYPE_STP, SWITCH_MAX_STP_INSTANCES);
@@ -37,7 +37,7 @@ switch_stp_init()
 }
 
 switch_status_t
-switch_stp_free()
+switch_stp_free(switch_device_t device)
 {
     switch_handle_type_free(SWITCH_HANDLE_TYPE_STP);
     return SWITCH_STATUS_SUCCESS;
@@ -88,13 +88,12 @@ switch_api_stp_group_create(switch_device_t device,
 }
 
 switch_status_t
-switch_api_stp_group_delete(switch_handle_t stg_handle)
+switch_api_stp_group_delete(switch_device_t device, switch_handle_t stg_handle)
 {
     switch_stp_info_t                 *stp_info = NULL;
     tommy_node                        *node = NULL;
     switch_stp_port_entry_t           *port_entry = NULL;
     switch_stp_vlan_entry_t           *vlan_entry = NULL;
-    switch_device_t                    device = SWITCH_DEV_ID;
 
     stp_info = switch_api_stp_get_internal(stg_handle);
     if (!stp_info) {
@@ -113,88 +112,102 @@ switch_api_stp_group_delete(switch_handle_t stg_handle)
     while (node) {
         vlan_entry = node->data;
         node = node->next;
-        switch_api_stp_group_vlan_remove(stg_handle, vlan_entry->vlan_handle);
+        switch_api_stp_group_vlans_remove(device, 
+                                          stg_handle, 1,
+                                          &vlan_entry->bd_handle);
     }
     switch_stg_handle_delete(stg_handle);
     return SWITCH_STATUS_SUCCESS;
 }
 
 switch_status_t
-switch_api_stp_group_vlan_add(switch_handle_t stg_handle,
-                              switch_handle_t vlan_handle)
+switch_api_stp_group_vlans_add(switch_device_t device,
+                              switch_handle_t stg_handle,
+                              uint16_t vlan_count,
+                              switch_handle_t *vlan_handle)
 {
-    switch_device_t                    device = SWITCH_DEV_ID;
     switch_stp_info_t                 *stp_info = NULL;
     switch_bd_info_t                  *bd_info = NULL;
     switch_stp_vlan_entry_t           *vlan_entry = NULL;
+    switch_handle_t                    bd_handle;
+    int                                count = 0;
 
     stp_info = switch_api_stp_get_internal(stg_handle);
     if (!stp_info) {
         return SWITCH_STATUS_INVALID_HANDLE;
     }
 
-    bd_info = switch_bd_get(vlan_handle);
-    if (!bd_info) {
-        return SWITCH_STATUS_INVALID_VLAN_ID;
-    }
+    for (count = 0; count < vlan_count; count++) {
+        bd_handle = vlan_handle[count];
+        bd_info = switch_bd_get(bd_handle);
+        if (!bd_info) {
+            return SWITCH_STATUS_INVALID_VLAN_ID;
+        }
 
-    vlan_entry = switch_malloc(sizeof(switch_stp_vlan_entry_t), 1);
-    memset(vlan_entry, 0 , sizeof(switch_stp_vlan_entry_t));
+        vlan_entry = switch_malloc(sizeof(switch_stp_vlan_entry_t), 1);
+        memset(vlan_entry, 0 , sizeof(switch_stp_vlan_entry_t));
 
-    vlan_entry->vlan_handle = vlan_handle;
-    bd_info->stp_handle = stg_handle;
+        vlan_entry->bd_handle = bd_handle;
+        bd_info->stp_handle = stg_handle;
 
-    switch_pd_bd_table_update_entry(device,
-                               handle_to_id(vlan_handle),
-                               bd_info,
-                               bd_info->bd_entry);
+        switch_pd_bd_table_update_entry(device,
+                                   handle_to_id(bd_handle),
+                                   bd_info,
+                                   bd_info->bd_entry);
 
-    tommy_list_insert_head(&(stp_info->vlan_list),
+        tommy_list_insert_head(&(stp_info->vlan_list),
                         &(vlan_entry->node), vlan_entry);
+    }
     return SWITCH_STATUS_SUCCESS;
 }
 
 switch_status_t
-switch_api_stp_group_vlan_remove(switch_handle_t stg_handle,
-                                 switch_handle_t vlan_handle)
+switch_api_stp_group_vlans_remove(switch_device_t device,
+                                 switch_handle_t stg_handle,
+                                 uint16_t vlan_count,
+                                 switch_handle_t *vlan_handle)
 {
-    switch_device_t                    device = SWITCH_DEV_ID;
     switch_stp_info_t                 *stp_info = NULL;
     switch_bd_info_t                  *bd_info = NULL;
     switch_stp_vlan_entry_t           *vlan_entry = NULL;
     tommy_node                        *node = NULL;
+    switch_handle_t                    bd_handle;
+    int                                count = 0;
 
     stp_info = switch_api_stp_get_internal(stg_handle);
     if (!stp_info) {
         return SWITCH_STATUS_INVALID_HANDLE;
     }
 
-    bd_info = switch_bd_get(vlan_handle);
-    if (!bd_info) {
-        return SWITCH_STATUS_INVALID_VLAN_ID;
-    }
-
-    node = tommy_list_head(&(stp_info->vlan_list));
-    while (node) {
-        vlan_entry = node->data;
-        if (vlan_entry->vlan_handle == vlan_handle) {
-            break;
+    for (count = 0; count < vlan_count; count++) {
+        bd_handle = vlan_handle[count];
+        bd_info = switch_bd_get(bd_handle);
+        if (!bd_info) {
+            return SWITCH_STATUS_INVALID_VLAN_ID;
         }
-        node = node->next;
-    }
 
-    if (!node) {
-        return SWITCH_STATUS_ITEM_NOT_FOUND;
-    }
+        node = tommy_list_head(&(stp_info->vlan_list));
+        while (node) {
+            vlan_entry = node->data;
+            if (vlan_entry->bd_handle == bd_handle) {
+                break;
+            }
+            node = node->next;
+        }
 
-    bd_info->stp_handle = 0;
-    switch_pd_bd_table_update_entry(device,
-                               handle_to_id(vlan_handle),
+        if (!node) {
+            return SWITCH_STATUS_ITEM_NOT_FOUND;
+        }
+
+        bd_info->stp_handle = 0;
+        switch_pd_bd_table_update_entry(device,
+                               handle_to_id(bd_handle),
                                bd_info,
                                bd_info->bd_entry);
 
-    vlan_entry = tommy_list_remove_existing(&(stp_info->vlan_list), node);
-    switch_free(vlan_entry);
+        vlan_entry = tommy_list_remove_existing(&(stp_info->vlan_list), node);
+        switch_free(vlan_entry);
+    }
     return SWITCH_STATUS_SUCCESS;
 }
 
@@ -405,7 +418,7 @@ switch_stp_update_flood_list(switch_device_t device, switch_handle_t stg_handle,
     switch_bd_info_t                  *bd_info = NULL;
     switch_stp_vlan_entry_t           *vlan_entry = NULL;
     tommy_node                        *node = NULL;
-    switch_handle_t                    vlan_handle = 0;
+    switch_handle_t                    bd_handle = 0;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
 
     stp_info = switch_api_stp_get_internal(stg_handle);
@@ -416,8 +429,8 @@ switch_stp_update_flood_list(switch_device_t device, switch_handle_t stg_handle,
     node = tommy_list_head(&(stp_info->vlan_list));
     while (node) {
         vlan_entry = node->data;
-        vlan_handle = vlan_entry->vlan_handle;
-        bd_info = switch_bd_get(vlan_handle);
+        bd_handle = vlan_entry->bd_handle;
+        bd_info = switch_bd_get(bd_handle);
         if (!bd_info) {
             return SWITCH_STATUS_INVALID_VLAN_ID;
         }
@@ -425,12 +438,12 @@ switch_stp_update_flood_list(switch_device_t device, switch_handle_t stg_handle,
         switch (state) {
             case SWITCH_PORT_STP_STATE_FORWARDING:
                 status = switch_api_multicast_member_add(device, bd_info->uuc_mc_index,
-                                                     vlan_handle, 1, &intf_handle);
+                                                     bd_handle, 1, &intf_handle);
                 break;
             case SWITCH_PORT_STP_STATE_BLOCKING:
             case SWITCH_PORT_STP_STATE_NONE:
                 status = switch_api_multicast_member_delete(device, bd_info->uuc_mc_index,
-                                                     vlan_handle, 1, &intf_handle);
+                                                     bd_handle, 1, &intf_handle);
                 break;
 
             default:
@@ -448,7 +461,7 @@ switch_api_stp_group_print_entry(switch_handle_t stg_handle)
     switch_stp_vlan_entry_t           *vlan_entry = NULL;
     switch_stp_port_entry_t           *port_entry = NULL;
     tommy_node                        *node = NULL;
-    switch_handle_t                    vlan_handle = 0;
+    switch_handle_t                    bd_handle = 0;
     switch_handle_t                    intf_handle = 0;
 
     stp_info = switch_api_stp_get_internal(stg_handle);
@@ -461,8 +474,8 @@ switch_api_stp_group_print_entry(switch_handle_t stg_handle)
     printf("\nlist of vlan handles:");
     while (node) {
         vlan_entry = node->data;
-        vlan_handle = vlan_entry->vlan_handle;
-        printf("\n\tvlan_handle: %x", (unsigned int) vlan_handle);
+        bd_handle = vlan_entry->bd_handle;
+        printf("\n\tvlan_handle: %x", (unsigned int) bd_handle);
         node = node->next;
     }
     printf("\nlist of interface handles:");

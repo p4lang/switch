@@ -64,25 +64,34 @@ switch_handle_t switch_api_stp_group_create(switch_device_t device, switch_stp_m
 
 /**
  Delete a spanning tree group
+ @param device device
  @param stg_handle handle of the spanning tree group
 */
-switch_status_t switch_api_stp_group_delete(switch_handle_t stg_handle);
+switch_status_t switch_api_stp_group_delete(switch_device_t device, switch_handle_t stg_handle);
 
 /**
  Add VLAN to the stp
+ @param device device
  @param stg_handle spanning tree group handle
- @param vlan_handle Vlan handle
+ @param vlan_count count of vlans
+ @param vlan_handle list of vlan handles
 */
-switch_status_t switch_api_stp_group_vlan_add(switch_handle_t stg_handle, switch_handle_t vlan_handle);
-
+switch_status_t switch_api_stp_group_vlans_add(switch_device_t device,
+                                              switch_handle_t stg_handle,
+                                              uint16_t vlan_count,
+                                              switch_handle_t *vlan_handle);
 /**
  Remove VLAN from the stp
+ @param device device
  @param stg_handle spanning tree group handle
- @param vlan_handle Vlan handle
+ @param vlan_count count of vlans
+ @param vlan_handle list of vlan handles
 */
-switch_status_t switch_api_stp_group_vlan_remove(switch_handle_t stg_handle, switch_handle_t vlan_handle);
+switch_status_t switch_api_stp_group_vlans_remove(switch_device_t device,
+                                                 switch_handle_t stg_handle,
+                                                 uint16_t vlan_count,
+                                                 switch_handle_t *vlan_handle);
 
-   
 /**
  Set the port belonging to a stp in one of discard, learn or forward
  @param device device

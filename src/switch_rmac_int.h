@@ -43,8 +43,8 @@ typedef struct switch_smac_entry_ {
 } switch_smac_entry_t;
 
 // Internal API Declarations
-switch_status_t switch_router_mac_init(void);
-switch_status_t switch_router_mac_free(void);
+switch_status_t switch_router_mac_init(switch_device_t device);
+switch_status_t switch_router_mac_free(switch_device_t device);
 switch_rmac_info_t * switch_api_rmac_info_get_internal(switch_handle_t rmac_handle);
  
 uint16_t switch_smac_rewrite_add_entry(switch_mac_addr_t *mac);

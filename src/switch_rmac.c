@@ -39,7 +39,7 @@ switch_api_id_allocator *smac_rewrite_index_allocator = NULL;
  * @return: Returns rmac group id if success
  */
 switch_handle_t
-switch_api_router_mac_group_create()
+switch_api_router_mac_group_create(switch_device_t device)
 {
     switch_rmac_info_t                *rmac_info = NULL;
     switch_handle_t                    rmac_handle;
@@ -57,7 +57,7 @@ switch_api_router_mac_group_create()
  * @return - Returns rmac group id if success
  */
 switch_status_t
-switch_api_router_mac_group_delete(switch_handle_t rmac_handle)
+switch_api_router_mac_group_delete(switch_device_t device, switch_handle_t rmac_handle)
 {
     switch_rmac_info_t                *rmac_info = NULL;
 
@@ -262,7 +262,7 @@ switch_api_router_mac_group_print_all(void)
  * the rmac groups
  */
 switch_status_t
-switch_router_mac_init(void)
+switch_router_mac_init(switch_device_t device)
 {
     p4_pd_entry_hdl_t                  smac_hdl = 0;
     switch_mac_addr_t                  temp_mac;
@@ -280,7 +280,7 @@ switch_router_mac_init(void)
 }
     
 switch_status_t
-switch_router_mac_free(void)
+switch_router_mac_free(switch_device_t device)
 {
     tommy_hashtable_done(&smac_rewrite_table);
     switch_handle_type_free(SWITCH_HANDLE_TYPE_MY_MAC);

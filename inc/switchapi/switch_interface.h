@@ -103,13 +103,15 @@ typedef struct switch_api_interface_info_ {
  @param intf_info - interface information specific to type
  */
 switch_handle_t switch_api_interface_create(switch_device_t device,
-                                              switch_api_interface_info_t *intf_info);
+                                            switch_api_interface_info_t *intf_info);
 
 /**
  Interface delete
+ @param device - device on which interface is created
  @param interface_handle handle returned by interface creation
  */
-switch_status_t switch_api_interface_delete(switch_handle_t interface_handle);
+switch_status_t switch_api_interface_delete(switch_device_t device,
+                                            switch_handle_t interface_handle);
  
 /**
  Set interface attributes

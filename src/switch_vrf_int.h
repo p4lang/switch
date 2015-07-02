@@ -36,8 +36,8 @@ extern "C" {
 #define SWITCH_VRF_IS_CORE(info) \
     SWITCH_VRF_TYPE(info) == SWITCH_VRF_TYPE_CORE
 
-switch_status_t switch_vrf_init(void);
-switch_status_t switch_vrf_free(void);
+switch_status_t switch_vrf_init(switch_device_t device);
+switch_status_t switch_vrf_free(switch_device_t device);
 switch_vrf_info_t * switch_vrf_get(switch_handle_t vrf_handle);
 
 #ifdef __cplusplus

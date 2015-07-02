@@ -50,7 +50,7 @@ typedef struct switch_port_info_ {
 #define SWITCH_PORT_ID(info) \
     info->api_port_info.port_number
 
-switch_status_t switch_port_init();
+switch_status_t switch_port_init(switch_device_t device);
 switch_port_info_t *switch_api_port_get_internal(switch_port_t port);
 
 #ifdef __cplusplus

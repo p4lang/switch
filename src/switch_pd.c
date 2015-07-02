@@ -28,7 +28,7 @@ p4_pd_sess_hdl_t g_sess_hdl = 0;
 p4_pd_sess_hdl_t g_mc_sess_hdl = 0;
 
 p4_pd_status_t
-switch_pd_client_init()
+switch_pd_client_init(switch_device_t device)
 {
 #ifndef P4_MULTICAST_DISABLE
     p4_pd_status_t sts = 0;
@@ -57,7 +57,7 @@ switch_pd_dmac_table_add_entry(switch_device_t device,
 
     memset(&match_spec, 0, sizeof(p4_pd_dc_dmac_match_spec_t));
 
-    match_spec.ingress_metadata_bd = handle_to_id(mac_entry->vlan_handle);
+    match_spec.ingress_metadata_ingress_bd = handle_to_id(mac_entry->vlan_handle);
     memcpy(match_spec.l2_metadata_lkp_mac_da, &mac_entry->mac, ETH_LEN);
 
     if (mac_entry->mac_action == SWITCH_MAC_ACTION_FORWARD) {
@@ -203,7 +203,7 @@ switch_pd_smac_table_add_entry(switch_device_t device,
     memset(&match_spec, 0, sizeof(p4_pd_dc_smac_match_spec_t));
     memset(&action_spec, 0, sizeof(p4_pd_dc_smac_hit_action_spec_t));
 
-    match_spec.ingress_metadata_bd = handle_to_id(mac_entry->vlan_handle);
+    match_spec.ingress_metadata_ingress_bd = handle_to_id(mac_entry->vlan_handle);
     memcpy(match_spec.l2_metadata_lkp_mac_sa, &mac_entry->mac, ETH_LEN);
 
     action_spec.action_ifindex = intf_info->ifindex;
@@ -447,7 +447,7 @@ switch_pd_ip_fib_add_entry(switch_device_t device, switch_handle_t vrf,
                 memset(&v4_match_spec, 0, sizeof(p4_pd_dc_ipv4_fib_match_spec_t));
                 memset(&v4_action_spec, 0, sizeof(p4_pd_dc_fib_hit_ecmp_action_spec_t));
 
-                v4_match_spec.ingress_metadata_vrf = vrf;
+                v4_match_spec.l3_metadata_vrf = vrf;
                 v4_match_spec.ipv4_metadata_lkp_ipv4_da = ip_addr->ip.v4addr;
                 v4_action_spec.action_ecmp_index = nexthop;
                 status = p4_pd_dc_ipv4_fib_table_add_with_fib_hit_ecmp(g_sess_hdl,
@@ -461,7 +461,7 @@ switch_pd_ip_fib_add_entry(switch_device_t device, switch_handle_t vrf,
 
                 memset(&v4_match_spec, 0, sizeof(p4_pd_dc_ipv4_fib_lpm_match_spec_t));
                 memset(&v4_action_spec, 0, sizeof(p4_pd_dc_fib_hit_ecmp_action_spec_t));
-                v4_match_spec.ingress_metadata_vrf = vrf;
+                v4_match_spec.l3_metadata_vrf = vrf;
                 v4_match_spec.ipv4_metadata_lkp_ipv4_da = ip_addr->ip.v4addr;
                 v4_match_spec.ipv4_metadata_lkp_ipv4_da_prefix_length = 
                                             ip_addr->prefix_len;
@@ -480,7 +480,7 @@ switch_pd_ip_fib_add_entry(switch_device_t device, switch_handle_t vrf,
                 memset(&v4_match_spec, 0, sizeof(p4_pd_dc_ipv4_fib_match_spec_t));
                 memset(&v4_action_spec, 0, sizeof(p4_pd_dc_fib_hit_nexthop_action_spec_t));
 
-                v4_match_spec.ingress_metadata_vrf = vrf;
+                v4_match_spec.l3_metadata_vrf = vrf;
                 v4_match_spec.ipv4_metadata_lkp_ipv4_da = ip_addr->ip.v4addr;
                 v4_action_spec.action_nexthop_index = nexthop;
                 status =  p4_pd_dc_ipv4_fib_table_add_with_fib_hit_nexthop(g_sess_hdl,
@@ -495,7 +495,7 @@ switch_pd_ip_fib_add_entry(switch_device_t device, switch_handle_t vrf,
                 memset(&v4_match_spec, 0, sizeof(p4_pd_dc_ipv4_fib_lpm_match_spec_t));
                 memset(&v4_action_spec, 0, sizeof(p4_pd_dc_fib_hit_nexthop_action_spec_t));
 
-                v4_match_spec.ingress_metadata_vrf = vrf;
+                v4_match_spec.l3_metadata_vrf = vrf;
                 v4_match_spec.ipv4_metadata_lkp_ipv4_da = ip_addr->ip.v4addr;
                 v4_match_spec.ipv4_metadata_lkp_ipv4_da_prefix_length = 
                                             ip_addr->prefix_len;
@@ -519,7 +519,7 @@ switch_pd_ip_fib_add_entry(switch_device_t device, switch_handle_t vrf,
                 memset(&v6_match_spec, 0, sizeof(p4_pd_dc_ipv6_fib_match_spec_t));
                 memset(&v6_action_spec, 0, sizeof(p4_pd_dc_fib_hit_ecmp_action_spec_t));
 
-                v6_match_spec.ingress_metadata_vrf = vrf;
+                v6_match_spec.l3_metadata_vrf = vrf;
                 memcpy(&v6_match_spec.ipv6_metadata_lkp_ipv6_da,
                        ip_addr->ip.v6addr, 16);
                 v6_action_spec.action_ecmp_index = nexthop;
@@ -535,7 +535,7 @@ switch_pd_ip_fib_add_entry(switch_device_t device, switch_handle_t vrf,
                 memset(&v6_match_spec, 0, sizeof(p4_pd_dc_ipv6_fib_lpm_match_spec_t));
                 memset(&v6_action_spec, 0, sizeof(p4_pd_dc_fib_hit_ecmp_action_spec_t));
 
-                v6_match_spec.ingress_metadata_vrf = vrf;
+                v6_match_spec.l3_metadata_vrf = vrf;
                 memcpy(&v6_match_spec.ipv6_metadata_lkp_ipv6_da,
                         ip_addr->ip.v6addr, 16);
                 v6_match_spec.ipv6_metadata_lkp_ipv6_da_prefix_length = 
@@ -555,7 +555,7 @@ switch_pd_ip_fib_add_entry(switch_device_t device, switch_handle_t vrf,
                 memset(&v6_match_spec, 0, sizeof(p4_pd_dc_ipv6_fib_match_spec_t));
                 memset(&v6_action_spec, 0, sizeof(p4_pd_dc_fib_hit_nexthop_action_spec_t));
 
-                v6_match_spec.ingress_metadata_vrf = vrf;
+                v6_match_spec.l3_metadata_vrf = vrf;
                 memcpy(&v6_match_spec.ipv6_metadata_lkp_ipv6_da,
                        ip_addr->ip.v6addr, 16);
                 v6_action_spec.action_nexthop_index = nexthop;
@@ -571,7 +571,7 @@ switch_pd_ip_fib_add_entry(switch_device_t device, switch_handle_t vrf,
                 memset(&v6_match_spec, 0, sizeof(p4_pd_dc_ipv6_fib_lpm_match_spec_t));
                 memset(&v6_action_spec, 0, sizeof(p4_pd_dc_fib_hit_nexthop_action_spec_t));
 
-                v6_match_spec.ingress_metadata_vrf = vrf;
+                v6_match_spec.l3_metadata_vrf = vrf;
                 memcpy(&v6_match_spec.ipv6_metadata_lkp_ipv6_da,
                         ip_addr->ip.v6addr, 16);
                 v6_match_spec.ipv6_metadata_lkp_ipv6_da_prefix_length = 
@@ -785,10 +785,10 @@ switch_pd_outer_rmac_table_add_entry(switch_device_t device,
     match_spec.l3_metadata_rmac_group = rmac_group;
     memcpy(match_spec.l2_metadata_lkp_mac_da, mac, ETH_LEN);
 
-    p4_pd_dc_outer_rmac_table_add_with_set_outer_rmac_hit_flag(g_sess_hdl,
-                                                                p4_pd_device,
-                                                                &match_spec,
-                                                                entry_hdl);
+    p4_pd_dc_outer_rmac_table_add_with_outer_rmac_hit(g_sess_hdl,
+                                                      p4_pd_device,
+                                                      &match_spec,
+                                                      entry_hdl);
 #endif /* P4_TUNNEL_DISABLE */
     p4_pd_complete_operations(g_sess_hdl);
     return status;
@@ -829,7 +829,7 @@ switch_pd_src_vtep_table_add_entry(switch_device_t device,
         memset(&v4_match_spec, 0, sizeof(p4_pd_dc_ipv4_src_vtep_match_spec_t));
         memset(&v4_action_spec, 0, sizeof(p4_pd_dc_src_vtep_hit_action_spec_t));
 
-        v4_match_spec.ingress_metadata_vrf = handle_to_id(ip_encap->vrf_handle);
+        v4_match_spec.l3_metadata_vrf = handle_to_id(ip_encap->vrf_handle);
         v4_match_spec.ipv4_metadata_lkp_ipv4_sa = SWITCH_IP_ENCAP_IPV4_SRC_IP(ip_encap);
 
         status = p4_pd_dc_ipv4_src_vtep_table_add_with_src_vtep_hit(
@@ -847,7 +847,7 @@ switch_pd_src_vtep_table_add_entry(switch_device_t device,
         memset(&v6_match_spec, 0, sizeof(p4_pd_dc_ipv6_src_vtep_match_spec_t));
         memset(&v6_action_spec, 0, sizeof(p4_pd_dc_src_vtep_hit_action_spec_t));
 
-        v6_match_spec.ingress_metadata_vrf = handle_to_id(ip_encap->vrf_handle);
+        v6_match_spec.l3_metadata_vrf = handle_to_id(ip_encap->vrf_handle);
         memcpy(&v6_match_spec.ipv6_metadata_lkp_ipv6_sa,
                 SWITCH_IP_ENCAP_IPV6_SRC_IP(ip_encap), 16);
 
@@ -905,10 +905,10 @@ switch_pd_dest_vtep_table_add_entry(switch_device_t device,
 #ifndef P4_IPV4_DISABLE
         p4_pd_dc_ipv4_dest_vtep_match_spec_t v4_match_spec;
         memset(&v4_match_spec, 0, sizeof(p4_pd_dc_ipv4_dest_vtep_match_spec_t));
-        v4_match_spec.ingress_metadata_vrf = handle_to_id(ip_encap->vrf_handle);
+        v4_match_spec.l3_metadata_vrf = handle_to_id(ip_encap->vrf_handle);
         v4_match_spec.ipv4_metadata_lkp_ipv4_da = SWITCH_IP_ENCAP_IPV4_DST_IP(ip_encap);
         v4_match_spec.l3_metadata_lkp_ip_proto = ip_encap->proto;
-        v4_match_spec.ingress_metadata_lkp_l4_dport = SWITCH_IP_ENCAP_UDP_DST_PORT(ip_encap);
+        v4_match_spec.l3_metadata_lkp_l4_dport = SWITCH_IP_ENCAP_UDP_DST_PORT(ip_encap);
         status = p4_pd_dc_ipv4_dest_vtep_table_add_with_set_tunnel_termination_flag(g_sess_hdl,
                                                                              p4_pd_device,
                                                                              &v4_match_spec,
@@ -918,10 +918,10 @@ switch_pd_dest_vtep_table_add_entry(switch_device_t device,
 #ifndef P4_IPV6_DISABLE
         p4_pd_dc_ipv6_dest_vtep_match_spec_t v6_match_spec;
         memset(&v6_match_spec, 0, sizeof(p4_pd_dc_ipv6_dest_vtep_match_spec_t));
-        v6_match_spec.ingress_metadata_vrf = handle_to_id(ip_encap->vrf_handle);
+        v6_match_spec.l3_metadata_vrf = handle_to_id(ip_encap->vrf_handle);
         memcpy(&v6_match_spec.ipv6_metadata_lkp_ipv6_da, SWITCH_IP_ENCAP_IPV6_DST_IP(ip_encap), 16);
         v6_match_spec.l3_metadata_lkp_ip_proto = ip_encap->proto;
-        v6_match_spec.ingress_metadata_lkp_l4_dport = SWITCH_IP_ENCAP_UDP_DST_PORT(ip_encap);
+        v6_match_spec.l3_metadata_lkp_l4_dport = SWITCH_IP_ENCAP_UDP_DST_PORT(ip_encap);
         status = p4_pd_dc_ipv6_dest_vtep_table_add_with_set_tunnel_termination_flag(g_sess_hdl,
                                                                              p4_pd_device,
                                                                              &v6_match_spec,
@@ -1227,7 +1227,7 @@ switch_pd_egress_vni_table_add_entry(switch_device_t device,
     memset(&match_spec, 0, sizeof(p4_pd_dc_egress_vni_match_spec_t));
     memset(&action_spec, 0, sizeof(p4_pd_dc_set_egress_tunnel_vni_action_spec_t));
 
-    match_spec.ingress_metadata_egress_bd = egress_bd;
+    match_spec.egress_metadata_bd = egress_bd;
     match_spec.tunnel_metadata_egress_tunnel_type = tunnel_type;
     action_spec.action_vnid = tunnel_vni;
 
@@ -1395,8 +1395,8 @@ switch_pd_tunnel_decap_tables_init_entry(switch_device_t device)
 #ifndef P4_MPLS_DISABLE
     /* mpls, inner_ipv4, pop 1 */
     memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_decap_process_outer_match_spec_t));
-    o_match_spec.tunnel_metadata_ingress_tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L3VPN;
-    o_match_spec.tunnel_metadata_ingress_header_count = 1;
+    o_match_spec.tunnel_metadata_ingress_tunnel_type =
+        SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L3VPN_NUM_LABELS_1;
     o_match_spec.inner_ipv4_valid = TRUE;
     status = p4_pd_dc_tunnel_decap_process_outer_table_add_with_decap_mpls_inner_ipv4_pop1(
         g_sess_hdl,
@@ -1406,8 +1406,8 @@ switch_pd_tunnel_decap_tables_init_entry(switch_device_t device)
 
     /* mpls, inner_ipv4, pop 2 */
     memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_decap_process_outer_match_spec_t));
-    o_match_spec.tunnel_metadata_ingress_tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L3VPN;
-    o_match_spec.tunnel_metadata_ingress_header_count = 2;
+    o_match_spec.tunnel_metadata_ingress_tunnel_type =
+        SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L3VPN_NUM_LABELS_2;
     o_match_spec.inner_ipv4_valid = TRUE;
     status = p4_pd_dc_tunnel_decap_process_outer_table_add_with_decap_mpls_inner_ipv4_pop2(
         g_sess_hdl,
@@ -1417,8 +1417,8 @@ switch_pd_tunnel_decap_tables_init_entry(switch_device_t device)
 
     /* mpls, inner_ipv4, pop 3 */
     memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_decap_process_outer_match_spec_t));
-    o_match_spec.tunnel_metadata_ingress_tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L3VPN;
-    o_match_spec.tunnel_metadata_ingress_header_count = 3;
+    o_match_spec.tunnel_metadata_ingress_tunnel_type =
+        SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L3VPN_NUM_LABELS_3;
     o_match_spec.inner_ipv4_valid = TRUE;
     status = p4_pd_dc_tunnel_decap_process_outer_table_add_with_decap_mpls_inner_ipv4_pop3(
         g_sess_hdl,
@@ -1429,8 +1429,8 @@ switch_pd_tunnel_decap_tables_init_entry(switch_device_t device)
 #ifndef P4_IPV6_DISABLE
     /* mpls, inner_ipv6, pop 1 */
     memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_decap_process_outer_match_spec_t));
-    o_match_spec.tunnel_metadata_ingress_tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L3VPN;
-    o_match_spec.tunnel_metadata_ingress_header_count = 1;
+    o_match_spec.tunnel_metadata_ingress_tunnel_type =
+        SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L3VPN_NUM_LABELS_1;
     o_match_spec.inner_ipv6_valid = TRUE;
     status = p4_pd_dc_tunnel_decap_process_outer_table_add_with_decap_mpls_inner_ipv6_pop1(
         g_sess_hdl,
@@ -1440,8 +1440,8 @@ switch_pd_tunnel_decap_tables_init_entry(switch_device_t device)
 
     /* mpls, inner_ipv6, pop 2 */
     memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_decap_process_outer_match_spec_t));
-    o_match_spec.tunnel_metadata_ingress_tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L3VPN;
-    o_match_spec.tunnel_metadata_ingress_header_count = 2;
+    o_match_spec.tunnel_metadata_ingress_tunnel_type =
+        SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L3VPN_NUM_LABELS_2;
     o_match_spec.inner_ipv6_valid = TRUE;
     status = p4_pd_dc_tunnel_decap_process_outer_table_add_with_decap_mpls_inner_ipv6_pop2(
         g_sess_hdl,
@@ -1451,8 +1451,8 @@ switch_pd_tunnel_decap_tables_init_entry(switch_device_t device)
 
     /* mpls, inner_ipv6, pop 3 */
     memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_decap_process_outer_match_spec_t));
-    o_match_spec.tunnel_metadata_ingress_tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L3VPN;
-    o_match_spec.tunnel_metadata_ingress_header_count = 3;
+    o_match_spec.tunnel_metadata_ingress_tunnel_type =
+        SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L3VPN_NUM_LABELS_3;
     o_match_spec.inner_ipv6_valid = TRUE;
     status = p4_pd_dc_tunnel_decap_process_outer_table_add_with_decap_mpls_inner_ipv6_pop3(
         g_sess_hdl,
@@ -1463,8 +1463,8 @@ switch_pd_tunnel_decap_tables_init_entry(switch_device_t device)
 
     /* mpls, ethernet, inner_ipv4, pop 1 */
     memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_decap_process_outer_match_spec_t));
-    o_match_spec.tunnel_metadata_ingress_tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L2VPN;
-    o_match_spec.tunnel_metadata_ingress_header_count = 1;
+    o_match_spec.tunnel_metadata_ingress_tunnel_type =
+        SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L2VPN_NUM_LABELS_1;
     o_match_spec.inner_ipv4_valid = TRUE;
     status = p4_pd_dc_tunnel_decap_process_outer_table_add_with_decap_mpls_inner_ethernet_ipv4_pop1(
         g_sess_hdl,
@@ -1474,8 +1474,8 @@ switch_pd_tunnel_decap_tables_init_entry(switch_device_t device)
 
     /* mpls, ethernet, inner_ipv4, pop 2 */
     memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_decap_process_outer_match_spec_t));
-    o_match_spec.tunnel_metadata_ingress_tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L2VPN;
-    o_match_spec.tunnel_metadata_ingress_header_count = 2;
+    o_match_spec.tunnel_metadata_ingress_tunnel_type =
+        SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L2VPN_NUM_LABELS_2;
     o_match_spec.inner_ipv4_valid = TRUE;
     status = p4_pd_dc_tunnel_decap_process_outer_table_add_with_decap_mpls_inner_ethernet_ipv4_pop2(
         g_sess_hdl,
@@ -1485,8 +1485,8 @@ switch_pd_tunnel_decap_tables_init_entry(switch_device_t device)
 
     /* mpls, ethernet, inner_ipv4, pop 3 */
     memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_decap_process_outer_match_spec_t));
-    o_match_spec.tunnel_metadata_ingress_tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L2VPN;
-    o_match_spec.tunnel_metadata_ingress_header_count = 3;
+    o_match_spec.tunnel_metadata_ingress_tunnel_type =
+        SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L2VPN_NUM_LABELS_3;
     o_match_spec.inner_ipv4_valid = TRUE;
     status = p4_pd_dc_tunnel_decap_process_outer_table_add_with_decap_mpls_inner_ethernet_ipv4_pop3(
         g_sess_hdl,
@@ -1497,8 +1497,8 @@ switch_pd_tunnel_decap_tables_init_entry(switch_device_t device)
 #ifndef P4_IPV6_DISABLE
     /* mpls, ethernet, inner_ipv6, pop 1 */
     memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_decap_process_outer_match_spec_t));
-    o_match_spec.tunnel_metadata_ingress_tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L2VPN;
-    o_match_spec.tunnel_metadata_ingress_header_count = 1;
+    o_match_spec.tunnel_metadata_ingress_tunnel_type =
+        SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L2VPN_NUM_LABELS_1;
     o_match_spec.inner_ipv6_valid = TRUE;
     status = p4_pd_dc_tunnel_decap_process_outer_table_add_with_decap_mpls_inner_ethernet_ipv6_pop1(
         g_sess_hdl,
@@ -1508,8 +1508,8 @@ switch_pd_tunnel_decap_tables_init_entry(switch_device_t device)
 
     /* mpls, ethernet, inner_ipv6, pop 2 */
     memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_decap_process_outer_match_spec_t));
-    o_match_spec.tunnel_metadata_ingress_tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L2VPN;
-    o_match_spec.tunnel_metadata_ingress_header_count = 2;
+    o_match_spec.tunnel_metadata_ingress_tunnel_type =
+        SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L2VPN_NUM_LABELS_2;
     o_match_spec.inner_ipv6_valid = TRUE;
     status = p4_pd_dc_tunnel_decap_process_outer_table_add_with_decap_mpls_inner_ethernet_ipv6_pop2(
         g_sess_hdl,
@@ -1519,8 +1519,8 @@ switch_pd_tunnel_decap_tables_init_entry(switch_device_t device)
 
     /* mpls, ethernet, inner_ipv6, pop 3 */
     memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_decap_process_outer_match_spec_t));
-    o_match_spec.tunnel_metadata_ingress_tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L2VPN;
-    o_match_spec.tunnel_metadata_ingress_header_count = 3;
+    o_match_spec.tunnel_metadata_ingress_tunnel_type =
+        SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L2VPN_NUM_LABELS_3;
     o_match_spec.inner_ipv6_valid = TRUE;
     status = p4_pd_dc_tunnel_decap_process_outer_table_add_with_decap_mpls_inner_ethernet_ipv6_pop3(
         g_sess_hdl,
@@ -1531,8 +1531,8 @@ switch_pd_tunnel_decap_tables_init_entry(switch_device_t device)
 
     /* mpls, ethernet, non_ip, pop 1 */
     memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_decap_process_outer_match_spec_t));
-    o_match_spec.tunnel_metadata_ingress_tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L2VPN;
-    o_match_spec.tunnel_metadata_ingress_header_count = 1;
+    o_match_spec.tunnel_metadata_ingress_tunnel_type =
+        SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L2VPN_NUM_LABELS_1;
     status = p4_pd_dc_tunnel_decap_process_outer_table_add_with_decap_mpls_inner_ethernet_non_ip_pop1(
         g_sess_hdl,
         p4_pd_device,
@@ -1541,8 +1541,8 @@ switch_pd_tunnel_decap_tables_init_entry(switch_device_t device)
 
     /* mpls, ethernet, inner_ipv6, pop 2 */
     memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_decap_process_outer_match_spec_t));
-    o_match_spec.tunnel_metadata_ingress_tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L2VPN;
-    o_match_spec.tunnel_metadata_ingress_header_count = 2;
+    o_match_spec.tunnel_metadata_ingress_tunnel_type =
+        SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L2VPN_NUM_LABELS_2;
     status = p4_pd_dc_tunnel_decap_process_outer_table_add_with_decap_mpls_inner_ethernet_non_ip_pop2(
         g_sess_hdl,
         p4_pd_device,
@@ -1551,8 +1551,8 @@ switch_pd_tunnel_decap_tables_init_entry(switch_device_t device)
 
     /* mpls, ethernet, inner_ipv6, pop 3 */
     memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_decap_process_outer_match_spec_t));
-    o_match_spec.tunnel_metadata_ingress_tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L2VPN;
-    o_match_spec.tunnel_metadata_ingress_header_count = 3;
+    o_match_spec.tunnel_metadata_ingress_tunnel_type =
+        SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L2VPN_NUM_LABELS_3;
     status = p4_pd_dc_tunnel_decap_process_outer_table_add_with_decap_mpls_inner_ethernet_non_ip_pop3(
         g_sess_hdl,
         p4_pd_device,
@@ -1673,7 +1673,16 @@ switch_pd_tunnel_encap_tables_init_entry(switch_device_t device)
 
     /* ipv4 vxlan */
     memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_encap_process_outer_match_spec_t));
-    o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_VXLAN_IPV4;
+    o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV4_VXLAN;
+    o_match_spec.multicast_metadata_replica = false;
+    status = p4_pd_dc_tunnel_encap_process_outer_table_add_with_ipv4_vxlan_rewrite(
+        g_sess_hdl,
+        p4_pd_device,
+        &o_match_spec,
+        &entry_hdl);
+     memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_encap_process_outer_match_spec_t));
+    o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV4_VXLAN;
+    o_match_spec.multicast_metadata_replica = true;
     status = p4_pd_dc_tunnel_encap_process_outer_table_add_with_ipv4_vxlan_rewrite(
         g_sess_hdl,
         p4_pd_device,
@@ -1682,7 +1691,16 @@ switch_pd_tunnel_encap_tables_init_entry(switch_device_t device)
 
     /* ipv6 vxlan */
     memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_encap_process_outer_match_spec_t));
-    o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_VXLAN_IPV6;
+    o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV6_VXLAN;
+    o_match_spec.multicast_metadata_replica = false;
+    status = p4_pd_dc_tunnel_encap_process_outer_table_add_with_ipv6_vxlan_rewrite(
+        g_sess_hdl,
+        p4_pd_device,
+        &o_match_spec,
+        &entry_hdl);
+    memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_encap_process_outer_match_spec_t));
+    o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV6_VXLAN;
+    o_match_spec.multicast_metadata_replica = true;
     status = p4_pd_dc_tunnel_encap_process_outer_table_add_with_ipv6_vxlan_rewrite(
         g_sess_hdl,
         p4_pd_device,
@@ -1691,7 +1709,16 @@ switch_pd_tunnel_encap_tables_init_entry(switch_device_t device)
 
     /* ipv4 geneve */
     memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_encap_process_outer_match_spec_t));
-    o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_GENEVE_IPV4;
+    o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV4_GENEVE;
+    o_match_spec.multicast_metadata_replica = false;
+    status = p4_pd_dc_tunnel_encap_process_outer_table_add_with_ipv4_genv_rewrite(
+        g_sess_hdl,
+        p4_pd_device,
+        &o_match_spec,
+        &entry_hdl);
+    memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_encap_process_outer_match_spec_t));
+    o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV4_GENEVE;
+    o_match_spec.multicast_metadata_replica = true;
     status = p4_pd_dc_tunnel_encap_process_outer_table_add_with_ipv4_genv_rewrite(
         g_sess_hdl,
         p4_pd_device,
@@ -1700,7 +1727,16 @@ switch_pd_tunnel_encap_tables_init_entry(switch_device_t device)
 
     /* ipv6 geneve */
     memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_encap_process_outer_match_spec_t));
-    o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_GENEVE_IPV6;
+    o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV6_GENEVE;
+    o_match_spec.multicast_metadata_replica = false;
+    status = p4_pd_dc_tunnel_encap_process_outer_table_add_with_ipv6_genv_rewrite(
+        g_sess_hdl,
+        p4_pd_device,
+        &o_match_spec,
+        &entry_hdl);
+    memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_encap_process_outer_match_spec_t));
+    o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV6_GENEVE;
+    o_match_spec.multicast_metadata_replica = true;
     status = p4_pd_dc_tunnel_encap_process_outer_table_add_with_ipv6_genv_rewrite(
         g_sess_hdl,
         p4_pd_device,
@@ -1709,7 +1745,16 @@ switch_pd_tunnel_encap_tables_init_entry(switch_device_t device)
 
     /* ipv4 nvgre */
     memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_encap_process_outer_match_spec_t));
-    o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_NVGRE_IPV4;
+    o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV4_NVGRE;
+    o_match_spec.multicast_metadata_replica = false;
+    status = p4_pd_dc_tunnel_encap_process_outer_table_add_with_ipv4_nvgre_rewrite(
+        g_sess_hdl,
+        p4_pd_device,
+        &o_match_spec,
+        &entry_hdl);
+    memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_encap_process_outer_match_spec_t));
+    o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV4_NVGRE;
+    o_match_spec.multicast_metadata_replica = true;
     status = p4_pd_dc_tunnel_encap_process_outer_table_add_with_ipv4_nvgre_rewrite(
         g_sess_hdl,
         p4_pd_device,
@@ -1718,7 +1763,16 @@ switch_pd_tunnel_encap_tables_init_entry(switch_device_t device)
 
     /* ipv6 nvgre */
     memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_encap_process_outer_match_spec_t));
-    o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_NVGRE_IPV6;
+    o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV6_NVGRE;
+    o_match_spec.multicast_metadata_replica = false;
+    status = p4_pd_dc_tunnel_encap_process_outer_table_add_with_ipv6_nvgre_rewrite(
+        g_sess_hdl,
+        p4_pd_device,
+        &o_match_spec,
+        &entry_hdl);
+    memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_encap_process_outer_match_spec_t));
+    o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV6_NVGRE;
+    o_match_spec.multicast_metadata_replica = true;
     status = p4_pd_dc_tunnel_encap_process_outer_table_add_with_ipv6_nvgre_rewrite(
         g_sess_hdl,
         p4_pd_device,
@@ -1730,6 +1784,16 @@ switch_pd_tunnel_encap_tables_init_entry(switch_device_t device)
     memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_encap_process_outer_match_spec_t));
     o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_MPLS_L2VPN;
     o_match_spec.tunnel_metadata_egress_header_count = 1;
+    o_match_spec.multicast_metadata_replica = false;
+    status = p4_pd_dc_tunnel_encap_process_outer_table_add_with_mpls_ethernet_push1_rewrite(
+        g_sess_hdl,
+        p4_pd_device,
+        &o_match_spec,
+        &entry_hdl);
+    memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_encap_process_outer_match_spec_t));
+    o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_MPLS_L2VPN;
+    o_match_spec.tunnel_metadata_egress_header_count = 1;
+    o_match_spec.multicast_metadata_replica = true;
     status = p4_pd_dc_tunnel_encap_process_outer_table_add_with_mpls_ethernet_push1_rewrite(
         g_sess_hdl,
         p4_pd_device,
@@ -1740,6 +1804,16 @@ switch_pd_tunnel_encap_tables_init_entry(switch_device_t device)
     memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_encap_process_outer_match_spec_t));
     o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_MPLS_L2VPN;
     o_match_spec.tunnel_metadata_egress_header_count = 2;
+    o_match_spec.multicast_metadata_replica = false;
+    status = p4_pd_dc_tunnel_encap_process_outer_table_add_with_mpls_ethernet_push2_rewrite(
+        g_sess_hdl,
+        p4_pd_device,
+        &o_match_spec,
+        &entry_hdl);
+    memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_encap_process_outer_match_spec_t));
+    o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_MPLS_L2VPN;
+    o_match_spec.tunnel_metadata_egress_header_count = 2;
+    o_match_spec.multicast_metadata_replica = true;
     status = p4_pd_dc_tunnel_encap_process_outer_table_add_with_mpls_ethernet_push2_rewrite(
         g_sess_hdl,
         p4_pd_device,
@@ -1750,6 +1824,16 @@ switch_pd_tunnel_encap_tables_init_entry(switch_device_t device)
     memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_encap_process_outer_match_spec_t));
     o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_MPLS_L2VPN;
     o_match_spec.tunnel_metadata_egress_header_count = 3;
+    o_match_spec.multicast_metadata_replica = false;
+    status = p4_pd_dc_tunnel_encap_process_outer_table_add_with_mpls_ethernet_push3_rewrite(
+        g_sess_hdl,
+        p4_pd_device,
+        &o_match_spec,
+        &entry_hdl);
+    memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_encap_process_outer_match_spec_t));
+    o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_MPLS_L2VPN;
+    o_match_spec.tunnel_metadata_egress_header_count = 3;
+    o_match_spec.multicast_metadata_replica = true;
     status = p4_pd_dc_tunnel_encap_process_outer_table_add_with_mpls_ethernet_push3_rewrite(
         g_sess_hdl,
         p4_pd_device,
@@ -1760,6 +1844,16 @@ switch_pd_tunnel_encap_tables_init_entry(switch_device_t device)
     memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_encap_process_outer_match_spec_t));
     o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_MPLS_L3VPN;
     o_match_spec.tunnel_metadata_egress_header_count = 1;
+    o_match_spec.multicast_metadata_replica = false;
+    status = p4_pd_dc_tunnel_encap_process_outer_table_add_with_mpls_ip_push1_rewrite(
+        g_sess_hdl,
+        p4_pd_device,
+        &o_match_spec,
+        &entry_hdl);
+    memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_encap_process_outer_match_spec_t));
+    o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_MPLS_L3VPN;
+    o_match_spec.tunnel_metadata_egress_header_count = 1;
+    o_match_spec.multicast_metadata_replica = true;
     status = p4_pd_dc_tunnel_encap_process_outer_table_add_with_mpls_ip_push1_rewrite(
         g_sess_hdl,
         p4_pd_device,
@@ -1770,6 +1864,16 @@ switch_pd_tunnel_encap_tables_init_entry(switch_device_t device)
     memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_encap_process_outer_match_spec_t));
     o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_MPLS_L3VPN;
     o_match_spec.tunnel_metadata_egress_header_count = 2;
+    o_match_spec.multicast_metadata_replica = false;
+    status = p4_pd_dc_tunnel_encap_process_outer_table_add_with_mpls_ip_push2_rewrite(
+        g_sess_hdl,
+        p4_pd_device,
+        &o_match_spec,
+        &entry_hdl);
+    memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_encap_process_outer_match_spec_t));
+    o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_MPLS_L3VPN;
+    o_match_spec.tunnel_metadata_egress_header_count = 2;
+    o_match_spec.multicast_metadata_replica = true;
     status = p4_pd_dc_tunnel_encap_process_outer_table_add_with_mpls_ip_push2_rewrite(
         g_sess_hdl,
         p4_pd_device,
@@ -1780,6 +1884,16 @@ switch_pd_tunnel_encap_tables_init_entry(switch_device_t device)
     memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_encap_process_outer_match_spec_t));
     o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_MPLS_L3VPN;
     o_match_spec.tunnel_metadata_egress_header_count = 3;
+    o_match_spec.multicast_metadata_replica = false;
+    status = p4_pd_dc_tunnel_encap_process_outer_table_add_with_mpls_ip_push3_rewrite(
+        g_sess_hdl,
+        p4_pd_device,
+        &o_match_spec,
+        &entry_hdl);
+    memset(&o_match_spec, 0, sizeof(p4_pd_dc_tunnel_encap_process_outer_match_spec_t));
+    o_match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_MPLS_L3VPN;
+    o_match_spec.tunnel_metadata_egress_header_count = 3;
+    o_match_spec.multicast_metadata_replica = true;
     status = p4_pd_dc_tunnel_encap_process_outer_table_add_with_mpls_ip_push3_rewrite(
         g_sess_hdl,
         p4_pd_device,
@@ -2107,7 +2221,7 @@ switch_pd_port_mapping_table_add_entry(switch_device_t device,
                                        switch_ifindex_t ifindex,
                                        p4_pd_entry_hdl_t *entry_hdl)
 {
-    p4_pd_dc_port_mapping_match_spec_t          match_spec;
+    p4_pd_dc_ingress_port_mapping_match_spec_t  match_spec;
     p4_pd_dc_set_ifindex_action_spec_t          action_spec;
     p4_pd_status_t                              status = 0;
     bool                                        modify = FALSE;
@@ -2116,7 +2230,7 @@ switch_pd_port_mapping_table_add_entry(switch_device_t device,
     p4_pd_device.device_id = device;
     p4_pd_device.dev_pipe_id = SWITCH_DEV_PIPE_ID;
 
-    memset(&match_spec, 0, sizeof(p4_pd_dc_port_mapping_match_spec_t));
+    memset(&match_spec, 0, sizeof(p4_pd_dc_ingress_port_mapping_match_spec_t));
     memset(&action_spec, 0, sizeof(p4_pd_dc_set_ifindex_action_spec_t));
 
     match_spec.standard_metadata_ingress_port = port_id;
@@ -2125,15 +2239,15 @@ switch_pd_port_mapping_table_add_entry(switch_device_t device,
 
     modify = (*entry_hdl != 0) ? TRUE : FALSE;
     if (modify) {
-        status = p4_pd_dc_port_mapping_table_modify_with_set_ifindex(g_sess_hdl, 0,
-                                                                       *entry_hdl,
-                                                                       &action_spec);
+        status = p4_pd_dc_ingress_port_mapping_table_modify_with_set_ifindex(g_sess_hdl, 0,
+                                                                     *entry_hdl,
+                                                                     &action_spec);
     } else {
-        status = p4_pd_dc_port_mapping_table_add_with_set_ifindex(g_sess_hdl,
-                                                                    p4_pd_device,
-                                                                    &match_spec,
-                                                                    &action_spec,
-                                                                    entry_hdl);
+        status = p4_pd_dc_ingress_port_mapping_table_add_with_set_ifindex(g_sess_hdl,
+                                                                  p4_pd_device,
+                                                                  &match_spec,
+                                                                  &action_spec,
+                                                                  entry_hdl);
     }
 
     p4_pd_complete_operations(g_sess_hdl);
@@ -2146,17 +2260,20 @@ switch_pd_port_mapping_table_delete_entry(switch_device_t device,
 {
     p4_pd_status_t status = 0;
 
-    status = p4_pd_dc_port_mapping_table_delete(g_sess_hdl,
-                                                  device,
-                                                  entry_hdl);
+    status = p4_pd_dc_ingress_port_mapping_table_delete(g_sess_hdl,
+                                                        device,
+                                                        entry_hdl);
     p4_pd_complete_operations(g_sess_hdl);
     return status;
 }
 
 p4_pd_status_t
-switch_pd_rewrite_table_unicast_rewrite_add_entry(switch_device_t device, uint16_t nhop_index,
-                                                  uint16_t smac_index, switch_mac_addr_t dmac,
-                                                  switch_ip_addr_type_t addr_type,
+switch_pd_rewrite_table_unicast_rewrite_add_entry(switch_device_t device,
+                                                  uint16_t bd,
+                                                  uint16_t nhop_index,
+                                                  uint16_t smac_index,
+                                                  switch_mac_addr_t dmac,
+                                                  switch_neighbor_rw_type_t rw_type,
                                                   p4_pd_entry_hdl_t *entry_hdl)
 {
     p4_pd_dc_rewrite_match_spec_t               match_spec;
@@ -2169,41 +2286,50 @@ switch_pd_rewrite_table_unicast_rewrite_add_entry(switch_device_t device, uint16
     memset(&match_spec, 0, sizeof(p4_pd_dc_rewrite_match_spec_t));
     match_spec.l3_metadata_nexthop_index = nhop_index;
 
-    if (addr_type == SWITCH_API_IP_ADDR_V4)
-    {
-        p4_pd_dc_set_ipv4_unicast_rewrite_action_spec_t v4_action_spec;
-        memset(&v4_action_spec, 0, sizeof(p4_pd_dc_set_ipv4_unicast_rewrite_action_spec_t));
-        v4_action_spec.action_smac_idx = smac_index;
-        memcpy(v4_action_spec.action_dmac, &dmac, ETH_LEN); 
-        status = p4_pd_dc_rewrite_table_add_with_set_ipv4_unicast_rewrite(g_sess_hdl,
-                                                                               p4_pd_device,
-                                                                               &match_spec,
-                                                                               &v4_action_spec,
-                                                                               entry_hdl);
+    if (rw_type == SWITCH_API_NEIGHBOR_RW_TYPE_L2) {
+        p4_pd_dc_set_l2_rewrite_action_spec_t action_spec;
+        memset(&action_spec, 0, sizeof(p4_pd_dc_set_l2_rewrite_action_spec_t));
+        action_spec.action_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_NONE;
+        action_spec.action_tunnel_index = 0;
 
-
+        status = p4_pd_dc_rewrite_table_add_with_set_l2_rewrite(
+            g_sess_hdl,
+            p4_pd_device,
+            &match_spec,
+            &action_spec,
+            entry_hdl);
     } else {
-#ifndef P4_IPV6_DISABLE
-        p4_pd_dc_set_ipv6_unicast_rewrite_action_spec_t v6_action_spec;
-        memset(&v6_action_spec, 0, sizeof(p4_pd_dc_set_ipv6_unicast_rewrite_action_spec_t));
-        v6_action_spec.action_smac_idx = smac_index; 
-        memcpy(v6_action_spec.action_dmac, &dmac, ETH_LEN); 
-        status = p4_pd_dc_rewrite_table_add_with_set_ipv6_unicast_rewrite(g_sess_hdl,
-                                                                               p4_pd_device,
-                                                                               &match_spec,
-                                                                               &v6_action_spec,
-                                                                               entry_hdl);
-#endif /* P4_IPV6_DISABLE */
+        p4_pd_dc_set_l3_unicast_rewrite_action_spec_t action_spec;
+        memset(&action_spec, 0,
+               sizeof(p4_pd_dc_set_l3_unicast_rewrite_action_spec_t));
+        action_spec.action_bd = bd;
+        action_spec.action_smac_idx = smac_index;
+        memcpy(action_spec.action_dmac, &dmac, ETH_LEN); 
+        action_spec.action_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_NONE;
+        action_spec.action_tunnel_index = 0;
+
+        status = p4_pd_dc_rewrite_table_add_with_set_l3_unicast_rewrite(
+            g_sess_hdl,
+            p4_pd_device,
+            &match_spec,
+            &action_spec,
+            entry_hdl);
     }
+
     p4_pd_complete_operations(g_sess_hdl);
     return status;
 }
 
 p4_pd_status_t
-switch_pd_rewrite_table_tunnel_rewrite_add_entry(switch_device_t device, uint16_t nhop_index,
-                                                 uint16_t smac_index, uint16_t outer_bd,
-                                                 switch_ip_addr_type_t addr_type, switch_mac_addr_t dmac,
-                                                 uint16_t tunnel_index, switch_encap_type_t encap_type,
+switch_pd_rewrite_table_tunnel_rewrite_add_entry(switch_device_t device,
+                                                 uint16_t bd,
+                                                 uint16_t nhop_index,
+                                                 uint16_t smac_index,
+                                                 switch_mac_addr_t dmac,
+                                                 switch_neighbor_type_t neigh_type,
+                                                 switch_neighbor_rw_type_t rw_type,
+                                                 uint16_t tunnel_index,
+                                                 switch_encap_type_t encap_type,
                                                  p4_pd_entry_hdl_t *entry_hdl)
 {
     p4_pd_status_t                              status = 0;
@@ -2217,254 +2343,172 @@ switch_pd_rewrite_table_tunnel_rewrite_add_entry(switch_device_t device, uint16_
     memset(&match_spec, 0, sizeof(p4_pd_dc_rewrite_match_spec_t));
     match_spec.l3_metadata_nexthop_index = nhop_index;
 
-    if (addr_type == SWITCH_API_IP_ADDR_V4) {
-        switch(encap_type) {
-            case SWITCH_API_ENCAP_TYPE_VXLAN:
-            {
-                p4_pd_dc_set_ipv4_vxlan_rewrite_action_spec_t v4_action_spec;
-                memset(&v4_action_spec, 0, sizeof(p4_pd_dc_set_ipv4_vxlan_rewrite_action_spec_t));
-                v4_action_spec.action_outer_bd = outer_bd;
-                v4_action_spec.action_tunnel_index = tunnel_index;
-                v4_action_spec.action_smac_idx = smac_index;
-                memcpy(v4_action_spec.action_dmac, &dmac, ETH_LEN); 
-                status = p4_pd_dc_rewrite_table_add_with_set_ipv4_vxlan_rewrite(g_sess_hdl,
-                                                                                     p4_pd_device,
-                                                                                     &match_spec,
-                                                                                     &v4_action_spec,
-                                                                                     entry_hdl);
+    switch_tunnel_type_egress_t tunnel_type;
+    switch(encap_type) {
+        case SWITCH_API_ENCAP_TYPE_VXLAN:
+            if (neigh_type == SWITCH_API_NEIGHBOR_IPV4_TUNNEL) {
+                tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV4_VXLAN;
+            } else {
+                tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV6_VXLAN;
             }
             break;
-            case SWITCH_API_ENCAP_TYPE_GENEVE:
-            {
-                p4_pd_dc_set_ipv4_geneve_rewrite_action_spec_t v4_action_spec;
-                memset(&v4_action_spec, 0, sizeof(p4_pd_dc_set_ipv4_geneve_rewrite_action_spec_t));
-                v4_action_spec.action_outer_bd = outer_bd;
-                v4_action_spec.action_tunnel_index = tunnel_index;
-                v4_action_spec.action_smac_idx = smac_index;
-                memcpy(v4_action_spec.action_dmac, &dmac, ETH_LEN); 
-                status = p4_pd_dc_rewrite_table_add_with_set_ipv4_geneve_rewrite(g_sess_hdl,
-                                                                                      p4_pd_device,
-                                                                                      &match_spec,
-                                                                                      &v4_action_spec,
-                                                                                      entry_hdl);
+        case SWITCH_API_ENCAP_TYPE_GENEVE:
+            if (neigh_type == SWITCH_API_NEIGHBOR_IPV4_TUNNEL) {
+                tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV4_GENEVE;
+            } else {
+                tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV6_GENEVE;
             }
             break;
-            case SWITCH_API_ENCAP_TYPE_NVGRE:
-            {
-                p4_pd_dc_set_ipv4_nvgre_rewrite_action_spec_t v4_action_spec;
-                memset(&v4_action_spec, 0, sizeof(p4_pd_dc_set_ipv4_nvgre_rewrite_action_spec_t));
-                v4_action_spec.action_outer_bd = outer_bd;
-                v4_action_spec.action_tunnel_index = tunnel_index;
-                v4_action_spec.action_smac_idx = smac_index;
-                memcpy(v4_action_spec.action_dmac, &dmac, ETH_LEN); 
-                status = p4_pd_dc_rewrite_table_add_with_set_ipv4_nvgre_rewrite(g_sess_hdl,
-                                                                                     p4_pd_device,
-                                                                                     &match_spec,
-                                                                                     &v4_action_spec,
-                                                                                     entry_hdl);
+        case SWITCH_API_ENCAP_TYPE_NVGRE:
+            if (neigh_type == SWITCH_API_NEIGHBOR_IPV4_TUNNEL) {
+                tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV4_NVGRE;
+            } else {
+                tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV6_NVGRE;
             }
             break;
-            default:
-                status = SWITCH_STATUS_INVALID_TUNNEL_TYPE;
-        }
-    } else {
-        switch(encap_type) {
-            case SWITCH_API_ENCAP_TYPE_VXLAN:
-            {
-                p4_pd_dc_set_ipv6_vxlan_rewrite_action_spec_t v6_action_spec;
-                memset(&v6_action_spec, 0, sizeof(p4_pd_dc_set_ipv6_vxlan_rewrite_action_spec_t));
-                v6_action_spec.action_outer_bd = outer_bd;
-                v6_action_spec.action_tunnel_index = tunnel_index;
-                v6_action_spec.action_smac_idx = smac_index;
-                memcpy(v6_action_spec.action_dmac, &dmac, ETH_LEN); 
-                status = p4_pd_dc_rewrite_table_add_with_set_ipv6_vxlan_rewrite(g_sess_hdl,
-                                                                                     p4_pd_device,
-                                                                                     &match_spec,
-                                                                                     &v6_action_spec,
-                                                                                     entry_hdl);
-            }
-            break;
-            case SWITCH_API_ENCAP_TYPE_GENEVE:
-            {
-                p4_pd_dc_set_ipv6_geneve_rewrite_action_spec_t v6_action_spec;
-                memset(&v6_action_spec, 0, sizeof(p4_pd_dc_set_ipv6_geneve_rewrite_action_spec_t));
-                v6_action_spec.action_outer_bd = outer_bd;
-                v6_action_spec.action_tunnel_index = tunnel_index;
-                v6_action_spec.action_smac_idx = smac_index;
-                memcpy(v6_action_spec.action_dmac, &dmac, ETH_LEN); 
-                status = p4_pd_dc_rewrite_table_add_with_set_ipv6_geneve_rewrite(g_sess_hdl,
-                                                                                      p4_pd_device,
-                                                                                      &match_spec,
-                                                                                      &v6_action_spec,
-                                                                                      entry_hdl);
-            }
-            break;
-            case SWITCH_API_ENCAP_TYPE_NVGRE:
-            {
-                p4_pd_dc_set_ipv6_nvgre_rewrite_action_spec_t v6_action_spec;
-                memset(&v6_action_spec, 0, sizeof(p4_pd_dc_set_ipv6_nvgre_rewrite_action_spec_t));
-                v6_action_spec.action_outer_bd = outer_bd;
-                v6_action_spec.action_tunnel_index = tunnel_index;
-                v6_action_spec.action_smac_idx = smac_index;
-                memcpy(v6_action_spec.action_dmac, &dmac, ETH_LEN); 
-                status = p4_pd_dc_rewrite_table_add_with_set_ipv6_nvgre_rewrite(g_sess_hdl,
-                                                                                     p4_pd_device,
-                                                                                     &match_spec,
-                                                                                     &v6_action_spec,
-                                                                                     entry_hdl);
-            }
-            break;
+        default:
+            status = SWITCH_STATUS_INVALID_TUNNEL_TYPE;
+            return status;
+    }
 
-            default:
-                status = SWITCH_STATUS_INVALID_ENCAP_TYPE;
-        }
+    if (rw_type == SWITCH_API_NEIGHBOR_RW_TYPE_L2) {
+        p4_pd_dc_set_l2_rewrite_action_spec_t action_spec;
+        action_spec.action_tunnel_type = tunnel_type;
+        action_spec.action_tunnel_index = tunnel_index;
+        status = p4_pd_dc_rewrite_table_add_with_set_l2_rewrite(g_sess_hdl,
+                                                                p4_pd_device,
+                                                                &match_spec,
+                                                                &action_spec,
+                                                                entry_hdl);
+    } else {
+        p4_pd_dc_set_l3_unicast_rewrite_action_spec_t action_spec;
+        memset(&action_spec, 0,
+               sizeof(p4_pd_dc_set_l3_unicast_rewrite_action_spec_t));
+        action_spec.action_bd = bd;
+        action_spec.action_smac_idx = smac_index;
+        memcpy(action_spec.action_dmac, &dmac, ETH_LEN); 
+        action_spec.action_tunnel_type = tunnel_type;
+        action_spec.action_tunnel_index = tunnel_index;
+        status = p4_pd_dc_rewrite_table_add_with_set_l3_unicast_rewrite(
+            g_sess_hdl,
+            p4_pd_device,
+            &match_spec,
+            &action_spec,
+            entry_hdl);
     }
 #endif /* P4_TUNNEL_DISABLE */
+
     p4_pd_complete_operations(g_sess_hdl);
     return status;
 }
 
 p4_pd_status_t
-switch_pd_rewrite_table_unicast_rewrite_update_entry(switch_device_t device, uint16_t nhop_index,
-                                                     uint16_t smac_index, switch_mac_addr_t dmac,
-                                                     switch_ip_addr_type_t addr_type,
+switch_pd_rewrite_table_unicast_rewrite_update_entry(switch_device_t device,
+                                                     uint16_t bd,
+                                                     uint16_t nhop_index,
+                                                     uint16_t smac_index,
+                                                     switch_mac_addr_t dmac,
+                                                     switch_neighbor_rw_type_t rw_type,
                                                      p4_pd_entry_hdl_t entry_hdl)
 {
     p4_pd_status_t                              status = 0;
 
-    if (addr_type == SWITCH_API_IP_ADDR_V4)
-    {
-        p4_pd_dc_set_ipv4_unicast_rewrite_action_spec_t v4_action_spec;
-        memset(&v4_action_spec, 0, sizeof(p4_pd_dc_set_ipv4_unicast_rewrite_action_spec_t));
-        v4_action_spec.action_smac_idx = 0;
-        memcpy(v4_action_spec.action_dmac, &dmac, ETH_LEN); 
-        status = p4_pd_dc_rewrite_table_modify_with_set_ipv4_unicast_rewrite(g_sess_hdl,
-                                                                                  device,
-                                                                                  entry_hdl,
-                                                                                  &v4_action_spec);
-
-
+    if (rw_type == SWITCH_API_NEIGHBOR_RW_TYPE_L2) {
+        p4_pd_dc_set_l2_rewrite_action_spec_t action_spec;
+        memset(&action_spec, 0, sizeof(p4_pd_dc_set_l2_rewrite_action_spec_t));
+        action_spec.action_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_NONE;
+        action_spec.action_tunnel_index = 0;
+        status = p4_pd_dc_rewrite_table_modify_with_set_l2_rewrite(
+            g_sess_hdl,
+            device,
+            entry_hdl,
+            &action_spec);
     } else {
-#ifndef P4_IPV6_DISABLE
-        p4_pd_dc_set_ipv6_unicast_rewrite_action_spec_t v6_action_spec;
-        memset(&v6_action_spec, 0, sizeof(p4_pd_dc_set_ipv6_unicast_rewrite_action_spec_t));
-        v6_action_spec.action_smac_idx = 0;
-        memcpy(v6_action_spec.action_dmac, &dmac, ETH_LEN); 
-        status = p4_pd_dc_rewrite_table_modify_with_set_ipv6_unicast_rewrite(g_sess_hdl,
-                                                                                  device,
-                                                                                  entry_hdl,
-                                                                                  &v6_action_spec);
-#endif /* P4_IPV6_DISABLE */
+        p4_pd_dc_set_l3_unicast_rewrite_action_spec_t action_spec;
+        memset(&action_spec, 0, sizeof(p4_pd_dc_set_l3_unicast_rewrite_action_spec_t));
+        action_spec.action_smac_idx = smac_index;
+        memcpy(action_spec.action_dmac, &dmac, ETH_LEN); 
+        action_spec.action_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_NONE;
+        action_spec.action_tunnel_index = 0;
+        status = p4_pd_dc_rewrite_table_modify_with_set_l3_unicast_rewrite(
+            g_sess_hdl,
+            device,
+            entry_hdl,
+            &action_spec);
     }
+
     p4_pd_complete_operations(g_sess_hdl);
     return status;
 }
 
 p4_pd_status_t
-switch_pd_rewrite_table_tunnel_rewrite_update_entry(switch_device_t device, uint16_t nhop_index,
-                                                    uint16_t smac_index, uint16_t outer_bd,
-                                                    switch_ip_addr_type_t addr_type, switch_mac_addr_t dmac,
-                                                    uint16_t tunnel_index, switch_encap_type_t encap_type,
-                                                    p4_pd_entry_hdl_t entry_hdl)
+switch_pd_rewrite_table_tunnel_rewrite_update_entry(switch_device_t device,
+                                                 uint16_t bd,
+                                                 uint16_t nhop_index,
+                                                 uint16_t smac_index,
+                                                 switch_mac_addr_t dmac,
+                                                 switch_neighbor_type_t neigh_type,
+                                                 switch_neighbor_rw_type_t rw_type,
+                                                 uint16_t tunnel_index,
+                                                 switch_encap_type_t encap_type,
+                                                 p4_pd_entry_hdl_t entry_hdl)
 {
     p4_pd_status_t    status = 0;
+
 #ifndef P4_TUNNEL_DISABLE
-    if (addr_type == SWITCH_API_IP_ADDR_V4) {
-        switch(encap_type) {
-            case SWITCH_API_ENCAP_TYPE_VXLAN:
-            {
-                p4_pd_dc_set_ipv4_vxlan_rewrite_action_spec_t v4_action_spec;
-                memset(&v4_action_spec, 0, sizeof(p4_pd_dc_set_ipv4_vxlan_rewrite_action_spec_t));
-                v4_action_spec.action_outer_bd = outer_bd;
-                v4_action_spec.action_tunnel_index = tunnel_index;
-                v4_action_spec.action_smac_idx = smac_index;
-                memcpy(v4_action_spec.action_dmac, &dmac, ETH_LEN); 
-                status = p4_pd_dc_rewrite_table_modify_with_set_ipv4_vxlan_rewrite(g_sess_hdl,
-                                                                                        device,
-                                                                                        entry_hdl,
-                                                                                        &v4_action_spec);
+    switch_tunnel_type_egress_t tunnel_type;
+    switch (encap_type) {
+        case SWITCH_API_ENCAP_TYPE_VXLAN:
+            if (neigh_type == SWITCH_API_NEIGHBOR_IPV4_TUNNEL) {
+                tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV4_VXLAN;
+            } else {
+                tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV6_VXLAN;
             }
             break;
-            case SWITCH_API_ENCAP_TYPE_GENEVE:
-            {
-                p4_pd_dc_set_ipv4_geneve_rewrite_action_spec_t v4_action_spec;
-                memset(&v4_action_spec, 0, sizeof(p4_pd_dc_set_ipv4_geneve_rewrite_action_spec_t));
-                v4_action_spec.action_outer_bd = outer_bd;
-                v4_action_spec.action_tunnel_index = tunnel_index;
-                v4_action_spec.action_smac_idx = smac_index;
-                memcpy(v4_action_spec.action_dmac, &dmac, ETH_LEN); 
-                status = p4_pd_dc_rewrite_table_modify_with_set_ipv4_geneve_rewrite(g_sess_hdl,
-                                                                                         device,
-                                                                                         entry_hdl,
-                                                                                         &v4_action_spec);
+        case SWITCH_API_ENCAP_TYPE_GENEVE:
+            if (neigh_type == SWITCH_API_NEIGHBOR_IPV4_TUNNEL) {
+                tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV4_GENEVE;
+            } else {
+                tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV6_GENEVE;
             }
             break;
-            case SWITCH_API_ENCAP_TYPE_NVGRE:
-            {
-                p4_pd_dc_set_ipv4_nvgre_rewrite_action_spec_t v4_action_spec;
-                memset(&v4_action_spec, 0, sizeof(p4_pd_dc_set_ipv4_nvgre_rewrite_action_spec_t));
-                v4_action_spec.action_outer_bd = outer_bd;
-                v4_action_spec.action_tunnel_index = tunnel_index;
-                v4_action_spec.action_smac_idx = smac_index;
-                memcpy(v4_action_spec.action_dmac, &dmac, ETH_LEN); 
-                status = p4_pd_dc_rewrite_table_modify_with_set_ipv4_nvgre_rewrite(g_sess_hdl,
-                                                                                        device,
-                                                                                        entry_hdl,
-                                                                                        &v4_action_spec);
+        case SWITCH_API_ENCAP_TYPE_NVGRE:
+            if (neigh_type == SWITCH_API_NEIGHBOR_IPV4_TUNNEL) {
+                tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV4_NVGRE;
+            } else {
+                tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV6_NVGRE;
             }
             break;
-            default:
-                status = SWITCH_STATUS_INVALID_ENCAP_TYPE;
-        }
+        default:
+            status = SWITCH_STATUS_INVALID_TUNNEL_TYPE;
+            return status;
+    }
+
+    if (rw_type == SWITCH_API_NEIGHBOR_RW_TYPE_L2) {
+        p4_pd_dc_set_l2_rewrite_action_spec_t action_spec;
+        action_spec.action_tunnel_type = tunnel_type;
+        action_spec.action_tunnel_index = tunnel_index;
+        status = p4_pd_dc_rewrite_table_modify_with_set_l2_rewrite(g_sess_hdl,
+                                                                   device,
+                                                                   entry_hdl,
+                                                                   &action_spec);
     } else {
-        switch(encap_type) {
-            case SWITCH_API_ENCAP_TYPE_VXLAN:
-            {
-                p4_pd_dc_set_ipv6_vxlan_rewrite_action_spec_t v6_action_spec;
-                memset(&v6_action_spec, 0, sizeof(p4_pd_dc_set_ipv6_vxlan_rewrite_action_spec_t));
-                v6_action_spec.action_outer_bd = outer_bd;
-                v6_action_spec.action_tunnel_index = tunnel_index;
-                v6_action_spec.action_smac_idx = smac_index;
-                memcpy(v6_action_spec.action_dmac, &dmac, ETH_LEN); 
-                status = p4_pd_dc_rewrite_table_modify_with_set_ipv6_vxlan_rewrite(g_sess_hdl,
-                                                                                        device,
-                                                                                        entry_hdl,
-                                                                                        &v6_action_spec);
-            }
-            break;
-            case SWITCH_API_ENCAP_TYPE_GENEVE:
-            {
-                p4_pd_dc_set_ipv6_geneve_rewrite_action_spec_t v6_action_spec;
-                memset(&v6_action_spec, 0, sizeof(p4_pd_dc_set_ipv6_geneve_rewrite_action_spec_t));
-                v6_action_spec.action_outer_bd = outer_bd;
-                v6_action_spec.action_tunnel_index = tunnel_index;
-                v6_action_spec.action_smac_idx = smac_index;
-                memcpy(v6_action_spec.action_dmac, &dmac, ETH_LEN); 
-                status = p4_pd_dc_rewrite_table_modify_with_set_ipv6_geneve_rewrite(g_sess_hdl,
-                                                                                         device,
-                                                                                         entry_hdl,
-                                                                                         &v6_action_spec);
-            }
-            break;
-            case SWITCH_API_ENCAP_TYPE_NVGRE:
-            {
-                p4_pd_dc_set_ipv6_nvgre_rewrite_action_spec_t v6_action_spec;
-                memset(&v6_action_spec, 0, sizeof(p4_pd_dc_set_ipv6_nvgre_rewrite_action_spec_t));
-                v6_action_spec.action_outer_bd = outer_bd;
-                v6_action_spec.action_tunnel_index = tunnel_index;
-                v6_action_spec.action_smac_idx = smac_index;
-                memcpy(v6_action_spec.action_dmac, &dmac, ETH_LEN); 
-                status = p4_pd_dc_rewrite_table_modify_with_set_ipv6_nvgre_rewrite(g_sess_hdl,
-                                                                                        device,
-                                                                                        entry_hdl,
-                                                                                        &v6_action_spec);
-                }
-            break;
-            default:
-                status = SWITCH_STATUS_INVALID_ENCAP_TYPE;
-        }
+        p4_pd_dc_set_l3_unicast_rewrite_action_spec_t action_spec;
+        memset(&action_spec, 0,
+               sizeof(p4_pd_dc_set_l3_unicast_rewrite_action_spec_t));
+        action_spec.action_bd = bd;
+        action_spec.action_smac_idx = smac_index;
+        memcpy(action_spec.action_dmac, &dmac, ETH_LEN); 
+        action_spec.action_tunnel_type = tunnel_type;
+        action_spec.action_tunnel_index = tunnel_index;
+        status = p4_pd_dc_rewrite_table_modify_with_set_l3_unicast_rewrite(
+            g_sess_hdl,
+            device,
+            entry_hdl,
+            &action_spec);
     }
 #endif /* P4_TUNNEL_DISABLE */
+
     p4_pd_complete_operations(g_sess_hdl);
     return status;
 }
@@ -2674,7 +2718,7 @@ p4_pd_status_t
 switch_pd_mac_rewrite_table_add_entry(switch_device_t device, uint8_t *smac)
 {
     p4_pd_dc_mac_rewrite_match_spec_t                   match_spec;
-    p4_pd_dc_rewrite_unicast_mac_action_spec_t          action_spec;
+    p4_pd_dc_rewrite_ipv4_unicast_mac_action_spec_t     ipv4_action_spec;
     p4_pd_status_t                                      status = 0;
     p4_pd_dev_target_t                                  p4_pd_device;
     p4_pd_entry_hdl_t                                   entry_hdl;
@@ -2683,20 +2727,59 @@ switch_pd_mac_rewrite_table_add_entry(switch_device_t device, uint8_t *smac)
     p4_pd_device.dev_pipe_id = SWITCH_DEV_PIPE_ID;
 
     memset(&match_spec, 0, sizeof(p4_pd_dc_mac_rewrite_match_spec_t));
-    memset(&action_spec, 0, sizeof(p4_pd_dc_rewrite_unicast_mac_action_spec_t));
-
+    memset(&ipv4_action_spec, 0,
+           sizeof(p4_pd_dc_rewrite_ipv4_unicast_mac_action_spec_t));
     match_spec.egress_metadata_smac_idx = 0;
-    //match_spec.ipv4_dstAddr_mask = 0xFFFFFFFF;
-    match_spec.ipv4_dstAddr_mask = 0x0;
+    match_spec.ipv4_valid = true;
+    match_spec.ipv6_valid = false;
+    match_spec.mpls_0__valid = false;
+    memcpy(ipv4_action_spec.action_smac, smac, ETH_LEN);
 
-    memcpy(action_spec.action_smac, smac, ETH_LEN);
+    status = p4_pd_dc_mac_rewrite_table_add_with_rewrite_ipv4_unicast_mac(
+        g_sess_hdl,
+        p4_pd_device,
+        &match_spec,
+        &ipv4_action_spec,
+        &entry_hdl);
 
-    status = p4_pd_dc_mac_rewrite_table_add_with_rewrite_unicast_mac(g_sess_hdl,
-                                                                     p4_pd_device,
-                                                                     &match_spec,
-                                                                     1000,
-                                                                     &action_spec,
-                                                                     &entry_hdl);
+#ifndef IPV6_DISABLE
+    p4_pd_dc_rewrite_ipv6_unicast_mac_action_spec_t ipv6_action_spec;
+    memset(&match_spec, 0, sizeof(p4_pd_dc_mac_rewrite_match_spec_t));
+    memset(&ipv6_action_spec, 0,
+           sizeof(p4_pd_dc_rewrite_ipv6_unicast_mac_action_spec_t));
+    match_spec.egress_metadata_smac_idx = 0;
+    match_spec.ipv4_valid = false;
+    match_spec.ipv6_valid = true;
+    match_spec.mpls_0__valid = false;
+    memcpy(ipv6_action_spec.action_smac, smac, ETH_LEN);
+
+    status = p4_pd_dc_mac_rewrite_table_add_with_rewrite_ipv6_unicast_mac(
+        g_sess_hdl,
+        p4_pd_device,
+        &match_spec,
+        &ipv6_action_spec,
+        &entry_hdl);
+#endif /* IPV6_DISABLE */
+
+#ifndef MPLS_DISABLE
+    p4_pd_dc_rewrite_mpls_mac_action_spec_t mpls_action_spec;
+    memset(&match_spec, 0, sizeof(p4_pd_dc_mac_rewrite_match_spec_t));
+    memset(&mpls_action_spec, 0,
+           sizeof(p4_pd_dc_rewrite_mpls_mac_action_spec_t));
+    match_spec.egress_metadata_smac_idx = 0;
+    match_spec.ipv4_valid = false;
+    match_spec.ipv6_valid = false;
+    match_spec.mpls_0__valid = true;
+    memcpy(mpls_action_spec.action_smac, smac, ETH_LEN);
+
+    status = p4_pd_dc_mac_rewrite_table_add_with_rewrite_mpls_mac(
+        g_sess_hdl,
+        p4_pd_device,
+        &match_spec,
+        &mpls_action_spec,
+        &entry_hdl);
+#endif /* MPLS_DISABLE */
+
     p4_pd_complete_operations(g_sess_hdl);
     return status;
 }
@@ -2726,7 +2809,7 @@ switch_pd_rid_table_add_entry(switch_device_t device,
     p4_pd_device.dev_pipe_id = SWITCH_DEV_PIPE_ID;
 
     memset(&match_spec, 0, sizeof(p4_pd_dc_rid_match_spec_t));
-    match_spec.intrinsic_metadata_replication_id = rid;
+    match_spec.intrinsic_metadata_egress_rid = rid;
 
     if (!inner_replica) {
         p4_pd_dc_outer_replica_from_rid_action_spec_t action_spec;
@@ -2854,7 +2937,7 @@ switch_pd_urpf_bd_table_add_entry(switch_device_t device,
 
     memset(&match_spec, 0, sizeof(p4_pd_dc_urpf_bd_match_spec_t));
     match_spec.l3_metadata_urpf_bd_group = urpf_group;
-    match_spec.ingress_metadata_bd = bd_index;
+    match_spec.ingress_metadata_ingress_bd = bd_index;
     status = p4_pd_dc_urpf_bd_table_add_with_nop(g_sess_hdl,
                                                    p4_pd_device,
                                                    &match_spec,
@@ -2902,7 +2985,7 @@ switch_pd_urpf_add_entry(switch_device_t device,
         if (host_entry) {
             p4_pd_dc_ipv4_urpf_match_spec_t v4_match_spec;
             memset(&v4_match_spec, 0, sizeof(p4_pd_dc_urpf_bd_match_spec_t));
-            v4_match_spec.ingress_metadata_vrf = vrf_id;
+            v4_match_spec.l3_metadata_vrf = vrf_id;
             v4_match_spec.ipv4_metadata_lkp_ipv4_sa = ip_addr->ip.v4addr;
             status = p4_pd_dc_ipv4_urpf_table_add_with_ipv4_urpf_hit(
                                                            g_sess_hdl,
@@ -2913,7 +2996,7 @@ switch_pd_urpf_add_entry(switch_device_t device,
         } else {
             p4_pd_dc_ipv4_urpf_lpm_match_spec_t v4_match_spec;
             memset(&v4_match_spec, 0, sizeof(p4_pd_dc_urpf_bd_match_spec_t));
-            v4_match_spec.ingress_metadata_vrf = vrf_id;
+            v4_match_spec.l3_metadata_vrf = vrf_id;
             v4_match_spec.ipv4_metadata_lkp_ipv4_sa = ip_addr->ip.v4addr;
             v4_match_spec.ipv4_metadata_lkp_ipv4_sa_prefix_length = ip_addr->prefix_len;
             status = p4_pd_dc_ipv4_urpf_lpm_table_add_with_ipv4_urpf_hit(
@@ -2933,7 +3016,7 @@ switch_pd_urpf_add_entry(switch_device_t device,
         if (host_entry) {
             p4_pd_dc_ipv6_urpf_match_spec_t v6_match_spec;
             memset(&v6_match_spec, 0, sizeof(p4_pd_dc_urpf_bd_match_spec_t));
-            v6_match_spec.ingress_metadata_vrf = vrf_id;
+            v6_match_spec.l3_metadata_vrf = vrf_id;
             memcpy(&v6_match_spec.ipv6_metadata_lkp_ipv6_sa, ip_addr->ip.v6addr, 16);
             status = p4_pd_dc_ipv6_urpf_table_add_with_ipv6_urpf_hit(
                                                            g_sess_hdl,
@@ -2944,7 +3027,7 @@ switch_pd_urpf_add_entry(switch_device_t device,
         } else {
             p4_pd_dc_ipv6_urpf_lpm_match_spec_t v6_match_spec;
             memset(&v6_match_spec, 0, sizeof(p4_pd_dc_urpf_bd_match_spec_t));
-            v6_match_spec.ingress_metadata_vrf = vrf_id;
+            v6_match_spec.l3_metadata_vrf = vrf_id;
             memcpy(&v6_match_spec.ipv6_metadata_lkp_ipv6_sa, ip_addr->ip.v6addr, 16);
             v6_match_spec.ipv6_metadata_lkp_ipv6_sa_prefix_length = ip_addr->prefix_len;
             status = p4_pd_dc_ipv6_urpf_lpm_table_add_with_ipv6_urpf_hit(
@@ -3201,12 +3284,12 @@ switch_pd_system_acl_table_add_entry(switch_device_t device,
 
     memset(&match_spec, 0, sizeof(p4_pd_dc_system_acl_match_spec_t));
     if (if_label) {
-        match_spec.ingress_metadata_if_label = if_label;
-        match_spec.ingress_metadata_if_label_mask = 0xFFFF;
+        match_spec.acl_metadata_if_label = if_label;
+        match_spec.acl_metadata_if_label_mask = 0xFFFF;
     }
     if (bd_label) {
-        match_spec.ingress_metadata_bd_label = bd_label;
-        match_spec.ingress_metadata_bd_label_mask = 0xFFFF;
+        match_spec.acl_metadata_bd_label = bd_label;
+        match_spec.acl_metadata_bd_label_mask = 0xFFFF;
     }
 
     for (i = 0; i < SWITCH_ACL_SYSTEM_FIELD_MAX; i++) {
@@ -3267,8 +3350,8 @@ switch_pd_system_acl_table_add_entry(switch_device_t device,
                 break;
 
             case SWITCH_ACL_SYSTEM_FIELD_IPSG_CHECK:
-                match_spec.ingress_metadata_ipsg_check_fail = system_acl[i].value.ipsg_check;
-                match_spec.ingress_metadata_ipsg_check_fail_mask = system_acl[i].mask.u.mask & 0x1;
+                match_spec.security_metadata_ipsg_check_fail = system_acl[i].value.ipsg_check;
+                match_spec.security_metadata_ipsg_check_fail_mask = system_acl[i].mask.u.mask & 0x1;
                 break;
             case SWITCH_ACL_SYSTEM_FIELD_RACL_DENY:
                 match_spec.acl_metadata_racl_deny = system_acl[i].value.racl_deny;
@@ -3278,12 +3361,12 @@ switch_pd_system_acl_table_add_entry(switch_device_t device,
                 match_spec.l3_metadata_routed_mask = system_acl[i].mask.u.mask & 0x1;
                 break;
             case SWITCH_ACL_SYSTEM_FIELD_LINK_LOCAL:
-                match_spec.ingress_metadata_src_is_link_local = system_acl[i].value.src_is_link_local;
-                match_spec.ingress_metadata_src_is_link_local_mask = system_acl[i].mask.u.mask & 0x1;
+                match_spec.ipv6_metadata_ipv6_src_is_link_local = system_acl[i].value.src_is_link_local;
+                match_spec.ipv6_metadata_ipv6_src_is_link_local_mask = system_acl[i].mask.u.mask & 0x1;
                 break;
             case SWITCH_ACL_SYSTEM_FIELD_BD_CHECK:
-                match_spec.ingress_metadata_same_bd_check = system_acl[i].value.bd_check;
-                match_spec.ingress_metadata_same_bd_check_mask = system_acl[i].mask.u.mask & 0x1;
+                match_spec.l3_metadata_same_bd_check = system_acl[i].value.bd_check;
+                match_spec.l3_metadata_same_bd_check_mask = system_acl[i].mask.u.mask & 0x1;
                 break;
             case SWITCH_ACL_SYSTEM_FIELD_TTL:
                 match_spec.l3_metadata_lkp_ip_ttl = system_acl[i].value.ttl;
@@ -3356,9 +3439,55 @@ switch_pd_system_acl_table_delete_entry(switch_device_t device, p4_pd_entry_hdl_
     return status;
 }
 
+#if !defined(P4_MPLS_DISABLE) && !defined(P4_TUNNEL_DISABLE)
+static switch_tunnel_type_ingress_t
+switch_pd_get_mpls_tunnel_type(switch_mpls_encap_t *mpls_encap)
+{
+    switch_tunnel_type_ingress_t tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_NONE;
+    switch (mpls_encap->mpls_type) {
+        case SWITCH_API_MPLS_TYPE_EOMPLS:
+        case SWITCH_API_MPLS_TYPE_VPLS:
+            switch (SWITCH_MPLS_POP_HEADER_COUNT(mpls_encap)) {
+                case 1:
+                    tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L2VPN_NUM_LABELS_1;
+                    break;
+                case 2:
+                    tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L2VPN_NUM_LABELS_2;
+                    break;
+                case 3:
+                    tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L2VPN_NUM_LABELS_3;
+                    break;
+                default:
+                    break;
+            }
+            break;
+        case SWITCH_API_MPLS_TYPE_IPV4_MPLS:
+        case SWITCH_API_MPLS_TYPE_IPV6_MPLS:
+            switch (SWITCH_MPLS_POP_HEADER_COUNT(mpls_encap)) {
+                case 1:
+                    tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L3VPN_NUM_LABELS_1;
+                    break;
+                case 2:
+                    tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L3VPN_NUM_LABELS_2;
+                    break;
+                case 3:
+                    tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L3VPN_NUM_LABELS_3;
+                    break;
+                default:
+                    break;
+            }
+            break;
+        default:
+            break;
+    }
+    return tunnel_type;
+}
+#endif /* !defined(P4_MPLS_DISABLE) && !defined(P4_TUNNEL_DISABLE) */
+
 p4_pd_status_t
 switch_pd_mpls_table_add_entry(switch_device_t device, switch_mpls_encap_t *mpls_encap,
                                uint32_t bd_index, uint32_t label,
+                               switch_bd_info_t *bd_info,
                                uint16_t egress_ifindex, p4_pd_entry_hdl_t *entry_hdl)
 {
     p4_pd_status_t status = 0;
@@ -3387,8 +3516,33 @@ switch_pd_mpls_table_add_entry(switch_device_t device, switch_mpls_encap_t *mpls
                     match_spec.inner_ipv4_valid = TRUE;
                     match_spec.inner_ipv6_valid = FALSE;
                     action_spec.action_bd = bd_index;
-                    action_spec.action_header_count = SWITCH_MPLS_POP_HEADER_COUNT(mpls_encap);
+                    action_spec.action_tunnel_type =
+                        switch_pd_get_mpls_tunnel_type(mpls_encap);
                     status = p4_pd_dc_mpls_table_add_with_terminate_eompls(
+                                                               g_sess_hdl,
+                                                               p4_pd_device,
+                                                               &match_spec,
+                                                               &action_spec,
+                                                               entry_hdl);
+                }
+                break;
+                case SWITCH_API_MPLS_TYPE_VPLS:
+                {
+                    p4_pd_dc_terminate_vpls_action_spec_t action_spec;
+                    memset(&action_spec, 0, sizeof(p4_pd_dc_terminate_vpls_action_spec_t));
+                    //TODO: This is a hack. Eompls will work only when the inner packet is IPV4.
+                    //This is just to avoid programming 3 entries - v4, v6 and non-ip.
+                    // Ideally, irrespective of inner header, eompls has to terminate but
+                    // since we are parsing the inner header, either v4 or v6 valid will be set.
+                    match_spec.inner_ipv4_valid = TRUE;
+                    match_spec.inner_ipv6_valid = FALSE;
+                    action_spec.action_bd = bd_index;
+                    action_spec.action_tunnel_type =
+                        switch_pd_get_mpls_tunnel_type(mpls_encap);
+                    action_spec.action_uuc_mc_index = handle_to_id(bd_info->uuc_mc_index);
+                    action_spec.action_umc_mc_index = handle_to_id(bd_info->umc_mc_index);
+                    action_spec.action_bcast_mc_index = handle_to_id(bd_info->bcast_mc_index);
+                    status = p4_pd_dc_mpls_table_add_with_terminate_vpls(
                                                                g_sess_hdl,
                                                                p4_pd_device,
                                                                &match_spec,
@@ -3418,8 +3572,9 @@ switch_pd_mpls_table_add_entry(switch_device_t device, switch_mpls_encap_t *mpls
                     memset(&action_spec, 0, sizeof(p4_pd_dc_terminate_ipv4_over_mpls_action_spec_t));
                     match_spec.inner_ipv4_valid = TRUE;
                     match_spec.inner_ipv6_valid = FALSE;
+                    action_spec.action_tunnel_type =
+                        switch_pd_get_mpls_tunnel_type(mpls_encap);
                     action_spec.action_vrf = handle_to_id(mpls_encap->vrf_handle);
-                    action_spec.action_header_count = SWITCH_MPLS_POP_HEADER_COUNT(mpls_encap);
                     status = p4_pd_dc_mpls_table_add_with_terminate_ipv4_over_mpls(
                                                               g_sess_hdl,
                                                               p4_pd_device,
@@ -3437,7 +3592,8 @@ switch_pd_mpls_table_add_entry(switch_device_t device, switch_mpls_encap_t *mpls
                     match_spec.inner_ipv4_valid = FALSE;
                     match_spec.inner_ipv6_valid = TRUE;
                     action_spec.action_vrf = handle_to_id(mpls_encap->vrf_handle);
-                    action_spec.action_header_count = SWITCH_MPLS_POP_HEADER_COUNT(mpls_encap);
+                    action_spec.action_tunnel_type =
+                        switch_pd_get_mpls_tunnel_type(mpls_encap);
                     status = p4_pd_dc_mpls_table_add_with_terminate_ipv6_over_mpls(
                                                               g_sess_hdl,
                                                               p4_pd_device,
@@ -3589,10 +3745,15 @@ switch_pd_tunnel_rewrite_table_mpls_add_entry(switch_device_t device, uint32_t t
 }
 
 p4_pd_status_t
-switch_pd_rewrite_table_mpls_rewrite_add_entry(switch_device_t device, uint16_t nhop_index,
-                                               uint16_t tunnel_index, switch_neighbor_type_t neigh_type,
-                                               uint16_t smac_index, switch_mac_addr_t dmac,
-                                               uint32_t label, uint8_t header_count,
+switch_pd_rewrite_table_mpls_rewrite_add_entry(switch_device_t device,
+                                               uint16_t bd,
+                                               uint16_t nhop_index,
+                                               uint16_t tunnel_index,
+                                               switch_neighbor_type_t neigh_type,
+                                               uint16_t smac_index,
+                                               switch_mac_addr_t dmac,
+                                               uint32_t label,
+                                               uint8_t header_count,
                                                p4_pd_entry_hdl_t *entry_hdl)
 {
     p4_pd_status_t status = 0;
@@ -3625,6 +3786,8 @@ switch_pd_rewrite_table_mpls_rewrite_add_entry(switch_device_t device, uint16_t 
             memset(&action_spec, 0, sizeof(p4_pd_dc_set_mpls_push_rewrite_l3_action_spec_t));
             action_spec.action_tunnel_index = tunnel_index;
             action_spec.action_header_count = header_count;
+            action_spec.action_smac_idx = smac_index;
+            memcpy(action_spec.action_dmac, &dmac, ETH_LEN);
             status = p4_pd_dc_rewrite_table_add_with_set_mpls_push_rewrite_l3(g_sess_hdl,
                                                                            p4_pd_device,
                                                                            &match_spec,
@@ -3639,8 +3802,6 @@ switch_pd_rewrite_table_mpls_rewrite_add_entry(switch_device_t device, uint16_t 
             action_spec.action_label = label;
             action_spec.action_tunnel_index = tunnel_index;
             action_spec.action_header_count = header_count;
-            action_spec.action_smac_idx = smac_index;
-            memcpy(action_spec.action_dmac, &dmac, ETH_LEN);
             status = p4_pd_dc_rewrite_table_add_with_set_mpls_swap_push_rewrite_l2(g_sess_hdl,
                                                                            p4_pd_device,
                                                                            &match_spec,
@@ -3667,13 +3828,12 @@ switch_pd_rewrite_table_mpls_rewrite_add_entry(switch_device_t device, uint16_t 
         case SWITCH_API_NEIGHBOR_MPLS_SWAP_L2VPN:
         {
             header_count = 0;
-            p4_pd_dc_set_mpls_swap_rewrite_l2_action_spec_t action_spec;
-            memset(&action_spec, 0, sizeof(p4_pd_dc_set_mpls_swap_rewrite_l2_action_spec_t));
+            p4_pd_dc_set_mpls_swap_push_rewrite_l2_action_spec_t action_spec;
+            memset(&action_spec, 0, sizeof(p4_pd_dc_set_mpls_swap_push_rewrite_l2_action_spec_t));
             action_spec.action_label = label;
+            action_spec.action_tunnel_index = tunnel_index;
             action_spec.action_header_count = header_count;
-            action_spec.action_smac_idx = smac_index;
-            memcpy(action_spec.action_dmac, &dmac, ETH_LEN);
-            status = p4_pd_dc_rewrite_table_add_with_set_mpls_swap_rewrite_l2(g_sess_hdl,
+            status = p4_pd_dc_rewrite_table_add_with_set_mpls_swap_push_rewrite_l2(g_sess_hdl,
                                                                            p4_pd_device,
                                                                            &match_spec,
                                                                            &action_spec,
@@ -3682,13 +3842,14 @@ switch_pd_rewrite_table_mpls_rewrite_add_entry(switch_device_t device, uint16_t 
         break;
         case SWITCH_API_NEIGHBOR_MPLS_SWAP_L3VPN:
         {
-            p4_pd_dc_set_mpls_swap_rewrite_l3_action_spec_t action_spec;
-            memset(&action_spec, 0, sizeof(p4_pd_dc_set_mpls_swap_rewrite_l3_action_spec_t));
+            p4_pd_dc_set_mpls_swap_push_rewrite_l3_action_spec_t action_spec;
+            memset(&action_spec, 0, sizeof(p4_pd_dc_set_mpls_swap_push_rewrite_l3_action_spec_t));
             action_spec.action_label = label;
+            action_spec.action_tunnel_index = tunnel_index;
             action_spec.action_header_count = header_count;
             action_spec.action_smac_idx = smac_index;
             memcpy(action_spec.action_dmac, &dmac, ETH_LEN);
-            status = p4_pd_dc_rewrite_table_add_with_set_mpls_swap_rewrite_l3(g_sess_hdl,
+            status = p4_pd_dc_rewrite_table_add_with_set_mpls_swap_push_rewrite_l3(g_sess_hdl,
                                                                            p4_pd_device,
                                                                            &match_spec,
                                                                            &action_spec,
@@ -3722,12 +3883,12 @@ switch_pd_ipv4_acl_table_add_entry(switch_device_t device, uint16_t if_label,
     memset(&match_spec, 0, sizeof(p4_pd_dc_ip_acl_match_spec_t));
 
     if (if_label) {
-        match_spec.ingress_metadata_if_label = if_label;
-        match_spec.ingress_metadata_if_label_mask = 0xFFFF;
+        match_spec.acl_metadata_if_label = if_label;
+        match_spec.acl_metadata_if_label_mask = 0xFFFF;
     }
     if (bd_label) {
-        match_spec.ingress_metadata_bd_label = bd_label;
-        match_spec.ingress_metadata_bd_label_mask = 0xFFFF;
+        match_spec.acl_metadata_bd_label = bd_label;
+        match_spec.acl_metadata_bd_label_mask = 0xFFFF;
     }
     for (i = 0; i < SWITCH_ACL_IP_FIELD_MAX; i++) {
         switch(ip_acl[i].field) {
@@ -3744,20 +3905,20 @@ switch_pd_ipv4_acl_table_add_entry(switch_device_t device, uint16_t if_label,
                 match_spec.l3_metadata_lkp_ip_proto_mask = ip_acl[i].mask.u.mask & 0xFF;
                 break;
             case SWITCH_ACL_IP_FIELD_L4_SOURCE_PORT:
-                match_spec.ingress_metadata_lkp_l4_sport = ip_acl[i].value.l4_source_port;
-                match_spec.ingress_metadata_lkp_l4_sport_mask = ip_acl[i].mask.u.mask & 0xFFFF;
+                match_spec.l3_metadata_lkp_l4_sport = ip_acl[i].value.l4_source_port;
+                match_spec.l3_metadata_lkp_l4_sport_mask = ip_acl[i].mask.u.mask & 0xFFFF;
                 break;
             case SWITCH_ACL_IP_FIELD_L4_DEST_PORT:
-                match_spec.ingress_metadata_lkp_l4_dport = ip_acl[i].value.l4_dest_port;
-                match_spec.ingress_metadata_lkp_l4_dport_mask = ip_acl[i].mask.u.mask & 0xFFFF;
+                match_spec.l3_metadata_lkp_l4_dport = ip_acl[i].value.l4_dest_port;
+                match_spec.l3_metadata_lkp_l4_dport_mask = ip_acl[i].mask.u.mask & 0xFFFF;
                 break;
             case SWITCH_ACL_IP_FIELD_ICMP_TYPE:
-                match_spec.ingress_metadata_lkp_icmp_type = ip_acl[i].value.icmp_type;
-                match_spec.ingress_metadata_lkp_icmp_type_mask = ip_acl[i].mask.u.mask & 0xFF;
+                match_spec.l3_metadata_lkp_icmp_type = ip_acl[i].value.icmp_type;
+                match_spec.l3_metadata_lkp_icmp_type_mask = ip_acl[i].mask.u.mask & 0xFF;
                 break;
             case SWITCH_ACL_IP_FIELD_ICMP_CODE:
-                match_spec.ingress_metadata_lkp_icmp_code = ip_acl[i].value.icmp_code;
-                match_spec.ingress_metadata_lkp_icmp_code_mask = ip_acl[i].mask.u.mask & 0xFF;
+                match_spec.l3_metadata_lkp_icmp_code = ip_acl[i].value.icmp_code;
+                match_spec.l3_metadata_lkp_icmp_code_mask = ip_acl[i].mask.u.mask & 0xFF;
                 break;
             case SWITCH_ACL_IP_FIELD_TCP_FLAGS:
                 match_spec.tcp_flags = ip_acl[i].value.tcp_flags;
@@ -3831,12 +3992,12 @@ switch_pd_ipv6_acl_table_add_entry(switch_device_t device, uint16_t if_label,
     memset(&match_spec, 0, sizeof(p4_pd_dc_ipv6_acl_match_spec_t));
 
     if (if_label) {
-        match_spec.ingress_metadata_if_label = if_label;
-        match_spec.ingress_metadata_if_label_mask = 0xFFFF;
+        match_spec.acl_metadata_if_label = if_label;
+        match_spec.acl_metadata_if_label_mask = 0xFFFF;
     }
     if (bd_label) {
-        match_spec.ingress_metadata_bd_label = bd_label;
-        match_spec.ingress_metadata_bd_label_mask = 0xFFFF;
+        match_spec.acl_metadata_bd_label = bd_label;
+        match_spec.acl_metadata_bd_label_mask = 0xFFFF;
     }
     for (i = 0; i < SWITCH_ACL_IPV6_FIELD_MAX; i++) {
         switch(ipv6_acl[i].field) {
@@ -3849,20 +4010,20 @@ switch_pd_ipv6_acl_table_add_entry(switch_device_t device, uint16_t if_label,
                     match_spec.l3_metadata_lkp_ip_proto_mask = ipv6_acl[i].mask.u.mask.low & 0xFF;
                 break;
             case SWITCH_ACL_IPV6_FIELD_L4_SOURCE_PORT:
-                    match_spec.ingress_metadata_lkp_l4_sport = ipv6_acl[i].value.l4_source_port;
-                    match_spec.ingress_metadata_lkp_l4_sport_mask = ipv6_acl[i].mask.u.mask.low & 0xFFFF;
+                    match_spec.l3_metadata_lkp_l4_sport = ipv6_acl[i].value.l4_source_port;
+                    match_spec.l3_metadata_lkp_l4_sport_mask = ipv6_acl[i].mask.u.mask.low & 0xFFFF;
                 break;
             case SWITCH_ACL_IPV6_FIELD_L4_DEST_PORT:
-                    match_spec.ingress_metadata_lkp_l4_dport = ipv6_acl[i].value.l4_dest_port;
-                    match_spec.ingress_metadata_lkp_l4_dport_mask = ipv6_acl[i].mask.u.mask.low & 0xFFFF;
+                    match_spec.l3_metadata_lkp_l4_dport = ipv6_acl[i].value.l4_dest_port;
+                    match_spec.l3_metadata_lkp_l4_dport_mask = ipv6_acl[i].mask.u.mask.low & 0xFFFF;
                 break;
             case SWITCH_ACL_IPV6_FIELD_ICMP_TYPE:
-                    match_spec.ingress_metadata_lkp_icmp_type = ipv6_acl[i].value.icmp_type;
-                    match_spec.ingress_metadata_lkp_icmp_type_mask = ipv6_acl[i].mask.u.mask.low & 0xFF;
+                    match_spec.l3_metadata_lkp_icmp_type = ipv6_acl[i].value.icmp_type;
+                    match_spec.l3_metadata_lkp_icmp_type_mask = ipv6_acl[i].mask.u.mask.low & 0xFF;
                 break;
             case SWITCH_ACL_IPV6_FIELD_ICMP_CODE:
-                    match_spec.ingress_metadata_lkp_icmp_code = ipv6_acl[i].value.icmp_code;
-                    match_spec.ingress_metadata_lkp_icmp_code_mask = ipv6_acl[i].mask.u.mask.low & 0xFF;
+                    match_spec.l3_metadata_lkp_icmp_code = ipv6_acl[i].value.icmp_code;
+                    match_spec.l3_metadata_lkp_icmp_code_mask = ipv6_acl[i].mask.u.mask.low & 0xFF;
                 break;
             case SWITCH_ACL_IPV6_FIELD_TCP_FLAGS:
                     match_spec.tcp_flags = ipv6_acl[i].value.tcp_flags;
@@ -3932,8 +4093,8 @@ switch_pd_ipv4_racl_table_add_entry(switch_device_t device, uint16_t if_label,
     memset(&match_spec, 0, sizeof(p4_pd_dc_ipv6_racl_match_spec_t));
 
     if (bd_label) {
-        match_spec.ingress_metadata_bd_label = bd_label;
-        match_spec.ingress_metadata_bd_label_mask = 0xFFFF;
+        match_spec.acl_metadata_bd_label = bd_label;
+        match_spec.acl_metadata_bd_label_mask = 0xFFFF;
     }
     for (i = 0; i < SWITCH_ACL_IP_RACL_FIELD_MAX; i++) {
         switch(ip_racl[i].field) {
@@ -3950,12 +4111,12 @@ switch_pd_ipv4_racl_table_add_entry(switch_device_t device, uint16_t if_label,
                 match_spec.l3_metadata_lkp_ip_proto_mask = ip_racl[i].mask.u.mask & 0xFF;
                 break;
             case SWITCH_ACL_IP_RACL_FIELD_L4_SOURCE_PORT:
-                match_spec.ingress_metadata_lkp_l4_sport = ip_racl[i].value.l4_source_port;
-                match_spec.ingress_metadata_lkp_l4_sport_mask = ip_racl[i].mask.u.mask & 0xFFFF;
+                match_spec.l3_metadata_lkp_l4_sport = ip_racl[i].value.l4_source_port;
+                match_spec.l3_metadata_lkp_l4_sport_mask = ip_racl[i].mask.u.mask & 0xFFFF;
                 break;
             case SWITCH_ACL_IP_RACL_FIELD_L4_DEST_PORT:
-                match_spec.ingress_metadata_lkp_l4_dport = ip_racl[i].value.l4_dest_port;
-                match_spec.ingress_metadata_lkp_l4_dport_mask = ip_racl[i].mask.u.mask & 0xFFFF;
+                match_spec.l3_metadata_lkp_l4_dport = ip_racl[i].value.l4_dest_port;
+                match_spec.l3_metadata_lkp_l4_dport_mask = ip_racl[i].mask.u.mask & 0xFFFF;
                 break;
             default:
                 break;
@@ -4018,8 +4179,8 @@ switch_pd_ipv6_racl_table_add_entry(switch_device_t device, uint16_t if_label,
     memset(&match_spec, 0, sizeof(p4_pd_dc_ipv6_racl_match_spec_t));
 
     if (bd_label) {
-        match_spec.ingress_metadata_bd_label = bd_label;
-        match_spec.ingress_metadata_bd_label_mask = 0xFFFF;
+        match_spec.acl_metadata_bd_label = bd_label;
+        match_spec.acl_metadata_bd_label_mask = 0xFFFF;
     }
     for (i = 0; i < SWITCH_ACL_IPV6_RACL_FIELD_MAX; i++) {
         switch(ipv6_racl[i].field) {
@@ -4032,12 +4193,12 @@ switch_pd_ipv6_racl_table_add_entry(switch_device_t device, uint16_t if_label,
                 match_spec.l3_metadata_lkp_ip_proto_mask = ipv6_racl[i].mask.u.mask.low & 0xFF;
                 break;
             case SWITCH_ACL_IPV6_RACL_FIELD_L4_SOURCE_PORT:
-                match_spec.ingress_metadata_lkp_l4_sport = ipv6_racl[i].value.l4_source_port;
-                match_spec.ingress_metadata_lkp_l4_sport_mask = ipv6_racl[i].mask.u.mask.low & 0xFFFF;
+                match_spec.l3_metadata_lkp_l4_sport = ipv6_racl[i].value.l4_source_port;
+                match_spec.l3_metadata_lkp_l4_sport_mask = ipv6_racl[i].mask.u.mask.low & 0xFFFF;
                 break;
             case SWITCH_ACL_IPV6_RACL_FIELD_L4_DEST_PORT:
-                match_spec.ingress_metadata_lkp_l4_dport = ipv6_racl[i].value.l4_dest_port;
-                match_spec.ingress_metadata_lkp_l4_dport_mask = ipv6_racl[i].mask.u.mask.low & 0xFFFF;
+                match_spec.l3_metadata_lkp_l4_dport = ipv6_racl[i].value.l4_dest_port;
+                match_spec.l3_metadata_lkp_l4_dport_mask = ipv6_racl[i].mask.u.mask.low & 0xFFFF;
                 break;
             default:
                 break;
@@ -4100,12 +4261,12 @@ switch_pd_mac_acl_table_add_entry(switch_device_t device, uint16_t if_label,
     memset(&match_spec, 0, sizeof(p4_pd_dc_mac_acl_match_spec_t));
 
     if (if_label) {
-        match_spec.ingress_metadata_if_label = if_label;
-        match_spec.ingress_metadata_if_label_mask = 0xFFFF;
+        match_spec.acl_metadata_if_label = if_label;
+        match_spec.acl_metadata_if_label_mask = 0xFFFF;
     }
     if (bd_label) {
-        match_spec.ingress_metadata_bd_label = bd_label;
-        match_spec.ingress_metadata_bd_label_mask = 0xFFFF;
+        match_spec.acl_metadata_bd_label = bd_label;
+        match_spec.acl_metadata_bd_label_mask = 0xFFFF;
     }
     for (i = 0; i < SWITCH_ACL_MAC_FIELD_MAX; i++) {
         switch(mac_acl[i].field) {
@@ -4173,8 +4334,8 @@ switch_pd_qos_acl_table_add_entry(switch_device_t device, uint16_t if_label,
     memset(&match_spec, 0, sizeof(p4_pd_dc_qos_match_spec_t));
 
     if (if_label) {
-        match_spec.ingress_metadata_if_label = if_label;
-        match_spec.ingress_metadata_if_label_mask = 0xFFFF;
+        match_spec.acl_metadata_if_label = if_label;
+        match_spec.acl_metadata_if_label_mask = 0xFFFF;
     }
     for (i = 0; i < SWITCH_ACL_QOS_FIELD_MAX; i++) {
         switch(qos_acl[i].field) {
@@ -4199,8 +4360,8 @@ switch_pd_qos_acl_table_add_entry(switch_device_t device, uint16_t if_label,
                 match_spec.tunnel_metadata_mpls_exp_mask = qos_acl[i].mask.u.mask & 0xFF;
                 break;
             case SWITCH_ACL_QOS_FIELD_DSCP:
-                match_spec.ingress_metadata_outer_dscp = qos_acl[i].value.dscp;
-                match_spec.ingress_metadata_outer_dscp_mask = qos_acl[i].mask.u.mask & 0xFF;
+                match_spec.qos_metadata_outer_dscp = qos_acl[i].value.dscp;
+                match_spec.qos_metadata_outer_dscp_mask = qos_acl[i].mask.u.mask & 0xFF;
                 break;
             default:
                 break;
@@ -4821,9 +4982,14 @@ switch_pd_rewrite_table_add_default_entry(switch_device_t device)
     p4_pd_device.device_id = device;
     p4_pd_device.dev_pipe_id = SWITCH_DEV_PIPE_ID;
     
+    p4_pd_dc_set_l2_rewrite_action_spec_t action_spec;
+    memset(&action_spec, 0, sizeof(p4_pd_dc_set_l2_rewrite_action_spec_t));
+    action_spec.action_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_NONE;
+    action_spec.action_tunnel_index = 0;
     status = p4_pd_dc_rewrite_set_default_action_set_l2_rewrite(
                                                        g_sess_hdl,
                                                        p4_pd_device,
+                                                       &action_spec,
                                                        &entry_hdl);
     p4_pd_complete_operations(g_sess_hdl);
     return status;
@@ -4895,9 +5061,9 @@ switch_pd_vlan_decap_table_add_default_entry(switch_device_t device)
     p4_pd_device.device_id = device;
     p4_pd_device.dev_pipe_id = SWITCH_DEV_PIPE_ID;
     
-    status = p4_pd_dc_vlan_decap_set_default_action_vlan_decap_nop(g_sess_hdl,
-                                                                   p4_pd_device,
-                                                                   &entry_hdl);
+    status = p4_pd_dc_vlan_decap_set_default_action_nop(g_sess_hdl,
+                                                        p4_pd_device,
+                                                        &entry_hdl);
     p4_pd_complete_operations(g_sess_hdl);
     return status;
 }
@@ -5309,6 +5475,72 @@ switch_pd_validate_mpls_packet_table_init_entry(switch_device_t device)
                                                            &entry_hdl);
 
 #endif /* P4_MPLS_DISABLE */
+    p4_pd_complete_operations(g_sess_hdl);
+    return status;
+}
+
+p4_pd_status_t
+switch_pd_fabric_header_table_init_entry(switch_device_t device)
+{
+    p4_pd_status_t status = 0;
+#ifdef FABRIC_ENABLE
+    p4_pd_entry_hdl_t entry_hdl;
+    p4_pd_mbr_hdl_t mbr_hdl;
+    p4_pd_dev_target_t p4_pd_device;
+    p4_pd_device.device_id = device;
+    p4_pd_device.dev_pipe_id = SWITCH_DEV_PIPE_ID;
+
+    status = p4_pd_dc_fabric_lag_action_profile_add_member_with_nop(
+                                                            g_sess_hdl,
+                                                            p4_pd_device,
+                                                            &mbr_hdl);
+    status = p4_pd_dc_fabric_lag_set_default_entry(g_sess_hdl,
+                                                   p4_pd_device,
+                                                   mbr_hdl,
+                                                   &entry_hdl);
+#endif /* FABRIC_ENABLE */
+
+    p4_pd_complete_operations(g_sess_hdl);
+    return status;
+}
+
+p4_pd_status_t
+switch_pd_egress_port_mapping_table_init_entry(switch_device_t device)
+{
+    p4_pd_status_t status = 0;
+    p4_pd_entry_hdl_t entry_hdl;
+    p4_pd_dev_target_t p4_pd_device;
+
+    p4_pd_device.device_id = device;
+    p4_pd_device.dev_pipe_id = SWITCH_DEV_PIPE_ID;
+
+    status =
+        p4_pd_dc_egress_port_mapping_set_default_action_egress_port_type_normal(
+            g_sess_hdl,
+            p4_pd_device,
+            &entry_hdl);
+
+    p4_pd_complete_operations(g_sess_hdl);
+    return status;
+}
+
+p4_pd_status_t
+switch_pd_compute_multicast_hashes_init_entry(switch_device_t device)
+{
+    p4_pd_status_t status = 0;
+#ifndef P4_MULTICAST_DISABLE
+    p4_pd_entry_hdl_t entry_hdl;
+    p4_pd_dev_target_t p4_pd_device;
+
+    p4_pd_device.device_id = device;
+    p4_pd_device.dev_pipe_id = SWITCH_DEV_PIPE_ID;
+
+    status = p4_pd_dc_compute_multicast_hashes_set_default_action_compute_lkp_ipv4_hash(
+            g_sess_hdl,
+            p4_pd_device,
+            &entry_hdl);
+
+#endif /* P4_MULTICAST_DISABLE */
     p4_pd_complete_operations(g_sess_hdl);
     return status;
 }
