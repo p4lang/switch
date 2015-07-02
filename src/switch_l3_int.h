@@ -73,8 +73,8 @@ typedef struct switch_vrf_route_list_ {
 #define SWITCH_L3_IP_IPV6_ADDRESS(ip_info) \
     ip_info->ip.ip.v6addr
 
-switch_status_t switch_l3_init(void);
-switch_status_t switch_l3_free(void);
+switch_status_t switch_l3_init(switch_device_t device);
+switch_status_t switch_l3_free(switch_device_t device);
 #ifdef __cplusplus
 }
 #endif

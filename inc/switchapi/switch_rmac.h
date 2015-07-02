@@ -32,19 +32,21 @@ extern "C" {
  Create a router mac group
  Returns rmac id which will be used to identify the group
  uniquely. 0 is invalid.
+ @param device Device to be programmed
  */
-switch_handle_t switch_api_router_mac_group_create();
+switch_handle_t switch_api_router_mac_group_create(switch_device_t device);
 
 /**
  Delete a router mac group
  Returns success/failure based on the group ID.
+ @param device Device to be programmed
  @param rmac_handle - Rmac group to be deleted.
  */
-switch_status_t switch_api_router_mac_group_delete(switch_handle_t rmac_handle);
+switch_status_t switch_api_router_mac_group_delete(switch_device_t device, switch_handle_t rmac_handle);
 
 /**
  Add a mac to router mac group
- @param device- Device to be programmed
+ @param device Device to be programmed
  @param rmac_handle - ID of the RMAC group
  @param mac - Router mac address to be added to the group
  */

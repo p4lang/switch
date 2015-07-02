@@ -33,7 +33,7 @@ switch_api_id_allocator *dst_vtep_index_allocator = NULL;
 static void *mpls_transit_array = NULL;
 
 switch_status_t
-switch_tunnel_init(void)
+switch_tunnel_init(switch_device_t device)
 {
     tommy_hashtable_init(&switch_src_vtep_table, SWITCH_SRC_VTEP_HASH_TABLE_SIZE);
     tommy_hashtable_init(&switch_dst_vtep_table, SWITCH_DST_VTEP_HASH_TABLE_SIZE);
@@ -45,7 +45,7 @@ switch_tunnel_init(void)
 }
 
 switch_status_t
-switch_tunnel_free(void)
+switch_tunnel_free(switch_device_t device)
 {
     tommy_hashtable_done(&switch_src_vtep_table);
     tommy_hashtable_done(&switch_dst_vtep_table);
@@ -330,9 +330,17 @@ switch_tunnel_mpls_table_add_entries(switch_device_t device,
                                      switch_mpls_encap_t *mpls_encap)
 {
     switch_interface_info_t           *eg_intf_info = NULL;
+    switch_bd_info_t                  *bd_info = NULL;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
     switch_ifindex_t                   egress_ifindex = 0;
     uint32_t                           label = 0;
+
+    if (bd_handle) {
+        bd_info = switch_bd_get(bd_handle);
+        if (!bd_info) {
+            return SWITCH_STATUS_INVALID_HANDLE;
+        }
+    }
 
     switch (mpls_encap->mpls_mode) {
         case SWITCH_API_MPLS_INITIATE:
@@ -351,7 +359,7 @@ switch_tunnel_mpls_table_add_entries(switch_device_t device,
             }
             status = switch_pd_mpls_table_add_entry(device, mpls_encap,
                                                handle_to_id(bd_handle),
-                                               label, egress_ifindex,
+                                               label, bd_info, egress_ifindex,
                                                entry_hdl);
             break;
         case SWITCH_API_MPLS_TERMINATE:
@@ -367,7 +375,7 @@ switch_tunnel_mpls_table_add_entries(switch_device_t device,
             label = switch_tunnel_mpls_get_pop_label(mpls_encap);
             status = switch_pd_mpls_table_add_entry(device, mpls_encap,
                                                handle_to_id(bd_handle),
-                                               label, egress_ifindex,
+                                               label, bd_info, egress_ifindex,
                                                entry_hdl);
 
             break;
@@ -437,12 +445,11 @@ switch_api_tunnel_interface_create(switch_device_t device,
 }
 
 switch_status_t
-switch_api_tunnel_interface_delete(switch_handle_t intf_handle)
+switch_api_tunnel_interface_delete(switch_device_t device, switch_handle_t intf_handle)
 {
     switch_interface_info_t           *intf_info = NULL;
     switch_tunnel_info_t              *tunnel_info = NULL;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
-    switch_device_t                    device = SWITCH_DEV_ID;
 
     intf_info = switch_api_interface_get(intf_handle);
     if (!intf_info) {
@@ -456,7 +463,7 @@ switch_api_tunnel_interface_delete(switch_handle_t intf_handle)
         status = switch_tunnel_ip_encap_table_delete_entries(device, intf_handle, intf_info);
     }
 
-    status = switch_api_interface_delete(intf_handle);
+    status = switch_api_interface_delete(device, intf_handle);
     if (status != SWITCH_STATUS_SUCCESS) {
         SWITCH_API_ERROR("%s:%d: unable to delete interface %lx",
                      __FUNCTION__, __LINE__, intf_handle);
@@ -469,7 +476,9 @@ cleanup:
 
 
 switch_status_t
-switch_api_logical_network_member_add(switch_handle_t bd_handle, switch_handle_t intf_handle)
+switch_api_logical_network_member_add(switch_device_t device,
+                                      switch_handle_t bd_handle,
+                                      switch_handle_t intf_handle)
 {
     switch_interface_info_t           *intf_info = NULL;
     switch_bd_info_t                  *bd_info = NULL;
@@ -492,10 +501,10 @@ switch_api_logical_network_member_add(switch_handle_t bd_handle, switch_handle_t
     intf_info->ln_bd_handle = bd_handle;
     switch(SWITCH_LN_NETWORK_TYPE(bd_info)) {
         case SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_BASIC:
-            status = switch_api_logical_network_member_add_basic(bd_handle, intf_handle);
+            status = switch_api_logical_network_member_add_basic(device, bd_handle, intf_handle);
             break;
         case SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_ENHANCED:
-            status = switch_api_logical_network_member_add_enhanced(bd_handle, intf_handle);
+            status = switch_api_logical_network_member_add_enhanced(device, bd_handle, intf_handle);
             break;
 
         default:
@@ -505,7 +514,9 @@ switch_api_logical_network_member_add(switch_handle_t bd_handle, switch_handle_t
 }
 
 switch_status_t
-switch_api_logical_network_member_add_basic(switch_handle_t bd_handle, switch_handle_t intf_handle)
+switch_api_logical_network_member_add_basic(switch_device_t device,
+                                            switch_handle_t bd_handle,
+                                            switch_handle_t intf_handle)
 {
     switch_interface_info_t           *intf_info = NULL;
     switch_bd_info_t                  *bd_info = NULL;
@@ -515,7 +526,6 @@ switch_api_logical_network_member_add_basic(switch_handle_t bd_handle, switch_ha
     switch_encap_type_t                encap_type = SWITCH_API_ENCAP_TYPE_NONE;
     uint16_t                           tunnel_vni = 0;
     uint8_t                            tunnel_type = 0;
-    switch_device_t                    device = SWITCH_DEV_ID;
     switch_vlan_t                      vlan_id = 0;
 
     intf_info = switch_api_interface_get(intf_handle);
@@ -605,7 +615,9 @@ cleanup:
 }
 
 switch_status_t
-switch_api_logical_network_member_add_enhanced(switch_handle_t bd_handle, switch_handle_t intf_handle)
+switch_api_logical_network_member_add_enhanced(switch_device_t device,
+                                               switch_handle_t bd_handle,
+                                               switch_handle_t intf_handle)
 {
     switch_interface_info_t           *intf_info = NULL;
     switch_tunnel_info_t              *tunnel_info = NULL;
@@ -618,7 +630,6 @@ switch_api_logical_network_member_add_enhanced(switch_handle_t bd_handle, switch
     switch_encap_type_t                encap_type = SWITCH_API_ENCAP_TYPE_NONE;
     uint16_t                           tunnel_vni = 0;
     uint8_t                            tunnel_type = 0;
-    switch_device_t                    device = SWITCH_DEV_ID;
     switch_vlan_t                      vlan_id = 0;
 
     intf_info = switch_api_interface_get(intf_handle);
@@ -723,13 +734,14 @@ cleanup:
 }
 
 switch_status_t
-switch_api_logical_network_member_remove_basic(switch_handle_t bd_handle, switch_handle_t intf_handle)
+switch_api_logical_network_member_remove_basic(switch_device_t device,
+                                               switch_handle_t bd_handle,
+                                               switch_handle_t intf_handle)
 {
     switch_interface_info_t           *intf_info = NULL;
     switch_ln_member_t                *ln_member = NULL;
     switch_bd_info_t                  *bd_info = NULL;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
-    switch_device_t                    device = SWITCH_DEV_ID;
     switch_vlan_t                      vlan_id = 0;
 
     intf_info = switch_api_interface_get(intf_handle);
@@ -804,7 +816,9 @@ cleanup:
 }
 
 switch_status_t
-switch_api_logical_network_member_remove_enhanced(switch_handle_t bd_handle, switch_handle_t intf_handle)
+switch_api_logical_network_member_remove_enhanced(switch_device_t device,
+                                                  switch_handle_t bd_handle,
+                                                  switch_handle_t intf_handle)
 {
     switch_interface_info_t           *intf_info = NULL;
     switch_ln_member_t                *ln_member = NULL;
@@ -812,7 +826,6 @@ switch_api_logical_network_member_remove_enhanced(switch_handle_t bd_handle, swi
     switch_tunnel_info_t              *tunnel_info = NULL;
     switch_mpls_encap_t               *mpls_encap = NULL;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
-    switch_device_t                    device = SWITCH_DEV_ID;
     switch_vlan_t                      vlan_id = 0;
 
     intf_info = switch_api_interface_get(intf_handle);
@@ -893,7 +906,9 @@ cleanup:
 }
 
 switch_status_t
-switch_api_logical_network_member_remove(switch_handle_t bd_handle, switch_handle_t intf_handle)
+switch_api_logical_network_member_remove(switch_device_t device,
+                                         switch_handle_t bd_handle,
+                                         switch_handle_t intf_handle)
 {
     switch_interface_info_t           *intf_info = NULL;
     switch_bd_info_t                  *bd_info = NULL;
@@ -911,10 +926,10 @@ switch_api_logical_network_member_remove(switch_handle_t bd_handle, switch_handl
 
     switch(SWITCH_LN_NETWORK_TYPE(bd_info)) {
         case SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_BASIC:
-            status = switch_api_logical_network_member_remove_basic(bd_handle, intf_handle);
+            status = switch_api_logical_network_member_remove_basic(device, bd_handle, intf_handle);
             break;
         case SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_ENHANCED:
-            status = switch_api_logical_network_member_remove_enhanced(bd_handle, intf_handle);
+            status = switch_api_logical_network_member_remove_enhanced(device, bd_handle, intf_handle);
             break;
         default:
             status = SWITCH_STATUS_INVALID_LN_TYPE;
@@ -972,23 +987,23 @@ switch_tunnel_get_egress_tunnel_type(switch_encap_type_t encap_type, switch_ip_e
     {
         case SWITCH_API_ENCAP_TYPE_VXLAN:
             if (SWITCH_IP_ENCAP_SRC_IP_TYPE(ip_encap) == SWITCH_API_IP_ADDR_V4) {
-                tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_VXLAN_IPV4;
+                tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV4_VXLAN;
             } else {
-                tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_VXLAN_IPV6;
+                tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV6_VXLAN;
             }
             break;
         case SWITCH_API_ENCAP_TYPE_GENEVE:
             if (SWITCH_IP_ENCAP_SRC_IP_TYPE(ip_encap) == SWITCH_API_IP_ADDR_V4) {
-                tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_GENEVE_IPV4;
+                tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV4_GENEVE;
             } else {
-                tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_GENEVE_IPV6;
+                tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV6_GENEVE;
             }
             break;
         case SWITCH_API_ENCAP_TYPE_NVGRE:
             if (SWITCH_IP_ENCAP_SRC_IP_TYPE(ip_encap) == SWITCH_API_IP_ADDR_V4) {
-                tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_NVGRE_IPV4;
+                tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV4_NVGRE;
             } else {
-                tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_NVGRE_IPV6;
+                tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV6_NVGRE;
             }
             break;
         default:

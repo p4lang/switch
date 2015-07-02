@@ -42,11 +42,8 @@ typedef struct switch_dmac_rewrite_ {
 #endif
 } switch_dmac_rewrite_t;
 
-#define SWITCH_NEIGHBOR_ADDR_TYPE(ninfo) \
-    ninfo->neighbor.ip_addr.type
- 
-switch_status_t switch_neighbor_init(void);
-switch_status_t switch_neighbor_free(void);
+switch_status_t switch_neighbor_init(switch_device_t device);
+switch_status_t switch_neighbor_free(switch_device_t device);
 switch_status_t
 switch_api_neighbor_entry_add_unicast_rewrite(switch_device_t device, switch_neighbor_info_t *neighbor_info);
 switch_status_t

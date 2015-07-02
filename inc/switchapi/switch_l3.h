@@ -40,22 +40,26 @@ typedef enum {
 
 /**
  Configure IP address on L3 interface
+ @param device device
  @param interface_handle interface handle returned from interface_create()
  @param vrf virtual domain identifier
  @param ip_addr IP address to be configured(v4 or v6)
 */
-switch_status_t switch_api_l3_interface_address_add(switch_handle_t interface_handle,
-                                            switch_handle_t vrf,
-                                            switch_ip_addr_t *ip_addr);
+switch_status_t switch_api_l3_interface_address_add(switch_device_t device,
+                                                    switch_handle_t interface_handle,
+                                                    switch_handle_t vrf,
+                                                    switch_ip_addr_t *ip_addr);
 /**
  Delete a configured IP address on interface
+ @param device device
  @param interface_handle interface handle returned from interface_create()
  @param vrf virtual domain identifier
  @param ip_addr IP address to be deleted
 */
-switch_status_t switch_api_l3_interface_address_delete(switch_handle_t interface_handle,
-                                               switch_handle_t vrf,
-                                               switch_ip_addr_t *ip_addr);
+switch_status_t switch_api_l3_interface_address_delete(switch_device_t device,
+                                                       switch_handle_t interface_handle,
+                                                       switch_handle_t vrf,
+                                                       switch_ip_addr_t *ip_addr);
 /**
  Host address reachability entry - inserted into a Hash table to match a
  /32 IPv4 ot /128 IPv6 address, When there are multiple paths to reach

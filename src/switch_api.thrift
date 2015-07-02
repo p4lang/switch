@@ -175,6 +175,11 @@ enum switcht_neighbor_type_t {
     SWITCHT_API_NEIGHBOR_MPLS_L3VPN
 }
 
+enum switcht_neighbor_rw_type_t {
+    SWITCH_API_NEIGHBOR_RW_TYPE_L2,
+    SWITCH_API_NEIGHBOR_RW_TYPE_L3
+}
+
 struct switcht_neighbor_info_t {
         1: switcht_neighbor_type_t neigh_type;
         2: switcht_handle_t nhop_handle;
@@ -184,6 +189,7 @@ struct switcht_neighbor_info_t {
         6: switcht_ip_addr_t ip_addr;
         7: i32 mpls_label;
         8: byte header_count;
+        9: switcht_neighbor_rw_type_t rw_type;
 }
 
 struct switcht_vxlan_id_t {
@@ -381,23 +387,23 @@ service switch_api_rpc {
     switcht_status_t switcht_api_init(1:switcht_device_t device);
 
     /* Port */
-    switcht_status_t switcht_api_port_set(1:switcht_port_info_t port_info);
+    switcht_status_t switcht_api_port_set(1:switcht_device_t device, 2:switcht_port_info_t port_info);
     switcht_status_t switcht_api_port_print_all();
 
     /* vpn */
     switcht_handle_t switcht_api_vrf_create(1:switcht_device_t device, 2:switcht_vrf_id_t vrf);
-    switcht_status_t switcht_api_vrf_delete(1:switcht_handle_t vrf_handle);
+    switcht_status_t switcht_api_vrf_delete(1:switcht_device_t device, 2:switcht_handle_t vrf_handle);
 
     /* router mac */
-    switcht_handle_t switcht_api_router_mac_group_create();
-    switcht_status_t switcht_api_router_mac_group_delete(1: switcht_handle_t rmac_handle);
+    switcht_handle_t switcht_api_router_mac_group_create(1:switcht_device_t device);
+    switcht_status_t switcht_api_router_mac_group_delete(1:switcht_device_t device, 2:switcht_handle_t rmac_handle);
     switcht_status_t switcht_api_router_mac_add(1:switcht_device_t device, 2:switcht_handle_t rmac_handle, 3:switcht_mac_addr_t mac);
     switcht_status_t switcht_api_router_mac_delete(1:switcht_device_t device, 2:switcht_handle_t rmac_handle, 3:switcht_mac_addr_t mac);
     switcht_status_t switcht_api_router_mac_group_print_all();
 
     /* interface */
     switcht_interface_handle_t switcht_api_interface_create(1:switcht_device_t device, 2:switcht_interface_info_t interface_info);
-    void switcht_api_interface_delete(1:switcht_interface_handle_t interface_handle);
+    void switcht_api_interface_delete(1:switcht_device_t device, 2:switcht_interface_handle_t interface_handle);
     switcht_status_t switcht_api_interface_print_all();
     switcht_status_t switcht_api_interface_attribute_set(1: switcht_handle_t interface_handle, 2: switcht_intf_attr_t attr_type, 3:i64 value);
     switcht_status_t switcht_api_interface_ipv4_unicast_enabled_set(1: switcht_handle_t intf_handle, 2: i64 value);
@@ -406,12 +412,12 @@ service switch_api_rpc {
     switcht_status_t switcht_api_interface_ipv6_urpf_mode_set(1: switcht_handle_t intf_handle, 2: i64 value);
 
     /* ip address */
-    switcht_status_t switcht_api_l3_interface_address_add( 1:switcht_interface_handle_t interface_handle, 2: switcht_handle_t vrf, 3: switcht_ip_addr_t ip_addr);
-    switcht_status_t switcht_api_l3_interface_address_delete(1:switcht_interface_handle_t interface_handle, 2:switcht_handle_t vrf, 3:switcht_ip_addr_t ip_addr);
+    switcht_status_t switcht_api_l3_interface_address_add(1:switcht_device_t device, 2:switcht_interface_handle_t interface_handle, 3: switcht_handle_t vrf, 4:switcht_ip_addr_t ip_addr);
+    switcht_status_t switcht_api_l3_interface_address_delete(1:switcht_device_t device, 2:switcht_interface_handle_t interface_handle, 3:switcht_handle_t vrf, 4:switcht_ip_addr_t ip_addr);
 
     /* next hop */
     switcht_handle_t switcht_api_nhop_create(1:switcht_device_t device, 2:switcht_nhop_key_t nhop_key);
-    switcht_status_t switcht_api_nhop_delete(1:switcht_handle_t handle);
+    switcht_status_t switcht_api_nhop_delete(1:switcht_device_t device, 2:switcht_handle_t handle);
     switcht_status_t switcht_api_nhop_print_all();
     
     /* ARP */
@@ -426,9 +432,9 @@ service switch_api_rpc {
 
     /* VLAN */
     switcht_handle_t switcht_api_vlan_create(1:switcht_device_t device, 2:switcht_vlan_t vlan_id);
-    switcht_status_t switcht_api_vlan_ports_add(1: switcht_handle_t vlan_handle, 2: switcht_vlan_port_t port_vlan);
-    switcht_status_t switcht_api_vlan_ports_remove(1:switcht_handle_t vlan_handle, 2: switcht_vlan_port_t port_vlan);
-    switcht_status_t switcht_api_vlan_delete(1:switcht_handle_t vlan_handle);
+    switcht_status_t switcht_api_vlan_ports_add(1:switcht_device_t devicem 2:switcht_handle_t vlan_handle, 3:switcht_vlan_port_t port_vlan);
+    switcht_status_t switcht_api_vlan_ports_remove(1:switcht_device_t device, 2:switcht_handle_t vlan_handle, 3:switcht_vlan_port_t port_vlan);
+    switcht_status_t switcht_api_vlan_delete(1:switcht_device_t device, 2:switcht_handle_t vlan_handle);
     switcht_status_t switcht_api_vlan_print_all();
 
     /* VLAN attribute */
@@ -449,13 +455,13 @@ service switch_api_rpc {
 
     /* ECMP */
     switcht_handle_t switcht_api_l3_ecmp_create(1:switcht_device_t device);
-    switcht_status_t switcht_api_l3_ecmp_delete(1:switcht_handle_t handle);
-    switcht_status_t switcht_api_l3_ecmp_member_add(1: switcht_device_t device, 2:switcht_handle_t handle, 3:switcht_handle_t member);
-    switcht_status_t switcht_api_l3_ecmp_member_delete(1: switcht_device_t device, 2:switcht_handle_t handle, 3:switcht_handle_t member);
+    switcht_status_t switcht_api_l3_ecmp_delete(1:switcht_device_t device, 2:switcht_handle_t handle);
+    switcht_status_t switcht_api_l3_ecmp_member_add(1: switcht_device_t device, 2:switcht_handle_t handle, 3: i16 nhop_count, 4:list<switcht_handle_t> nhop_handle);
+    switcht_status_t switcht_api_l3_ecmp_member_delete(1: switcht_device_t device, 2:switcht_handle_t handle, 3: i16 nhop_count, 4: list<switcht_handle_t> nhop_handle);
 
     /* LAG */
     switcht_handle_t switcht_api_lag_create(1:switcht_device_t device);
-    switcht_status_t switcht_api_lag_delete(1:switcht_handle_t lag_handle);
+    switcht_status_t switcht_api_lag_delete(1:switcht_device_t device, 2:switcht_handle_t lag_handle);
     switcht_status_t switcht_api_lag_member_add(1: switcht_device_t device, 2:switcht_handle_t lag_handle, 3:switcht_direction_t side, 4:switcht_port_t port);
     switcht_status_t switcht_api_lag_member_delete(1: switcht_device_t device, 2:switcht_handle_t lag_handle, 3:switcht_direction_t side, 4:switcht_port_t port);
     switcht_status_t switcht_api_lag_print_all();
@@ -466,46 +472,45 @@ service switch_api_rpc {
 
     /* Tunnel API */
     switcht_tunnel_handle_t switcht_api_tunnel_interface_create(1:switcht_device_t device, 2:switcht_direction_t direction, 3:switcht_tunnel_info_t tun_info);
-    switcht_status_t switcht_api_tunnel_interface_delete(1:switcht_tunnel_handle_t tun_handle);
-    switcht_status_t switcht_api_logical_network_member_add(1:switcht_handle_t network_handle, 2:switcht_interface_handle_t interface_handle);
-    switcht_status_t switcht_api_logical_network_member_remove(1:switcht_handle_t network_handle, 2:switcht_interface_handle_t interface_handle);
+    switcht_status_t switcht_api_tunnel_interface_delete(1: switcht_device_t device, 2:switcht_tunnel_handle_t tun_handle);
+    switcht_status_t switcht_api_logical_network_member_add(1: switcht_device_t device, 2:switcht_handle_t network_handle, 3:switcht_interface_handle_t interface_handle);
+    switcht_status_t switcht_api_logical_network_member_remove(1:switcht_device_t device, 2:switcht_handle_t network_handle, 3:switcht_interface_handle_t interface_handle);
     switcht_status_t switcht_api_mpls_tunnel_transit_create(1: switcht_device_t device, 2: switcht_mpls_encap_t mpls_encap);
     switcht_status_t switcht_api_mpls_tunnel_transit_delete(1: switcht_device_t device, 2: switcht_mpls_encap_t mpls_encap);
 
     /* STP API */
-    switcht_handle_t switcht_api_stp_group_create(1: switcht_device_t device, 2: switcht_stp_mode_t stp_mode);
-    switcht_status_t switcht_api_stp_group_delete(1: switcht_handle_t stp_handle);
-    switcht_status_t switcht_api_stp_group_vlan_add(1: switcht_handle_t stp_handle, 2: switcht_handle_t vlan_handle);
-    switcht_status_t switcht_api_stp_group_vlan_remove(1: switcht_handle_t stp_handle, 2: switcht_handle_t vlan_handle);
-    switcht_status_t switcht_api_stp_port_state_set(1:switcht_device_t device, 2: switcht_handle_t stp_handle,
-                                            3: switcht_handle_t intf_handle, 4: switcht_stp_state_t stp_state);
-    switcht_status_t switcht_api_stp_port_state_clear(1:switcht_device_t device, 2: switcht_handle_t stp_handle,
-                                              3: switcht_handle_t intf_handle);
+    switcht_handle_t switcht_api_stp_group_create(1:switcht_device_t device, 2:switcht_stp_mode_t stp_mode);
+    switcht_status_t switcht_api_stp_group_delete(1:switcht_device_t device, 2:switcht_handle_t stp_handle);
+    switcht_status_t switcht_api_stp_group_vlans_add(1:switcht_device_t device, 2:switcht_handle_t stp_handle, 3:i16 vlan_count, 4:list<switcht_handle_t> vlan_handle);
+    switcht_status_t switcht_api_stp_group_vlans_remove(1:switcht_device_t device, 2:switcht_handle_t stp_handle, 3:i16 vlan_count, 4:list<switcht_handle_t> vlan_handle);
+    switcht_status_t switcht_api_stp_port_state_set(1:switcht_device_t device, 2:switcht_handle_t stp_handle,
+                                            3:switcht_handle_t intf_handle, 4:switcht_stp_state_t stp_state);
+    switcht_status_t switcht_api_stp_port_state_clear(1:switcht_device_t device, 2:switcht_handle_t stp_handle,
+                                              3:switcht_handle_t intf_handle);
     switcht_status_t switcht_api_stp_group_print_all();
 
     /* ACL API */
     switcht_handle_t switcht_api_acl_list_create(1:switcht_device_t device, 2:switcht_acl_type_t type);
-    switcht_status_t switcht_api_acl_list_delete(1:switcht_handle_t handle);
-    switcht_status_t switcht_api_acl_ip_rule_create(1:switcht_handle_t acl_handle, 2:i32 priority, 3:i32 key_value_count, 4:list<switcht_acl_ip_key_value_pair_t> acl_kvp, 5:switcht_acl_action_t action, 6:i32 action_params);
-    switcht_status_t switcht_api_acl_mirror_rule_create(1:switcht_handle_t acl_handle, 2:i32 priority, 3:i32 key_value_count, 4:list<switcht_acl_mirror_key_value_pair_t> acl_kvp, 5:switcht_acl_action_t action, 6:i32 action_params);
-    switcht_status_t switcht_api_acl_system_rule_create(1:switcht_handle_t acl_handle, 2:i32 priority, 3:i32 key_value_count, 4:list<switcht_acl_system_key_value_pair_t> acl_kvp, 5:switcht_acl_action_t action, 6:i32 action_params);
-    switcht_status_t switcht_api_acl_rule_delete(1:switcht_handle_t acl_handle, 2:i32 priority);
-    switcht_status_t switcht_api_acl_reference(1:switcht_handle_t acl_handle, 2:switcht_handle_t interface_handle);
-    switcht_status_t switcht_api_acl_remove(1:switcht_handle_t acl_handle, 2:switcht_handle_t interface_handle);
+    switcht_status_t switcht_api_acl_list_delete(1:switcht_device_t device, 2:switcht_handle_t handle);
+    switcht_status_t switcht_api_acl_ip_rule_create(1:switcht_device_t device, 2:switcht_handle_t acl_handle, 3:i32 priority, 4:i32 key_value_count, 5:list<switcht_acl_ip_key_value_pair_t> acl_kvp, 6:switcht_acl_action_t action, 7:i32 action_params);
+    switcht_status_t switcht_api_acl_mirror_rule_create(1:switcht_device_t device, 2:switcht_handle_t acl_handle, 3:i32 priority, 4:i32 key_value_count, 5:list<switcht_acl_mirror_key_value_pair_t> acl_kvp, 6:switcht_acl_action_t action, 7:i32 action_params);
+    switcht_status_t switcht_api_acl_system_rule_create(1:switcht_device_t device, 2:switcht_handle_t acl_handle, 3:i32 priority, 4:i32 key_value_count, 5:list<switcht_acl_system_key_value_pair_t> acl_kvp, 6:switcht_acl_action_t action, 7:i32 action_params);
+    switcht_status_t switcht_api_acl_rule_delete(1:switcht_device_t device, 2:switcht_handle_t acl_handle, 3:i32 priority);
+    switcht_status_t switcht_api_acl_reference(1:switcht_device_t device, 2:switcht_handle_t acl_handle, 3:switcht_handle_t interface_handle);
+    switcht_status_t switcht_api_acl_remove(1:switcht_device_t device, 2:switcht_handle_t acl_handle, 3:switcht_handle_t interface_handle);
 
     /* SUP API */
     switcht_status_t switcht_api_sup_rewrite_init(1: switcht_device_t device, 2: i32 port_id);
 
     /* Multicast API */
-    switcht_handle_t switcht_api_multicast_tree_create(1: switcht_device_t device);
-    switcht_status_t switcht_api_multicast_tree_delete(1: switcht_handle_t mgid_handle);
+    switcht_handle_t switcht_api_multicast_tree_create(1:switcht_device_t device);
+    switcht_status_t switcht_api_multicast_tree_delete(1:switcht_device_t device, 2:switcht_handle_t mgid_handle);
 
-    switcht_status_t switcht_api_multicast_member_add(1: switcht_device_t device, 2: switcht_handle_t mgid_handle,
-                                              3: switcht_handle_t tenant_bd_handle,
-                                              4: i32 intf_handle_count, 5: list<switcht_handle_t> interface_handle);
+    switcht_status_t switcht_api_multicast_member_add(1:switcht_device_t device, 2:switcht_handle_t mgid_handle,
+                                              3:switcht_handle_t tenant_bd_handle,
+                                              4:i32 intf_handle_count, 5:list<switcht_handle_t> interface_handle);
 
-    switcht_status_t switcht_api_multicast_member_delete(1: switcht_device_t device, 2: switcht_handle_t mgid_handle,
-                                              3: switcht_handle_t tenant_bd_handle,
-                                              4: i32 intf_handle_count, 5: list<switcht_handle_t> interface_handle);
+    switcht_status_t switcht_api_multicast_member_delete(1: switcht_device_t device, 2:switcht_handle_t mgid_handle,
+                                              3:switcht_handle_t tenant_bd_handle,
+                                              4:i32 intf_handle_count, 5:list<switcht_handle_t> interface_handle);
 }
-

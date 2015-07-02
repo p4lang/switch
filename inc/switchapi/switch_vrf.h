@@ -62,9 +62,10 @@ switch_handle_t switch_api_vrf_create(switch_device_t device, switch_vrf_id_t vr
 
 /**
   Delete a VRF
+  @param device - device that programs the VRF
   @param vrf_handle Vrf handle
 */
-switch_status_t switch_api_vrf_delete(switch_handle_t vrf_handle);
+switch_status_t switch_api_vrf_delete(switch_device_t device, switch_handle_t vrf_handle);
 
 /**
   Set an attribute for a Vrf

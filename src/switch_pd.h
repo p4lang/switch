@@ -41,7 +41,7 @@ extern "C" {
 #include "switch_defines.h"
 
 p4_pd_status_t
-switch_pd_client_init();
+switch_pd_client_init(switch_device_t device);
 
 /* Dmac table PD API's */
 p4_pd_status_t
@@ -286,29 +286,44 @@ switch_pd_port_mapping_table_delete_entry(switch_device_t device,
  * Rewrite table
  */
 p4_pd_status_t
-switch_pd_rewrite_table_unicast_rewrite_add_entry(switch_device_t device, uint16_t nhop_index,
-                                             uint16_t smac_index, switch_mac_addr_t dmac,
-                                             switch_ip_addr_type_t addr_type,
-                                             p4_pd_entry_hdl_t *entry_hdl);
+switch_pd_rewrite_table_unicast_rewrite_add_entry(switch_device_t device,
+                                                  uint16_t bd,
+                                                  uint16_t nhop_index,
+                                                  uint16_t smac_index,
+                                                  switch_mac_addr_t dmac,
+                                                  switch_neighbor_rw_type_t rw_type,
+                                                  p4_pd_entry_hdl_t *entry_hdl);
 p4_pd_status_t
-switch_pd_rewrite_table_unicast_rewrite_update_entry(switch_device_t device, uint16_t nhop_index,
-                                                uint16_t smac_index, switch_mac_addr_t dmac,
-                                                switch_ip_addr_type_t addr_type,
-                                                p4_pd_entry_hdl_t entry_hdl);
+switch_pd_rewrite_table_unicast_rewrite_update_entry(switch_device_t device,
+                                                     uint16_t bd,
+                                                     uint16_t nhop_index,
+                                                     uint16_t smac_index,
+                                                     switch_mac_addr_t dmac,
+                                                     switch_neighbor_rw_type_t rw_type,
+                                                     p4_pd_entry_hdl_t entry_hdl);
 p4_pd_status_t
-switch_pd_rewrite_table_tunnel_rewrite_add_entry(switch_device_t device, uint16_t nhop_index,
-                                            uint16_t smac_index, uint16_t outer_bd,
-                                            switch_ip_addr_type_t addr_type, switch_mac_addr_t dmac,
-                                            uint16_t tunnel_index, switch_encap_type_t encap_type,
-                                            p4_pd_entry_hdl_t *entry_hdl);
+switch_pd_rewrite_table_tunnel_rewrite_add_entry(switch_device_t device,
+                                                 uint16_t bd,
+                                                 uint16_t nhop_index,
+                                                 uint16_t smac_index,
+                                                 switch_mac_addr_t dmac,
+                                                 switch_neighbor_type_t neigh_type,
+                                                 switch_neighbor_rw_type_t rw_type,
+                                                 uint16_t tunnel_index,
+                                                 switch_encap_type_t encap_type,
+                                                 p4_pd_entry_hdl_t *entry_hdl);
 
 p4_pd_status_t
-switch_pd_rewrite_table_tunnel_rewrite_update_entry(switch_device_t device, uint16_t nhop_index,
-                                              uint16_t smac_index, uint16_t outer_bd,
-                                              switch_ip_addr_type_t addr_type, switch_mac_addr_t dmac,
-                                              uint16_t tunnel_index, switch_encap_type_t encap_type,
-                                              p4_pd_entry_hdl_t entry_hdl);
-
+switch_pd_rewrite_table_tunnel_rewrite_update_entry(switch_device_t device,
+                                                    uint16_t bd,
+                                                    uint16_t nhop_index,
+                                                    uint16_t smac_index,
+                                                    switch_mac_addr_t dmac,
+                                                    switch_neighbor_type_t neigh_type,
+                                                    switch_neighbor_rw_type_t rw_type,
+                                                    uint16_t tunnel_index,
+                                                    switch_encap_type_t encap_type,
+                                                    p4_pd_entry_hdl_t entry_hdl);
 p4_pd_status_t
 switch_pd_rewrite_table_delete_entry(switch_device_t device,
                                  p4_pd_entry_hdl_t entry_hdl);
@@ -440,6 +455,7 @@ switch_pd_mcast_lag_port_map_update(switch_device_t device, uint16_t lag_index,
 p4_pd_status_t
 switch_pd_mpls_table_add_entry(switch_device_t device, switch_mpls_encap_t *mpls_encap,
                           uint32_t bd_index, uint32_t label,
+                          switch_bd_info_t *bd_info,
                           uint16_t egress_ifindex, p4_pd_entry_hdl_t *entry_hdl);
 
 p4_pd_status_t
@@ -451,11 +467,16 @@ switch_pd_tunnel_rewrite_table_mpls_add_entry(switch_device_t device, uint32_t t
                                        switch_mpls_encap_t *mpls_encap,
                                        p4_pd_entry_hdl_t *entry_hdl);
 p4_pd_status_t
-switch_pd_rewrite_table_mpls_rewrite_add_entry(switch_device_t device, uint16_t nhop_index,
-                                          uint16_t tunnel_index, switch_neighbor_type_t neigh_type,
-                                          uint16_t smac_index, switch_mac_addr_t dmac,
-                                          uint32_t label, uint8_t header_count,
-                                          p4_pd_entry_hdl_t *entry_hdl);
+switch_pd_rewrite_table_mpls_rewrite_add_entry(switch_device_t device,
+                                               uint16_t bd,
+                                               uint16_t nhop_index,
+                                               uint16_t tunnel_index,
+                                               switch_neighbor_type_t neigh_type,
+                                               uint16_t smac_index,
+                                               switch_mac_addr_t dmac,
+                                               uint32_t label,
+                                               uint8_t header_count,
+                                               p4_pd_entry_hdl_t *entry_hdl);
 
 p4_pd_status_t
 switch_pd_ipv4_acl_table_add_entry(switch_device_t device, uint16_t if_label,
@@ -662,6 +683,15 @@ switch_pd_validate_mpls_packet_table_init_entry(switch_device_t device);
 
 switch_status_t
 switch_pd_egress_lag_table_add_default_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_fabric_header_table_init_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_egress_port_mapping_table_init_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_compute_multicast_hashes_init_entry(switch_device_t device);
 
 #ifdef __cplusplus
 }

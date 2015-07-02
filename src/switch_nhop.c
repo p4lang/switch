@@ -23,6 +23,7 @@ limitations under the License.
 #include "switch_nhop_int.h"
 #include "switch_pd.h"
 #include "switch_utils.h"
+#include "switch_log.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,7 +35,7 @@ static switch_api_id_allocator *ecmp_select;
 static tommy_hashtable switch_nhop_hash_table;
 
 switch_status_t
-switch_nhop_init()
+switch_nhop_init(switch_device_t device)
 {
     switch_nhop_array = NULL;
     ecmp_select = switch_api_id_allocator_new(64 * 1024/ 32);
@@ -45,7 +46,7 @@ switch_nhop_init()
 }
 
 switch_status_t
-switch_nhop_free(void)
+switch_nhop_free(switch_device_t device)
 {
     switch_handle_type_free(SWITCH_HANDLE_TYPE_NHOP);
     return SWITCH_STATUS_SUCCESS;
@@ -184,7 +185,10 @@ switch_api_nhop_create(switch_device_t device, switch_nhop_key_t *nhop_key)
     switch_handle_t                    nhop_handle;
     switch_nhop_info_t                *nhop_info = NULL;
     switch_interface_info_t           *intf_info = NULL;
+    switch_handle_t                    encap_if;
+    switch_interface_info_t           *encap_intf_info = NULL;
     switch_spath_info_t               *spath_info = NULL;
+    switch_ifindex_t                   ifindex = 0;
 
     intf_info = switch_api_interface_get(nhop_key->intf_handle);
     if (!intf_info) {
@@ -196,24 +200,33 @@ switch_api_nhop_create(switch_device_t device, switch_nhop_key_t *nhop_key)
     nhop_info->type = SWITCH_NHOP_INDEX_TYPE_ONE_PATH;
     spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
     spath_info->nhop_key.intf_handle = nhop_key->intf_handle;
-
     intf_info->nhop_handle = nhop_handle;
 
+    ifindex = intf_info->ifindex;
+    if (SWITCH_INTF_TYPE(intf_info) == SWITCH_API_INTERFACE_TUNNEL) {
+        encap_if = SWITCH_INTF_TUNNEL_ENCAP_OUT_IF(intf_info);
+        encap_intf_info = switch_api_interface_get(encap_if);
+        if (!encap_intf_info) {
+            return SWITCH_API_INVALID_HANDLE;
+        }
+        ifindex = encap_intf_info->ifindex;
+        SWITCH_API_TRACE("%s:%d ifindex for tunnel interface: %x",
+                         __FUNCTION__, __LINE__, ifindex);
+    }
 #ifdef SWITCH_PD
     switch_pd_nexthop_table_add_entry(device,
                                   handle_to_id(nhop_handle),
-                                  intf_info,
-                                  &spath_info->hw_entry);
+                                  intf_info, &spath_info->hw_entry);
 
     if (SWITCH_INTF_IS_PORT_L3(intf_info) && intf_info->bd_handle) {
         switch_pd_urpf_bd_table_add_entry(device, handle_to_id(nhop_handle),
                                      handle_to_id(intf_info->bd_handle),
                                      &spath_info->urpf_hw_entry);
     }
+#endif
     if (nhop_key->ip_addr_valid) {
         switch_nhop_insert_hash(spath_info, nhop_key, nhop_handle);
     }
-#endif
     return nhop_handle;
 }
 
@@ -364,7 +377,8 @@ switch_api_ecmp_delete(switch_device_t device, switch_handle_t handle)
 }
 
 switch_status_t
-switch_api_ecmp_member_add(switch_device_t device, switch_handle_t ecmp_handle, switch_handle_t nhop_handle)
+switch_api_ecmp_member_add(switch_device_t device, switch_handle_t ecmp_handle,
+                           uint16_t nhop_count, switch_handle_t *nhop_handle_list)
 {
     switch_nhop_info_t                *e_nhop_info = NULL;
     switch_nhop_info_t                *nhop_info = NULL;
@@ -372,13 +386,10 @@ switch_api_ecmp_member_add(switch_device_t device, switch_handle_t ecmp_handle, 
     switch_ecmp_member_t              *ecmp_member = NULL;
     switch_interface_info_t           *intf_info = NULL;
     switch_spath_info_t               *spath_info = NULL;
+    switch_handle_t                    nhop_handle;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+    int                                count = 0;
 
-    nhop_info = switch_nhop_get(nhop_handle);
-    if (!nhop_info) {
-        return SWITCH_STATUS_INVALID_NHOP;
-    }
-    spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
 
     e_nhop_info = switch_nhop_get(ecmp_handle);
     if (!e_nhop_info) {
@@ -386,39 +397,49 @@ switch_api_ecmp_member_add(switch_device_t device, switch_handle_t ecmp_handle, 
     }
     ecmp_info = &(SWITCH_NHOP_ECMP_INFO(e_nhop_info));
 
-    ecmp_member = switch_malloc(sizeof(switch_ecmp_member_t), 1);
-    if (!ecmp_member) {
-        return SWITCH_STATUS_NO_MEMORY;
-    }
-    ecmp_member->nhop_handle = nhop_handle;
-    intf_info = switch_api_interface_get(spath_info->nhop_key.intf_handle);
-    if (!intf_info) {
+    for (count = 0; count < nhop_count; count++) {
+        nhop_handle = nhop_handle_list[count];
+        nhop_info = switch_nhop_get(nhop_handle);
+        if (!nhop_info) {
+            return SWITCH_STATUS_INVALID_NHOP;
+        }
+        spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
+
+        ecmp_member = switch_malloc(sizeof(switch_ecmp_member_t), 1);
+        if (!ecmp_member) {
+            return SWITCH_STATUS_NO_MEMORY;
+        }
+        ecmp_member->nhop_handle = nhop_handle;
+        intf_info = switch_api_interface_get(spath_info->nhop_key.intf_handle);
+        if (!intf_info) {
             return SWITCH_STATUS_INVALID_INTERFACE;
-    }
+        }
 
 #ifdef SWITCH_PD
-    status = switch_pd_ecmp_member_add(device, ecmp_info->pd_group_hdl, 
+        status = switch_pd_ecmp_member_add(device, ecmp_info->pd_group_hdl, 
                     handle_to_id(ecmp_member->nhop_handle), intf_info,
                     &(ecmp_member->mbr_hdl));
-    if(ecmp_info->count == 0) {
+        if (ecmp_info->count == 0) {
             switch_pd_ecmp_group_table_add_entry_with_selector(device, 
                     handle_to_id(ecmp_handle),
                     ecmp_info->pd_group_hdl, 
                     &(ecmp_info->hw_entry)); 
-    }
-    if (SWITCH_INTF_IS_PORT_L3(intf_info) && intf_info->bd_handle) {
-        switch_pd_urpf_bd_table_add_entry(device, handle_to_id(ecmp_handle),
+        }
+        if (SWITCH_INTF_IS_PORT_L3(intf_info) && intf_info->bd_handle) {
+            switch_pd_urpf_bd_table_add_entry(device, handle_to_id(ecmp_handle),
                                      handle_to_id(intf_info->bd_handle),
                                      &(ecmp_member->urpf_hw_entry));
-    }
+        }
 #endif
-    ecmp_info->count++;
-    tommy_list_insert_head(&ecmp_info->members, &(ecmp_member->node), ecmp_member);
+        ecmp_info->count++;
+        tommy_list_insert_head(&ecmp_info->members, &(ecmp_member->node), ecmp_member);
+    }
     return status;
 }
 
 switch_status_t
-switch_api_ecmp_member_delete(switch_device_t device, switch_handle_t ecmp_handle, switch_handle_t nhop_handle)
+switch_api_ecmp_member_delete(switch_device_t device, switch_handle_t ecmp_handle,
+                              uint16_t nhop_count, switch_handle_t *nhop_handle_list)
 {
     switch_nhop_info_t                *nhop_info = NULL;
     switch_nhop_info_t                *e_nhop_info = NULL;
@@ -427,49 +448,53 @@ switch_api_ecmp_member_delete(switch_device_t device, switch_handle_t ecmp_handl
     switch_ecmp_info_t                *ecmp_info = NULL;
     switch_ecmp_member_t              *ecmp_member = NULL;
     tommy_node                        *node = NULL;
+    switch_handle_t                    nhop_handle;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
-
-    nhop_info = switch_nhop_get(nhop_handle);
-    if (!nhop_info) {
-        return SWITCH_STATUS_INVALID_NHOP;
-    }
-    spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
+    int                                count = 0;
 
     e_nhop_info = switch_nhop_get(ecmp_handle);
     if (!e_nhop_info) {
         return SWITCH_STATUS_INVALID_NHOP;
     }
-    ecmp_info = &(SWITCH_NHOP_ECMP_INFO(e_nhop_info));
-    node = tommy_list_head(&(ecmp_info->members));
-    while (node) {
-        ecmp_member = (switch_ecmp_member_t *) node->data;
-        if (ecmp_member->nhop_handle == nhop_handle) {
-            break;
+    for (count = 0; count < nhop_count; count++) {
+        nhop_handle = nhop_handle_list[count];
+        nhop_info = switch_nhop_get(nhop_handle);
+        if (!nhop_info) {
+            return SWITCH_STATUS_INVALID_NHOP;
         }
-        node = node->next;
-    }
+        spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
+        ecmp_info = &(SWITCH_NHOP_ECMP_INFO(e_nhop_info));
+        node = tommy_list_head(&(ecmp_info->members));
+        while (node) {
+            ecmp_member = (switch_ecmp_member_t *) node->data;
+            if (ecmp_member->nhop_handle == nhop_handle) {
+                break;
+            }
+            node = node->next;
+        }
 
-    if (!node) {
-        return SWITCH_STATUS_ITEM_NOT_FOUND;
-    }
-    intf_info = switch_api_interface_get(spath_info->nhop_key.intf_handle);
-    if (!intf_info) {
+        if (!node) {
+            return SWITCH_STATUS_ITEM_NOT_FOUND;
+        }
+        intf_info = switch_api_interface_get(spath_info->nhop_key.intf_handle);
+        if (!intf_info) {
             return SWITCH_STATUS_INVALID_INTERFACE;
-    }
+        }
 
 #if SWITCH_PD
-    if(ecmp_info->count == 1) {
-        status = switch_pd_ecmp_group_table_delete_entry(device, ecmp_info->hw_entry);
-    }
-    status = switch_pd_ecmp_member_delete(device, ecmp_info->pd_group_hdl, 
-            ecmp_member->mbr_hdl);
-    if (SWITCH_INTF_IS_PORT_L3(intf_info) && intf_info->bd_handle) {
-        status = switch_pd_urpf_bd_table_delete_entry(device, ecmp_member->urpf_hw_entry);
-    }
+        if (ecmp_info->count == 1) {
+            status = switch_pd_ecmp_group_table_delete_entry(device, ecmp_info->hw_entry);
+        }
+        status = switch_pd_ecmp_member_delete(device, ecmp_info->pd_group_hdl, 
+                                              ecmp_member->mbr_hdl);
+        if (SWITCH_INTF_IS_PORT_L3(intf_info) && intf_info->bd_handle) {
+            status = switch_pd_urpf_bd_table_delete_entry(device, ecmp_member->urpf_hw_entry);
+        }
 #endif
-    ecmp_info->count--;
-    ecmp_member = tommy_list_remove_existing(&(ecmp_info->members), node);
-    switch_free(ecmp_member);
+        ecmp_info->count--;
+        ecmp_member = tommy_list_remove_existing(&(ecmp_info->members), node);
+        switch_free(ecmp_member);
+    }
     return status;
 }
 

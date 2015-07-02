@@ -68,17 +68,21 @@ switch_status_t switch_api_ecmp_delete(switch_device_t device, switch_handle_t n
  Add nexthop member to ecmp group
  @param device - device to program the nexthop
  @param ecmp_handle - handle that identifies ECMP group uniquely
- @param nhop_handle - Nexthop to be added to the ECMP Group
+ @param nhop_count - number of nexthops
+ @param nhop_handle_list - List of nexthops to be added to the ECMP Group
 */
-switch_status_t switch_api_ecmp_member_add(switch_device_t device, switch_handle_t ecmp_handle, switch_handle_t nhop_handle);
+switch_status_t switch_api_ecmp_member_add(switch_device_t device, switch_handle_t ecmp_handle,
+                                           uint16_t nhop_count, switch_handle_t *nhop_handle_list);
 
 /**
  Delete nexthop member from ecmp group
  @param device - device to program the nexthop
  @param ecmp_handle - handle that identifies ECMP group uniquely
- @param nhop_handle - Nexthop to be deleted from the ECMP Group
+ @param nhop_count - number of nexthops
+ @param nhop_handle_list - List of nexthops to be added to the ECMP Group
 */
-switch_status_t switch_api_ecmp_member_delete(switch_device_t device, switch_handle_t nhop_handle, switch_handle_t intf_handle);
+switch_status_t switch_api_ecmp_member_delete(switch_device_t device, switch_handle_t ecmp_handle,
+                                              uint16_t nhop_count, switch_handle_t *nhop_handle_list);
 
 /*
  Create ECMP Group along with the members.

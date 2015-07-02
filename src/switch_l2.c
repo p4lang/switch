@@ -251,7 +251,7 @@ switch_mac_learn_notify_cb(p4_pd_sess_hdl_t sess_hdl,
         learn_entry = &(msg->entries[index]);
         SWITCH_API_TRACE("%s:%d:MAC learn BD: 0x%d, MAC: 0x%02x:%02x:%02x:%02x:%02x:%02x => If: %d\n",
                      __FUNCTION__, __LINE__,
-                     learn_entry->ingress_metadata_bd,
+                     learn_entry->ingress_metadata_ingress_bd,
                      learn_entry->l2_metadata_lkp_mac_sa[0],
                      learn_entry->l2_metadata_lkp_mac_sa[1],
                      learn_entry->l2_metadata_lkp_mac_sa[2],
@@ -260,7 +260,7 @@ switch_mac_learn_notify_cb(p4_pd_sess_hdl_t sess_hdl,
                      learn_entry->l2_metadata_lkp_mac_sa[5],
                      learn_entry->ingress_metadata_ifindex);
         memset(&mac_entry, 0, sizeof(switch_api_mac_entry_t));
-        mac_entry.vlan_handle = id_to_handle(SWITCH_HANDLE_TYPE_BD, learn_entry->ingress_metadata_bd); 
+        mac_entry.vlan_handle = id_to_handle(SWITCH_HANDLE_TYPE_BD, learn_entry->ingress_metadata_ingress_bd); 
         bd_info = switch_bd_get(mac_entry.vlan_handle);
         if (!bd_info) {
             SWITCH_API_TRACE("%s:%d: Ignoring the mac. vlan not found!", __FUNCTION__, __LINE__);
@@ -414,7 +414,7 @@ switch_api_mac_table_entry_add(switch_device_t device,
                                switch_api_mac_entry_t *mac_entry)
 {
     // check if interface is port, lag, port_vlan or Tunnel type
-    switch_interface_info_t           *i_info = NULL;
+    switch_interface_info_t           *intf_info = NULL;
     switch_mac_info_t                 *mac_info = NULL;
     switch_bd_info_t                  *bd_info = NULL;
     switch_logical_network_t          *ln_info = NULL;
@@ -445,8 +445,8 @@ switch_api_mac_table_entry_add(switch_device_t device,
                                  __FUNCTION__, __LINE__);
                 return status;
             }
-            i_info = switch_api_interface_get(intf_handle);
-            if (!i_info) {
+            intf_info = switch_api_interface_get(intf_handle);
+            if (!intf_info) {
                 SWITCH_API_ERROR("%s:%d: invalid interface!", __FUNCTION__, __LINE__);
                 return SWITCH_STATUS_INVALID_INTERFACE;
             }
@@ -454,8 +454,8 @@ switch_api_mac_table_entry_add(switch_device_t device,
         case SWITCH_HANDLE_TYPE_INTERFACE:
             mac_entry->mac_action = TRUE;
             intf_handle = mac_entry->handle;
-            i_info = switch_api_interface_get(intf_handle);
-            if (!i_info) {
+            intf_info = switch_api_interface_get(intf_handle);
+            if (!intf_info) {
                 SWITCH_API_ERROR("%s:%d: invalid interface!", __FUNCTION__, __LINE__);
                 return SWITCH_STATUS_INVALID_INTERFACE;
             }
@@ -468,8 +468,8 @@ switch_api_mac_table_entry_add(switch_device_t device,
                 return SWITCH_STATUS_INVALID_NHOP;
             }
             spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
-            i_info = switch_api_interface_get(spath_info->nhop_key.intf_handle);
-            if (!i_info) {
+            intf_info = switch_api_interface_get(spath_info->nhop_key.intf_handle);
+            if (!intf_info) {
                 return SWITCH_STATUS_INVALID_INTERFACE;
             }
             nhop_index = handle_to_id(mac_entry->handle);
@@ -506,12 +506,12 @@ switch_api_mac_table_entry_add(switch_device_t device,
     mac_info->dmac_entry = SWITCH_HW_INVALID_HANDLE;
     status = switch_pd_dmac_table_add_entry(device, mac_entry,
                                         nhop_index, mgid_index,
-                                        aging_time, i_info,
+                                        aging_time, intf_info,
                                         &mac_info->dmac_entry);
     // Do not learn multicast macs on smac table
     if (!mgid_index && SWITCH_LN_LEARN_ENABLED(bd_info)) {
         status = switch_pd_smac_table_add_entry(device, mac_entry,
-                                           i_info,
+                                           intf_info,
                                            &mac_info->smac_entry);
     }
 #endif
@@ -541,7 +541,7 @@ switch_status_t
 switch_api_mac_table_entry_update(switch_device_t device,
                                   switch_api_mac_entry_t *mac_entry)
 {
-    switch_interface_info_t           *i_info = NULL;
+    switch_interface_info_t           *intf_info = NULL;
     switch_mac_info_t                 *mac_info = NULL;
     switch_bd_info_t                  *bd_info = NULL;
     switch_nhop_info_t                *nhop_info = NULL;
@@ -567,15 +567,15 @@ switch_api_mac_table_entry_update(switch_device_t device,
                                  __FUNCTION__, __LINE__);
                 return status;
             }
-            i_info = switch_api_interface_get(mac_entry->handle);
-            if (!i_info) {
+            intf_info = switch_api_interface_get(mac_entry->handle);
+            if (!intf_info) {
                 return SWITCH_STATUS_INVALID_INTERFACE;
             }
             break;
         case SWITCH_HANDLE_TYPE_INTERFACE:
             intf_handle = mac_entry->handle;
-            i_info = switch_api_interface_get(intf_handle);
-            if (!i_info) {
+            intf_info = switch_api_interface_get(intf_handle);
+            if (!intf_info) {
                 return SWITCH_STATUS_INVALID_INTERFACE;
             }
         break;
@@ -586,8 +586,8 @@ switch_api_mac_table_entry_update(switch_device_t device,
                 return SWITCH_STATUS_INVALID_NHOP;
             }
             spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
-            i_info = switch_api_interface_get(spath_info->nhop_key.intf_handle);
-            if (!i_info) {
+            intf_info = switch_api_interface_get(spath_info->nhop_key.intf_handle);
+            if (!intf_info) {
                 return SWITCH_STATUS_INVALID_INTERFACE;
             }
             nhop_index = handle_to_id(mac_entry->handle);
@@ -612,12 +612,12 @@ switch_api_mac_table_entry_update(switch_device_t device,
 #ifdef SWITCH_PD
     status = switch_pd_dmac_table_update_entry(device, mac_entry,
                                         nhop_index, mgid_index,
-                                        i_info,
+                                        intf_info,
                                         mac_info->dmac_entry);
     // Do not learn multicast macs on smac table
     if (!mgid_index && SWITCH_LN_LEARN_ENABLED(bd_info)) {
         status = switch_pd_smac_table_update_entry(device, mac_entry,
-                                              i_info,
+                                              intf_info,
                                               mac_info->smac_entry);
     }
 #endif
@@ -822,43 +822,6 @@ switch_api_mac_table_entries_delete_by_interface_vlan(switch_handle_t handle,
             continue;
         }
         status = switch_api_mac_table_entry_delete(device, &mac_info->mac_entry);
-    }
-    return status;
-}
-
-switch_status_t
-switch_api_mac_table_attribute_set(switch_mac_attr_t mac_attr, uint64_t value)
-{
-    switch_status_t status = SWITCH_STATUS_SUCCESS;
-
-    switch(mac_attr) {
-        case SWITCH_MAC_ATTR_AGING_TIME:
-            status = switch_api_mac_table_aging_time_set(value);
-            break;
-        case SWITCH_MAC_ATTR_TABLE_SIZE:
-        break;
-
-        default:
-            status = SWITCH_STATUS_INVALID_ATTRIBUTE;
-    }
-    return status;
-}
-
-switch_status_t
-switch_api_mac_table_attribute_get(switch_mac_attr_t mac_attr, uint64_t *value)
-{
-    switch_status_t status = SWITCH_STATUS_SUCCESS;
-
-    switch(mac_attr) {
-        case SWITCH_MAC_ATTR_AGING_TIME:
-            status = switch_api_mac_table_aging_time_get(value);
-        break;
-        case SWITCH_MAC_ATTR_TABLE_SIZE:
-            status = SWITCH_STATUS_SUCCESS;
-        break;
-
-        default:
-            status = SWITCH_STATUS_INVALID_ATTRIBUTE;
     }
     return status;
 }

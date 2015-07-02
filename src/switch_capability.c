@@ -32,9 +32,8 @@ extern "C" {
 static switch_capability_info_t *switch_info = NULL;
 
 int
-switch_capability_init()
+switch_capability_init(switch_device_t device)
 {
-    switch_device_t device = SWITCH_DEV_ID;
     switch_api_capability_t *api_switch_info = NULL;
     switch_port_info_t *port_info = NULL;
     int index = 0;
@@ -85,15 +84,14 @@ switch_api_capability_smac_index_get()
 }
 
 switch_status_t
-switch_api_capability_set(switch_api_capability_t *api_switch_info) {
-    switch_device_t device = SWITCH_DEV_ID;
+switch_api_capability_set(switch_device_t device, switch_api_capability_t *api_switch_info) {
     switch_status_t status = SWITCH_STATUS_SUCCESS;
     switch_mac_addr_t mac;
 
     memset(&mac, 0, sizeof(switch_mac_addr_t));
     if (memcmp(&api_switch_info->switch_mac, &mac, ETH_LEN) != 0) {
         memcpy(&switch_info->api_switch_info.switch_mac, &api_switch_info->switch_mac, ETH_LEN);
-        switch_info->rmac_handle = switch_api_router_mac_group_create();
+        switch_info->rmac_handle = switch_api_router_mac_group_create(device);
         status = switch_api_router_mac_add(device, switch_info->rmac_handle, &api_switch_info->switch_mac);
         switch_info->smac_index = switch_smac_rewrite_add_entry(&api_switch_info->switch_mac);
     }
@@ -101,7 +99,7 @@ switch_api_capability_set(switch_api_capability_t *api_switch_info) {
 }
 
 switch_status_t
-switch_api_capability_get(switch_api_capability_t *api_switch_info) {
+switch_api_capability_get(switch_device_t device, switch_api_capability_t *api_switch_info) {
     memcpy(api_switch_info, &switch_info->api_switch_info, sizeof(switch_api_capability_t));
     return SWITCH_STATUS_SUCCESS;
 }

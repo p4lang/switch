@@ -250,17 +250,19 @@ switch_status_t switch_api_port_egress_rate_set(switch_device_t device, switch_p
 
 /**
  Set Port configuration
+ @param device device to use
  @param api_port_info port information inclduing port number
  (portnumber specified in port_info->port_number)
 */
-switch_status_t switch_api_port_set(switch_api_port_info_t *api_port_info);
+switch_status_t switch_api_port_set(switch_device_t device, switch_api_port_info_t *api_port_info);
 
 /**
  Get Port configuration
+ @param device device to use
  @param api_port_info port information inclduing port number
  (portnumber specified in port_info->port_number)
 */
-switch_status_t switch_api_port_get(switch_api_port_info_t *api_port_info);
+switch_status_t switch_api_port_get(switch_device_t device, switch_api_port_info_t *api_port_info);
 
 /**
  Dump port table

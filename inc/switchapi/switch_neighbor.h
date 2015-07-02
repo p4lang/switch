@@ -37,25 +37,27 @@ extern "C" {
 
 /** Neighbor type */
 typedef enum switch_neighbor_type_ {
-    SWITCH_API_NEIGHBOR_L3_IPV4_UNICAST = 0,
-    SWITCH_API_NEIGHBOR_L3_IPV6_UNICAST = 1,
-    SWITCH_API_NEIGHBOR_MPLS_SWAP_L2VPN = 2,
-    SWITCH_API_NEIGHBOR_MPLS_SWAP_L3VPN = 3,
-    SWITCH_API_NEIGHBOR_MPLS_SWAP_PUSH_L2VPN = 4,
-    SWITCH_API_NEIGHBOR_MPLS_SWAP_PUSH_L3VPN = 5,
-    SWITCH_API_NEIGHBOR_MPLS_PUSH_L2VPN = 6,
-    SWITCH_API_NEIGHBOR_MPLS_PUSH_L3VPN = 7,
-    SWITCH_API_NEIGHBOR_VXLAN_IPV4 = 8,
-    SWITCH_API_NEIGHBOR_VXLAN_IPV6 = 9,
-    SWITCH_API_NEIGHBOR_NVGRE_IPV4 = 10,
-    SWITCH_API_NEIGHBOR_NVGRE_IPV6 = 11,
-    SWITCH_API_NEIGHBOR_GENEVE_IPV4 = 12,
-    SWITCH_API_NEIGHBOR_GENEVE_IPV6 = 13,
+    SWITCH_API_NEIGHBOR_NONE = 0,
+    SWITCH_API_NEIGHBOR_MPLS_SWAP_L2VPN = 1,
+    SWITCH_API_NEIGHBOR_MPLS_SWAP_L3VPN = 2,
+    SWITCH_API_NEIGHBOR_MPLS_SWAP_PUSH_L2VPN = 3,
+    SWITCH_API_NEIGHBOR_MPLS_SWAP_PUSH_L3VPN = 4,
+    SWITCH_API_NEIGHBOR_MPLS_PUSH_L2VPN = 5,
+    SWITCH_API_NEIGHBOR_MPLS_PUSH_L3VPN = 6,
+    SWITCH_API_NEIGHBOR_IPV4_TUNNEL = 7,
+    SWITCH_API_NEIGHBOR_IPV6_TUNNEL = 8,
 } switch_neighbor_type_t;
+
+/** Neighbor rewrite type */
+typedef enum switch_neighbor_rw_type_ {
+    SWITCH_API_NEIGHBOR_RW_TYPE_L2 = 0,
+    SWITCH_API_NEIGHBOR_RW_TYPE_L3 = 1,
+} switch_neighbor_rw_type_t;
 
 /** Neighbor identifier */
 typedef struct switch_api_neighbor_ {
     switch_neighbor_type_t neigh_type;      /**< neighbor type */
+    switch_neighbor_rw_type_t rw_type;      /**< rewrite type */
     switch_handle_t vrf_handle;             /**< vrf instance */
     switch_ip_addr_t ip_addr;               /**< IP address */
     switch_handle_t nhop_handle;            /**< Next hop handle for neighbor */

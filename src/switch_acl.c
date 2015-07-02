@@ -28,7 +28,7 @@ extern "C" {
 static void *switch_acl_array;
 
 switch_status_t
-switch_acl_init()
+switch_acl_init(switch_device_t device)
 {
     switch_acl_array = NULL;
     switch_handle_type_init(SWITCH_HANDLE_TYPE_ACL, (4*1024));
@@ -36,7 +36,7 @@ switch_acl_init()
 }
 
 switch_status_t
-switch_acl_free(void)
+switch_acl_free(switch_device_t device)
 {
     switch_handle_type_free(SWITCH_HANDLE_TYPE_ACL);
     return SWITCH_STATUS_SUCCESS;
@@ -83,7 +83,7 @@ switch_api_acl_list_create(switch_device_t device, switch_acl_type_t type)
 }
 
 switch_status_t
-switch_api_acl_list_delete(switch_handle_t acl_handle)
+switch_api_acl_list_delete(switch_device_t device, switch_handle_t acl_handle)
 {
     switch_acl_info_t *acl_info = NULL;
     
@@ -96,14 +96,14 @@ switch_api_acl_list_delete(switch_handle_t acl_handle)
 }
 
 static switch_status_t
-switch_acl_ip_set_fields_actions(switch_acl_rule_t *p, switch_handle_t interface_handle, p4_pd_entry_hdl_t *entry)
+switch_acl_ip_set_fields_actions(switch_device_t device, switch_acl_rule_t *p,
+                                 switch_handle_t interface_handle, p4_pd_entry_hdl_t *entry)
 {
     switch_acl_ip_key_value_pair_t    *ip_acl = NULL;
     switch_interface_info_t           *intf_info = NULL;
     uint16_t                           bd_label = 0;
     uint16_t                           if_label = 0;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
-    switch_device_t                    device = SWITCH_DEV_ID;
 
     if (interface_handle) {
         intf_info = switch_api_interface_get(interface_handle);
@@ -129,15 +129,14 @@ switch_acl_ip_set_fields_actions(switch_acl_rule_t *p, switch_handle_t interface
 }
 
 static switch_status_t
-switch_acl_ipv6_set_fields_actions(switch_acl_rule_t *p, switch_handle_t interface_handle,
-                                   p4_pd_entry_hdl_t *entry)
+switch_acl_ipv6_set_fields_actions(switch_device_t device, switch_acl_rule_t *p,
+                                   switch_handle_t interface_handle, p4_pd_entry_hdl_t *entry)
 {
     switch_acl_ipv6_key_value_pair_t  *ipv6_acl=NULL;
     switch_interface_info_t           *intf_info = NULL;
     uint16_t                          bd_label = 0;
     uint16_t                          if_label = 0;
     switch_status_t                   status = SWITCH_STATUS_SUCCESS;
-    switch_device_t                   device = SWITCH_DEV_ID;
 
     if (interface_handle) {
         intf_info = switch_api_interface_get(interface_handle);
@@ -162,15 +161,14 @@ switch_acl_ipv6_set_fields_actions(switch_acl_rule_t *p, switch_handle_t interfa
 }
 
 static switch_status_t
-switch_acl_mac_set_fields_actions(switch_acl_rule_t *p, switch_handle_t interface_handle,
-                                  p4_pd_entry_hdl_t *entry)
+switch_acl_mac_set_fields_actions(switch_device_t device, switch_acl_rule_t *p,
+                                  switch_handle_t interface_handle, p4_pd_entry_hdl_t *entry)
 {
     switch_acl_mac_key_value_pair_t             *mac_acl=NULL;
     switch_interface_info_t                     *intf_info = NULL;
     uint16_t                                     bd_label = 0;
     uint16_t                                     if_label = 0;
     switch_status_t                              status = SWITCH_STATUS_SUCCESS;
-    switch_device_t                              device = SWITCH_DEV_ID;
 
     if (interface_handle) {
         intf_info = switch_api_interface_get(interface_handle);
@@ -196,13 +194,13 @@ switch_acl_mac_set_fields_actions(switch_acl_rule_t *p, switch_handle_t interfac
 }
 
 static switch_status_t
-switch_acl_ip_racl_set_fields_actions(switch_acl_rule_t *p, switch_handle_t interface_handle, p4_pd_entry_hdl_t *entry)
+switch_acl_ip_racl_set_fields_actions(switch_device_t device, switch_acl_rule_t *p,
+                                      switch_handle_t interface_handle, p4_pd_entry_hdl_t *entry)
 {
     switch_acl_ip_racl_key_value_pair_t         *ip_racl = NULL;
     uint16_t                                     bd_label = 0;
     uint16_t                                     if_label = 0;
     switch_status_t                              status = SWITCH_STATUS_SUCCESS;
-    switch_device_t                              device = SWITCH_DEV_ID;
 
     if(interface_handle) {
         switch(switch_handle_get_type(interface_handle)) {
@@ -220,13 +218,13 @@ switch_acl_ip_racl_set_fields_actions(switch_acl_rule_t *p, switch_handle_t inte
 }
 
 static switch_status_t
-switch_acl_ipv6_racl_set_fields_actions(switch_acl_rule_t *p, switch_handle_t interface_handle, p4_pd_entry_hdl_t *entry)
+switch_acl_ipv6_racl_set_fields_actions(switch_device_t device, switch_acl_rule_t *p,
+                                        switch_handle_t interface_handle, p4_pd_entry_hdl_t *entry)
 {
     switch_acl_ipv6_racl_key_value_pair_t       *ipv6_racl=NULL;
     uint16_t                                     bd_label = 0;
     uint16_t                                     if_label = 0;
     switch_status_t                              status = SWITCH_STATUS_SUCCESS;
-    switch_device_t                              device = SWITCH_DEV_ID;
 
     if(interface_handle) {
         switch(switch_handle_get_type(interface_handle)) {
@@ -245,14 +243,14 @@ switch_acl_ipv6_racl_set_fields_actions(switch_acl_rule_t *p, switch_handle_t in
 }
 
 static switch_status_t
-switch_acl_qos_set_fields_actions(switch_acl_rule_t *p, switch_handle_t interface_handle, p4_pd_entry_hdl_t *entry)
+switch_acl_qos_set_fields_actions(switch_device_t device, switch_acl_rule_t *p,
+                                  switch_handle_t interface_handle, p4_pd_entry_hdl_t *entry)
 {
     switch_acl_qos_key_value_pair_t             *qos_acl = NULL;
     switch_interface_info_t                     *intf_info = NULL;
     uint16_t                                     bd_label = 0;
     uint16_t                                     if_label = 0;
     switch_status_t                              status = SWITCH_STATUS_SUCCESS;
-    switch_device_t                              device = SWITCH_DEV_ID;
 
     if (interface_handle) {
         intf_info = switch_api_interface_get(interface_handle);
@@ -274,14 +272,14 @@ switch_acl_qos_set_fields_actions(switch_acl_rule_t *p, switch_handle_t interfac
 }
 
 static switch_status_t
-switch_acl_system_set_fields_actions(switch_acl_rule_t *p, switch_handle_t interface_handle, p4_pd_entry_hdl_t *entry)
+switch_acl_system_set_fields_actions(switch_device_t device, switch_acl_rule_t *p,
+                                     switch_handle_t interface_handle, p4_pd_entry_hdl_t *entry)
 {
     switch_acl_system_key_value_pair_t          *system_acl = NULL;
     switch_interface_info_t                     *intf_info = NULL;
     uint16_t                                     bd_label = 0;
     uint16_t                                     if_label = 0;
     switch_status_t                              status = SWITCH_STATUS_SUCCESS;
-    switch_device_t                              device = SWITCH_DEV_ID;
 
     if (interface_handle) {
         intf_info = switch_api_interface_get(interface_handle);
@@ -306,7 +304,9 @@ switch_acl_system_set_fields_actions(switch_acl_rule_t *p, switch_handle_t inter
 }
 
 static switch_status_t
-acl_hw_set(switch_acl_info_t *acl_info, switch_acl_rule_t *p, switch_acl_interface_t *intf, switch_handle_t interface_handle, Word_t index)
+acl_hw_set(switch_device_t device, switch_acl_info_t *acl_info,
+           switch_acl_rule_t *p, switch_acl_interface_t *intf,
+           switch_handle_t interface_handle, Word_t index)
 {
     p4_pd_entry_hdl_t                           entry;
     switch_status_t                             status =  SWITCH_STATUS_SUCCESS;
@@ -314,25 +314,25 @@ acl_hw_set(switch_acl_info_t *acl_info, switch_acl_rule_t *p, switch_acl_interfa
 
     switch (acl_info->type) {
         case SWITCH_ACL_TYPE_SYSTEM:
-            status = switch_acl_system_set_fields_actions(p, interface_handle, &entry);
+            status = switch_acl_system_set_fields_actions(device, p, interface_handle, &entry);
             break;
         case SWITCH_ACL_TYPE_IP:
-            status = switch_acl_ip_set_fields_actions(p, interface_handle, &entry);
+            status = switch_acl_ip_set_fields_actions(device, p, interface_handle, &entry);
             break;
         case SWITCH_ACL_TYPE_IPV6:
-            status = switch_acl_ipv6_set_fields_actions(p, interface_handle, &entry);
+            status = switch_acl_ipv6_set_fields_actions(device, p, interface_handle, &entry);
             break;
         case SWITCH_ACL_TYPE_IP_RACL:
-            status = switch_acl_ip_racl_set_fields_actions(p, interface_handle, &entry);
+            status = switch_acl_ip_racl_set_fields_actions(device, p, interface_handle, &entry);
             break;
         case SWITCH_ACL_TYPE_IPV6_RACL:
-            status = switch_acl_ipv6_racl_set_fields_actions(p, interface_handle, &entry);
+            status = switch_acl_ipv6_racl_set_fields_actions(device, p, interface_handle, &entry);
             break;
         case SWITCH_ACL_TYPE_MAC:
-            status = switch_acl_mac_set_fields_actions(p, interface_handle, &entry);
+            status = switch_acl_mac_set_fields_actions(device, p, interface_handle, &entry);
             break;
         case SWITCH_ACL_TYPE_QOS:
-            status = switch_acl_qos_set_fields_actions(p, interface_handle, &entry);
+            status = switch_acl_qos_set_fields_actions(device, p, interface_handle, &entry);
             break;
         default:
             break;
@@ -347,11 +347,11 @@ acl_hw_set(switch_acl_info_t *acl_info, switch_acl_rule_t *p, switch_acl_interfa
 }
 
 static switch_status_t
-acl_hw_del(switch_acl_info_t *acl_info, switch_acl_interface_t *intf, Word_t index)
+acl_hw_del(switch_device_t device, switch_acl_info_t *acl_info,
+           switch_acl_interface_t *intf, Word_t index)
 {
     unsigned long                              *hw_entry = NULL;
     int                                         ret = 0;
-    switch_device_t                             device = SWITCH_DEV_ID;
     switch_status_t                             status = SWITCH_STATUS_SUCCESS;
 
     JLG(hw_entry, intf->entries, index);
@@ -387,9 +387,10 @@ acl_hw_del(switch_acl_info_t *acl_info, switch_acl_interface_t *intf, Word_t ind
 }
 
 switch_status_t
-switch_api_acl_rule_create(switch_handle_t acl_handle, unsigned int priority,
-                           unsigned int key_value_count, void *acl_kvp,
-                           switch_acl_action_t action, switch_acl_action_params_t *action_params)
+switch_api_acl_rule_create(switch_device_t device, switch_handle_t acl_handle,
+                           unsigned int priority, unsigned int key_value_count,
+                           void *acl_kvp, switch_acl_action_t action,
+                           switch_acl_action_params_t *action_params)
 {
     switch_acl_info_t                           *acl_info = NULL;
     switch_acl_ip_key_value_pair_t              *ip_acl = NULL;
@@ -472,13 +473,13 @@ switch_api_acl_rule_create(switch_handle_t acl_handle, unsigned int priority,
             while (node) {
                 intf = node->data;
                 // update ACL H/W entries
-                acl_hw_set(acl_info, p, intf, intf->interface, priority);
+                acl_hw_set(device, acl_info, p, intf, intf->interface, priority);
                 node = node->next;
             }
         } else {
             if (acl_info->type == SWITCH_ACL_TYPE_SYSTEM) {
                 // update system ACL H/W entries
-                acl_hw_set(acl_info, p, NULL, 0, priority);
+                acl_hw_set(device, acl_info, p, NULL, 0, priority);
             }
         }
     }
@@ -486,7 +487,9 @@ switch_api_acl_rule_create(switch_handle_t acl_handle, unsigned int priority,
 }
 
 switch_status_t
-switch_api_acl_rule_delete(switch_handle_t acl_handle, unsigned int priority)
+switch_api_acl_rule_delete(switch_device_t device,
+                           switch_handle_t acl_handle,
+                           unsigned int priority)
 {
     switch_acl_info_t                           *acl_info = NULL;
     switch_acl_rule_t                           *p = NULL;
@@ -511,7 +514,7 @@ switch_api_acl_rule_delete(switch_handle_t acl_handle, unsigned int priority)
                 while (node) {
                     intf = node->data;
                     // update ACL H/W entries
-                    acl_hw_del(acl_info, intf, priority);
+                    acl_hw_del(device, acl_info, intf, priority);
                     node = node->next;
                 }
             }
@@ -525,7 +528,9 @@ switch_api_acl_rule_delete(switch_handle_t acl_handle, unsigned int priority)
 }
 
 switch_status_t
-switch_api_acl_renumber(switch_handle_t acl_handle, int increment_priority)
+switch_api_acl_renumber(switch_device_t device,
+                        switch_handle_t acl_handle,
+                        int increment_priority)
 {
     // modify priority in reverse order for priority > 0 or increasing order if
     // walk the list of entries and modify the priority - when supported
@@ -539,7 +544,9 @@ switch_api_acl_renumber(switch_handle_t acl_handle, int increment_priority)
 }
 
 switch_status_t
-switch_api_acl_reference(switch_handle_t acl_handle, switch_handle_t interface_handle)
+switch_api_acl_reference(switch_device_t device,
+                         switch_handle_t acl_handle,
+                         switch_handle_t interface_handle)
 {
     switch_acl_interface_t            *intf = NULL;
     switch_acl_info_t                 *acl_info = NULL;
@@ -559,7 +566,7 @@ switch_api_acl_reference(switch_handle_t acl_handle, switch_handle_t interface_h
     intf->entries = NULL;
     JLL(jp, acl_info->rules, index);
     while (jp) {
-       acl_hw_set(acl_info, (switch_acl_rule_t *)(*(unsigned long *)jp), intf, interface_handle, index);
+       acl_hw_set(device, acl_info, (switch_acl_rule_t *)(*(unsigned long *)jp), intf, interface_handle, index);
        // walk the table
        JLP(jp, acl_info->rules, index);
     }
@@ -569,7 +576,9 @@ switch_api_acl_reference(switch_handle_t acl_handle, switch_handle_t interface_h
 }
 
 switch_status_t
-switch_api_acl_remove(switch_handle_t acl_handle, switch_handle_t interface_handle)
+switch_api_acl_remove(switch_device_t device, 
+                      switch_handle_t acl_handle,
+                      switch_handle_t interface_handle)
 {
     switch_acl_info_t                 *acl_info = NULL;
     switch_acl_interface_t            *intf = NULL;
@@ -595,7 +604,7 @@ switch_api_acl_remove(switch_handle_t acl_handle, switch_handle_t interface_hand
     }
     JLL(jp, acl_info->rules, index);
     while (jp) {
-        acl_hw_del(acl_info, intf, index);
+        acl_hw_del(device, acl_info, intf, index);
         JLP(jp, acl_info->rules, index);
     }
     // remove from interface list

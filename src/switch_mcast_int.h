@@ -138,8 +138,8 @@ typedef struct switch_mcast_rid_ {
     l1_node->u.l1_info.lag_map
 
 /* MCAST Internal API's */
-switch_status_t switch_mcast_init();
-switch_status_t switch_mcast_free();
+switch_status_t switch_mcast_init(switch_device_t device);
+switch_status_t switch_mcast_free(switch_device_t device);
 uint16_t switch_mcast_rid_allocate();
 void switch_mcast_rid_free(uint16_t rid);
 switch_handle_t switch_api_mcast_index_allocate();

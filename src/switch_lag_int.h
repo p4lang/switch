@@ -83,8 +83,8 @@ typedef struct switch_lag_weighted_member_ {
 #define SWITCH_IS_LAG_IFINDEX(ifindex) \
     (ifindex & 0x200)
 
-switch_status_t switch_lag_init(void);
-switch_status_t switch_lag_free(void);
+switch_status_t switch_lag_init(switch_device_t device);
+switch_status_t switch_lag_free(switch_device_t device);
 switch_lag_info_t *switch_api_lag_get_internal(switch_handle_t lag_handle);
 switch_status_t switch_lag_update_prune_mask_table(switch_device_t device, switch_lag_info_t *lag_info);
 

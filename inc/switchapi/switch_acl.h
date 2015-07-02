@@ -424,12 +424,14 @@ switch_handle_t switch_api_acl_list_create(switch_device_t device, switch_acl_ty
     
 /**
  Delete the ACL key list
+ @param device device
  @param acl_handle handle of created ACL
 */
-switch_status_t switch_api_acl_list_delete(switch_handle_t acl_handle);
+switch_status_t switch_api_acl_list_delete(switch_device_t device, switch_handle_t acl_handle);
 
 /**
  Create ACL Rules
+ @param device device
  @param acl_handle - Acl handle
  @param priority - priority of Acl
  @param key_value_count - key value pair count
@@ -437,37 +439,42 @@ switch_status_t switch_api_acl_list_delete(switch_handle_t acl_handle);
  @param action - Acl action (permit/drop/redirect to cpu)
  @param action_params - optional action parameters
 */
-switch_status_t switch_api_acl_rule_create(switch_handle_t acl_handle, unsigned int priority,
-                                   unsigned int key_value_count, void *acl_kvp,
-                                   switch_acl_action_t action, switch_acl_action_params_t *action_params);
+switch_status_t switch_api_acl_rule_create(switch_device_t device, switch_handle_t acl_handle,
+                                           unsigned int priority, unsigned int key_value_count,
+                                           void *acl_kvp, switch_acl_action_t action,
+                                           switch_acl_action_params_t *action_params);
 
 /**
  Delete ACL Rules
+ @param device device
  @param acl_handle - Acl handle
  @param priority - priority of acl rule
 */
-switch_status_t switch_api_acl_rule_delete(switch_handle_t acl_handle, unsigned int priority);
+switch_status_t switch_api_acl_rule_delete(switch_device_t device, switch_handle_t acl_handle, unsigned int priority);
 
 /**
  Renumber ACL Rules
+ @param device device
  @param acl_handle - Acl handle
  @param increment_priority - priority to reorder the acl rule
 */
-switch_status_t switch_api_acl_renumber(switch_handle_t acl_handle, int increment_priority);
+switch_status_t switch_api_acl_renumber(switch_device_t device, switch_handle_t acl_handle, int increment_priority);
 
 /**
  Apply ACLs on interfaces, VLANs, etc.
+ @param device device
  @param acl_handle handle created with list_create
  @param interface_handle - Interface handle
 */ 
-switch_status_t switch_api_acl_reference(switch_handle_t acl_handle, switch_handle_t interface_handle);
+switch_status_t switch_api_acl_reference(switch_device_t device, switch_handle_t acl_handle, switch_handle_t interface_handle);
 
 /**
  Apply ACLs on interfaces, VLANs, etc.
+ @param device device
  @param acl_handle handle created with list_create
  @param interface_handle - Interface handle
 */ 
-switch_status_t switch_api_acl_remove(switch_handle_t acl_handle, switch_handle_t interface_handle);
+switch_status_t switch_api_acl_remove(switch_device_t device, switch_handle_t acl_handle, switch_handle_t interface_handle);
 
 /** @} */ // end of ACL API
 

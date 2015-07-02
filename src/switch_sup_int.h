@@ -32,7 +32,7 @@ typedef struct switch_sup_info_ {
 /*
  * Internal API's
  */
-int switch_sup_init();
+int switch_sup_init(switch_device_t device);
 
 #ifdef __cplusplus
 }

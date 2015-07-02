@@ -111,8 +111,8 @@ switch_handle_t switch_bd_create();
 switch_bd_info_t *switch_bd_get(switch_handle_t handle);
 void switch_bd_delete(switch_handle_t handle);
 
-switch_status_t switch_bd_init(void);
-switch_status_t switch_bd_free(void);
+switch_status_t switch_bd_init(switch_device_t device);
+switch_status_t switch_bd_free(switch_device_t device);
 
 switch_status_t switch_bd_ipv4_unicast_enabled_set(switch_handle_t bd_handle, uint64_t value);
 switch_status_t switch_bd_ipv4_unicast_enabled_get(switch_handle_t bd_handle, uint64_t *value);

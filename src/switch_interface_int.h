@@ -123,10 +123,12 @@ typedef struct switch_interface_info_ {
 // Internal Interface API's
 switch_interface_info_t *switch_api_interface_get(switch_handle_t handle);
 switch_handle_t switch_api_interface_get_from_ifindex(switch_ifindex_t ifindex);
-switch_status_t switch_interface_init(void);
-switch_status_t switch_interface_free(void);
-switch_status_t switch_api_interface_create_l2(switch_handle_t intf_handle, switch_interface_info_t *intf_info);
-switch_status_t switch_api_interface_create_l3(switch_handle_t intf_handle, switch_interface_info_t *intf_info);
+switch_status_t switch_interface_init(switch_device_t device);
+switch_status_t switch_interface_free(switch_device_t device);
+switch_status_t switch_api_interface_create_l2(switch_device_t device, switch_handle_t intf_handle,
+                                               switch_interface_info_t *intf_info);
+switch_status_t switch_api_interface_create_l3(switch_device_t device, switch_handle_t intf_handle,
+                                               switch_interface_info_t *intf_info);
 
 #ifdef __cplusplus
 }
