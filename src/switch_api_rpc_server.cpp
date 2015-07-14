@@ -708,9 +708,11 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     return switch_api_acl_list_delete(device, handle);
   }
 
-  switcht_status_t switcht_api_acl_ip_rule_create(const switcht_device_t device, const switcht_handle_t acl_handle, const int32_t priority, const int32_t key_value_count, const std::vector<switcht_acl_ip_key_value_pair_t> & acl_kvp, const switcht_acl_action_t action, const int32_t action_params) {
+  switcht_handle_t switcht_api_acl_ip_rule_create(const switcht_device_t device, const switcht_handle_t acl_handle, const int32_t priority, const int32_t key_value_count, const std::vector<switcht_acl_ip_key_value_pair_t> & acl_kvp, const switcht_acl_action_t action, const int32_t action_params) {
     printf("switcht_api_acl_ip_rule_create\n");
-    switch_status_t status=0;
+//    switch_status_t status=0;
+    switch_handle_t handle;
+
     std::vector<switcht_acl_ip_key_value_pair_t>::const_iterator f=acl_kvp.begin();
 
     void *fields = calloc(sizeof(switch_acl_ip_key_value_pair_t)*acl_kvp.size(), 1);
@@ -720,9 +722,9 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
         memcpy(&(((switch_acl_ip_key_value_pair_t *)fields+i)->value.ipv4_source), &v, sizeof(switch_acl_ip_value));
         ((switch_acl_ip_key_value_pair_t *)fields+i)->mask.u.mask = (switch_acl_ip_field_t)f->mask;
     }
-    status = switch_api_acl_rule_create(device, acl_handle, priority, key_value_count, fields, (switch_acl_action_t)action, (switch_acl_action_params_t *)&action_params);
+    /*status =*/ switch_api_acl_rule_create(device, acl_handle, priority, key_value_count, fields, (switch_acl_action_t)action, (switch_acl_action_params_t *)&action_params, &handle);
     free(fields);
-    return status;
+    return handle;
   }
 
   switcht_status_t switcht_api_acl_mirror_rule_create(const switcht_device_t device, const switcht_handle_t acl_handle, const int32_t priority, const int32_t key_value_count, const std::vector<switcht_acl_mirror_key_value_pair_t> & acl_kvp, const switcht_acl_action_t action, const int32_t action_params) {
@@ -730,6 +732,7 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     switch_status_t status=0;
     std::vector<switcht_acl_mirror_key_value_pair_t>::const_iterator f=acl_kvp.begin();
     switch_acl_action_params_t ap;
+    switch_handle_t handle;
 
     void *fields = calloc(sizeof(switch_acl_mirror_key_value_pair_t)*acl_kvp.size(), 1);
     for(uint32_t i=0;i<acl_kvp.size();i++,f++) {
@@ -740,7 +743,7 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     }
     memset(&ap, 0, sizeof(switch_acl_action_params_t));
     ap.mirror.clone_spec = action_params;
-    status = switch_api_acl_rule_create(device, acl_handle, priority, key_value_count, fields, (switch_acl_action_t)action, &ap);
+    status = switch_api_acl_rule_create(device, acl_handle, priority, key_value_count, fields, (switch_acl_action_t)action, &ap, &handle);
     free(fields);
     return status;
   }
@@ -748,6 +751,7 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   switcht_status_t switcht_api_acl_system_rule_create(const switcht_device_t device, const switcht_handle_t acl_handle, const int32_t priority, const int32_t key_value_count, const std::vector<switcht_acl_system_key_value_pair_t> & acl_kvp, const switcht_acl_action_t action, const int32_t action_params) {
     printf("switcht_api_system_acl_rule_create\n");
     switch_status_t status=0;
+    switch_handle_t handle;
     std::vector<switcht_acl_system_key_value_pair_t>::const_iterator f=acl_kvp.begin();
     switch_acl_action_params_t ap;
 
@@ -760,14 +764,14 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     }
     memset(&ap, 0, sizeof(switch_acl_action_params_t));
     ap.mirror.clone_spec = action_params;
-    status = switch_api_acl_rule_create(device, acl_handle, priority, key_value_count, fields, (switch_acl_action_t)action, &ap);
+    status = switch_api_acl_rule_create(device, acl_handle, priority, key_value_count, fields, (switch_acl_action_t)action, &ap, &handle);
     free(fields);
     return status;
   }
 
-  switcht_status_t switcht_api_acl_rule_delete(const switcht_device_t device, const switcht_handle_t acl_handle, const int32_t priority) {
+  switcht_status_t switcht_api_acl_rule_delete(const switcht_device_t device, const switcht_handle_t acl_handle, const switcht_handle_t ace) {
     printf("switcht_api_acl_rule_delete\n");
-    return switch_api_acl_rule_delete(device, acl_handle, priority);
+    return switch_api_acl_rule_delete(device, acl_handle, ace);
   }
 
   switcht_status_t switcht_api_acl_reference(const switcht_device_t device, const switcht_handle_t acl_handle, const switcht_handle_t interface_handle) {
@@ -779,10 +783,6 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     // Your implementation goes here
     printf("switcht_api_acl_remove\n");
     return switch_api_acl_remove(device, acl_handle, interface_handle);
-  }
-  switcht_status_t switcht_api_sup_rewrite_init(const switcht_device_t device, const int32_t port_id) {
-    printf("switcht_api_sup_rewrite_init\n");
-    return (switch_api_sup_rewrite_init(device, port_id));
   }
 
   switcht_handle_t switcht_api_multicast_tree_create(const switcht_device_t device) {
@@ -934,6 +934,54 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
         }
     }
     return switch_api_mpls_tunnel_transit_delete(device, &lmpls_encap);
+  }
+
+  switcht_handle_t switcht_api_sup_group_create(const switcht_device_t device, const switcht_sup_group_t& sup_group) {
+    // Your implementation goes here
+    printf("switcht_api_sup_group_create\n");
+    switch_sup_group_t lsup_group;
+    lsup_group.egress_queue = sup_group.egress_queue;
+    lsup_group.priority = sup_group.priority;
+    return switch_api_sup_group_create(device, &lsup_group);
+  }
+
+  switcht_status_t switcht_api_sup_group_delete(const switcht_device_t device, const switcht_handle_t sup_group_handle) {
+    // Your implementation goes here
+    printf("switcht_api_sup_group_delete\n");
+    return switch_api_sup_group_delete(device, sup_group_handle);
+  }
+
+  switcht_status_t switcht_api_sup_code_create(const switcht_device_t device, const switcht_sup_code_info_t& sup_code_info) {
+    // Your implementation goes here
+    printf("switcht_api_sup_code_create\n");
+    switch_sup_code_info_t lsup_code_info;
+    lsup_code_info.sup_code = (switch_sup_code_t) sup_code_info.sup_code;
+    lsup_code_info.action = (switch_acl_action_t) sup_code_info.action;
+    lsup_code_info.priority = sup_code_info.priority;
+    lsup_code_info.channel = (switch_sup_channel_t) sup_code_info.channel;
+    lsup_code_info.sup_group_id = sup_code_info.sup_group_id;
+    return switch_api_sup_code_create(device, &lsup_code_info);
+  }
+
+  switcht_status_t switcht_api_sup_code_delete(const switcht_device_t device, const switcht_sup_code_t sup_code) {
+    // Your implementation goes here
+    printf("switcht_api_sup_code_delete\n");
+    return switch_api_sup_code_delete(device, (switch_sup_code_t) sup_code);
+  }
+
+  switcht_handle_t switcht_api_sup_interface_create(const switcht_device_t device, const switcht_sup_interface_t& sup_interface) {
+    // Your implementation goes here
+    printf("switcht_api_sup_interface_create\n");
+    switch_sup_interface_t lsup_interface;
+    lsup_interface.handle = sup_interface.handle;
+    memcpy(lsup_interface.intf_name, sup_interface.intf_name.c_str(), SWITCH_INTF_NAME_SIZE);
+    return switch_api_sup_interface_create(device, &lsup_interface);
+  }
+
+  switcht_status_t switcht_api_sup_interface_delete(const switcht_device_t device, const switcht_handle_t sup_intf_handle) {
+    // Your implementation goes here
+    printf("switcht_api_sup_interface_delete\n");
+    return switch_api_sup_interface_delete(device, sup_intf_handle);
   }
 };
 

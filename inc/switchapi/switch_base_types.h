@@ -42,8 +42,10 @@ extern "C" {
 #define switch_free(x) free(x)
 #define switch_realloc(x, sz) realloc(x, sz)
 
-#define handle_to_id(x) (x & 0xFFFF)
-#define id_to_handle(t,x) (t << 28 | x)
+#define HANDLE_TYPE_SHIFT 27
+
+#define handle_to_id(x) (x & 0x3FFFFFF)
+#define id_to_handle(t,x) (t << HANDLE_TYPE_SHIFT | x)
 
 typedef int switch_status_t;
 typedef uint16_t switch_vlan_t;

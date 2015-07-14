@@ -175,6 +175,7 @@ switch_api_lag_member_add(switch_device_t device, switch_handle_t lag_handle,
             port_info = switch_api_port_get_internal(port);
             status = switch_pd_port_mapping_table_add_entry(device, port,
                     lag_info->ifindex,
+                    port_info->port_type,
                     &port_info->hw_entry);
             status = switch_pd_egress_lag_table_add_entry(device,
                                      SWITCH_PORT_ID(port_info),
@@ -246,6 +247,7 @@ switch_api_lag_member_delete(switch_device_t device, switch_handle_t lag_handle,
             //part of lag
             status = switch_pd_port_mapping_table_add_entry(device, port,
                                      port_info->ifindex,
+                                     port_info->port_type,
                                      &port_info->hw_entry);
             status = switch_pd_egress_lag_table_add_entry(device,
                                      SWITCH_PORT_ID(port_info),

@@ -42,9 +42,13 @@ typedef enum {
     SWITCH_HANDLE_TYPE_ACL,
     SWITCH_HANDLE_TYPE_MCAST_ECMP,
     SWITCH_HANDLE_TYPE_URPF,
-    SWITCH_HANDLE_TYPE_MAX=20
+    SWITCH_HANDLE_TYPE_SUP_GROUP,
+    SWITCH_HANDLE_TYPE_SUP_INTERFACE,
+    SWITCH_HANDLE_TYPE_ACE,
+
+    SWITCH_HANDLE_TYPE_MAX=32
 } switch_handle_type_t;
-    
+
 /**
  Generic handle to encode different types of objects
  handle impicitly encodes the device, type and type specific

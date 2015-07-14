@@ -61,7 +61,9 @@ typedef enum switch_tunnel_type_egress_ {
     SWITCH_EGRESS_TUNNEL_TYPE_IPV4_NVGRE     = 5,
     SWITCH_EGRESS_TUNNEL_TYPE_IPV6_NVGRE     = 6,
     SWITCH_EGRESS_TUNNEL_TYPE_MPLS_L2VPN     = 13,
-    SWITCH_EGRESS_TUNNEL_TYPE_MPLS_L3VPN     = 14
+    SWITCH_EGRESS_TUNNEL_TYPE_MPLS_L3VPN     = 14,
+    SWITCH_EGRESS_TUNNEL_TYPE_FABRIC         = 15,
+    SWITCH_EGRESS_TUNNEL_TYPE_CPU            = 16
 } switch_tunnel_type_egress_t;
 
 /** Tunnel Ingress type */

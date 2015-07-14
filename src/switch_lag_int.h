@@ -32,44 +32,44 @@ extern "C" {
 
 /** Lag member is one of the ports that can be a member of LAG */
 typedef struct switch_lag_member_ {
-    tommy_node ingress_node;    /**< linked list node */
-    tommy_node egress_node;     /**< linked list node */
-    switch_port_t port;             /**< physical port */
-    uint8_t index;              /**< Index relative to base */
+    tommy_node ingress_node;         /**< linked list node */
+    tommy_node egress_node;          /**< linked list node */
+    switch_port_t port;              /**< physical port */
+    uint8_t index;                   /**< Index relative to base */
 #ifdef SWITCH_PD
-    p4_pd_mbr_hdl_t mbr_hdl;       /**< Member handle */
+    p4_pd_mbr_hdl_t mbr_hdl;         /**< Member handle */
     p4_pd_entry_hdl_t xlate_entry;
 #endif
 } switch_lag_member_t;
     
 /** LAG Information */
 typedef struct {
-    switch_lag_type_t type;         /**< weighted or otherwise */
-    switch_ifindex_t  ifindex;      /**< LAG Ifindex */
+    switch_lag_type_t type;             /**< weighted or otherwise */
+    switch_ifindex_t  ifindex;          /**< LAG Ifindex */
     switch_handle_t intf_handle;
-    bool lacp;                  /**< LACP enabled? */
-    lacp_key_t key;             /**< LACP key */
-    tommy_list ingress;         /**< Ingress port list */
-    tommy_list egress;          /**< Egress port list */
+    bool lacp;                          /**< LACP enabled? */
+    lacp_key_t key;                     /**< LACP key */
+    tommy_list ingress;                 /**< Ingress port list */
+    tommy_list egress;                  /**< Egress port list */
     switch_api_id_allocator *egr_bmap;  /**< egress bitmap */
-    unsigned int count;         /**< number of members */
-    uint16_t base;              /**< Base of lag select table */
-    switch_device_t device;         /**< device on which lag is set */
+    unsigned int count;                 /**< number of members */
+    uint16_t base;                      /**< Base of lag select table */
+    switch_device_t device;             /**< device on which lag is set */
 #ifdef SWITCH_PD
-    p4_pd_entry_hdl_t hw_entry;    /**< HW entry */
-    p4_pd_grp_hdl_t pd_group_hdl;  /**< HW entry */
+    p4_pd_entry_hdl_t hw_entry;         /**< HW entry */
+    p4_pd_grp_hdl_t pd_group_hdl;       /**< HW entry */
 #endif
 } switch_lag_info_t;
  
 /** LAG weighted member information */
 typedef struct switch_lag_weighted_member_ {
-    tommy_node ingress_node;    /**< house keeping node */
-    tommy_node egress_node;     /**< house keeping node */
-    switch_lag_member_t port;       /**< port member */
-    uint16_t weight;            /**< weight for port in the group */
-    uint8_t index;              /**< Index of member */
+    tommy_node ingress_node;            /**< house keeping node */
+    tommy_node egress_node;             /**< house keeping node */
+    switch_lag_member_t port;           /**< port member */
+    uint16_t weight;                    /**< weight for port in the group */
+    uint8_t index;                      /**< Index of member */
 #ifdef SWITCH_PD
-    p4_pd_mbr_hdl_t mbr_hdl;       /**< Member handle */
+    p4_pd_mbr_hdl_t mbr_hdl;            /**< Member handle */
 #endif
 } switch_lag_weighted_member_t;
 

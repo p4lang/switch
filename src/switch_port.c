@@ -21,8 +21,6 @@ limitations under the License.
 
 static switch_port_info_t switch_port_info[SWITCH_API_MAX_PORTS];
 
-// port_table_delete(entry);
-
 switch_status_t
 switch_port_init(switch_device_t device)
 {
@@ -35,6 +33,10 @@ switch_port_init(switch_device_t device)
         port_info = &switch_port_info[index];
         SWITCH_PORT_ID(port_info) = index;
         port_info->ifindex = index + 1;
+        port_info->port_type = SWITCH_PORT_TYPE_NORMAL;
+        if (index == CPU_PORT_ID) {
+            port_info->port_type = SWITCH_PORT_TYPE_CPU;
+        }
 #ifdef SWITCH_PD
         switch_pd_lag_group_table_add_entry(device, port_info->ifindex,
                                      SWITCH_PORT_ID(port_info),
@@ -43,6 +45,7 @@ switch_port_init(switch_device_t device)
         switch_pd_port_mapping_table_add_entry(device,
                                      SWITCH_PORT_ID(port_info),
                                      port_info->ifindex,
+                                     port_info->port_type,
                                      &(port_info->hw_entry));
         port_info->eg_lag_entry = 0;
         switch_pd_egress_lag_table_add_entry(device,

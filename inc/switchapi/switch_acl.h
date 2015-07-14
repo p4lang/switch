@@ -54,6 +54,10 @@ typedef enum switch_acl_ip_field_ {
     SWITCH_ACL_IP_FIELD_TCP_FLAGS,      /**< TCP flags */
     SWITCH_ACL_IP_FIELD_TTL,            /**< TTL */
     SWITCH_ACL_IP_FIELD_ETH_TYPE,       /**< Ether type */
+    SWITCH_ACL_IP_FIELD_DSCP,           /**< DSCP */
+    SWITCH_ACL_IP_FIELD_IP_FLAGS,       /**< IP flags */
+    SWITCH_ACL_IP_FIELD_TOS,            /**< TOS */
+    SWITCH_ACL_IP_FIELD_IP_FRAGMENT,    /**< IP FRAG */
 
     SWITCH_ACL_IP_FIELD_MAX
 } switch_acl_ip_field_t;
@@ -70,6 +74,8 @@ typedef enum switch_acl_ipv6_field_ {
     SWITCH_ACL_IPV6_FIELD_TCP_FLAGS,        /**< TCP flags */
     SWITCH_ACL_IPV6_FIELD_TTL,              /**< TTL */
     SWITCH_ACL_IPV6_FIELD_ETH_TYPE,         /**< Ether type */
+    SWITCH_ACL_IPV6_FIELD_FLOW_LABEL,       /**< Flow Label */
+    SWITCH_ACL_IPV6_FIELD_TOS,              /**< TOS */
 
     SWITCH_ACL_IPV6_FIELD_MAX
 } switch_acl_ipv6_field_t;
@@ -86,6 +92,10 @@ typedef union switch_acl_ip_value_ {
     unsigned char icmp_code;                          /**< icmp code */
     unsigned char tcp_flags;                          /**< tcp flags */
     unsigned char ttl;                                /**< time to live */ 
+    unsigned char dscp;                               /**< DSCP */
+    unsigned char ip_flags;                           /**< IP flags */
+    unsigned char tos;                                /**< TOS */
+    unsigned char ip_frag;                            /**< IP FRAG */
 } switch_acl_ip_value;
 
 /** Acl IPv6 field list */
@@ -102,6 +112,7 @@ typedef union switch_acl_ipv6_value_ {
     unsigned char ttl;                                /**< time to live */
     uint64_t source_mac;                              /**< source mac */
     uint64_t dest_mac;                                /**< destination mac */
+    uint32_t flow_label;                              /**< flow label */
 } switch_acl_ipv6_value;
 
 /** Acl IP mask */
@@ -137,7 +148,7 @@ typedef struct {
 } switch_acl_ipv6_key_value_pair_t;
 
 /** Acl IP action */
-typedef enum switch_acl_ip_action_ {
+typedef enum switch_acl_action_ {
     SWITCH_ACL_ACTION_NOP,                  /**< Do nothing action */
     SWITCH_ACL_ACTION_DROP,                 /**< Drop the packet */
     SWITCH_ACL_ACTION_PERMIT,               /**< Permit */
@@ -145,6 +156,7 @@ typedef enum switch_acl_ip_action_ {
     SWITCH_ACL_ACTION_REDIRECT,             /**< Redirect packet to new destination */
     SWITCH_ACL_ACTION_REDIRECT_TO_CPU,      /**< Redirect packet to CPU */
     SWITCH_ACL_ACTION_COPY_TO_CPU,          /**< Send Copy of packet to CPU */
+    SWITCH_ACL_ACTION_FLOOD_TO_VLAN,        /**< Flood to all members of BD */
     SWITCH_ACL_ACTION_SET_NATMODE,          /**< Set NAT mode */
     SWITCH_ACL_ACTION_SET_MIRROR,           /**< Set mirror session */
     SWITCH_ACL_QOS_ACTION_COS,              /**< Set Class of Service */
@@ -152,38 +164,43 @@ typedef enum switch_acl_ip_action_ {
     SWITCH_ACL_QOS_ACTION_TC,               /**< Set the traffic class */
 
     SWITCH_ACL_ACTION_MAX
-} switch_acl_ip_action_t;
+} switch_acl_action_t;
 
 /** Acl Mac field enum */
 typedef enum switch_acl_mac_field_ {
     SWITCH_ACL_MAC_FIELD_ETH_TYPE,              /**< Ether type */
     SWITCH_ACL_MAC_FIELD_SOURCE_MAC,            /**< Source MAC address */
     SWITCH_ACL_MAC_FIELD_DEST_MAC,              /**< Destination MAC address */
+    SWITCH_ACL_MAC_FIELD_VLAN_PRI,              /**< VLAN priority */
+    SWITCH_ACL_MAC_FIELD_VLAN_CFI,              /**< VLAN CFI */
 
     SWITCH_ACL_MAC_FIELD_MAX
 } switch_acl_mac_field_t;
 
 /** Acl mac field list */
 typedef union switch_acl_mac_value_ {
-    unsigned short eth_type;                        /**< ethernet type */
-    uint64_t source_mac;                            /**< source mac */
-    uint64_t dest_mac;                              /**< destionation mac */
+    unsigned short eth_type;                    /**< ethernet type */
+    uint8_t source_mac[6];                      /**< source mac */
+    uint8_t dest_mac[6];                        /**< destionation mac */
+    uint8_t vlan_pri;                           /**< VLAN priority */
+    uint8_t vlan_cfi;                           /**< drop eligible */
 } switch_acl_mac_value;
 
 /** Acl mac mask */
 typedef union switch_acl_mac_mask_ {
-    unsigned type:1;                                /**< acl mask type */
+    unsigned type:1;                            /**< acl mask type */
     union {
-        uint64_t mask;                              /**< mask value */
-        unsigned int start, end;                    /**< mask range */
-    } u;                                            /**< mac mask union */
+        uint8_t  mac_mask[6];                   /**< MAC addr mask */
+        uint16_t mask16;                        /**< mask value */
+        unsigned int start, end;                /**< mask range */
+    } u;                                        /**< mac mask union */
 } switch_acl_mac_mask;
 
 /** Acl mac key value pair */
 typedef struct switch_acl_mac_key_value_pair_ {
-    switch_acl_mac_field_t field;                       /**< acl mac field type */
-    switch_acl_mac_value value;                         /**< acl mac field value */
-    switch_acl_mac_mask mask;                           /**< acl mac field mask */
+    switch_acl_mac_field_t field;               /**< acl mac field type */
+    switch_acl_mac_value value;                 /**< acl mac field value */
+    switch_acl_mac_mask mask;                   /**< acl mac field mask */
 } switch_acl_mac_key_value_pair_t;
 
 /** ACL ip racl field enum */
@@ -398,9 +415,9 @@ typedef union switch_acl_system_mask_ {
 
 /** Acl system key value pair */
 typedef struct switch_acl_system_key_value_pair_ {
-    switch_acl_system_field_t field;                      /**< acl system field type */
-    switch_acl_system_value value;                        /**< acl system field value */
-    switch_acl_system_mask mask;                          /**< acl system field mask */
+    switch_acl_system_field_t field;                  /**< acl system field type */
+    switch_acl_system_value value;                    /**< acl system field value */
+    switch_acl_system_mask mask;                      /**< acl system field mask */
 } switch_acl_system_key_value_pair_t;
 
 /** Acl action parameters */
@@ -408,12 +425,26 @@ typedef union switch_acl_action_params_ {
     struct {
         unsigned int clone_spec, drop_reason;         /**< mirror acl actions parameters */
     } mirror;                                         /**< mirror acl struct */
+    struct {
+        unsigned int sup_code;                        /**< sup reason code */
+    } sup_redirect;                                   /**< sup redirect struct */
+    struct {
+        switch_handle_t handle;                       /**< port/nexthop handle */
+    } redirect;
 } switch_acl_action_params_t;
 
-typedef switch_acl_ip_action_t switch_acl_ipv6_action_t;     /**< IPv6 acl action */
-typedef switch_acl_ip_action_t switch_acl_mac_action_t;      /**< mac acl action */
-typedef switch_acl_ip_action_t switch_acl_system_action_t;   /**< system acl action */
-typedef switch_acl_ip_action_t switch_acl_action_t;          /**< acl action */
+typedef switch_acl_action_t switch_acl_ip_action_t;   /**< acl action */
+typedef switch_acl_action_t switch_acl_ipv6_action_t; /**< IPv6 acl action */
+typedef switch_acl_action_t switch_acl_mac_action_t;  /**< mac acl action */
+typedef switch_acl_action_t switch_acl_system_action_t;/**< system acl action */
+
+
+/** Acl info struct */
+typedef struct switch_acl_info_ {
+    switch_acl_type_t type;
+    void *rules; // judy array sorted with priority
+    tommy_list  interface_list;
+} switch_acl_info_t;
 
 /**
  ACL Key list create
@@ -438,19 +469,21 @@ switch_status_t switch_api_acl_list_delete(switch_device_t device, switch_handle
  @param acl_kvp - pointer to multiple key value pair
  @param action - Acl action (permit/drop/redirect to cpu)
  @param action_params - optional action parameters
+ @param ace_handle - returned handle for the rule
 */
 switch_status_t switch_api_acl_rule_create(switch_device_t device, switch_handle_t acl_handle,
-                                           unsigned int priority, unsigned int key_value_count,
-                                           void *acl_kvp, switch_acl_action_t action,
-                                           switch_acl_action_params_t *action_params);
+                        unsigned int priority, unsigned int key_value_count,
+                        void *acl_kvp, switch_acl_action_t action,
+                        switch_acl_action_params_t *action_params,
+                        switch_handle_t *ace);
 
 /**
  Delete ACL Rules
  @param device device
  @param acl_handle - Acl handle
- @param priority - priority of acl rule
+ @param ace_handle - handle obtained from create_rule
 */
-switch_status_t switch_api_acl_rule_delete(switch_device_t device, switch_handle_t acl_handle, unsigned int priority);
+switch_status_t switch_api_acl_rule_delete(switch_device_t device, switch_handle_t acl_handle, switch_handle_t ace_handle);
 
 /**
  Renumber ACL Rules
@@ -475,6 +508,12 @@ switch_status_t switch_api_acl_reference(switch_device_t device, switch_handle_t
  @param interface_handle - Interface handle
 */ 
 switch_status_t switch_api_acl_remove(switch_device_t device, switch_handle_t acl_handle, switch_handle_t interface_handle);
+
+/**
+ Get ACL type, given the ACL handle
+ @param acl_handle handle created with list_create
+*/ 
+switch_acl_info_t *switch_acl_get(switch_handle_t acl_handle);
 
 /** @} */ // end of ACL API
 

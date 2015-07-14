@@ -32,12 +32,14 @@ switch_acl_init(switch_device_t device)
 {
     switch_acl_array = NULL;
     switch_handle_type_init(SWITCH_HANDLE_TYPE_ACL, (4*1024));
+    switch_handle_type_init(SWITCH_HANDLE_TYPE_ACE, (4*1024));
     return SWITCH_STATUS_SUCCESS;
 }
 
 switch_status_t
 switch_acl_free(switch_device_t device)
 {
+    switch_handle_type_free(SWITCH_HANDLE_TYPE_ACE);
     switch_handle_type_free(SWITCH_HANDLE_TYPE_ACL);
     return SWITCH_STATUS_SUCCESS;
 }
@@ -95,6 +97,35 @@ switch_api_acl_list_delete(switch_device_t device, switch_handle_t acl_handle)
     return SWITCH_STATUS_SUCCESS;
 }
 
+
+// redundant typedef below! TBD remove it
+typedef  switch_acl_rule_t switch_ace_info_t;
+
+static void *switch_ace_array;
+
+static switch_handle_t
+switch_ace_create()
+{
+    switch_handle_t ace_handle;
+    _switch_handle_create(SWITCH_HANDLE_TYPE_ACE, switch_ace_info_t, switch_ace_array, NULL, ace_handle);
+    return ace_handle;
+}
+
+static switch_ace_info_t *
+switch_ace_get(switch_handle_t ace_handle)
+{
+    switch_ace_info_t *ace_info = NULL;
+    _switch_handle_get(switch_ace_info_t, switch_ace_array, ace_handle, ace_info);
+    return ace_info;
+}
+
+static switch_status_t
+switch_ace_delete(switch_handle_t handle)
+{
+    _switch_handle_delete(switch_ace_info_t, switch_ace_array, handle);
+    return SWITCH_STATUS_SUCCESS;
+}
+
 static switch_status_t
 switch_acl_ip_set_fields_actions(switch_device_t device, switch_acl_rule_t *p,
                                  switch_handle_t interface_handle, p4_pd_entry_hdl_t *entry)
@@ -123,8 +154,8 @@ switch_acl_ip_set_fields_actions(switch_device_t device, switch_acl_rule_t *p,
     }
     ip_acl = (switch_acl_ip_key_value_pair_t *)p->fields;
 
-    status = switch_pd_ipv4_acl_table_add_entry(device, if_label, bd_label, p->priority,
-                                         ip_acl, p->action, entry);
+    status = switch_pd_ipv4_acl_table_add_entry(device, if_label, bd_label,
+                        p->priority, ip_acl, p->action, &(p->action_params), entry);
     return status;
 }
 
@@ -156,7 +187,7 @@ switch_acl_ipv6_set_fields_actions(switch_device_t device, switch_acl_rule_t *p,
     }
     ipv6_acl = (switch_acl_ipv6_key_value_pair_t *)p->fields;
     status = switch_pd_ipv6_acl_table_add_entry(device, if_label, bd_label, p->priority,
-                                           ipv6_acl, p->action, entry);
+                     ipv6_acl, p->action, &(p->action_params), entry);
     return status;
 }
 
@@ -188,8 +219,8 @@ switch_acl_mac_set_fields_actions(switch_device_t device, switch_acl_rule_t *p,
     }
 
     mac_acl = (switch_acl_mac_key_value_pair_t *)p->fields;
-    status = switch_pd_mac_acl_table_add_entry(device, if_label, bd_label, p->priority,
-                                          mac_acl, p->action, entry);
+    status = switch_pd_mac_acl_table_add_entry(device, if_label, bd_label,
+                    p->priority, mac_acl, p->action, &(p->action_params), entry);
     return status;
 }
 
@@ -213,7 +244,7 @@ switch_acl_ip_racl_set_fields_actions(switch_device_t device, switch_acl_rule_t 
     }
     ip_racl = (switch_acl_ip_racl_key_value_pair_t *)p->fields;
     status = switch_pd_ipv4_racl_table_add_entry(device, if_label, bd_label, p->priority,
-                                          ip_racl, p->action, entry);
+                             ip_racl, p->action, &(p->action_params), entry);
     return status;
 }
 
@@ -238,7 +269,7 @@ switch_acl_ipv6_racl_set_fields_actions(switch_device_t device, switch_acl_rule_
     }
     ipv6_racl = (switch_acl_ipv6_racl_key_value_pair_t *)p->fields;
     status = switch_pd_ipv6_racl_table_add_entry(device, if_label, bd_label, p->priority,
-                                            ipv6_racl, p->action, entry);
+                             ipv6_racl, p->action, &(p->action_params), entry);
     return status;
 }
 
@@ -267,7 +298,7 @@ switch_acl_qos_set_fields_actions(switch_device_t device, switch_acl_rule_t *p,
     }
     qos_acl = (switch_acl_qos_key_value_pair_t *)p->fields;
     status = switch_pd_qos_acl_table_add_entry(device, if_label, bd_label, p->priority,
-                                          qos_acl, p->action, entry);
+                           qos_acl, p->action, entry);
     return status;
 }
 
@@ -306,7 +337,7 @@ switch_acl_system_set_fields_actions(switch_device_t device, switch_acl_rule_t *
 static switch_status_t
 acl_hw_set(switch_device_t device, switch_acl_info_t *acl_info,
            switch_acl_rule_t *p, switch_acl_interface_t *intf,
-           switch_handle_t interface_handle, Word_t index)
+           switch_handle_t interface_handle, switch_handle_t ace_handle)
 {
     p4_pd_entry_hdl_t                           entry;
     switch_status_t                             status =  SWITCH_STATUS_SUCCESS;
@@ -339,8 +370,8 @@ acl_hw_set(switch_device_t device, switch_acl_info_t *acl_info,
     }
 
     if (intf) {
-        // use the index from rule list in the interface entries
-        JLI(hw_entry, intf->entries, index);
+        // use the ace_handle from rule list in the interface entries
+        JLI(hw_entry, intf->entries, ace_handle);
         *(unsigned long *)hw_entry = entry;
     }
     return status;
@@ -348,41 +379,41 @@ acl_hw_set(switch_device_t device, switch_acl_info_t *acl_info,
 
 static switch_status_t
 acl_hw_del(switch_device_t device, switch_acl_info_t *acl_info,
-           switch_acl_interface_t *intf, Word_t index)
+           switch_acl_interface_t *intf, switch_handle_t ace_handle)
 {
     unsigned long                              *hw_entry = NULL;
     int                                         ret = 0;
     switch_status_t                             status = SWITCH_STATUS_SUCCESS;
 
-    JLG(hw_entry, intf->entries, index);
-
-    switch(acl_info->type) {
-        case SWITCH_ACL_TYPE_SYSTEM:
-            status = switch_pd_system_acl_table_delete_entry(device, *(unsigned long *) hw_entry);
-            break;
-        case SWITCH_ACL_TYPE_IP:
-            status = switch_pd_ipv4_acl_table_delete_entry(device, *(unsigned long *) hw_entry);
-            break;
-        case SWITCH_ACL_TYPE_IPV6:
-            status = switch_pd_ipv6_acl_table_delete_entry(device, *(unsigned long *) hw_entry);
-            break;
-        case SWITCH_ACL_TYPE_IP_RACL:
-            status = switch_pd_ipv4_racl_table_delete_entry(device, *(unsigned long *) hw_entry);
-            break;
-        case SWITCH_ACL_TYPE_IPV6_RACL:
-            status = switch_pd_ipv6_racl_table_delete_entry(device, *(unsigned long *) hw_entry);
-            break;
-        case SWITCH_ACL_TYPE_MAC:
-            status = switch_pd_mac_acl_table_delete_entry(device, *(unsigned long *) hw_entry);
-            break;
-        case SWITCH_ACL_TYPE_QOS:
-            status = switch_pd_qos_acl_table_delete_entry(device, *(unsigned long *) hw_entry);
-            break;
-        default:
-            break;
+    JLG(hw_entry, intf->entries, ace_handle);
+    if(hw_entry) {
+        switch(acl_info->type) {
+            case SWITCH_ACL_TYPE_SYSTEM:
+                status = switch_pd_system_acl_table_delete_entry(device, *(unsigned long *) hw_entry);
+                break;
+            case SWITCH_ACL_TYPE_IP:
+                status = switch_pd_ipv4_acl_table_delete_entry(device, *(unsigned long *) hw_entry);
+                break;
+            case SWITCH_ACL_TYPE_IPV6:
+                status = switch_pd_ipv6_acl_table_delete_entry(device, *(unsigned long *) hw_entry);
+                break;
+            case SWITCH_ACL_TYPE_IP_RACL:
+                status = switch_pd_ipv4_racl_table_delete_entry(device, *(unsigned long *) hw_entry);
+                break;
+            case SWITCH_ACL_TYPE_IPV6_RACL:
+                status = switch_pd_ipv6_racl_table_delete_entry(device, *(unsigned long *) hw_entry);
+                break;
+            case SWITCH_ACL_TYPE_MAC:
+                status = switch_pd_mac_acl_table_delete_entry(device, *(unsigned long *) hw_entry);
+                break;
+            case SWITCH_ACL_TYPE_QOS:
+                status = switch_pd_qos_acl_table_delete_entry(device, *(unsigned long *) hw_entry);
+                break;
+            default:
+                break;
+        }
     }
-
-    JLD(ret, intf->entries, index);
+    JLD(ret, intf->entries, ace_handle);
     return status;
 }
 
@@ -390,7 +421,8 @@ switch_status_t
 switch_api_acl_rule_create(switch_device_t device, switch_handle_t acl_handle,
                            unsigned int priority, unsigned int key_value_count,
                            void *acl_kvp, switch_acl_action_t action,
-                           switch_acl_action_params_t *action_params)
+                           switch_acl_action_params_t *action_params,
+                           switch_handle_t *ace)
 {
     switch_acl_info_t                           *acl_info = NULL;
     switch_acl_ip_key_value_pair_t              *ip_acl = NULL;
@@ -402,14 +434,23 @@ switch_api_acl_rule_create(switch_device_t device, switch_handle_t acl_handle,
     switch_acl_rule_t                           *p = NULL;
     tommy_node                                  *node = NULL;
     switch_acl_interface_t                      *intf = NULL;
-    int                                          i = 0;
+    int                                         i = 0;
+    switch_handle_t                             ace_handle=-1;
 
     acl_info = switch_acl_get(acl_handle);
     if (!acl_info) {
         return SWITCH_STATUS_INVALID_HANDLE;
     }
 
-    JLI(jp, acl_info->rules, priority);
+    // create an ace entry
+    ace_handle = switch_ace_create();
+    if (!ace_handle) {
+        return SWITCH_STATUS_NO_MEMORY;
+    }
+
+    p = switch_ace_get(ace_handle);
+
+    JLI(jp, acl_info->rules, ace_handle);
     if (jp) {
         switch (acl_info->type) {
             case SWITCH_ACL_TYPE_IP:
@@ -438,7 +479,6 @@ switch_api_acl_rule_create(switch_device_t device, switch_handle_t acl_handle,
         if (!fields) {
             return SWITCH_STATUS_NO_MEMORY;
         }
-        p = switch_malloc(sizeof(switch_acl_rule_t), 1);
         if (p) {
             memset(p, 0, sizeof(switch_acl_rule_t));
             // walk the list and set the structs
@@ -463,8 +503,8 @@ switch_api_acl_rule_create(switch_device_t device, switch_handle_t acl_handle,
             p->fields = fields;
             p->action = action;
             p->action_params = *action_params;
+            p->priority = priority;
         }
-        p->priority = priority;
         *(unsigned long *)jp = (unsigned long)p;
 
         // if interface referenced then make the hardware table changes
@@ -473,23 +513,24 @@ switch_api_acl_rule_create(switch_device_t device, switch_handle_t acl_handle,
             while (node) {
                 intf = node->data;
                 // update ACL H/W entries
-                acl_hw_set(device, acl_info, p, intf, intf->interface, priority);
+                acl_hw_set(device, acl_info, p, intf, intf->interface, ace_handle);
                 node = node->next;
             }
         } else {
             if (acl_info->type == SWITCH_ACL_TYPE_SYSTEM) {
                 // update system ACL H/W entries
-                acl_hw_set(device, acl_info, p, NULL, 0, priority);
+                acl_hw_set(device, acl_info, p, NULL, 0, ace_handle);
             }
         }
     }
+    *ace = ace_handle;
     return SWITCH_STATUS_SUCCESS;
 }
 
 switch_status_t
 switch_api_acl_rule_delete(switch_device_t device,
                            switch_handle_t acl_handle,
-                           unsigned int priority)
+                           switch_handle_t ace_handle)
 {
     switch_acl_info_t                           *acl_info = NULL;
     switch_acl_rule_t                           *p = NULL;
@@ -503,10 +544,10 @@ switch_api_acl_rule_delete(switch_device_t device,
         return SWITCH_STATUS_INVALID_HANDLE;
     }
 
-    JLG(jp, acl_info->rules, priority);
+    JLG(jp, acl_info->rules, ace_handle);
     if (jp) {
         p = (switch_acl_rule_t *) (*(unsigned long *)jp);
-        JLD(ret, acl_info->rules, priority);
+        JLD(ret, acl_info->rules, ace_handle);
         if (p) {
             // if interface referenced then make the hardware table changes
             if (acl_info->interface_list) {
@@ -514,14 +555,14 @@ switch_api_acl_rule_delete(switch_device_t device,
                 while (node) {
                     intf = node->data;
                     // update ACL H/W entries
-                    acl_hw_del(device, acl_info, intf, priority);
+                    acl_hw_del(device, acl_info, intf, ace_handle);
                     node = node->next;
                 }
             }
             if (p->fields) {
                 switch_free(p->fields);
             }
-            switch_free(p);
+            switch_ace_delete(ace_handle);
         }
     }
     return SWITCH_STATUS_SUCCESS;
@@ -551,7 +592,7 @@ switch_api_acl_reference(switch_device_t device,
     switch_acl_interface_t            *intf = NULL;
     switch_acl_info_t                 *acl_info = NULL;
     unsigned long                     *jp = NULL;
-    Word_t                             index = -1;
+    switch_handle_t ace_handle = -1;
 
     acl_info = switch_acl_get(acl_handle);
     if (!acl_info) {
@@ -564,11 +605,11 @@ switch_api_acl_reference(switch_device_t device,
     }
 
     intf->entries = NULL;
-    JLL(jp, acl_info->rules, index);
+    JLL(jp, acl_info->rules, ace_handle);
     while (jp) {
-       acl_hw_set(device, acl_info, (switch_acl_rule_t *)(*(unsigned long *)jp), intf, interface_handle, index);
+       acl_hw_set(device, acl_info, (switch_acl_rule_t *)(*(unsigned long *)jp), intf, interface_handle, ace_handle);
        // walk the table
-       JLP(jp, acl_info->rules, index);
+       JLP(jp, acl_info->rules, ace_handle);
     }
     intf->interface = interface_handle;
     tommy_list_insert_head(&(acl_info->interface_list), &(intf->node), intf);
@@ -584,7 +625,7 @@ switch_api_acl_remove(switch_device_t device,
     switch_acl_interface_t            *intf = NULL;
     tommy_node                        *node = NULL;
     unsigned long                     *jp = NULL;
-    Word_t                             index = -1;
+    switch_handle_t ace_handle = -1;
 
     acl_info = switch_acl_get(acl_handle);
     if (!acl_info) {
@@ -602,10 +643,10 @@ switch_api_acl_remove(switch_device_t device,
     if(!node) {
         return SWITCH_STATUS_ITEM_NOT_FOUND;
     }
-    JLL(jp, acl_info->rules, index);
+    JLL(jp, acl_info->rules, ace_handle);
     while (jp) {
-        acl_hw_del(device, acl_info, intf, index);
-        JLP(jp, acl_info->rules, index);
+        acl_hw_del(device, acl_info, intf, ace_handle);
+        JLP(jp, acl_info->rules, ace_handle);
     }
     // remove from interface list
     tommy_list_remove_existing(&(acl_info->interface_list), node);

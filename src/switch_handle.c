@@ -75,7 +75,7 @@ switch_handle_allocate(switch_handle_type_t type)
     if((handle_info = (switch_handle_info_t *) (*(unsigned long *)p))) {
         unsigned int id = switch_api_id_allocator_allocate (handle_info->allocator);
         handle_info->num_in_use++;
-        return (type << 28 | id);
+        return ((type << HANDLE_TYPE_SHIFT) | id);
     }
     return SWITCH_API_INVALID_HANDLE;
 }
@@ -87,7 +87,7 @@ switch_handle_free(switch_handle_t handle)
     switch_handle_info_t              *handle_info = NULL;
     void                              *p = NULL;
 
-    type = (handle & 0xF0000000) >> 28;
+    type = (handle & 0xF8000000) >> HANDLE_TYPE_SHIFT;
     JLG(p, switch_handle_array, (unsigned int)type);
     if((handle_info = (switch_handle_info_t *) (*(unsigned long *)p))) {
         switch_api_id_allocator_release(handle_info->allocator, handle & 0x00FFFFFF);
@@ -98,7 +98,7 @@ switch_handle_free(switch_handle_t handle)
 switch_handle_type_t
 switch_handle_get_type(switch_handle_t handle)
 {
-    switch_handle_type_t type = (handle & 0xF0000000) >> 28;
+    switch_handle_type_t type = (handle & 0xF8000000) >> HANDLE_TYPE_SHIFT;
     return type;
 }
     
