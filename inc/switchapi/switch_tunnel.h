@@ -26,14 +26,14 @@ extern "C" {
 #endif /* __cplusplus */
 
 /** @defgroup Tunnel Tunnel API
- *  API functions create tunnel interfaces
+ *  API functions create host interfaces
  *  @{
  */ // begin of Tunnel API
 
 /** Tunnel encap mode */
 typedef enum switch_encap_mode_ {
-    SWITCH_API_TUNNEL_ENCAP_MODE_IP,
-    SWITCH_API_TUNNEL_ENCAP_MODE_MPLS
+    SWITCH_API_TUNNEL_ENCAP_MODE_IP,            /**< IP encapsulation */
+    SWITCH_API_TUNNEL_ENCAP_MODE_MPLS           /**< MPLS encapsulation */
 } switch_encap_mode_t;
 
 /** Tunnel information */
@@ -43,7 +43,7 @@ typedef struct switch_tunnel_info_ {
     union {
         switch_ip_encap_t ip_encap;              /**< IP encapsulation */
         switch_mpls_encap_t mpls_encap;          /**< Mpls Encapsulation */
-    } u;                                     /**< tunnel encap union */
+    } u;                                         /**< tunnel encap union */
     switch_handle_t out_if;                      /**< Underlying interface */
     struct {
         bool core_intf:1;                    /**< core interface */

@@ -24,6 +24,11 @@ limitations under the License.
 extern "C" {
 #endif /* __cplusplus */
 
+/** @defgroup HostInterface Host Interface API
+ *  API functions create/modify Host interface
+ *  @{
+ */ // begin of Host Interface API
+
 /** switch sup code */
 typedef enum switch_sup_code_ {
     SWITCH_SUP_CODE_NONE = 0x0,
@@ -61,9 +66,9 @@ typedef enum switch_sup_code_ {
 
 /** switch channel */
 typedef enum switch_sup_channel_ {
-    SWITCH_CHANNEL_CB,
-    SWITCH_CHANNEL_FD,
-    SWITCH_CHANNEL_NETDEV
+    SWITCH_CHANNEL_CB,                      /**< Callback interface */
+    SWITCH_CHANNEL_FD,                      /**< File descriptor interface */
+    SWITCH_CHANNEL_NETDEV                   /**< Net device based interface */
 } switch_sup_channel_t;
 
 /** switch sup group */
@@ -173,6 +178,9 @@ switch_api_sup_interface_create(switch_device_t device, switch_sup_interface_t *
  */
 switch_status_t
 switch_api_sup_interface_delete(switch_device_t device, switch_handle_t sup_intf_handle);
+
+/** @} */ // end of Host Interface API
+    
 #ifdef __cplusplus
 }
 #endif
