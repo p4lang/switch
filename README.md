@@ -31,6 +31,7 @@ Supported Features
 6. Basic ACL: MAC and IP ACLs
 7. Unicast RPF check
 8. MPLS: LER, LSR, IPVPN
+9. Host/Supervisor interface
 
 Upcoming Features
 -----------------
