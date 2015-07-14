@@ -1908,6 +1908,77 @@ switch_pd_tunnel_encap_tables_init_entry(switch_device_t device)
 }
 
 p4_pd_status_t
+switch_pd_rewrite_table_fabric_add_entry(switch_device_t device,
+                                         switch_tunnel_type_egress_t tunnel_type,
+                                         uint16_t tunnel_index,
+                                         p4_pd_entry_hdl_t *entry_hdl)
+{
+    p4_pd_status_t status = 0;
+    p4_pd_dev_target_t p4_pd_device;
+
+    p4_pd_device.device_id = device;
+    p4_pd_device.dev_pipe_id = SWITCH_DEV_PIPE_ID;
+
+    p4_pd_dc_tunnel_encap_process_outer_match_spec_t match_spec;
+    p4_pd_dc_fabric_rewrite_action_spec_t action_spec;
+    switch (tunnel_type) {
+        case SWITCH_EGRESS_TUNNEL_TYPE_CPU:
+            memset(&match_spec, 0, sizeof(p4_pd_dc_tunnel_encap_process_outer_match_spec_t));
+            memset(&action_spec, 0, sizeof(p4_pd_dc_fabric_rewrite_action_spec_t));
+            match_spec.tunnel_metadata_egress_tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_CPU;
+            match_spec.tunnel_metadata_egress_header_count = 0;
+            match_spec.multicast_metadata_replica = false;
+            action_spec.action_tunnel_index = tunnel_index;
+            status = p4_pd_dc_tunnel_encap_process_outer_table_add_with_fabric_rewrite(
+                                                   g_sess_hdl,
+                                                   p4_pd_device,
+                                                   &match_spec,
+                                                   &action_spec,
+                                                   entry_hdl);
+            break;
+        default:
+            break;
+    }
+    p4_pd_complete_operations(g_sess_hdl);
+    return status;
+}
+
+p4_pd_status_t
+switch_pd_tunnel_rewrite_cpu_add_entry(switch_device_t device,
+                                       uint16_t tunnel_index,
+                                       p4_pd_entry_hdl_t *entry_hdl)
+{
+    p4_pd_status_t status = 0;
+    p4_pd_dev_target_t p4_pd_device;
+
+    p4_pd_device.device_id = device;
+    p4_pd_device.dev_pipe_id = SWITCH_DEV_PIPE_ID;
+
+    p4_pd_dc_tunnel_rewrite_match_spec_t match_spec;
+    memset(&match_spec, 0, sizeof(p4_pd_dc_tunnel_rewrite_match_spec_t));
+    match_spec.tunnel_metadata_tunnel_index = tunnel_index;
+    status = p4_pd_dc_tunnel_rewrite_table_add_with_cpu_rx_rewrite(
+                                                   g_sess_hdl,
+                                                   p4_pd_device,
+                                                   &match_spec,
+                                                   entry_hdl);
+
+
+    p4_pd_complete_operations(g_sess_hdl);
+    return status;
+}
+
+p4_pd_status_t
+switch_pd_mirror_add_session(int mirror_id, int egress_port) {
+    extern int p4_pd_dc_mirroring_mapping_add(int mirror_id, int egress_port);
+    p4_pd_status_t status = 0;
+    status = p4_pd_dc_mirroring_mapping_add(mirror_id,egress_port);
+    p4_pd_complete_operations(g_sess_hdl);
+    return status;
+}
+
+
+p4_pd_status_t
 switch_pd_tunnel_src_rewrite_table_add_entry(switch_device_t device,
                                              uint16_t tunnel_src_index,
                                              switch_ip_encap_t *ip_encap,
@@ -1968,7 +2039,6 @@ switch_pd_tunnel_src_rewrite_table_delete_entry(switch_device_t device,
     p4_pd_complete_operations(g_sess_hdl);
     return status;
 }
-                                            
 
 p4_pd_status_t
 switch_pd_tunnel_dst_rewrite_table_add_entry(switch_device_t device,
@@ -2219,6 +2289,7 @@ p4_pd_status_t
 switch_pd_port_mapping_table_add_entry(switch_device_t device,
                                        switch_port_t port_id,
                                        switch_ifindex_t ifindex,
+                                       switch_port_type_t port_type,
                                        p4_pd_entry_hdl_t *entry_hdl)
 {
     p4_pd_dc_ingress_port_mapping_match_spec_t  match_spec;
@@ -2235,7 +2306,8 @@ switch_pd_port_mapping_table_add_entry(switch_device_t device,
 
     match_spec.standard_metadata_ingress_port = port_id;
     action_spec.action_ifindex = ifindex;
-    action_spec.action_if_label = port_id; //TODO: Insert the right IF ACL Label
+    action_spec.action_if_label = port_id;
+    action_spec.action_port_type = port_type;
 
     modify = (*entry_hdl != 0) ? TRUE : FALSE;
     if (modify) {
@@ -2248,6 +2320,33 @@ switch_pd_port_mapping_table_add_entry(switch_device_t device,
                                                                   &match_spec,
                                                                   &action_spec,
                                                                   entry_hdl);
+    }
+
+    if (!modify) {
+        p4_pd_dc_egress_port_mapping_match_spec_t   egress_match_spec;
+        p4_pd_entry_hdl_t                           egress_entry_hdl;
+        memset(&egress_match_spec, 0,
+               sizeof(p4_pd_dc_egress_port_mapping_match_spec_t));
+        egress_match_spec.standard_metadata_egress_port = port_id;
+        if (port_type == SWITCH_PORT_TYPE_NORMAL) {
+            p4_pd_dc_egress_port_mapping_table_add_with_egress_port_type_normal(
+                g_sess_hdl,
+                p4_pd_device,
+                &egress_match_spec,
+                &egress_entry_hdl);
+        } else if (port_type == SWITCH_PORT_TYPE_FABRIC) {
+            p4_pd_dc_egress_port_mapping_table_add_with_egress_port_type_fabric(
+                g_sess_hdl,
+                p4_pd_device,
+                &egress_match_spec,
+                &egress_entry_hdl);
+        } else if (port_type == SWITCH_PORT_TYPE_CPU) {
+            p4_pd_dc_egress_port_mapping_table_add_with_egress_port_type_cpu(
+                g_sess_hdl,
+                p4_pd_device,
+                &egress_match_spec,
+                &egress_entry_hdl);
+        }
     }
 
     p4_pd_complete_operations(g_sess_hdl);
@@ -3402,18 +3501,30 @@ switch_pd_system_acl_table_add_entry(switch_device_t device,
                                                         entry_hdl);
             break;
         case SWITCH_ACL_ACTION_REDIRECT_TO_CPU:
-            status = p4_pd_dc_system_acl_table_add_with_redirect_to_cpu(g_sess_hdl,
+            {
+                p4_pd_dc_redirect_to_cpu_action_spec_t action_spec;
+                memset(&action_spec, 0, sizeof(p4_pd_dc_redirect_to_cpu_action_spec_t));
+                action_spec.action_sup_code = action_params->sup_redirect.sup_code;
+                status = p4_pd_dc_system_acl_table_add_with_redirect_to_cpu(g_sess_hdl,
                                                         p4_pd_device,
                                                         &match_spec, 
                                                         priority,
+                                                        &action_spec,
                                                         entry_hdl);
+            }
             break;
         case SWITCH_ACL_ACTION_COPY_TO_CPU:
-            status = p4_pd_dc_system_acl_table_add_with_copy_to_cpu(g_sess_hdl,
+            {
+                p4_pd_dc_copy_to_cpu_action_spec_t action_spec;
+                memset(&action_spec, 0, sizeof(p4_pd_dc_copy_to_cpu_action_spec_t));
+                action_spec.action_sup_code = action_params->sup_redirect.sup_code;
+                status = p4_pd_dc_system_acl_table_add_with_copy_to_cpu(g_sess_hdl,
                                                         p4_pd_device,
                                                         &match_spec,
                                                         priority,
+                                                        &action_spec,
                                                         entry_hdl);
+            }
             break;
         case SWITCH_ACL_ACTION_DROP:
             status = p4_pd_dc_system_acl_table_add_with_drop_packet(g_sess_hdl,
@@ -3869,6 +3980,7 @@ switch_pd_ipv4_acl_table_add_entry(switch_device_t device, uint16_t if_label,
                                    uint16_t bd_label, uint16_t priority,
                                    switch_acl_ip_key_value_pair_t *ip_acl,
                                    switch_acl_ip_action_t action,
+                                   switch_acl_action_params_t *action_params,
                                    p4_pd_entry_hdl_t *entry_hdl)
 {
     p4_pd_status_t status = 0;
@@ -3949,10 +4061,19 @@ switch_pd_ipv4_acl_table_add_entry(switch_device_t device, uint16_t if_label,
             break;
         case SWITCH_ACL_ACTION_REDIRECT:
             {
-                p4_pd_dc_acl_redirect_nexthop_action_spec_t action_spec;
-                memset(&action_spec, 0, sizeof(p4_pd_dc_acl_redirect_nexthop_action_spec_t));
-                p4_pd_dc_ip_acl_table_add_with_acl_redirect_nexthop(g_sess_hdl, p4_pd_device, &match_spec,
-                                                                    priority, &action_spec, entry_hdl);
+                switch_handle_t handle = action_params->redirect.handle;
+                if(switch_handle_get_type(handle) == SWITCH_HANDLE_TYPE_NHOP) {
+                    p4_pd_dc_acl_redirect_nexthop_action_spec_t action_spec;
+                    action_spec.action_nexthop_index = handle_to_id(handle);
+                    p4_pd_dc_ip_acl_table_add_with_acl_redirect_nexthop(g_sess_hdl, p4_pd_device, 
+                        &match_spec, priority, &action_spec, entry_hdl);
+                }
+                else if(switch_handle_get_type(handle) == SWITCH_HANDLE_TYPE_NHOP) {
+                    p4_pd_dc_acl_redirect_ecmp_action_spec_t action_spec;
+                    action_spec.action_ecmp_index = handle_to_id(handle);
+                    p4_pd_dc_ip_acl_table_add_with_acl_redirect_ecmp(g_sess_hdl, p4_pd_device, 
+                        &match_spec, priority, &action_spec, entry_hdl);
+                }
             }
             break;
         default:
@@ -3978,6 +4099,7 @@ switch_pd_ipv6_acl_table_add_entry(switch_device_t device, uint16_t if_label,
                                    uint16_t bd_label, uint16_t priority,
                                    switch_acl_ipv6_key_value_pair_t *ipv6_acl,
                                    switch_acl_ipv6_action_t action,
+                                   switch_acl_action_params_t *action_params,
                                    p4_pd_entry_hdl_t *entry_hdl)
 {
     p4_pd_status_t status = 0;
@@ -4049,10 +4171,13 @@ switch_pd_ipv6_acl_table_add_entry(switch_device_t device, uint16_t if_label,
             break;
         case SWITCH_ACL_ACTION_REDIRECT:
             {
-                p4_pd_dc_acl_redirect_nexthop_action_spec_t action_spec;
-                memset(&action_spec, 0, sizeof(p4_pd_dc_acl_redirect_nexthop_action_spec_t));
-                status = p4_pd_dc_ipv6_acl_table_add_with_acl_redirect_nexthop(g_sess_hdl, p4_pd_device, &match_spec,
-                                                                               priority, &action_spec, entry_hdl);
+                switch_handle_t handle = action_params->redirect.handle;
+                if(switch_handle_get_type(handle) == SWITCH_HANDLE_TYPE_NHOP) {
+                    p4_pd_dc_acl_redirect_nexthop_action_spec_t action_spec;
+                    action_spec.action_nexthop_index = handle_to_id(handle);
+                    status = p4_pd_dc_ipv6_acl_table_add_with_acl_redirect_nexthop(g_sess_hdl, p4_pd_device, &match_spec,
+                                    priority, &action_spec, entry_hdl);
+                }
             }
             break;
         default:
@@ -4079,6 +4204,7 @@ switch_pd_ipv4_racl_table_add_entry(switch_device_t device, uint16_t if_label,
                                     uint16_t bd_label, uint16_t priority,
                                     switch_acl_ip_racl_key_value_pair_t *ip_racl,
                                     switch_acl_ip_action_t action,
+                                    switch_acl_action_params_t *action_params,
                                     p4_pd_entry_hdl_t *entry_hdl)
 {
     p4_pd_status_t status = 0;
@@ -4134,10 +4260,13 @@ switch_pd_ipv4_racl_table_add_entry(switch_device_t device, uint16_t if_label,
             break;
         case SWITCH_ACL_ACTION_REDIRECT:
             {
-                p4_pd_dc_racl_redirect_nexthop_action_spec_t action_spec;
-                memset(&action_spec, 0, sizeof(p4_pd_dc_racl_redirect_nexthop_action_spec_t));
-                status = p4_pd_dc_ipv4_racl_table_add_with_racl_redirect_nexthop(g_sess_hdl, p4_pd_device, &match_spec,
-                                                                                 priority, &action_spec, entry_hdl);
+                switch_handle_t handle = action_params->redirect.handle;
+                if(switch_handle_get_type(handle) == SWITCH_HANDLE_TYPE_NHOP) {
+                    p4_pd_dc_racl_redirect_nexthop_action_spec_t action_spec;
+                    action_spec.action_nexthop_index = handle_to_id(handle);
+                    status = p4_pd_dc_ipv4_racl_table_add_with_racl_redirect_nexthop(g_sess_hdl, p4_pd_device, &match_spec,
+                                    priority, &action_spec, entry_hdl);
+                }
             }
             break;
         case SWITCH_ACL_ACTION_SET_NATMODE:
@@ -4165,6 +4294,7 @@ switch_pd_ipv6_racl_table_add_entry(switch_device_t device, uint16_t if_label,
                                     uint16_t bd_label, uint16_t priority,
                                     switch_acl_ipv6_racl_key_value_pair_t *ipv6_racl,
                                     switch_acl_ipv6_action_t action,
+                                    switch_acl_action_params_t *action_params,
                                     p4_pd_entry_hdl_t *entry_hdl)
 {
     p4_pd_status_t status = 0;
@@ -4216,10 +4346,13 @@ switch_pd_ipv6_racl_table_add_entry(switch_device_t device, uint16_t if_label,
             break;
         case SWITCH_ACL_ACTION_REDIRECT:
             {
-                p4_pd_dc_racl_redirect_nexthop_action_spec_t action_spec;
-                memset(&action_spec, 0, sizeof(p4_pd_dc_racl_redirect_nexthop_action_spec_t));
-                p4_pd_dc_ipv6_racl_table_add_with_racl_redirect_nexthop(g_sess_hdl, p4_pd_device, &match_spec,
-                                                                        priority, &action_spec, entry_hdl);
+                switch_handle_t handle = action_params->redirect.handle;
+                if(switch_handle_get_type(handle) == SWITCH_HANDLE_TYPE_NHOP) {
+                    p4_pd_dc_racl_redirect_nexthop_action_spec_t action_spec;
+                    action_spec.action_nexthop_index = handle_to_id(handle);
+                    p4_pd_dc_ipv6_racl_table_add_with_racl_redirect_nexthop(g_sess_hdl, p4_pd_device, &match_spec,
+                            priority, &action_spec, entry_hdl);
+                }
             }
             break;
         case SWITCH_ACL_ACTION_SET_NATMODE:
@@ -4247,6 +4380,7 @@ switch_pd_mac_acl_table_add_entry(switch_device_t device, uint16_t if_label,
                                   uint16_t bd_label, uint16_t priority,
                                   switch_acl_mac_key_value_pair_t *mac_acl,
                                   switch_acl_mac_action_t action,
+                                  switch_acl_action_params_t *action_params,
                                   p4_pd_entry_hdl_t *entry_hdl)
 {
     p4_pd_status_t status = 0;
@@ -4272,15 +4406,15 @@ switch_pd_mac_acl_table_add_entry(switch_device_t device, uint16_t if_label,
         switch(mac_acl[i].field) {
             case SWITCH_ACL_MAC_FIELD_ETH_TYPE:
                 match_spec.l2_metadata_lkp_mac_type = mac_acl[i].value.eth_type;
-                match_spec.l2_metadata_lkp_mac_type_mask = mac_acl[i].mask.u.mask & 0xFFFF;
+                match_spec.l2_metadata_lkp_mac_type_mask = mac_acl[i].mask.u.mask16 & 0xFFFF;
                 break;
             case SWITCH_ACL_MAC_FIELD_SOURCE_MAC:
-                //match_spec.l2_metadata_lkp_mac_sa = mac_acl[i].value.source_mac;
-                //match_spec.l2_metadata_lkp_mac_sa_mask = mac_acl[i].mask.u.mask & 0xFFFFFFFFFFFFFFFFULL;
+                memcpy(match_spec.l2_metadata_lkp_mac_sa, mac_acl[i].value.source_mac, 6);
+                memcpy(match_spec.l2_metadata_lkp_mac_sa_mask, mac_acl[i].mask.u.mac_mask, 6);
                 break;
             case SWITCH_ACL_MAC_FIELD_DEST_MAC:
-                //match_spec.l2_metadata_lkp_mac_da = mac_acl[i].value.dest_mac;
-                //match_spec.l2_metadata_lkp_mac_da_mask = mac_acl[i].mask.u.mask & 0xFFFFFFFFFFFFFFFFULL;
+                memcpy(match_spec.l2_metadata_lkp_mac_da, mac_acl[i].value.dest_mac, 6);
+                memcpy(match_spec.l2_metadata_lkp_mac_da_mask, mac_acl[i].mask.u.mac_mask, 6);
                 break;
             default:
                 break;
@@ -4295,6 +4429,18 @@ switch_pd_mac_acl_table_add_entry(switch_device_t device, uint16_t if_label,
             break;
         case SWITCH_ACL_ACTION_LOG:
             status = p4_pd_dc_mac_acl_table_add_with_acl_log(g_sess_hdl, p4_pd_device, &match_spec, priority, entry_hdl);
+            break;
+        case SWITCH_ACL_ACTION_REDIRECT:
+            {
+                // Permit redirect to alternate port/LAG based on MAC ACL?
+                /*
+                switch_handle_t handle = action_params->redirect.handle;
+                if(switch_handle_get_type(handle) == SWITCH_HANDLE_TYPE_PORT) {
+                }
+                else if(switch_handle_get_type(handle) == SWITCH_HANDLE_TYPE_LAG) {
+                }
+                */
+            }
             break;
         default:
             break;
@@ -4422,6 +4568,28 @@ switch_pd_qos_acl_table_delete_entry(switch_device_t device, p4_pd_entry_hdl_t e
 #endif /* P4_QOS_DISABLE & P4_ACL_DISABLE */
     return status;
 }
+
+p4_pd_status_t
+switch_pd_ingress_fabric_table_add_entry(switch_device_t device)
+{
+    p4_pd_status_t status = 0;
+    p4_pd_dev_target_t p4_pd_device;
+
+    p4_pd_device.device_id = device;
+    p4_pd_device.dev_pipe_id = SWITCH_DEV_PIPE_ID;
+
+    p4_pd_entry_hdl_t entry_hdl;
+    p4_pd_dc_fabric_ingress_dst_lkp_match_spec_t match_spec;
+    memset(&match_spec, 0, sizeof(p4_pd_dc_fabric_ingress_dst_lkp_match_spec_t));
+    match_spec.fabric_header_dstDevice = device;
+    status = p4_pd_dc_fabric_ingress_dst_lkp_table_add_with_terminate_cpu_packet(
+                                                                     g_sess_hdl,
+                                                                     p4_pd_device,
+                                                                     &match_spec,
+                                                                     &entry_hdl);
+    return status;
+}
+
 /*
  * DEFAULT ENTRIES
  * TODO: Remove them once the default action can be specified in P4.
@@ -5161,20 +5329,35 @@ switch_pd_fwd_result_table_add_init_entry(switch_device_t device)
     match_spec.l3_metadata_fib_hit = 1;
     match_spec.l3_metadata_fib_hit_mask = 1;
 
-    status = p4_pd_dc_fwd_result_table_add_with_set_fib_redirect_action(g_sess_hdl,
-                                                                        p4_pd_device,
-                                                                        &match_spec,
-                                                                        1000,
-                                                                        &entry_hdl);
+    status = p4_pd_dc_fwd_result_table_add_with_set_fib_redirect_action(
+        g_sess_hdl,
+        p4_pd_device,
+        &match_spec,
+        1000,
+        &entry_hdl);
 
     memset(&match_spec, 0, sizeof(p4_pd_dc_fwd_result_match_spec_t));
     match_spec.l2_metadata_l2_redirect = 1;
     match_spec.l2_metadata_l2_redirect_mask = 1;
-    status = p4_pd_dc_fwd_result_table_add_with_set_l2_redirect_action(g_sess_hdl,
-                                                                       p4_pd_device,
-                                                                       &match_spec,
-                                                                       1000,
-                                                                       &entry_hdl);
+    status = p4_pd_dc_fwd_result_table_add_with_set_l2_redirect_action(
+        g_sess_hdl,
+        p4_pd_device,
+        &match_spec,
+        1000,
+        &entry_hdl);
+
+    memset(&match_spec, 0, sizeof(p4_pd_dc_fwd_result_match_spec_t));
+    match_spec.l3_metadata_rmac_hit = 1;
+    match_spec.l3_metadata_rmac_hit_mask = 1;
+    match_spec.l3_metadata_fib_hit = 0;
+    match_spec.l3_metadata_fib_hit_mask = 1;
+    status = p4_pd_dc_fwd_result_table_add_with_set_cpu_redirect_action(
+        g_sess_hdl,
+        p4_pd_device,
+        &match_spec,
+        1000,
+        &entry_hdl);
+
     p4_pd_complete_operations(g_sess_hdl);
     return status;
 }

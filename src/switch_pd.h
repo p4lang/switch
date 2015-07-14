@@ -172,6 +172,17 @@ switch_pd_tunnel_rewrite_table_add_entry(switch_device_t device, uint16_t tunnel
                                     p4_pd_entry_hdl_t *entry_hdl);
 
 p4_pd_status_t
+switch_pd_rewrite_table_fabric_add_entry(switch_device_t device,
+                                         switch_tunnel_type_egress_t tunnel_type,
+                                         uint16_t tunnel_index,
+                                         p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_tunnel_rewrite_cpu_add_entry(switch_device_t device,
+                                       uint16_t tunnel_index,
+                                       p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
 switch_pd_tunnel_rewrite_table_delete_entry(switch_device_t device, p4_pd_entry_hdl_t entry_hdl);
 
 p4_pd_status_t
@@ -276,6 +287,7 @@ p4_pd_status_t
 switch_pd_port_mapping_table_add_entry(switch_device_t device,
                                    switch_port_t port_id,
                                    switch_ifindex_t ifindex,
+                                   switch_port_type_t port_type,
                                    p4_pd_entry_hdl_t *entry_hdl);
 
 p4_pd_status_t
@@ -480,10 +492,11 @@ switch_pd_rewrite_table_mpls_rewrite_add_entry(switch_device_t device,
 
 p4_pd_status_t
 switch_pd_ipv4_acl_table_add_entry(switch_device_t device, uint16_t if_label,
-                            uint16_t bd_label, uint16_t priority,
-                            switch_acl_ip_key_value_pair_t *ip_acl,
-                            switch_acl_ip_action_t action,
-                            p4_pd_entry_hdl_t *entry_hdl);
+                                   uint16_t bd_label, uint16_t priority,
+                                   switch_acl_ip_key_value_pair_t *ip_acl,
+                                   switch_acl_ip_action_t action,
+                                   switch_acl_action_params_t *action_params,
+                                   p4_pd_entry_hdl_t *entry_hdl);
 
 p4_pd_status_t
 switch_pd_ipv4_acl_table_delete_entry(switch_device_t device, p4_pd_entry_hdl_t entry_hdl);
@@ -493,6 +506,7 @@ switch_pd_ipv6_acl_table_add_entry(switch_device_t device, uint16_t if_label,
                             uint16_t bd_label, uint16_t priority,
                             switch_acl_ipv6_key_value_pair_t *ipv6_acl,
                             switch_acl_ipv6_action_t action,
+                            switch_acl_action_params_t *action_params,
                             p4_pd_entry_hdl_t *entry_hdl);
 
 p4_pd_status_t
@@ -503,6 +517,7 @@ switch_pd_ipv4_racl_table_add_entry(switch_device_t device, uint16_t if_label,
                             uint16_t bd_label, uint16_t priority,
                             switch_acl_ip_racl_key_value_pair_t *ip_racl,
                             switch_acl_ip_action_t action,
+                            switch_acl_action_params_t *action_params,
                             p4_pd_entry_hdl_t *entry_hdl);
 
 p4_pd_status_t
@@ -513,6 +528,7 @@ switch_pd_ipv6_racl_table_add_entry(switch_device_t device, uint16_t if_label,
                             uint16_t bd_label, uint16_t priority,
                             switch_acl_ipv6_racl_key_value_pair_t *ip_racl,
                             switch_acl_ipv6_action_t action,
+                            switch_acl_action_params_t *action_params,
                             p4_pd_entry_hdl_t *entry_hdl);
 
 p4_pd_status_t
@@ -523,6 +539,7 @@ switch_pd_mac_acl_table_add_entry(switch_device_t device, uint16_t if_label,
                             uint16_t bd_label, uint16_t priority,
                             switch_acl_mac_key_value_pair_t *mac_acl,
                             switch_acl_mac_action_t action,
+                            switch_acl_action_params_t *action_params,
                             p4_pd_entry_hdl_t *entry_hdl);
 
 p4_pd_status_t
@@ -558,6 +575,8 @@ p4_pd_status_t
 switch_pd_egress_lag_table_delete_entry(switch_device_t device,
                                         p4_pd_entry_hdl_t entry_hdl);
 
+p4_pd_status_t
+switch_pd_ingress_fabric_table_add_entry(switch_device_t device);
 //TODO: Add delete entry for outer_mac table
 
 // Default Entries
@@ -692,6 +711,9 @@ switch_pd_egress_port_mapping_table_init_entry(switch_device_t device);
 
 p4_pd_status_t
 switch_pd_compute_multicast_hashes_init_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_mirror_add_session(int mirror_id, int egress_port);
 
 #ifdef __cplusplus
 }

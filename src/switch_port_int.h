@@ -21,7 +21,8 @@ limitations under the License.
 #include "switchapi/switch_handle.h"
 #include "switchapi/switch_port.h"
 
-#define CPU_PORT_ID                    64
+#define CPU_PORT_ID 64
+#define CPU_MIRROR_SESSION_ID 250
 
 #define SWITCH_API_MAX_PORTS 256
 
@@ -29,18 +30,28 @@ limitations under the License.
 extern "C" {
 #endif /* __cplusplus */
 
+typedef enum switch_port_type_ {
+    SWITCH_PORT_TYPE_NORMAL,
+    SWITCH_PORT_TYPE_FABRIC,
+    SWITCH_PORT_TYPE_CPU
+} switch_port_type_t;
+
 /** Port information */
 typedef struct switch_port_info_ {
     switch_api_port_info_t api_port_info;
     switch_ifindex_t ifindex;
     switch_handle_t intf_handle;
     switch_handle_t port_handle;
+    switch_handle_t sup_intf_handle;
+    switch_port_type_t port_type;
 #ifdef SWITCH_PD
     p4_pd_entry_hdl_t hw_entry;             /* port mapping entry */
     p4_pd_entry_hdl_t lg_entry;             /* Lag group entry */
     p4_pd_entry_hdl_t ls_entry;             /* Lag select entry */
     p4_pd_mbr_hdl_t mbr_hdl;                /* Lag action profile entry */
     p4_pd_entry_hdl_t eg_lag_entry;         /* egress lag entry */
+    p4_pd_entry_hdl_t rw_entry;             /* fabric rewrite entry */
+    p4_pd_entry_hdl_t tunnel_rw_entry;      /* tunnel rewrite entry */
 #endif
 } switch_port_info_t;
 
