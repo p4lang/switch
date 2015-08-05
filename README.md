@@ -6,7 +6,7 @@ Refer to p4factory/targets/switch/README.md for more details on switch.p4 progra
 
     +-----+    +-----+   +-----+  +-----+
     |App 1|    |App j|   |App n|  |App q|
-    |     |... |     |...|     |..|     | 
+    |     |... |     |...|     |..|     |
     +-----+    +-----+   +-----+  +-----+
        |        |          |  |     |
     +-----------------------+ |     |
@@ -18,25 +18,27 @@ Refer to p4factory/targets/switch/README.md for more details on switch.p4 progra
     +---------------------------------+
     |        Soft Switch              |
     |  (compiled from switch.p4)      |
-    +---------------------------------+ 
+    +---------------------------------+
 
 Supported Features
 ------------------
 
-1. Basic L2 switching: VLAN flooding and STP
+1. Basic L2 switching: Flooding, learning and STP
 2. Basic L3 Routing: IPv4, IPv6 and VRF
 3. LAG
 4. ECMP
-5. Tunneling: VXLAN and NVGRE (including L2/L3 Gateway), Geneve, and GRE 
+5. Tunneling: VXLAN and NVGRE (including L2/L3 Gateway), Geneve, and GRE
 6. Basic ACL: MAC and IP ACLs
 7. Unicast RPF check
 8. MPLS: LER, LSR, IPVPN
-9. Host/Supervisor interface
+9. Host interface
+10. Mirroring: Ingress and egress mirroring with ERSPAN
+11. Counters/Statistics
 
 Upcoming Features
 -----------------
 
-1. Learning on Tunnels and VPLS
+1. VPLS
 
 Documentation
 -------------

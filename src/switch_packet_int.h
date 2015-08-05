@@ -19,7 +19,7 @@ limitations under the License.
 
 #include "switchapi/switch_base_types.h"
 #include "switchapi/switch_handle.h"
-#include "switch_sup_int.h"
+#include "switch_hostif_int.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,7 +30,7 @@ extern "C" {
 void
 switch_packet_tx_to_hw(switch_packet_header_t *packet_header, char *packet, int packet_size);
 switch_status_t
-switch_packet_sup_host_interface_create(switch_sup_interface_info_t *sup_intf_info);
+switch_packet_hostif_create(switch_device_t device, switch_hostif_info_t *hostif_info);
 
 #ifdef __cplusplus
 }

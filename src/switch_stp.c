@@ -95,6 +95,10 @@ switch_api_stp_group_delete(switch_device_t device, switch_handle_t stg_handle)
     switch_stp_port_entry_t           *port_entry = NULL;
     switch_stp_vlan_entry_t           *vlan_entry = NULL;
 
+    if (!SWITCH_STP_HANDLE_VALID(stg_handle)) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
+
     stp_info = switch_api_stp_get_internal(stg_handle);
     if (!stp_info) {
         return SWITCH_STATUS_INVALID_HANDLE;
@@ -132,6 +136,10 @@ switch_api_stp_group_vlans_add(switch_device_t device,
     switch_handle_t                    bd_handle;
     int                                count = 0;
 
+    if (!SWITCH_STP_HANDLE_VALID(stg_handle)) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
+
     stp_info = switch_api_stp_get_internal(stg_handle);
     if (!stp_info) {
         return SWITCH_STATUS_INVALID_HANDLE;
@@ -145,6 +153,9 @@ switch_api_stp_group_vlans_add(switch_device_t device,
         }
 
         vlan_entry = switch_malloc(sizeof(switch_stp_vlan_entry_t), 1);
+        if (!vlan_entry) {
+            return SWITCH_STATUS_NO_MEMORY;
+        }
         memset(vlan_entry, 0 , sizeof(switch_stp_vlan_entry_t));
 
         vlan_entry->bd_handle = bd_handle;
@@ -173,6 +184,10 @@ switch_api_stp_group_vlans_remove(switch_device_t device,
     tommy_node                        *node = NULL;
     switch_handle_t                    bd_handle;
     int                                count = 0;
+
+    if (!SWITCH_STP_HANDLE_VALID(stg_handle)) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
 
     stp_info = switch_api_stp_get_internal(stg_handle);
     if (!stp_info) {
@@ -226,6 +241,16 @@ switch_api_stp_port_state_set(switch_device_t device, switch_handle_t stg_handle
     switch_handle_type_t               handle_type = 0;
     bool                               new_entry = FALSE;
 
+    if (!SWITCH_STP_HANDLE_VALID(stg_handle)) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
+
+    if ((!SWITCH_PORT_HANDLE_VALID(handle)) &&
+        (!SWITCH_LAG_HANDLE_VALID(handle)) &&
+        (!SWITCH_INTERFACE_HANDLE_VALID(handle))) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
+
     stp_info = switch_api_stp_get_internal(stg_handle);
     if (!stp_info) {
         return SWITCH_STATUS_INVALID_HANDLE;
@@ -235,10 +260,16 @@ switch_api_stp_port_state_set(switch_device_t device, switch_handle_t stg_handle
     intf_handle = handle;
     if (handle_type == SWITCH_HANDLE_TYPE_PORT) {
        port_info = switch_api_port_get_internal((switch_port_t)handle); 
+       if (!port_info) {
+           return SWITCH_STATUS_INVALID_PORT_NUMBER;
+       }
        intf_handle = port_info->intf_handle;
     }
     if (handle_type == SWITCH_HANDLE_TYPE_LAG) {
         lag_info = switch_api_lag_get_internal(handle);
+        if (!lag_info) {
+            return SWITCH_STATUS_INVALID_HANDLE;
+        }
         intf_handle = lag_info->intf_handle;
     }
 
@@ -273,6 +304,9 @@ switch_api_stp_port_state_set(switch_device_t device, switch_handle_t stg_handle
         if (!node) {
             new_entry = TRUE;
             port_entry = switch_malloc(sizeof(switch_stp_port_entry_t), 1);
+            if (!port_entry) {
+                return SWITCH_STATUS_NO_MEMORY;
+            }
             memset(port_entry, 0, sizeof(switch_stp_port_entry_t));
             port_entry->intf_handle = intf_handle;
             port_entry->intf_state = state;
@@ -312,6 +346,16 @@ switch_api_stp_port_state_get(switch_device_t device, switch_handle_t stg_handle
     switch_handle_t                    intf_handle = 0; 
     switch_handle_type_t               handle_type = 0;
 
+    if (!SWITCH_STP_HANDLE_VALID(stg_handle)) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
+
+    if ((!SWITCH_PORT_HANDLE_VALID(handle)) &&
+        (!SWITCH_LAG_HANDLE_VALID(handle)) &&
+        (!SWITCH_INTERFACE_HANDLE_VALID(handle))) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
+
     stp_info = switch_api_stp_get_internal(stg_handle);
     if (!stp_info) {
         return SWITCH_STATUS_INVALID_HANDLE;
@@ -321,10 +365,16 @@ switch_api_stp_port_state_get(switch_device_t device, switch_handle_t stg_handle
     intf_handle = handle;
     if (handle_type == SWITCH_HANDLE_TYPE_PORT) {
        port_info = switch_api_port_get_internal((switch_port_t)handle); 
+       if (!port_info) {
+           return SWITCH_STATUS_INVALID_PORT_NUMBER;
+       }
        intf_handle = port_info->intf_handle;
     }
     if (handle_type == SWITCH_HANDLE_TYPE_LAG) {
         lag_info = switch_api_lag_get_internal(handle);
+        if (!lag_info) {
+            return SWITCH_STATUS_INVALID_HANDLE;
+        }
         intf_handle = lag_info->intf_handle;
     }
 
@@ -368,6 +418,16 @@ switch_api_stp_port_state_clear(switch_device_t device, switch_handle_t stg_hand
     switch_handle_t                    intf_handle = 0; 
     switch_handle_type_t               handle_type = 0;
 
+    if (!SWITCH_STP_HANDLE_VALID(stg_handle)) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
+
+    if ((!SWITCH_PORT_HANDLE_VALID(handle)) &&
+        (!SWITCH_LAG_HANDLE_VALID(handle)) &&
+        (!SWITCH_INTERFACE_HANDLE_VALID(handle))) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
+
     stp_info = switch_api_stp_get_internal(stg_handle);
     if (!stp_info) {
         return SWITCH_STATUS_INVALID_HANDLE;
@@ -377,10 +437,16 @@ switch_api_stp_port_state_clear(switch_device_t device, switch_handle_t stg_hand
     intf_handle = handle;
     if (handle_type == SWITCH_HANDLE_TYPE_PORT) {
        port_info = switch_api_port_get_internal((switch_port_t)handle); 
+       if (!port_info) {
+           return SWITCH_STATUS_INVALID_PORT_NUMBER;
+       }
        intf_handle = port_info->intf_handle;
     }
     if (handle_type == SWITCH_HANDLE_TYPE_LAG) {
         lag_info = switch_api_lag_get_internal(handle);
+        if (!lag_info) {
+            return SWITCH_STATUS_INVALID_HANDLE;
+        }
         intf_handle = lag_info->intf_handle;
     }
 
@@ -420,6 +486,10 @@ switch_stp_update_flood_list(switch_device_t device, switch_handle_t stg_handle,
     tommy_node                        *node = NULL;
     switch_handle_t                    bd_handle = 0;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+
+    if (!SWITCH_STP_HANDLE_VALID(stg_handle)) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
 
     stp_info = switch_api_stp_get_internal(stg_handle);
     if (!stp_info) {
@@ -463,6 +533,10 @@ switch_api_stp_group_print_entry(switch_handle_t stg_handle)
     tommy_node                        *node = NULL;
     switch_handle_t                    bd_handle = 0;
     switch_handle_t                    intf_handle = 0;
+
+    if (!SWITCH_STP_HANDLE_VALID(stg_handle)) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
 
     stp_info = switch_api_stp_get_internal(stg_handle);
     if (!stp_info) {

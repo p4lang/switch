@@ -52,7 +52,7 @@ switch_api_logical_network_member_add_basic(switch_device_t device,
                                             switch_handle_t intf_handle);
 
 switch_status_t
-switch_api_logical_network_member_remove_basic(switch_device_t device, 
+switch_api_logical_network_member_remove_basic(switch_device_t device,
                                                switch_handle_t bd_handle,
                                                switch_handle_t intf_handle);
 

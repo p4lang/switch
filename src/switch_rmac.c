@@ -61,6 +61,10 @@ switch_api_router_mac_group_delete(switch_device_t device, switch_handle_t rmac_
 {
     switch_rmac_info_t                *rmac_info = NULL;
 
+    if (!SWITCH_RMAC_HANDLE_VALID(rmac_handle)) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
+
     rmac_info = switch_api_rmac_info_get_internal(rmac_handle);
     if (!rmac_info) {
         return SWITCH_STATUS_INVALID_HANDLE;
@@ -87,6 +91,10 @@ switch_api_router_mac_add(switch_device_t device, switch_handle_t rmac_handle, s
     tommy_node                        *node = NULL;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
 
+    if (!SWITCH_RMAC_HANDLE_VALID(rmac_handle)) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
+
     rmac_info = switch_api_rmac_info_get_internal(rmac_handle);
     if (!rmac_info) {
         return SWITCH_STATUS_INVALID_HANDLE;
@@ -105,6 +113,7 @@ switch_api_router_mac_add(switch_device_t device, switch_handle_t rmac_handle, s
     }
     memcpy(&rmac_entry->mac, mac, sizeof(switch_mac_addr_t));
     tommy_list_insert_head(&(rmac_info->rmac_list), &(rmac_entry->node), rmac_entry);
+    switch_smac_rewrite_add_entry(mac);
 #ifdef SWITCH_PD
     
     status = switch_pd_inner_rmac_table_add_entry(device,
@@ -133,6 +142,10 @@ switch_api_router_mac_delete(switch_device_t device, switch_handle_t rmac_handle
     tommy_node                        *node = NULL;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
 
+    if (!SWITCH_RMAC_HANDLE_VALID(rmac_handle)) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
+
     rmac_info = switch_api_rmac_info_get_internal(rmac_handle);
     if (!rmac_info) {
         return SWITCH_STATUS_ITEM_NOT_FOUND;
@@ -150,10 +163,17 @@ switch_api_router_mac_delete(switch_device_t device, switch_handle_t rmac_handle
         return SWITCH_STATUS_ITEM_NOT_FOUND;
     }
 
+    switch_smac_rewrite_delete_entry(mac);
     rmac_entry = tommy_list_remove_existing(&(rmac_info->rmac_list), node);
 #ifdef SWITCH_PD
     status = switch_pd_outer_rmac_table_delete_entry(device, rmac_info->outer_rmac_entry);
+    if (status != SWITCH_STATUS_SUCCESS) {
+        return status;
+    }
     status = switch_pd_inner_rmac_table_delete_entry(device, rmac_info->inner_rmac_entry);
+    if (status != SWITCH_STATUS_SUCCESS) {
+        return status;
+    }
 #endif
     free(rmac_entry);
     return status;
@@ -270,12 +290,12 @@ switch_router_mac_init(switch_device_t device)
     unsigned char mac[ETH_LEN] = {0x00, 0x77, 0x66, 0x55, 0x44, 0x33};
 
     switch_rmac_array = NULL;
-    switch_pd_mac_rewrite_table_add_entry(0, mac);
+    //switch_pd_mac_rewrite_table_add_entry(device, smac_idx, mac);
+    tommy_hashtable_init(&smac_rewrite_table, SWITCH_SMAC_REWRITE_HASH_TABLE_SIZE);
+    smac_rewrite_index_allocator = switch_api_id_allocator_new(SWITCH_SMAC_REWRITE_HASH_TABLE_SIZE, TRUE);
+    switch_handle_type_init(SWITCH_HANDLE_TYPE_MY_MAC, (512));
     memcpy(&temp_mac.mac_addr, &mac, ETH_LEN);
     switch_pd_tunnel_smac_rewrite_table_add_entry(0, 1, &temp_mac, &smac_hdl); 
-    tommy_hashtable_init(&smac_rewrite_table, SWITCH_SMAC_REWRITE_HASH_TABLE_SIZE);
-    smac_rewrite_index_allocator = switch_api_id_allocator_new(SWITCH_SMAC_REWRITE_HASH_TABLE_SIZE);
-    switch_handle_type_init(SWITCH_HANDLE_TYPE_MY_MAC, (512));
     return SWITCH_STATUS_SUCCESS;
 }
     
@@ -312,6 +332,29 @@ switch_smac_rewrite_hash_cmp(const void *key1, const void *key2)
     return memcmp(key1, key2, ETH_LEN);
 }
 
+static void
+switch_smac_rewrite_hash_insert(switch_smac_entry_t *smac_entry)
+{
+    unsigned char                      key[ETH_LEN];
+    unsigned int                       len = 0;
+    uint32_t                           hash;
+
+    switch_smac_rewrite_hash_key_init(key, &smac_entry->mac, &len, &hash);
+    tommy_hashtable_insert(&smac_rewrite_table, &(smac_entry->node), smac_entry, hash);
+}
+
+static void
+switch_smac_rewrite_hash_delete(switch_smac_entry_t *smac_entry)
+{
+    unsigned char                      key[ETH_LEN];
+    uint32_t                           hash = 0;
+    unsigned int                       len = 0;
+
+    switch_smac_rewrite_hash_key_init(key, &smac_entry->mac, &len, &hash);
+    tommy_hashtable_remove(&smac_rewrite_table, switch_smac_rewrite_hash_cmp, key, hash);
+}
+
+
 static switch_smac_entry_t *
 switch_smac_rewrite_search_entry(switch_mac_addr_t *mac)
 {
@@ -326,28 +369,57 @@ switch_smac_rewrite_search_entry(switch_mac_addr_t *mac)
 }
 
 uint16_t
+switch_smac_rewrite_index_from_rmac(switch_handle_t rmac_handle)
+{
+    switch_rmac_info_t                *rmac_info = NULL;
+    switch_rmac_entry_t               *rmac_entry = NULL;
+    tommy_node                        *node = NULL;
+    switch_mac_addr_t                 *mac = NULL;
+    uint16_t                           smac_index = 0;
+    switch_smac_entry_t               *smac_entry = NULL;
+
+    rmac_info = switch_api_rmac_info_get_internal(rmac_handle);
+    if (!rmac_info) {
+        return smac_index;
+    }
+
+    node = tommy_list_head(&(rmac_info->rmac_list));
+    while (node) {
+        rmac_entry = node->data;
+        mac = &rmac_entry->mac;
+        smac_entry = switch_smac_rewrite_search_entry(mac);
+        if (smac_entry) {
+            smac_index = smac_entry->smac_index;
+            break;
+        }
+        node = node->next;
+    }
+    return smac_index;
+}
+
+uint16_t
 switch_smac_rewrite_add_entry(switch_mac_addr_t *mac)
 {
     switch_smac_entry_t               *smac_entry = NULL;
-    unsigned char                      key[ETH_LEN];
-    unsigned int                       len = 0;
-    uint32_t                           hash;
     uint16_t                           smac_index = 0;
+    switch_device_t                    device = SWITCH_DEV_ID;
 
     smac_entry = switch_smac_rewrite_search_entry(mac);
     if (smac_entry) {
         smac_entry->ref_count++;
+        return smac_entry->smac_index;
+    }
+    smac_entry = switch_malloc(sizeof(switch_smac_entry_t), 1);
+    if (!smac_entry) {
         return smac_index;
     }
-    switch_smac_rewrite_hash_key_init(key, mac, &len, &hash);
-    smac_entry = switch_malloc(sizeof(switch_smac_entry_t), 1);
     memset(smac_entry, 0, sizeof(switch_smac_entry_t));
     smac_index = switch_api_id_allocator_allocate(smac_rewrite_index_allocator);
     memcpy(&smac_entry->mac, mac, ETH_LEN);
     smac_entry->smac_index = smac_index;
     smac_entry->ref_count = 1;
-    tommy_hashtable_insert(&smac_rewrite_table, &(smac_entry->node), smac_entry, hash);
-    switch_pd_mac_rewrite_table_add_entry(smac_index, mac->mac_addr);
+    switch_smac_rewrite_hash_insert(smac_entry);
+    switch_pd_mac_rewrite_table_add_entry(device, smac_entry);
     return smac_index;
 }
 
@@ -355,10 +427,8 @@ switch_status_t
 switch_smac_rewrite_delete_entry(switch_mac_addr_t *mac)
 {
     switch_smac_entry_t               *smac_entry = NULL;
-    unsigned char                      key[ETH_LEN];
-    uint32_t                           hash = 0;
-    unsigned int                       len = 0;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+    switch_device_t                    device = SWITCH_DEV_ID;
 
     smac_entry = switch_smac_rewrite_search_entry(mac);
     if (!smac_entry) {
@@ -368,8 +438,8 @@ switch_smac_rewrite_delete_entry(switch_mac_addr_t *mac)
 
     smac_entry->ref_count--;
     if (smac_entry->ref_count == 0) {
-        switch_smac_rewrite_hash_key_init(key, mac, &len, &hash);
-        smac_entry = tommy_hashtable_remove(&smac_rewrite_table, switch_smac_rewrite_hash_cmp, key, hash);
+        switch_pd_mac_rewrite_table_delete_entry(device, smac_entry);
+        switch_smac_rewrite_hash_delete(smac_entry);
         switch_api_id_allocator_release(smac_rewrite_index_allocator, smac_entry->smac_index);
         free(smac_entry);
     }

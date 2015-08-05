@@ -25,13 +25,15 @@ limitations under the License.
 #include "switch_capability_int.h"
 #include "switch_rmac_int.h"
 
+#define SWITCH_API_MAX_CONF_PORTS 32
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
 static switch_capability_info_t *switch_info = NULL;
 
-int
+switch_status_t
 switch_capability_init(switch_device_t device)
 {
     switch_api_capability_t *api_switch_info = NULL;
@@ -39,6 +41,9 @@ switch_capability_init(switch_device_t device)
     int index = 0;
 
     switch_info = switch_malloc(sizeof(switch_capability_info_t), 1);
+    if (!switch_info) {
+        return SWITCH_STATUS_NO_MEMORY;
+    }
     api_switch_info = &switch_info->api_switch_info;
     memset(switch_info, 0, sizeof(switch_capability_info_t));
     memset(api_switch_info, 0, sizeof(switch_api_capability_t));
@@ -51,8 +56,8 @@ switch_capability_init(switch_device_t device)
     api_switch_info->default_vrf = SWITCH_API_DEFAULT_VRF;
     switch_info->default_vrf_handle = switch_api_vrf_create(device, SWITCH_API_DEFAULT_VRF);
 
-    api_switch_info->max_ports = SWITCH_API_MAX_DEFAULT_PORTS;
-    for (index = 0; index < SWITCH_API_MAX_DEFAULT_PORTS; index++) {
+    api_switch_info->max_ports = SWITCH_API_MAX_CONF_PORTS;
+    for (index = 0; index < SWITCH_API_MAX_PORTS; index++) {
         port_info = switch_api_port_get_internal((switch_port_t)index);
         api_switch_info->port_list[index] = port_info->port_handle;
     }
@@ -93,7 +98,7 @@ switch_api_capability_set(switch_device_t device, switch_api_capability_t *api_s
         memcpy(&switch_info->api_switch_info.switch_mac, &api_switch_info->switch_mac, ETH_LEN);
         switch_info->rmac_handle = switch_api_router_mac_group_create(device);
         status = switch_api_router_mac_add(device, switch_info->rmac_handle, &api_switch_info->switch_mac);
-        switch_info->smac_index = switch_smac_rewrite_add_entry(&api_switch_info->switch_mac);
+        switch_info->smac_index = switch_smac_rewrite_index_from_rmac(switch_info->rmac_handle);
     }
     return status;
 }

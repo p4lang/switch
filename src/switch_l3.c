@@ -44,7 +44,7 @@ prefix_to_v4_mask(unsigned int prefix)
 static void
 prefix_to_v6_mask(unsigned int prefix, uint8_t *mask)
 {
-    int i = 0;
+    unsigned int i = 0;
     memset(mask, 0, 16);
     for (i = 0; i < prefix/16; i++) {
         mask[i] = 0xFF;
@@ -57,6 +57,7 @@ prefix_to_v6_mask(unsigned int prefix, uint8_t *mask)
 switch_status_t
 switch_l3_init(switch_device_t device)
 {
+    UNUSED(device);
     // IP + VRF Hash table init (V4 only for now!)
     tommy_hashtable_init(&switch_l3_hash_table, SWITCH_L3_HASH_TABLE_SIZE);
     switch_handle_type_init(SWITCH_HANDLE_TYPE_URPF, (4096));
@@ -66,6 +67,7 @@ switch_l3_init(switch_device_t device)
 switch_status_t
 switch_l3_free(switch_device_t device)
 {
+    UNUSED(device);
     tommy_hashtable_done(&switch_l3_hash_table);
     switch_handle_type_free(SWITCH_HANDLE_TYPE_URPF);
     return SWITCH_STATUS_SUCCESS;
@@ -199,6 +201,9 @@ switch_l3_insert_hash(switch_handle_t vrf, switch_ip_addr_t *ip_addr,
 
     switch_l3_hash_key_init(key, vrf, ip_addr, &len, &hash);
     hash_entry = switch_malloc(sizeof(switch_l3_hash_t), 1);
+    if (!hash_entry) {
+        return NULL;
+    }
     memcpy(hash_entry->key, key, SWITCH_L3_HASH_KEY_SIZE);
     hash_entry->path_count = 1;
     tommy_hashtable_insert(&switch_l3_hash_table, &(hash_entry->node), hash_entry, hash);
@@ -250,6 +255,7 @@ switch_api_l3_interface_address_add(switch_device_t device,
     switch_ip_addr_info_t             *ip_info = NULL;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
 
+    UNUSED(device);
     info = switch_api_interface_get(interface_handle);
     if (!info) {
         return SWITCH_STATUS_INVALID_INTERFACE;
@@ -281,6 +287,8 @@ switch_api_l3_interface_address_delete(switch_device_t device,
     switch_ip_addr_info_t             *ip_info = NULL;
     tommy_node                        *node = NULL;
 
+    UNUSED(device);
+    UNUSED(vrf_handle);
     info = switch_api_interface_get(interface_handle);
     if (!info) {
         return SWITCH_STATUS_INVALID_INTERFACE;
@@ -320,6 +328,14 @@ switch_api_l3_route_add(switch_device_t device, switch_handle_t vrf,
     uint8_t                            v6_mask[16];
     switch_ip_addr_t                   masked_ip;
 
+    if (!SWITCH_VRF_HANDLE_VALID(vrf)) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
+
+    if (!SWITCH_NHOP_HANDLE_VALID(nhop_handle)) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
+
     nhop_index = handle_to_id(nhop_handle);
     nhop_info = switch_nhop_get(nhop_handle);
     if (!nhop_info) {
@@ -335,6 +351,9 @@ switch_api_l3_route_add(switch_device_t device, switch_handle_t vrf,
                                        SWITCH_NHOP_TYPE_IS_ECMP(nhop_info),
                                        nhop_index,
                                        hash_entry->hw_entry);
+        if (status != SWITCH_STATUS_SUCCESS) {
+            return status;
+        }
 
         status = switch_pd_urpf_update_entry(device, handle_to_id(vrf),
                                         ip_addr, handle_to_id(nhop_handle),
@@ -353,6 +372,9 @@ switch_api_l3_route_add(switch_device_t device, switch_handle_t vrf,
             }
         }
         hash_entry = switch_l3_insert_hash(vrf, ip_addr, nhop_handle);
+        if (!hash_entry) {
+            return SWITCH_STATUS_NO_MEMORY;
+        }
         hash_entry->nhop_handle = nhop_handle;
 #ifdef SWITCH_PD
         // set the HW entry
@@ -361,6 +383,9 @@ switch_api_l3_route_add(switch_device_t device, switch_handle_t vrf,
                                        SWITCH_NHOP_TYPE_IS_ECMP(nhop_info),
                                        nhop_index,
                                        &hash_entry->hw_entry);
+        if (status != SWITCH_STATUS_SUCCESS) {
+            return status;
+        }
 
         status = switch_pd_urpf_add_entry(device, handle_to_id(vrf),
                                      ip_addr, handle_to_id(nhop_handle),
@@ -377,17 +402,28 @@ switch_api_l3_route_delete(switch_device_t device, switch_handle_t vrf,
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
     switch_l3_hash_t                  *hash_entry = NULL;
     
+    if (!SWITCH_VRF_HANDLE_VALID(vrf)) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
+
+    UNUSED(nhop_handle);
     hash_entry = switch_l3_search_hash(vrf, ip_addr);
     if (!hash_entry) {
         return SWITCH_STATUS_ITEM_NOT_FOUND;
     }
 #ifdef SWITCH_PD
     status = switch_pd_ip_fib_delete_entry(device, ip_addr, hash_entry->hw_entry);
+    if (status != SWITCH_STATUS_SUCCESS) {
+        return status;
+    }
     status = switch_pd_urpf_delete_entry(device, handle_to_id(vrf),
                                     ip_addr,
                                     hash_entry->urpf_entry);
+    if (status != SWITCH_STATUS_SUCCESS) {
+        return status;
+    }
 #endif
-    switch_l3_delete_hash(vrf, ip_addr);
+    status = switch_l3_delete_hash(vrf, ip_addr);
     return status;
 }
 

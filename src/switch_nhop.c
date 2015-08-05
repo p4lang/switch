@@ -20,9 +20,9 @@ limitations under the License.
 #include "switchapi/switch_rmac.h"
 #include "switchapi/switch_status.h"
 #include "switchapi/switch_nhop.h"
+#include "switchapi/switch_utils.h"
 #include "switch_nhop_int.h"
 #include "switch_pd.h"
-#include "switch_utils.h"
 #include "switch_log.h"
 
 #ifdef __cplusplus
@@ -38,7 +38,7 @@ switch_status_t
 switch_nhop_init(switch_device_t device)
 {
     switch_nhop_array = NULL;
-    ecmp_select = switch_api_id_allocator_new(64 * 1024/ 32);
+    ecmp_select = switch_api_id_allocator_new(64 * 1024/ 32, FALSE);
     switch_handle_type_init(SWITCH_HANDLE_TYPE_NHOP, (16*1024));
     tommy_hashtable_init(&switch_nhop_hash_table, SWITCH_NHOP_HASH_TABLE_SIZE);
     switch_nhop_create();
@@ -171,9 +171,13 @@ switch_api_neighbor_handle_get(switch_handle_t nhop_handle)
     switch_nhop_info_t                *nhop_info = NULL;
     switch_spath_info_t               *spath_info = NULL;
 
+    if (!SWITCH_NHOP_HANDLE_VALID(nhop_handle)) {
+        return SWITCH_API_INVALID_HANDLE;
+    }
+
     nhop_info = switch_nhop_get(nhop_handle);
     if (!nhop_info) {
-        return SWITCH_STATUS_INVALID_NHOP;
+        return SWITCH_API_INVALID_HANDLE;
     }
     spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
     return spath_info->neighbor_handle;
@@ -189,18 +193,29 @@ switch_api_nhop_create(switch_device_t device, switch_nhop_key_t *nhop_key)
     switch_interface_info_t           *encap_intf_info = NULL;
     switch_spath_info_t               *spath_info = NULL;
     switch_ifindex_t                   ifindex = 0;
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+
+    if (!SWITCH_INTERFACE_HANDLE_VALID(nhop_key->intf_handle)) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
 
     intf_info = switch_api_interface_get(nhop_key->intf_handle);
     if (!intf_info) {
-        return SWITCH_STATUS_INVALID_INTERFACE;
+        return SWITCH_API_INVALID_HANDLE;
     }
 
-    nhop_handle = switch_nhop_create();
+    if((nhop_handle = switch_api_nhop_handle_get(nhop_key)) == SWITCH_API_INVALID_HANDLE) {
+        nhop_handle = switch_nhop_create();
+    }
     nhop_info = switch_nhop_get(nhop_handle);
+    if (!nhop_info) {
+        return SWITCH_API_INVALID_HANDLE;
+    }
     nhop_info->type = SWITCH_NHOP_INDEX_TYPE_ONE_PATH;
     spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
     spath_info->nhop_key.intf_handle = nhop_key->intf_handle;
     intf_info->nhop_handle = nhop_handle;
+    nhop_info->valid = 1;
 
     ifindex = intf_info->ifindex;
     if (SWITCH_INTF_TYPE(intf_info) == SWITCH_API_INTERFACE_TUNNEL) {
@@ -213,15 +228,22 @@ switch_api_nhop_create(switch_device_t device, switch_nhop_key_t *nhop_key)
         SWITCH_API_TRACE("%s:%d ifindex for tunnel interface: %x",
                          __FUNCTION__, __LINE__, ifindex);
     }
+
 #ifdef SWITCH_PD
-    switch_pd_nexthop_table_add_entry(device,
+    status = switch_pd_nexthop_table_add_entry(device,
                                   handle_to_id(nhop_handle),
-                                  intf_info, &spath_info->hw_entry);
+                                  ifindex, &spath_info->hw_entry);
+    if (status != SWITCH_STATUS_SUCCESS) {
+        return SWITCH_API_INVALID_HANDLE;
+    }
 
     if (SWITCH_INTF_IS_PORT_L3(intf_info) && intf_info->bd_handle) {
-        switch_pd_urpf_bd_table_add_entry(device, handle_to_id(nhop_handle),
+        status = switch_pd_urpf_bd_table_add_entry(device, handle_to_id(nhop_handle),
                                      handle_to_id(intf_info->bd_handle),
                                      &spath_info->urpf_hw_entry);
+        if (status != SWITCH_STATUS_SUCCESS) {
+            return SWITCH_API_INVALID_HANDLE;
+        }
     }
 #endif
     if (nhop_key->ip_addr_valid) {
@@ -236,10 +258,23 @@ switch_api_nhop_delete(switch_device_t device, switch_handle_t nhop_handle)
     switch_nhop_info_t                *nhop_info = NULL;
     switch_interface_info_t           *intf_info = NULL;
     switch_spath_info_t               *spath_info = NULL;
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+
+    if (!SWITCH_NHOP_HANDLE_VALID(nhop_handle)) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
 
     nhop_info = switch_nhop_get(nhop_handle);
     if (!nhop_info) {
         return SWITCH_STATUS_INVALID_HANDLE;
+    }
+
+    if (nhop_info->type != SWITCH_NHOP_INDEX_TYPE_ONE_PATH) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
+
+    if (nhop_info->ref_count) {
+        return SWITCH_STATUS_RESOURCE_IN_USE;
     }
 
     spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
@@ -248,14 +283,23 @@ switch_api_nhop_delete(switch_device_t device, switch_handle_t nhop_handle)
         return SWITCH_STATUS_INVALID_INTERFACE;
     }
 #ifdef SWITCH_PD
-    switch_pd_nexthop_table_delete_entry(device, spath_info->hw_entry);
+    status = switch_pd_nexthop_table_delete_entry(device, spath_info->hw_entry);
+    if (status != SWITCH_STATUS_SUCCESS) {
+        return status;
+    }
+
     if (SWITCH_INTF_IS_PORT_L3(intf_info) && intf_info->bd_handle) {
-        switch_pd_urpf_bd_table_delete_entry(device, spath_info->urpf_hw_entry);
+        status = switch_pd_urpf_bd_table_delete_entry(device, spath_info->urpf_hw_entry);
+        if (status != SWITCH_STATUS_SUCCESS) {
+            return status;
+        }
     }
 #endif
     switch_nhop_delete_hash(spath_info);
-    switch_nhop_delete(nhop_handle);
-    UNUSED(nhop_info);
+    nhop_info->valid = 0;
+    if (nhop_info->u.spath.neighbor_handle == 0) {
+        switch_nhop_delete(nhop_handle);
+    }
     return SWITCH_STATUS_SUCCESS;
 }
 
@@ -265,11 +309,12 @@ switch_api_ecmp_create(switch_device_t device)
     switch_handle_t                    nhop_handle;
     switch_nhop_info_t                *nhop_info = NULL;
     switch_ecmp_info_t                *ecmp_info = NULL;
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
 
     nhop_handle = switch_nhop_create();
     nhop_info = switch_nhop_get(nhop_handle);
     if (!nhop_info) {
-        return 0;
+        return SWITCH_API_INVALID_HANDLE;
     }
     nhop_info->type = SWITCH_NHOP_INDEX_TYPE_ECMP;
     ecmp_info = &(SWITCH_NHOP_ECMP_INFO(nhop_info));
@@ -279,7 +324,10 @@ switch_api_ecmp_create(switch_device_t device)
     tommy_list_init(&(ecmp_info->members));
 
 #ifdef SWITCH_PD
-    switch_pd_ecmp_group_create(device, &(ecmp_info->pd_group_hdl));
+    status = switch_pd_ecmp_group_create(device, &(ecmp_info->pd_group_hdl));
+    if (status != SWITCH_STATUS_SUCCESS) {
+        return SWITCH_API_INVALID_HANDLE;
+    }
 #endif
 
     return nhop_handle;
@@ -297,12 +345,12 @@ switch_api_ecmp_create_with_members(switch_device_t device,
     switch_ecmp_member_t              *ecmp_member = NULL;
     switch_handle_t                    ecmp_handle;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
-    int                                index = 0;
+    uint32_t                           index = 0;
 
     ecmp_handle = switch_api_ecmp_create(device);
     nhop_info = switch_nhop_get(ecmp_handle);
     if (!nhop_info) {
-        return 0;
+        return SWITCH_API_INVALID_HANDLE;
     }
 
     ecmp_info = &(SWITCH_NHOP_ECMP_INFO(nhop_info));
@@ -310,40 +358,52 @@ switch_api_ecmp_create_with_members(switch_device_t device,
 
 #ifdef SWITCH_PD
     status = switch_pd_ecmp_group_create(device, &(ecmp_info->pd_group_hdl));
+    if (status != SWITCH_STATUS_SUCCESS) {
+        return SWITCH_API_INVALID_HANDLE;
+    }
 #endif
 
     for (index = 0; index < member_count; index++) {
+        if (!SWITCH_NHOP_HANDLE_VALID(nhop_handle[index])) {
+            return SWITCH_STATUS_INVALID_HANDLE;
+        }
+
         ecmp_member = switch_malloc(sizeof(switch_ecmp_member_t), 1);
         if (!ecmp_member) {
             // TODO: Cleanup memory
-            return 0;
+            return SWITCH_API_INVALID_HANDLE;
         }
-
         ecmp_member->nhop_handle = nhop_handle[index];
         ecmp_member->mbr_hdl = 0;
 
         nhop_info = switch_nhop_get(ecmp_member->nhop_handle);
         if (!nhop_info) {
-            return SWITCH_STATUS_INVALID_NHOP;
+            return SWITCH_API_INVALID_HANDLE;
         }
 
         spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
         intf_info = switch_api_interface_get(spath_info->nhop_key.intf_handle);
         if (!intf_info) {
-            return SWITCH_STATUS_INVALID_INTERFACE;
+            return SWITCH_API_INVALID_HANDLE;
         }
+        nhop_info->ref_count++;
 
 #ifdef SWITCH_PD
         status = switch_pd_ecmp_member_add(device, ecmp_info->pd_group_hdl, 
                     handle_to_id(ecmp_member->nhop_handle), intf_info,
                     &(ecmp_member->mbr_hdl));
+        if (status != SWITCH_STATUS_SUCCESS) {
+            return SWITCH_API_INVALID_HANDLE;
+        }
 
         if (SWITCH_INTF_IS_PORT_L3(intf_info) && intf_info->bd_handle) {
             status = switch_pd_urpf_bd_table_add_entry(device, handle_to_id(ecmp_handle),
                                                   handle_to_id(intf_info->bd_handle),
                                                   &(ecmp_member->urpf_hw_entry));
-    }
-
+            if (status != SWITCH_STATUS_SUCCESS) {
+                return SWITCH_API_INVALID_HANDLE;
+            }
+        }
 #endif
         tommy_list_insert_head(&ecmp_info->members, &(ecmp_member->node), ecmp_member);
     }
@@ -351,10 +411,13 @@ switch_api_ecmp_create_with_members(switch_device_t device,
 #ifdef SWITCH_PD
     status = switch_pd_ecmp_group_table_add_entry_with_selector(device, handle_to_id(ecmp_handle), 
                     ecmp_info->pd_group_hdl, &(ecmp_info->hw_entry));
+    if (status != SWITCH_STATUS_SUCCESS) {
+        return SWITCH_API_INVALID_HANDLE;
+    }
 #endif
     ecmp_info->count = member_count;
     if (status != SWITCH_STATUS_SUCCESS) {
-        return 0;
+        return SWITCH_API_INVALID_HANDLE;
     }
     return ecmp_handle;
 }
@@ -364,16 +427,40 @@ switch_api_ecmp_delete(switch_device_t device, switch_handle_t handle)
 {
     switch_nhop_info_t                *nhop_info = NULL;
     switch_ecmp_info_t                *ecmp_info = NULL;
+    tommy_node                        *node = NULL;
+    switch_ecmp_member_t              *ecmp_member = NULL;
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+
+    if (!SWITCH_NHOP_HANDLE_VALID(handle)) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
 
     nhop_info = switch_nhop_get(handle);
     if (!nhop_info) {
         return SWITCH_STATUS_INVALID_NHOP;
     }
-    ecmp_info = &(SWITCH_NHOP_ECMP_INFO(nhop_info));
+    if (nhop_info->type != SWITCH_NHOP_INDEX_TYPE_ONE_PATH) {
+        ecmp_info = &(SWITCH_NHOP_ECMP_INFO(nhop_info));
+        if (ecmp_info->count > 0) {
+            node = tommy_list_head(&(ecmp_info->members));
+            while (node) {
+                ecmp_member = (switch_ecmp_member_t *) node->data;
+                nhop_info = switch_nhop_get(ecmp_member->nhop_handle);
+                if (!nhop_info) {
+                    return SWITCH_STATUS_INVALID_NHOP;
+                }
+                nhop_info->ref_count--;
+                node = node->next;
+            }
+        }
 #ifdef SWITCH_PD
-    switch_pd_ecmp_group_delete(device, ecmp_info->pd_group_hdl);
+        status = switch_pd_ecmp_group_delete(device, ecmp_info->pd_group_hdl);
+        if (status != SWITCH_STATUS_SUCCESS) {
+            return status;
+        }
 #endif
-    return switch_api_nhop_delete(device, handle);
+    }
+    return switch_nhop_delete(handle);
 }
 
 switch_status_t
@@ -390,6 +477,9 @@ switch_api_ecmp_member_add(switch_device_t device, switch_handle_t ecmp_handle,
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
     int                                count = 0;
 
+    if (!SWITCH_NHOP_HANDLE_VALID(ecmp_handle)) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
 
     e_nhop_info = switch_nhop_get(ecmp_handle);
     if (!e_nhop_info) {
@@ -399,6 +489,9 @@ switch_api_ecmp_member_add(switch_device_t device, switch_handle_t ecmp_handle,
 
     for (count = 0; count < nhop_count; count++) {
         nhop_handle = nhop_handle_list[count];
+        if (!SWITCH_NHOP_HANDLE_VALID(nhop_handle)) {
+            return SWITCH_STATUS_INVALID_HANDLE;
+        }
         nhop_info = switch_nhop_get(nhop_handle);
         if (!nhop_info) {
             return SWITCH_STATUS_INVALID_NHOP;
@@ -415,20 +508,30 @@ switch_api_ecmp_member_add(switch_device_t device, switch_handle_t ecmp_handle,
             return SWITCH_STATUS_INVALID_INTERFACE;
         }
 
+        nhop_info->ref_count++;
 #ifdef SWITCH_PD
         status = switch_pd_ecmp_member_add(device, ecmp_info->pd_group_hdl, 
                     handle_to_id(ecmp_member->nhop_handle), intf_info,
                     &(ecmp_member->mbr_hdl));
+        if (status != SWITCH_STATUS_SUCCESS) {
+            return status;
+        }
         if (ecmp_info->count == 0) {
-            switch_pd_ecmp_group_table_add_entry_with_selector(device, 
+            status = switch_pd_ecmp_group_table_add_entry_with_selector(device, 
                     handle_to_id(ecmp_handle),
                     ecmp_info->pd_group_hdl, 
                     &(ecmp_info->hw_entry)); 
+            if (status != SWITCH_STATUS_SUCCESS) {
+                return status;
+            }
         }
         if (SWITCH_INTF_IS_PORT_L3(intf_info) && intf_info->bd_handle) {
-            switch_pd_urpf_bd_table_add_entry(device, handle_to_id(ecmp_handle),
+            status = switch_pd_urpf_bd_table_add_entry(device, handle_to_id(ecmp_handle),
                                      handle_to_id(intf_info->bd_handle),
                                      &(ecmp_member->urpf_hw_entry));
+            if (status != SWITCH_STATUS_SUCCESS) {
+                return status;
+            }
         }
 #endif
         ecmp_info->count++;
@@ -452,12 +555,19 @@ switch_api_ecmp_member_delete(switch_device_t device, switch_handle_t ecmp_handl
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
     int                                count = 0;
 
+    if (!SWITCH_NHOP_HANDLE_VALID(ecmp_handle)) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
+
     e_nhop_info = switch_nhop_get(ecmp_handle);
     if (!e_nhop_info) {
         return SWITCH_STATUS_INVALID_NHOP;
     }
     for (count = 0; count < nhop_count; count++) {
         nhop_handle = nhop_handle_list[count];
+        if (!SWITCH_NHOP_HANDLE_VALID(nhop_handle)) {
+            return SWITCH_STATUS_INVALID_HANDLE;
+        }
         nhop_info = switch_nhop_get(nhop_handle);
         if (!nhop_info) {
             return SWITCH_STATUS_INVALID_NHOP;
@@ -481,14 +591,24 @@ switch_api_ecmp_member_delete(switch_device_t device, switch_handle_t ecmp_handl
             return SWITCH_STATUS_INVALID_INTERFACE;
         }
 
+        nhop_info->ref_count--;
 #if SWITCH_PD
         if (ecmp_info->count == 1) {
             status = switch_pd_ecmp_group_table_delete_entry(device, ecmp_info->hw_entry);
+            if (status != SWITCH_STATUS_SUCCESS) {
+                return status;
+            }
         }
         status = switch_pd_ecmp_member_delete(device, ecmp_info->pd_group_hdl, 
                                               ecmp_member->mbr_hdl);
+        if (status != SWITCH_STATUS_SUCCESS) {
+            return status;
+        }
         if (SWITCH_INTF_IS_PORT_L3(intf_info) && intf_info->bd_handle) {
             status = switch_pd_urpf_bd_table_delete_entry(device, ecmp_member->urpf_hw_entry);
+            if (status != SWITCH_STATUS_SUCCESS) {
+                return status;
+            }
         }
 #endif
         ecmp_info->count--;
@@ -496,6 +616,22 @@ switch_api_ecmp_member_delete(switch_device_t device, switch_handle_t ecmp_handl
         switch_free(ecmp_member);
     }
     return status;
+}
+
+switch_nhop_index_type_t
+switch_api_nhop_type_get(switch_handle_t nhop_handle)
+{
+    switch_nhop_info_t                *nhop_info = NULL;
+
+    if (!SWITCH_NHOP_HANDLE_VALID(nhop_handle)) {
+        return SWITCH_NHOP_INDEX_TYPE_NONE;
+    }
+
+    nhop_info = switch_nhop_get(nhop_handle);
+    if (!nhop_info) {
+        return SWITCH_NHOP_INDEX_TYPE_NONE;
+    }
+    return nhop_info->type;
 }
 
 switch_status_t

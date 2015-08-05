@@ -22,12 +22,12 @@ limitations under the License.
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-    
+
 /** @defgroup ACL ACL API
  *  API functions define and manipulate Access lists
  *  @{
  */ // begin of ACL API
-    
+
 /** ACL Types */
 typedef enum switch_acl_type_ {
     SWITCH_ACL_TYPE_IP,             /**< IPv4 ACL */
@@ -39,6 +39,7 @@ typedef enum switch_acl_type_ {
     SWITCH_ACL_TYPE_EGRESS_SYSTEM,  /**< Egress System ACL */
     SWITCH_ACL_TYPE_IP_RACL,        /**< IPv4 Route ACL */
     SWITCH_ACL_TYPE_IPV6_RACL,      /**< IPv6 Route ACL */
+    SWITCH_ACL_TYPE_EGR_PORT,       /**< Egress Port ACL */
     SWITCH_ACL_TYPE_MAX
 } switch_acl_type_t;
 
@@ -156,12 +157,14 @@ typedef enum switch_acl_action_ {
     SWITCH_ACL_ACTION_REDIRECT,             /**< Redirect packet to new destination */
     SWITCH_ACL_ACTION_REDIRECT_TO_CPU,      /**< Redirect packet to CPU */
     SWITCH_ACL_ACTION_COPY_TO_CPU,          /**< Send Copy of packet to CPU */
-    SWITCH_ACL_ACTION_FLOOD_TO_VLAN,        /**< Flood to all members of BD */
+    SWITCH_ACL_ACTION_NEGATIVE_MIRROR,      /**< Negative mirror to defined target */
     SWITCH_ACL_ACTION_SET_NATMODE,          /**< Set NAT mode */
     SWITCH_ACL_ACTION_SET_MIRROR,           /**< Set mirror session */
     SWITCH_ACL_QOS_ACTION_COS,              /**< Set Class of Service */
     SWITCH_ACL_QOS_ACTION_DSCP,             /**< Set the DSCP */
     SWITCH_ACL_QOS_ACTION_TC,               /**< Set the traffic class */
+    SWITCH_ACL_ACTION_FLOOD_TO_VLAN,        /**< Flood to all members of BD */
+    SWITCH_ACL_ACTION_DOD_EN,               /**< Allow deflect-on-drop  */
 
     SWITCH_ACL_ACTION_MAX
 } switch_acl_action_t;
@@ -372,6 +375,7 @@ typedef enum switch_acl_system_field_ {
     SWITCH_ACL_SYSTEM_FIELD_STP_STATE,              /**< STP state */
     SWITCH_ACL_SYSTEM_FIELD_CONTROL_FRAME,          /**< Control frame */
     SWITCH_ACL_SYSTEM_FIELD_IPV4_ENABLED,           /**< IPv4 enabled on BD */
+    SWITCH_ACL_SYSTEM_FIELD_RMAC_HIT,               /**< Rmac hit */
 
     SWITCH_ACL_SYSTEM_FIELD_MAX
 } switch_acl_system_field_t;
@@ -385,8 +389,8 @@ typedef union switch_acl_system_value_ {
     unsigned int ipv4_dest;                           /**< v4 destination IP */
     unsigned short ip_proto;                          /**< protocol */
     unsigned short eth_type;                          /**< ethernet type */
-    switch_mac_addr_t source_mac;                         /**< source mac */
-    switch_mac_addr_t dest_mac;                           /**< destination mac */
+    switch_mac_addr_t source_mac;                     /**< source mac */
+    switch_mac_addr_t dest_mac;                       /**< destination mac */
     unsigned ipsg_check :1,                           /**< ip sourceguard check */
              acl_deny:1,                              /**< acl deny */
              racl_deny:1,                             /**< racl deny */
@@ -398,10 +402,12 @@ typedef union switch_acl_system_value_ {
              l2_miss:1,                               /**< mac table miss */
              l2_move:10,                              /**< mac move */
              control_frame:1,                         /**< control frame */
-             ipv4_enabled:1;                          /**< IPv4 enabled on BD */
+             ipv4_enabled:1,                          /**< IPv4 enabled on BD */
+             rmac_hit:1;                              /**< rmac hit */
     unsigned char ttl;                                /**< time to live */
     unsigned short out_port;                          /**< egress port */
     unsigned char stp_state;                          /**< spanning tree port state */
+    unsigned short egr_port;                          /**< egress port */
 } switch_acl_system_value;
 
 /** Acl system mask */
@@ -426,24 +432,58 @@ typedef union switch_acl_action_params_ {
         unsigned int clone_spec, drop_reason;         /**< mirror acl actions parameters */
     } mirror;                                         /**< mirror acl struct */
     struct {
-        unsigned int sup_code;                        /**< sup reason code */
-    } sup_redirect;                                   /**< sup redirect struct */
-    struct {
         switch_handle_t handle;                       /**< port/nexthop handle */
-    } redirect;
+    } redirect;                                       /**< port redirect struct */
+    struct {
+        uint16_t reason_code;                         /**< cpu reason code */
+    } cpu_redirect;                                   /**< cpu redirect struct */
 } switch_acl_action_params_t;
+
+/** Egress port ACL */
+typedef enum switch_acl_egr_port_field_ {
+    SWITCH_ACL_EGR_PORT_DEST_PORT,
+    SWITCH_ACL_EGR_DEFLECT,
+    SWITCH_ACL_EGR_PORT_FIELD_MAX
+} switch_acl_egr_port_field_t;
+
+/** Egress port value */
+typedef union switch_acl_egr_port_value_ {
+    unsigned short egr_port;                         /**< egress port */
+    bool           deflection_flag;                  /**< deflection flag */
+} switch_acl_egr_port_value;
+
+/** Egress acl port mask */
+typedef union switch_acl_egr_port_mask_ {
+    unsigned type:1;                                  /**< acl mask type */
+    union {
+        uint32_t mask;                                /**< mask value */
+        unsigned int start, end;                      /**< mask range */
+    } u;                                              /**< ip mask union */
+} switch_acl_egr_port_mask;
+
+/** Egress acl key value pair */
+typedef struct switch_acl_egr_port_key_value_pair_ {
+    switch_acl_egr_port_field_t field;               /**< acl ip field type */
+    switch_acl_egr_port_value value;                 /**< acl ip field value */
+    switch_acl_egr_port_mask mask;                   /**< acl ip field mask */
+} switch_acl_egr_port_key_value_pair_t;
+
+/** Egress acl port action */
+typedef enum switch_acl_egr_port_action_ {
+    SWITCH_ACL_EGR_PORT_ACTION_NOP,                  /**< Do nothing action */
+    SWITCH_ACL_EGR_PORT_ACTION_SET_MIRROR,           /**< Set mirror session */
+} switch_acl_egr_port_action_t;
 
 typedef switch_acl_action_t switch_acl_ip_action_t;   /**< acl action */
 typedef switch_acl_action_t switch_acl_ipv6_action_t; /**< IPv6 acl action */
 typedef switch_acl_action_t switch_acl_mac_action_t;  /**< mac acl action */
 typedef switch_acl_action_t switch_acl_system_action_t;/**< system acl action */
 
-
 /** Acl info struct */
 typedef struct switch_acl_info_ {
-    switch_acl_type_t type;
-    void *rules; // judy array sorted with priority
-    tommy_list  interface_list;
+    switch_acl_type_t type;                           /**< acl type */
+    void *rules;                                      /**< set of rules */
+    tommy_list  interface_list;                       /**< list of interface handles */
 } switch_acl_info_t;
 
 /**
@@ -475,7 +515,7 @@ switch_status_t switch_api_acl_rule_create(switch_device_t device, switch_handle
                         unsigned int priority, unsigned int key_value_count,
                         void *acl_kvp, switch_acl_action_t action,
                         switch_acl_action_params_t *action_params,
-                        switch_handle_t *ace);
+                        switch_handle_t *ace_handle);
 
 /**
  Delete ACL Rules

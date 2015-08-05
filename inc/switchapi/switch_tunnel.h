@@ -26,14 +26,14 @@ extern "C" {
 #endif /* __cplusplus */
 
 /** @defgroup Tunnel Tunnel API
- *  API functions create host interfaces
+ *  API functions create tunnel interfaces
  *  @{
  */ // begin of Tunnel API
 
 /** Tunnel encap mode */
 typedef enum switch_encap_mode_ {
-    SWITCH_API_TUNNEL_ENCAP_MODE_IP,            /**< IP encapsulation */
-    SWITCH_API_TUNNEL_ENCAP_MODE_MPLS           /**< MPLS encapsulation */
+    SWITCH_API_TUNNEL_ENCAP_MODE_IP,
+    SWITCH_API_TUNNEL_ENCAP_MODE_MPLS
 } switch_encap_mode_t;
 
 /** Tunnel information */
@@ -46,9 +46,9 @@ typedef struct switch_tunnel_info_ {
     } u;                                         /**< tunnel encap union */
     switch_handle_t out_if;                      /**< Underlying interface */
     struct {
-        bool core_intf:1;                    /**< core interface */
-        bool flood_enabled:1;                /**< flooding enabled */
-    } flags;                                 /**< tunnel flags */
+        bool core_intf:1;                        /**< core interface */
+        bool flood_enabled:1;                    /**< flooding enabled */
+    } flags;                                     /**< tunnel flags */
 } switch_tunnel_info_t;
 
 /** Tunnel Egress type */
@@ -60,6 +60,8 @@ typedef enum switch_tunnel_type_egress_ {
     SWITCH_EGRESS_TUNNEL_TYPE_IPV6_GENEVE    = 4,
     SWITCH_EGRESS_TUNNEL_TYPE_IPV4_NVGRE     = 5,
     SWITCH_EGRESS_TUNNEL_TYPE_IPV6_NVGRE     = 6,
+    SWITCH_EGRESS_TUNNEL_TYPE_IPV4_ERSPAN_T3 = 7,
+    SWITCH_EGRESS_TUNNEL_TYPE_IPV6_ERSPAN_T3 = 8,
     SWITCH_EGRESS_TUNNEL_TYPE_MPLS_L2VPN     = 13,
     SWITCH_EGRESS_TUNNEL_TYPE_MPLS_L3VPN     = 14,
     SWITCH_EGRESS_TUNNEL_TYPE_FABRIC         = 15,

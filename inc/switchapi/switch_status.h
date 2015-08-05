@@ -149,24 +149,34 @@ extern "C" {
 #define SWITCH_STATUS_INVALID_HANDLE                           0x000000018L
 
 /*
+*  RESOURCE is in use
+*/
+#define SWITCH_STATUS_RESOURCE_IN_USE                          0x00000019L
+
+/*
  * Invalid LN type
  */
-#define SWITCH_STATUS_INVALID_LN_TYPE                          0x000000019L
+#define SWITCH_STATUS_INVALID_LN_TYPE                          0x00000001AL
 
 /*
  * Invalid encap type
  */
-#define SWITCH_STATUS_INVALID_ENCAP_TYPE                       0x00000001AL
+#define SWITCH_STATUS_INVALID_ENCAP_TYPE                       0x00000001BL
 
 /*
  * Unsupported type
  */
-#define SWITCH_STATUS_UNSUPPORTED_TYPE                         0x00000001BL
+#define SWITCH_STATUS_UNSUPPORTED_TYPE                         0x00000001CL
 
 /*
- *
+ * pd failure
  */
-#define SWITCH_STATUS_PD_FAILURE                               0x00000001CL
+#define SWITCH_STATUS_PD_FAILURE                               0x00000001DL
+
+/*
+ * invalid device id
+ */
+#define SWITCH_STATUS_INVALID_DEVICE                           0x00000001EL
 
 #ifdef __cplusplus
 }

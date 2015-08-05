@@ -62,6 +62,7 @@ typedef struct switch_spath_info_
 typedef struct switch_nhop_info_
 {
     unsigned int ref_count;
+    bool valid;
     switch_nhop_index_type_t type;
     union {
         switch_spath_info_t spath;

@@ -20,6 +20,8 @@ limitations under the License.
 #include "switch_port_int.h"
 
 static switch_port_info_t switch_port_info[SWITCH_API_MAX_PORTS];
+static switch_port_info_t null_port_info;
+static switch_port_info_t dummy_port_info;
 
 switch_status_t
 switch_port_init(switch_device_t device)
@@ -55,6 +57,13 @@ switch_port_init(switch_device_t device)
         port_info->port_handle = id_to_handle(SWITCH_HANDLE_TYPE_PORT, index);
 #endif
     }
+    memset(&dummy_port_info, 0, sizeof(dummy_port_info));
+    dummy_port_info.port_type = SWITCH_PORT_TYPE_NORMAL;
+
+    memset(&null_port_info, 0, sizeof(null_port_info));
+    null_port_info.ifindex =  NULL_PORT_ID;
+    null_port_info.port_type = SWITCH_PORT_TYPE_NORMAL;
+
     return SWITCH_STATUS_SUCCESS;
 }
 
@@ -62,16 +71,27 @@ switch_port_info_t *
 switch_api_port_get_internal(switch_port_t port)
 {
     port = handle_to_id(port);
-    return &switch_port_info[port];
+    if(port < SWITCH_API_MAX_PORTS)
+        return &switch_port_info[port];
+    else if(port == NULL_PORT_ID) {
+        return &null_port_info;
+    }
+    else {
+        return &dummy_port_info;
+    }
 }
 
 switch_status_t
 switch_api_port_set(switch_device_t device, switch_api_port_info_t *api_port_info)
 {
     switch_port_info_t *port_info = switch_api_port_get_internal(api_port_info->port_number);
-    // blindly overwrite the values - may need to get a modify later!
-    memcpy(&(port_info->api_port_info), api_port_info, sizeof(switch_api_port_info_t));
-    return SWITCH_STATUS_SUCCESS;
+    UNUSED(device);
+    if(port_info) {
+        // blindly overwrite the values - may need to get a modify later!
+        memcpy(&(port_info->api_port_info), api_port_info, sizeof(switch_api_port_info_t));
+        return SWITCH_STATUS_SUCCESS;
+    }
+    return SWITCH_STATUS_FAILURE;
 }
 
 switch_status_t
@@ -79,8 +99,11 @@ switch_api_port_delete(switch_device_t device, uint16_t port_number)
 {
     switch_status_t status = SWITCH_STATUS_SUCCESS;
     switch_port_info_t *port_info = switch_api_port_get_internal(port_number);
-    status = switch_pd_lag_group_table_delete_entry(device, port_info->hw_entry);
-    return status;
+    if(port_info) {
+        status = switch_pd_lag_group_table_delete_entry(device, port_info->hw_entry);
+        return status;
+    }
+    return SWITCH_STATUS_FAILURE;
 }
 
 switch_status_t

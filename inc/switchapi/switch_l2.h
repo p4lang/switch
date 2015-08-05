@@ -142,31 +142,39 @@ switch_status_t switch_api_mac_table_entry_delete(switch_device_t device,
  to be deleted
  @param mac_entry_count - Number of mac entries to be deleted
  */
-switch_status_t switch_api_mac_table_entries_delete(switch_device_t device, uint16_t mac_entry_count,
-                                      switch_api_mac_entry_t *mac_entries);
+switch_status_t switch_api_mac_table_entries_delete(switch_device_t device,
+                                                    uint16_t mac_entry_count,
+                                                    switch_api_mac_entry_t *mac_entries);
 /**
   Delete all Destination MAC entries from FDB.
+ @param device - device
 */
-switch_status_t switch_api_mac_table_entries_delete_all(void);
+switch_status_t switch_api_mac_table_entries_delete_all(switch_device_t device);
 
 /**
  Delete all MACs on a given outgoing intf
+ @param device - device
  @param interface_handle outgoing interface handle
 */
-switch_status_t switch_api_mac_table_entries_delete_by_interface(switch_handle_t interface_handle);
+switch_status_t switch_api_mac_table_entries_delete_by_interface(switch_device_t device,
+                                                                 switch_handle_t interface_handle);
 
 /**
  Delete all MACs on a selected VLAN
+ @param device - device
  @param vlan_handle idenifes the VLAN (domain)
 */
-switch_status_t switch_api_mac_table_entries_delete_by_vlan(switch_handle_t vlan_handle);
+switch_status_t switch_api_mac_table_entries_delete_by_vlan(switch_device_t device,
+                                                            switch_handle_t vlan_handle);
 
 /**
  Delete all MACs on a selected VLAN + Interface
- @param interface_handle idenfies the interface
+ @param device - device
+ @param handle idenfies the interface/port/lag
  @param vlan_handle idenifes the VLAN (domain)
 */
-switch_status_t switch_api_mac_table_entries_delete_by_interface_vlan(switch_handle_t interface_handle,
+switch_status_t switch_api_mac_table_entries_delete_by_interface_vlan(switch_device_t device,
+                                                                      switch_handle_t handle,
                                                                       switch_handle_t vlan_handle);
 
 /**

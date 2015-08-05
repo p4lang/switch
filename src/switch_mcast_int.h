@@ -75,30 +75,29 @@ typedef uint8_t switch_mc_lag_map_t[SWITCH_LAG_ARRAY_SIZE];
     (*_lag_pm)[_lag_i] |= (1 << _lag_j);                                 \
   } while (0);
 
-typedef enum switch_l1_node_type_ {
+typedef enum switch_mcast_node_type_ {
     SWITCH_NODE_TYPE_SINGLE = 1,
-} switch_l1_node_type_t;
+} switch_mcast_node_type_t;
 
-typedef struct switch_l1_info_ {
-    mc_l1_node_hdl_t l1_hdl;
-    mc_l2_node_hdl_t l2_hdl;
+typedef struct switch_mcast_node_info_ {
+    mc_node_hdl_t hw_entry;
     switch_rid_t rid;
     switch_mc_port_map_t port_map;
     switch_mc_lag_map_t lag_map;
     p4_pd_entry_hdl_t rid_hw_entry;
-} switch_l1_info_t;
+} switch_mcast_node_info_t;
 
-typedef struct switch_mcast_l1_node_ {
+typedef struct switch_mcast_node_ {
     tommy_node node;
-    switch_l1_node_type_t node_type;
+    switch_mcast_node_type_t node_type;
     union {
-        switch_l1_info_t l1_info;
+        switch_mcast_node_info_t node_info;
     } u;
-} switch_mcast_l1_node_t;
+} switch_mcast_node_t;
 
 typedef struct switch_mcast_info_ {
     mc_mgrp_hdl_t mgrp_hdl;
-    tommy_list l1_list;
+    tommy_list node_list;
 } switch_mcast_info_t;
 
 typedef struct switch_mcast_rid_key_ {
@@ -113,37 +112,29 @@ typedef struct switch_mcast_rid_ {
     tommy_hashtable_node node;
 } switch_mcast_rid_t;
 
-#define SWITCH_MCAST_L2_LAG_MAP(l1_node) \
-    l1_node->u.l1_info.lag_map
+#define SWITCH_MCAST_NODE_RID(node) \
+    node->u.node_info.rid
 
-#define SWITCH_MCAST_L2_PORT_MAP(l1_node) \
-    l1_node->u.l1_info.port_map
+#define SWITCH_MCAST_NODE_RID_HW_ENTRY(node) \
+    node->u.node_info.rid_hw_entry
 
-#define SWITCH_MCAST_L1_RID(l1_node) \
-    l1_node->u.l1_info.rid
+#define SWITCH_MCAST_NODE_INFO_HW_ENTRY(node) \
+    node->u.node_info.hw_entry
 
-#define SWITCH_MCAST_L1_RID_HW_ENTRY(l1_node) \
-    l1_node->u.l1_info.rid_hw_entry
+#define SWITCH_MCAST_NODE_INFO_PORT_MAP(node) \
+    node->u.node_info.port_map
 
-#define SWITCH_MCAST_L1_INFO_L1_HDL(l1_node) \
-    l1_node->u.l1_info.l1_hdl
+#define SWITCH_MCAST_NODE_INFO_LAG_MAP(node) \
+    node->u.node_info.lag_map
 
-#define SWITCH_MCAST_L1_INFO_L2_HDL(l1) \
-    l1_node->u.l1_info.l2_hdl
-
-#define SWITCH_MCAST_L1_INFO_PORT_MAP(l1_node) \
-    l1_node->u.l1_info.port_map
-
-#define SWITCH_MCAST_L1_INFO_LAG_MAP(l1_node) \
-    l1_node->u.l1_info.lag_map
 
 /* MCAST Internal API's */
 switch_status_t switch_mcast_init(switch_device_t device);
 switch_status_t switch_mcast_free(switch_device_t device);
 uint16_t switch_mcast_rid_allocate();
 void switch_mcast_rid_free(uint16_t rid);
-switch_handle_t switch_api_mcast_index_allocate();
-switch_status_t switch_api_mcast_index_delete(switch_handle_t mgid_handle);
+switch_handle_t switch_api_mcast_index_allocate(switch_device_t device);
+switch_status_t switch_api_mcast_index_delete(switch_device_t device, switch_handle_t mgid_handle);
 switch_mcast_info_t * switch_mcast_tree_get(switch_handle_t mgid_handle);
 switch_status_t switch_multicast_update_lag_port_map(switch_device_t device, switch_handle_t lag_handle);
 

@@ -14,12 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#ifndef _switch_sup_int_h_
-#define _switch_sup_int_h_
+#ifndef _switch_hostif_int_h_
+#define _switch_hostif_int_h_
 
 #include "switchapi/switch_base_types.h"
 #include "switchapi/switch_handle.h"
-#include "switchapi/switch_sup.h"
+#include "switchapi/switch_hostif.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,15 +28,15 @@ extern "C" {
 #define SWITCH_PACKET_HEADER_OFFSET 12
 #define SWITCH_FABRIC_HEADER_ETHTYPE 0x9000
 
-typedef struct switch_sup_info_ {
+typedef struct switch_hostif_rcode_info_ {
     switch_handle_t acl_handle;
-    switch_sup_code_info_t sup_code_info;
-} switch_sup_info_t;
+    switch_api_hostif_rcode_info_t rcode_api_info;
+} switch_hostif_rcode_info_t;
 
-typedef struct switch_sup_interface_info_ {
-    switch_sup_interface_t sup_interface;
+typedef struct switch_hostif_info_ {
+    switch_hostif_t hostif;
     int intf_fd;
-} switch_sup_interface_info_t;
+} switch_hostif_info_t;
 
 typedef enum switch_fabric_header_type_ {
     SWITCH_FABRIC_HEADER_TYPE_NONE = 0,
@@ -65,7 +65,8 @@ typedef struct __attribute__((__packed__)) switch_cpu_header_ {
     uint16_t reserved : 2;
     uint16_t tx_bypass : 1;
     uint16_t egress_queue : 5;
-    uint32_t sup_code;
+    uint16_t ingress_port;
+    uint16_t reason_code;
 } switch_cpu_header_t;
 
 typedef struct __attribute__((__packed__)) switch_packet_header_ {
@@ -73,20 +74,29 @@ typedef struct __attribute__((__packed__)) switch_packet_header_ {
     switch_cpu_header_t cpu_header;
 } switch_packet_header_t;
 
+typedef struct switch_hostif_nhop_ {
+    switch_handle_t intf_handle;
+    switch_handle_t nhop_handle;
+    switch_ifindex_t ifindex;
+} switch_hostif_nhop_t;
+
+#define SWITCH_HOSTIF_COMPUTE_IFINDEX(index) \
+    (1 << SWITCH_IFINDEX_TYPE_CPU) | index
+
 /*
  * Internal API's
  */
-switch_status_t switch_sup_init(switch_device_t device);
-switch_status_t switch_sup_free(switch_device_t device);
+switch_status_t switch_hostif_init(switch_device_t device);
+switch_status_t switch_hostif_free(switch_device_t device);
 switch_status_t switch_packet_init(switch_device_t device);
 switch_status_t
-switch_api_sup_rx_packet_from_hw(switch_packet_header_t *packet_header, char *packet, int packet_size);
+switch_api_hostif_rx_packet_from_hw(switch_packet_header_t *packet_header, char *packet, int packet_size);
 switch_status_t
-switch_api_sup_rx_packet_from_host(switch_sup_interface_info_t *sup_intf_info, char *packet, int packet_size);
-switch_sup_interface_info_t *
-switch_sup_interface_get(switch_handle_t sup_intf_handle);
+switch_api_hostif_rx_packet_from_host(switch_hostif_info_t *hostif_info, char *packet, int packet_size);
+switch_hostif_info_t *
+switch_hostif_get(switch_handle_t hostif_handle);
 void
-switch_packet_tx_to_host(switch_sup_interface_info_t *sup_intf_info, char *packet, int packet_size);
+switch_packet_tx_to_host(switch_hostif_info_t *hostif_info, char *packet, int packet_size);
 switch_status_t
 switch_api_cpu_interface_create(switch_device_t device);
 

@@ -48,7 +48,9 @@ typedef struct switch_interface_info_ {
     switch_handle_t bd_handle;                       /**< L3 Port Implicit BD Handle */
     switch_handle_t ln_bd_handle;                    /**< Logical network BD Handle */
     switch_handle_t nhop_handle;
+    switch_handle_t hostif_handle;
     uint32_t rid;
+    uint16_t smac_idx;
 #ifdef SWITCH_PD
     p4_pd_entry_hdl_t nhop_type_entry;
     p4_pd_entry_hdl_t lag_group_entry;
@@ -119,6 +121,16 @@ typedef struct switch_interface_info_ {
 
 #define SWITCH_INTF_FLOOD_ENABLED(info) \
     info->api_intf_info.flags.flood_enabled
+
+#define SWITCH_INTF_COMPUTE_TUNNEL_IFINDEX(handle)                       \
+    handle_to_id(handle) |                                               \
+    (SWITCH_INTF_TUNNEL_IFINDEX << SWITCH_LOGICAL_IFINDEX_SHIFT)
+
+#define SWITCH_INTF_IS_TUNNEL_IFINDEX(ifindex) \
+    ifindex & (SWITCH_INTF_TUNNEL_IFINDEX << SWITCH_LOGICAL_IFINDEX_SHIFT)
+
+#define SWITCH_INTF_TUNNEL_ID(ifindex) \
+    ifindex & ~(SWITCH_INTF_TUNNEL_IFINDEX << SWITCH_LOGICAL_IFINDEX_SHIFT)
 
 // Internal Interface API's
 switch_interface_info_t *switch_api_interface_get(switch_handle_t handle);

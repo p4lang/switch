@@ -15,4 +15,25 @@ limitations under the License.
 */
 
 #include "p4features.h"
+#include <stdio.h>
+#include <switchapi/switch_base_types.h>
+#include <switchapi/switch_status.h>
 #include "switch_log.h"
+
+char * switch_print_error(switch_status_t status)
+{
+    switch (status) {
+        case SWITCH_STATUS_INVALID_HANDLE:
+            return "err: invalid handle";
+            break;
+        case SWITCH_STATUS_ITEM_NOT_FOUND:
+            return "err: entry not found";
+            break;
+        case SWITCH_STATUS_FAILURE:
+            return "err: general failure";
+            break;
+        default:
+            return "err: unknown failure";
+            break;
+    }
+}

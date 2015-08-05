@@ -24,12 +24,12 @@ extern "C" {
 #endif /* __cplusplus */
     
 switch_api_id_allocator *
-switch_api_id_allocator_new(unsigned int initial_size)
+switch_api_id_allocator_new(unsigned int initial_size, bool zero_based)
 {
     switch_api_id_allocator *allocator = switch_malloc(sizeof(switch_api_id_allocator), 1);
     allocator->n_words = initial_size;
     allocator->data = switch_malloc(sizeof(uint32_t), initial_size);
-    allocator->zero_based = FALSE;
+    allocator->zero_based = zero_based;
     if (allocator->data) {
         memset(allocator->data, 0x0, initial_size*sizeof(uint32_t));
     }
@@ -46,7 +46,7 @@ switch_api_id_allocator_destroy(switch_api_id_allocator *allocator)
 static inline int
 _fit_width( uint32_t val, unsigned width)
 {
-    int                                 offset = 32;
+    unsigned                            offset = 32;
     uint32_t                            mask = 0;
     uint32_t                            b = 0;
         
@@ -150,7 +150,7 @@ int id_main (int argc, char **argv)
 {
     unsigned int i;
     unsigned int iter;
-    switch_api_id_allocator *allocator = switch_api_id_allocator_new (INITIAL_WORDS);
+    switch_api_id_allocator *allocator = switch_api_id_allocator_new (INITIAL_WORDS, FALSE);
         
     for(i=0;i<40;i++)
         switch_api_id_allocator_allocate(allocator);

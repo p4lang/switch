@@ -34,14 +34,16 @@ static switch_api_id_allocator *lag_select;
 switch_status_t
 switch_lag_init(switch_device_t device)
 {
+    UNUSED(device);
     switch_lag_array = NULL;
-    lag_select = switch_api_id_allocator_new(64 * 1024/ 32);
+    lag_select = switch_api_id_allocator_new(64 * 1024/ 32, FALSE);
     return switch_handle_type_init(SWITCH_HANDLE_TYPE_LAG, (1*1024));
 }
     
 switch_status_t
 switch_lag_free(switch_device_t device)
 {
+    UNUSED(device);
     switch_handle_type_free(SWITCH_HANDLE_TYPE_LAG);
     return SWITCH_STATUS_SUCCESS;
 }
@@ -79,8 +81,7 @@ switch_api_lag_create(switch_device_t device)
     lag_handle = switch_lag_handle_create();
     lag_info = switch_api_lag_get_internal(lag_handle);
     if (!lag_info) {
-        // No memory
-        return 0;
+        return SWITCH_API_INVALID_HANDLE;
     }
 
     memset(lag_info, 0, sizeof(switch_lag_info_t));
@@ -92,7 +93,7 @@ switch_api_lag_create(switch_device_t device)
 #ifdef SWITCH_PD
     if(switch_pd_lag_group_create(device, &(lag_info->pd_group_hdl)) != 0) {
         // Need to check for error
-        return 0;
+        return SWITCH_API_INVALID_HANDLE;
     }
     lag_info->device = device;
 #endif
@@ -102,14 +103,22 @@ switch_api_lag_create(switch_device_t device)
 switch_status_t
 switch_api_lag_delete(switch_device_t device, switch_handle_t lag_handle)
 {
-    switch_lag_info_t *lag_info = NULL;
+    switch_lag_info_t                 *lag_info = NULL;
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+
+    if (!SWITCH_LAG_HANDLE_VALID(lag_handle)) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
 
     lag_info = switch_api_lag_get_internal(lag_handle);
     if (!lag_info) {
         return SWITCH_STATUS_INVALID_HANDLE;
     }
 #ifdef SWITCH_PD
-    switch_pd_lag_group_delete(lag_info->device, lag_info->pd_group_hdl);
+    status = switch_pd_lag_group_delete(lag_info->device, lag_info->pd_group_hdl);
+    if (status != SWITCH_STATUS_SUCCESS) {
+        return status;
+    }
 #endif
     if (lag_info->egr_bmap) {
         switch_api_id_allocator_destroy(lag_info->egr_bmap);
@@ -127,13 +136,17 @@ switch_api_lag_member_add(switch_device_t device, switch_handle_t lag_handle,
     switch_lag_member_t               *lag_member = NULL;
     switch_port_info_t                *port_info = NULL;
 
+    if (!SWITCH_LAG_HANDLE_VALID(lag_handle)) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
+
     lag_info = switch_api_lag_get_internal(lag_handle);
     if (!lag_info) {
         return SWITCH_STATUS_INVALID_HANDLE;
     }
 
     if (!lag_info->egr_bmap) {
-        lag_info->egr_bmap = switch_api_id_allocator_new(SWITCH_INITIAL_LAG_SIZE);
+        lag_info->egr_bmap = switch_api_id_allocator_new(SWITCH_INITIAL_LAG_SIZE, FALSE);
         if (!lag_info->egr_bmap) {
             return SWITCH_STATUS_NO_MEMORY;
         }
@@ -153,17 +166,31 @@ switch_api_lag_member_add(switch_device_t device, switch_handle_t lag_handle,
             tommy_list_insert_head(&lag_info->egress,
                     &(lag_member->egress_node), 
                     lag_member);
-            switch_pd_lag_member_add(device, lag_info->pd_group_hdl, 
-                    SWITCH_PORT_ID(switch_api_port_get_internal(port)), &(lag_member->mbr_hdl));
-            if(lag_info->count == 0) {
-                switch_pd_lag_group_table_add_entry_with_selector(device,
-                        lag_info->ifindex,
-                        lag_info->pd_group_hdl,
-                        &lag_info->hw_entry);
+            port_info = switch_api_port_get_internal(port);
+            if (!port_info) {
+                return SWITCH_STATUS_INVALID_PORT_NUMBER;
+            }
+            status = switch_pd_lag_member_add(device, lag_info->pd_group_hdl, 
+                                              SWITCH_PORT_ID(port_info),
+                                              &(lag_member->mbr_hdl));
+            if (status != SWITCH_STATUS_SUCCESS) {
+                return status;
+            }
+            if (lag_info->count == 0) {
+                status = switch_pd_lag_group_table_add_entry_with_selector(device,
+                                                lag_info->ifindex,
+                                                lag_info->pd_group_hdl,
+                                                &lag_info->hw_entry);
+                if (status != SWITCH_STATUS_SUCCESS) {
+                    return status;
+                }
             }
             lag_info->count++;
             // Update lag table in pre
             status = switch_multicast_update_lag_port_map(device, lag_handle);
+            if (status != SWITCH_STATUS_SUCCESS) {
+                return status;
+            }
 
             if (direction == SWITCH_API_DIRECTION_EGRESS)
                 break;
@@ -173,10 +200,16 @@ switch_api_lag_member_add(switch_device_t device, switch_handle_t lag_handle,
                     lag_member);
             // lookup port table
             port_info = switch_api_port_get_internal(port);
+            if (!port_info) {
+                return SWITCH_STATUS_INVALID_PORT_NUMBER;
+            }
             status = switch_pd_port_mapping_table_add_entry(device, port,
                     lag_info->ifindex,
                     port_info->port_type,
                     &port_info->hw_entry);
+            if (status != SWITCH_STATUS_SUCCESS) {
+                return status;
+            }
             status = switch_pd_egress_lag_table_add_entry(device,
                                      SWITCH_PORT_ID(port_info),
                                      lag_info->ifindex,
@@ -197,6 +230,10 @@ switch_api_lag_member_delete(switch_device_t device, switch_handle_t lag_handle,
     switch_lag_member_t               *lag_member = NULL;
     tommy_node                        *delete_node = NULL;
     switch_port_info_t                *port_info = NULL;
+
+    if (!SWITCH_LAG_HANDLE_VALID(lag_handle)) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
 
     lag_info = switch_api_lag_get_internal(lag_handle);
     if (!lag_info) {
@@ -219,12 +256,21 @@ switch_api_lag_member_delete(switch_device_t device, switch_handle_t lag_handle,
             }
             if(lag_info->count == 1) {
                 status = switch_pd_lag_group_table_delete_entry(device, lag_info->hw_entry);
+                if (status != SWITCH_STATUS_SUCCESS) {
+                    return status;
+                }
             }
             status = switch_pd_lag_member_delete(device, lag_info->pd_group_hdl, lag_member->mbr_hdl);
+            if (status != SWITCH_STATUS_SUCCESS) {
+                return status;
+            }
             lag_member = tommy_list_remove_existing(&(lag_info->egress), delete_node);
 
             //Update the lag table in pre
             status = switch_multicast_update_lag_port_map(device, lag_handle);
+            if (status != SWITCH_STATUS_SUCCESS) {
+                return status;
+            }
             lag_info->count--;
 
             if (direction == SWITCH_API_DIRECTION_EGRESS)
@@ -244,15 +290,24 @@ switch_api_lag_member_delete(switch_device_t device, switch_handle_t lag_handle,
             }
             lag_member = tommy_list_remove_existing(&(lag_info->ingress), delete_node);
             port_info = switch_api_port_get_internal(port);
+            if (!port_info) {
+                return SWITCH_STATUS_INVALID_PORT_NUMBER;
+            }
             //part of lag
             status = switch_pd_port_mapping_table_add_entry(device, port,
                                      port_info->ifindex,
                                      port_info->port_type,
                                      &port_info->hw_entry);
+            if (status != SWITCH_STATUS_SUCCESS) {
+                return status;
+            }
             status = switch_pd_egress_lag_table_add_entry(device,
                                      SWITCH_PORT_ID(port_info),
                                      port_info->ifindex,
                                      &(port_info->eg_lag_entry));
+            if (status != SWITCH_STATUS_SUCCESS) {
+                return status;
+            }
             switch_free(lag_member);
             break;
         default:

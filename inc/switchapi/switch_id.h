@@ -33,8 +33,9 @@ typedef struct switch_api_id_allocator_ {
 /**
  Create a new allocator
  @param initial_size init size in words (32-bit) for allocator
+ @param zero_based allocate index from 0 if set to true
 */
-switch_api_id_allocator *switch_api_id_allocator_new(unsigned int initial_size);
+switch_api_id_allocator *switch_api_id_allocator_new(unsigned int initial_size, bool zero_based);
     
 /**
  Delete the allocator

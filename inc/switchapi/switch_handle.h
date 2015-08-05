@@ -42,9 +42,10 @@ typedef enum {
     SWITCH_HANDLE_TYPE_ACL,
     SWITCH_HANDLE_TYPE_MCAST_ECMP,
     SWITCH_HANDLE_TYPE_URPF,
-    SWITCH_HANDLE_TYPE_SUP_GROUP,
-    SWITCH_HANDLE_TYPE_SUP_INTERFACE,
+    SWITCH_HANDLE_TYPE_HOSTIF_GROUP,
+    SWITCH_HANDLE_TYPE_HOSTIF,
     SWITCH_HANDLE_TYPE_ACE,
+    SWITCH_HANDLE_TYPE_MIRROR_NHOP,
 
     SWITCH_HANDLE_TYPE_MAX=32
 } switch_handle_type_t;
@@ -69,7 +70,55 @@ void switch_handle_type_free(switch_handle_type_t type);
 switch_handle_t switch_handle_allocate(switch_handle_type_t type);
 void switch_handle_free(switch_handle_t handle);
 switch_handle_type_t switch_handle_get_type(switch_handle_t handle);
-    
+
+#define SWITCH_HANDLE_VALID(handle, type) \
+    ((handle >> HANDLE_TYPE_SHIFT) == type)
+
+#define SWITCH_PORT_HANDLE_VALID(handle) \
+    SWITCH_HANDLE_VALID(handle, SWITCH_HANDLE_TYPE_PORT)
+
+#define SWITCH_INTERFACE_HANDLE_VALID(handle) \
+    SWITCH_HANDLE_VALID(handle, SWITCH_HANDLE_TYPE_INTERFACE)
+
+#define SWITCH_LAG_HANDLE_VALID(handle) \
+    SWITCH_HANDLE_VALID(handle, SWITCH_HANDLE_TYPE_LAG)
+
+#define SWITCH_VRF_HANDLE_VALID(handle) \
+    SWITCH_HANDLE_VALID(handle, SWITCH_HANDLE_TYPE_VRF)
+
+#define SWITCH_BD_HANDLE_VALID(handle) \
+    SWITCH_HANDLE_VALID(handle, SWITCH_HANDLE_TYPE_BD)
+
+#define SWITCH_TUNNEL_HANDLE_VALID(handle) \
+    SWITCH_HANDLE_VALID(handle, SWITCH_HANDLE_TYPE_TUNNEL)
+
+#define SWITCH_NHOP_HANDLE_VALID(handle) \
+    SWITCH_HANDLE_VALID(handle, SWITCH_HANDLE_TYPE_NHOP)
+
+#define SWITCH_NEIGHBOR_HANDLE_VALID(handle) \
+    SWITCH_HANDLE_VALID(handle, SWITCH_HANDLE_TYPE_ARP)
+
+#define SWITCH_RMAC_HANDLE_VALID(handle) \
+    SWITCH_HANDLE_VALID(handle, SWITCH_HANDLE_TYPE_MY_MAC)
+
+#define SWITCH_STP_HANDLE_VALID(handle) \
+    SWITCH_HANDLE_VALID(handle, SWITCH_HANDLE_TYPE_STP)
+
+#define SWITCH_MGID_HANDLE_VALID(handle) \
+    SWITCH_HANDLE_VALID(handle, SWITCH_HANDLE_TYPE_MGID)
+
+#define SWITCH_ACL_HANDLE_VALID(handle) \
+    SWITCH_HANDLE_VALID(handle, SWITCH_HANDLE_TYPE_ACL)
+
+#define SWITCH_ACE_HANDLE_VALID(handle) \
+    SWITCH_HANDLE_VALID(handle, SWITCH_HANDLE_TYPE_ACE)
+
+#define SWITCH_HOSTIF_GROUP_HANDLE_VALID(handle) \
+    SWITCH_HANDLE_VALID(handle, SWITCH_HANDLE_TYPE_HOSTIF_GROUP)
+
+#define SWITCH_HOSTIF_HANDLE_VALID(handle) \
+    SWITCH_HANDLE_VALID(handle, SWITCH_HANDLE_TYPE_HOSTIF)
+
 // Easy use macros
 #define SWITCH_API_INVALID_HANDLE 0xFFFFFFFF
 #define SWITCH_HW_INVALID_HANDLE 0xFFFFFFFF
@@ -77,7 +126,7 @@ switch_handle_type_t switch_handle_get_type(switch_handle_t handle);
 #define _switch_handle_create(_type, _info, _judy, _init, _handle)      \
     _handle = switch_handle_allocate(_type);                            \
     if(_handle) {                                                       \
-        _info *_i_info = switch_malloc(sizeof(_info), 1);               \
+        _info *_i_info = (_info *)switch_malloc(sizeof(_info), 1);      \
         if(_i_info) {                                                   \
             char *_ap=NULL;                                             \
             memset(_i_info, 0, sizeof(_info));                          \

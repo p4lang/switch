@@ -33,7 +33,9 @@ typedef struct switch_acl_interface_ {
 } switch_acl_interface_t;
 
 typedef struct switch_acl_rule_ {
+    switch_handle_t acl_handle;
     int priority;
+    unsigned int field_count;
     void *fields;
     switch_acl_action_t action;
     unsigned int action_param_size;

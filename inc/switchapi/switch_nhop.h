@@ -60,9 +60,9 @@ switch_handle_t switch_api_ecmp_create(switch_device_t device);
 
 /**
  Delete a ECMP Group
- @param nhop_handle - Handle that identifies ECMP group uniquely
+ @param ecmp_handle - Handle that identifies ECMP group uniquely
 */
-switch_status_t switch_api_ecmp_delete(switch_device_t device, switch_handle_t nhop_handle);
+switch_status_t switch_api_ecmp_delete(switch_device_t device, switch_handle_t ecmp_handle);
 
 /**
  Add nexthop member to ecmp group
@@ -90,7 +90,8 @@ switch_status_t switch_api_ecmp_member_delete(switch_device_t device, switch_han
  @param nhop_handle - List of nexthops to be added to ECMP group
 */
 switch_handle_t switch_api_ecmp_create_with_members(switch_device_t device, uint32_t member_count,
-                                            switch_handle_t *intf_handle);
+                                            switch_handle_t *nhop_handle);
+
 /*
  Return nexthop handle from (intf_handle, ip address)
  @param nhop_key- Interface to be associated with the nexthop and nexthop ip
@@ -102,6 +103,12 @@ switch_handle_t switch_api_nhop_handle_get(switch_nhop_key_t *nhop_key);
  @param nhop_handle nexthop handle
  */
 switch_handle_t switch_api_neighbor_handle_get(switch_handle_t nhop_handle);
+
+/*
+ Get to know whether nhop is single path or ecmp
+ @param nhop_handle nexthop handle
+*/
+switch_nhop_index_type_t switch_api_nhop_type_get(switch_handle_t nhop_handle);
 
 /*
  * Dump all nexthops

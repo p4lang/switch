@@ -35,10 +35,11 @@ static void *mpls_transit_array = NULL;
 switch_status_t
 switch_tunnel_init(switch_device_t device)
 {
+    UNUSED(device);
     tommy_hashtable_init(&switch_src_vtep_table, SWITCH_SRC_VTEP_HASH_TABLE_SIZE);
     tommy_hashtable_init(&switch_dst_vtep_table, SWITCH_DST_VTEP_HASH_TABLE_SIZE);
-    src_vtep_index_allocator = switch_api_id_allocator_new(SWITCH_SRC_VTEP_HASH_TABLE_SIZE);
-    dst_vtep_index_allocator = switch_api_id_allocator_new(SWITCH_DST_VTEP_HASH_TABLE_SIZE);
+    src_vtep_index_allocator = switch_api_id_allocator_new(SWITCH_SRC_VTEP_HASH_TABLE_SIZE, FALSE);
+    dst_vtep_index_allocator = switch_api_id_allocator_new(SWITCH_DST_VTEP_HASH_TABLE_SIZE, FALSE);
     switch_api_id_allocator_allocate(src_vtep_index_allocator);
     switch_api_id_allocator_allocate(dst_vtep_index_allocator);
     return SWITCH_STATUS_SUCCESS;
@@ -47,6 +48,7 @@ switch_tunnel_init(switch_device_t device)
 switch_status_t
 switch_tunnel_free(switch_device_t device)
 {
+    UNUSED(device);
     tommy_hashtable_done(&switch_src_vtep_table);
     tommy_hashtable_done(&switch_dst_vtep_table);
     switch_api_id_allocator_destroy(src_vtep_index_allocator);
@@ -93,6 +95,9 @@ switch_tunnel_src_vtep_insert_hash(switch_handle_t vrf, switch_ip_addr_t *ip_add
 
     switch_tunnel_vtep_hash_key_init(key, vrf, ip_addr, &len, &hash);
     vtep_entry = switch_malloc(sizeof(switch_vtep_entry_t), 1);
+    if (!vtep_entry) {
+        return src_vtep_index;
+    }
     src_vtep_index = switch_api_id_allocator_allocate(src_vtep_index_allocator);
     vtep_entry->vrf = vrf;
     memcpy(&vtep_entry->ip_addr, ip_addr, sizeof(switch_ip_addr_t));
@@ -150,6 +155,9 @@ switch_tunnel_dst_vtep_insert_hash(switch_handle_t vrf, switch_ip_addr_t *ip_add
 
     switch_tunnel_vtep_hash_key_init(key, vrf, ip_addr, &len, &hash);
     vtep_entry = switch_malloc(sizeof(switch_vtep_entry_t), 1);
+    if (!vtep_entry) {
+        return dst_vtep_index;
+    }
     dst_vtep_index = switch_api_id_allocator_allocate(dst_vtep_index_allocator);
     vtep_entry->vrf = vrf;
     memcpy(&vtep_entry->ip_addr, ip_addr, sizeof(switch_ip_addr_t));
@@ -234,7 +242,8 @@ switch_tunnel_ip_encap_table_add_entries(switch_device_t device,
         dst_vtep_index = switch_tunnel_dst_vtep_insert_hash(ip_encap->vrf_handle, &ip_encap->dst_ip);
     }
 #ifdef SWITCH_PD
-    status = switch_pd_src_vtep_table_add_entry(device, ip_encap, &ip_encap_hdl->src_hw_entry);
+    status = switch_pd_src_vtep_table_add_entry(device, ip_encap,
+                 intf_info->ifindex, &ip_encap_hdl->src_hw_entry);
     if (status != SWITCH_STATUS_SUCCESS) {
         SWITCH_API_ERROR("%s:%d: unable to add src vtep entry for interface %lx", 
                      __FUNCTION__, __LINE__, intf_handle);
@@ -421,6 +430,7 @@ switch_api_tunnel_interface_create(switch_device_t device,
     switch_interface_info_t           *intf_info = NULL;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
 
+    UNUSED(device);
     memset(&info, 0, sizeof(switch_api_interface_info_t));
     info.type = SWITCH_API_INTERFACE_TUNNEL;
     info.flags.core_intf = tunnel_info->flags.core_intf;
@@ -473,7 +483,6 @@ switch_api_tunnel_interface_delete(switch_device_t device, switch_handle_t intf_
 cleanup:
     return status;
 }
-
 
 switch_status_t
 switch_api_logical_network_member_add(switch_device_t device,
@@ -546,6 +555,9 @@ switch_api_logical_network_member_add_basic(switch_device_t device,
     ln_member = switch_api_logical_network_search_member(bd_handle, intf_handle);
     if (!ln_member) {
         ln_member = switch_malloc(sizeof(switch_ln_member_t), 1);
+        if (!ln_member) {
+            return SWITCH_STATUS_NO_MEMORY;
+        }
         ln_member->member = intf_handle;
         tommy_list_insert_head(&(bd_info->members), &(ln_member->node), ln_member);
     }
@@ -598,7 +610,7 @@ switch_api_logical_network_member_add_basic(switch_device_t device,
                          __FUNCTION__, __LINE__, intf_handle, bd_handle);
             goto cleanup;
         }
-        status = switch_api_vlan_xlate_add(bd_handle, intf_handle, vlan_id);
+        status = switch_api_vlan_xlate_add(device, bd_handle, intf_handle, vlan_id);
     }
 
     if (SWITCH_INTF_FLOOD_ENABLED(intf_info)) {
@@ -650,6 +662,9 @@ switch_api_logical_network_member_add_enhanced(switch_device_t device,
     ln_member = switch_api_logical_network_search_member(bd_handle, intf_handle);
     if (!ln_member) {
         ln_member = switch_malloc(sizeof(switch_ln_member_t), 1);
+        if (!ln_member) {
+            return SWITCH_STATUS_NO_MEMORY;
+        }
         ln_member->member = intf_handle;
         tommy_list_insert_head(&(bd_info->members), &(ln_member->node), ln_member);
     }
@@ -718,7 +733,7 @@ switch_api_logical_network_member_add_enhanced(switch_device_t device,
             SWITCH_API_ERROR("%s:%d: unable to add port to vlan!.", __FUNCTION__, __LINE__);
             return status;
         }
-        status = switch_api_vlan_xlate_add(bd_handle, intf_handle, vlan_id);
+        status = switch_api_vlan_xlate_add(device, bd_handle, intf_handle, vlan_id);
 #endif
     }
     if (SWITCH_INTF_FLOOD_ENABLED(intf_info)) {
@@ -799,7 +814,7 @@ switch_api_logical_network_member_remove_basic(switch_device_t device,
             goto cleanup;
 #endif
         }
-        status = switch_api_vlan_xlate_remove(bd_handle, intf_handle, vlan_id);
+        status = switch_api_vlan_xlate_remove(device, bd_handle, intf_handle, vlan_id);
     }
     if (SWITCH_INTF_FLOOD_ENABLED(intf_info)) {
         status = switch_api_multicast_member_delete(device, bd_info->uuc_mc_index,
@@ -889,7 +904,7 @@ switch_api_logical_network_member_remove_enhanced(switch_device_t device,
             goto cleanup;
 #endif
         }
-        status = switch_api_vlan_xlate_remove(bd_handle, intf_handle, vlan_id);
+        status = switch_api_vlan_xlate_remove(device, bd_handle, intf_handle, vlan_id);
     }
     if (SWITCH_INTF_FLOOD_ENABLED(intf_info)) {
         status = switch_api_multicast_member_delete(device, bd_info->uuc_mc_index,
