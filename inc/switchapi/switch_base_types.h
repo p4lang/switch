@@ -27,12 +27,12 @@ limitations under the License.
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-    
+
 #define UNUSED(x) *(&x) = x;
 
 #define TRUE 1
 #define FALSE 0
-    
+
 // Enable use of PD wrapper API
 #define SWITCH_PD 1
 
@@ -56,16 +56,16 @@ typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
 typedef unsigned long switch_port_t;
 typedef unsigned char switch_device_t;
+typedef uint8_t switch_cos_t;
 typedef unsigned int switch_vrf_id_t;
 
-    
 /** Direction - ingress, egress or both */
 typedef enum {
     SWITCH_API_DIRECTION_BOTH,           /**< Ingress and Egress directions */
     SWITCH_API_DIRECTION_INGRESS,        /**< Ingress Only */
     SWITCH_API_DIRECTION_EGRESS          /**< Egress Only */
 } switch_direction_t;
-    
+
 /** 128 bit field */
 typedef struct uint128_t {
     uint64_t high;                   /**< higher 64 bits of 128 bit value */
@@ -76,7 +76,7 @@ typedef struct uint128_t {
 typedef struct switch_mac_addr {
     uint8_t mac_addr[ETH_LEN];       /**< 6 bytes of mac address */
 } switch_mac_addr_t;
-    
+
 /* init */
 switch_status_t switch_api_init(switch_device_t device);
 
@@ -85,7 +85,7 @@ typedef enum {
    SWITCH_API_IP_ADDR_V4,                 /**< IPv4 address type */
    SWITCH_API_IP_ADDR_V6                  /**< IPv6 address type */
 } switch_ip_addr_type_t;
-    
+
 /** IP address - v4 and v6 with type */
 typedef struct switch_ip_addr_ {
     switch_ip_addr_type_t type;          /**< IPv4 or IPv6 */
@@ -95,6 +95,20 @@ typedef struct switch_ip_addr_ {
     } ip;                            /**< detail based on type */
     unsigned int prefix_len;         /**< prefix length on interface */
 } switch_ip_addr_t;
+
+/** Ifindex type */
+typedef enum switch_ifindex_type_ {
+    SWITCH_IFINDEX_TYPE_LAG = 0x9,
+    SWITCH_IFINDEX_TYPE_TUNNEL = 0xa,
+    SWITCH_IFINDEX_TYPE_CPU = 0xb,
+    SWITCH_IFINDEX_TYPE_MAX = 0xf
+} switch_ifinedx_type_t;
+
+/** counter info */
+typedef struct switch_counter_ {
+    uint64_t num_packets;           /**< number of packets */
+    uint64_t num_bytes;             /**< number of bytes */
+} switch_counter_t;
 
 #ifdef __cplusplus
 }

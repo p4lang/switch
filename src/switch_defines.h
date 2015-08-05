@@ -21,6 +21,9 @@ extern "C" {
 #define SWITCH_DEV_ID          0x0
 #define SWITCH_DEV_PIPE_ID     0xFFFF
 
+#define SWITCH_LOGICAL_IFINDEX_SHIFT      12 
+#define SWITCH_INTF_TUNNEL_IFINDEX        1
+
 //IP Encap defines
 #define SWITCH_IP_ENCAP_SRC_IP_TYPE(ip_encap) \
     ip_encap->src_ip.type

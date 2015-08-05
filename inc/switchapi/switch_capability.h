@@ -33,7 +33,7 @@ extern "C" {
 
 #define SWITCH_API_DEFAULT_VLAN          1                   /**< system default vlan */
 #define SWITCH_API_DEFAULT_VRF           1                   /**< system default vrf */
-#define SWITCH_API_MAX_DEFAULT_PORTS     256                 /**< system default ports */
+#define SWITCH_API_MAX_PORTS             256                 /**< system default ports */
 
 /** switch operational status */
 typedef enum switch_oper_status_ {
@@ -95,7 +95,7 @@ typedef struct switch_api_capability_ {
     uint16_t max_stp_groups;                                     /**< max spanning tree group */
     uint16_t max_tunnels;                                        /**< max tunnels */
     uint16_t max_span_sessions;                                  /**< max span sessions */
-    switch_handle_t port_list[SWITCH_API_MAX_DEFAULT_PORTS];     /**< list of ports */
+    switch_handle_t port_list[SWITCH_API_MAX_PORTS];             /**< list of ports */
 } switch_api_capability_t;
 
 /**

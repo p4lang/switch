@@ -31,7 +31,10 @@ switch_handle_type_init(switch_handle_type_t type, unsigned int size)
     void                              *p = NULL;
 
     handle_info = switch_malloc(sizeof(switch_handle_info_t), 1);
-    allocator = switch_api_id_allocator_new (size);
+    if (!handle_info) {
+        return SWITCH_STATUS_FAILURE;
+    }
+    allocator = switch_api_id_allocator_new (size, FALSE);
     if (!allocator) {
         switch_free(handle_info);
         return -1;
@@ -46,7 +49,7 @@ switch_handle_type_init(switch_handle_type_t type, unsigned int size)
        return SWITCH_STATUS_SUCCESS;
     }
     switch_free(handle_info);
-    return SWITCH_STATUS_FAILURE;;
+    return SWITCH_STATUS_FAILURE;
 }
     
 void

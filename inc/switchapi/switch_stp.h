@@ -80,6 +80,7 @@ switch_status_t switch_api_stp_group_vlans_add(switch_device_t device,
                                               switch_handle_t stg_handle,
                                               uint16_t vlan_count,
                                               switch_handle_t *vlan_handle);
+
 /**
  Remove VLAN from the stp
  @param device device

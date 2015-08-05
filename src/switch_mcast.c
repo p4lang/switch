@@ -47,14 +47,14 @@ switch_mcast_init(switch_device_t device)
     switch_mcast_array = NULL;
     switch_handle_type_init(SWITCH_HANDLE_TYPE_MGID, SWITCH_MGID_TABLE_SIZE);
     tommy_hashtable_init(&switch_rid_hash_table, SWITCH_RID_HASH_TABLE_SIZE);
-    switch_rid_allocator = switch_api_id_allocator_new(SWITCH_RID_ALLOCATOR_SIZE);
+    switch_rid_allocator = switch_api_id_allocator_new(SWITCH_RID_ALLOCATOR_SIZE, FALSE);
     //Reserve the RID 0.
     //switch_api_id_allocator_allocate(switch_rid_allocator);
     return SWITCH_STATUS_SUCCESS;
 }
 
 switch_status_t
-switch_mcast_switch_free(switch_device_t device)
+switch_mcast_free(switch_device_t device)
 {
     switch_handle_type_free(SWITCH_HANDLE_TYPE_MGID);
     tommy_hashtable_done(&switch_rid_hash_table);
@@ -182,12 +182,11 @@ switch_mcast_rid_search_hash(switch_mcast_rid_key_t *rid_key, bool *inner_replic
 }
 
 switch_handle_t
-switch_api_mcast_index_allocate()
+switch_api_mcast_index_allocate(switch_device_t device)
 {
     switch_mcast_info_t               *mcast_info = NULL;
     switch_handle_t                    mgid_handle;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
-    switch_device_t                    device = SWITCH_DEV_ID;
 
 
     _switch_handle_create(SWITCH_HANDLE_TYPE_MGID, switch_mcast_info_t, switch_mcast_array, NULL, mgid_handle);
@@ -199,7 +198,7 @@ switch_api_mcast_index_allocate()
     if (status) {
         return 0;
     }
-    tommy_list_init(&mcast_info->l1_list);
+    tommy_list_init(&mcast_info->node_list);
     return mgid_handle;
 }
 
@@ -212,10 +211,9 @@ switch_mcast_tree_get(switch_handle_t mgid_handle)
 }
 
 switch_status_t
-switch_api_mcast_index_delete(switch_handle_t mgid_handle)
+switch_api_mcast_index_delete(switch_device_t device, switch_handle_t mgid_handle)
 {
     switch_mcast_info_t               *mcast_info = NULL;
-    switch_device_t                    device = SWITCH_DEV_ID;
 
     mcast_info = switch_mcast_tree_get(mgid_handle);
     if (!mcast_info) {
@@ -230,45 +228,45 @@ switch_api_mcast_index_delete(switch_handle_t mgid_handle)
 switch_handle_t
 switch_api_multicast_tree_create(switch_device_t device)
 {
-    return switch_api_mcast_index_allocate();
+    return switch_api_mcast_index_allocate(device);
 }
 
 switch_status_t
 switch_api_multicast_tree_delete(switch_device_t device, switch_handle_t mgid_handle)
 {
-    return switch_api_mcast_index_delete(mgid_handle);
+    return switch_api_mcast_index_delete(device, mgid_handle);
 }
 
-switch_mcast_l1_node_t *
-switch_mcast_find_l1_node(switch_mcast_info_t *mcast_info, 
-                          switch_l1_node_type_t node_type,
-                          switch_handle_t rid)
+switch_mcast_node_t *
+switch_mcast_find_node(switch_mcast_info_t *mcast_info, 
+                       switch_mcast_node_type_t node_type,
+                       switch_handle_t rid)
 {
-    switch_mcast_l1_node_t            *l1_node = NULL;
+    switch_mcast_node_t               *mcast_node = NULL;
     tommy_node                        *node = NULL;
 
-    node = tommy_list_head(&mcast_info->l1_list);
+    node = tommy_list_head(&mcast_info->node_list);
     while(node) {
-        l1_node = node->data;
+        mcast_node = node->data;
         if (node_type == SWITCH_NODE_TYPE_SINGLE) {
-            if (SWITCH_MCAST_L1_RID(l1_node) == rid) {
+            if (SWITCH_MCAST_NODE_RID(mcast_node) == rid) {
                 break;
             }
         }
         node = node->next;
     }
-    return l1_node;
+    return mcast_node;
 }
 
 bool
-switch_mcast_l1_node_empty(switch_mcast_l1_node_t *l1_node)
+switch_mcast_node_empty(switch_mcast_node_t *node)
 {
     switch_mc_lag_map_t               *lag_map = NULL;
     switch_mc_port_map_t              *port_map = NULL;
     int                                i = 0;
 
-    lag_map = &(SWITCH_MCAST_L1_INFO_LAG_MAP(l1_node));
-    port_map = &(SWITCH_MCAST_L1_INFO_PORT_MAP(l1_node));
+    lag_map = &(SWITCH_MCAST_NODE_INFO_LAG_MAP(node));
+    port_map = &(SWITCH_MCAST_NODE_INFO_PORT_MAP(node));
 
     for (i = 0; i < SWITCH_PORT_ARRAY_SIZE; i++) {
         if ((*port_map)[i]) {
@@ -284,7 +282,7 @@ switch_mcast_l1_node_empty(switch_mcast_l1_node_t *l1_node)
 }
 
 switch_status_t
-switch_mcast_update_port_map(switch_mcast_l1_node_t *l1_node,
+switch_mcast_update_port_map(switch_mcast_node_t *node,
                              switch_handle_t intf_handle,
                              bool set)
 {
@@ -337,15 +335,19 @@ switch_mcast_update_port_map(switch_mcast_l1_node_t *l1_node,
     }
     if (set) {
         if (lag_index) {
-            SWITCH_MC_LAG_MAP_SET_(SWITCH_MCAST_L1_INFO_LAG_MAP(l1_node), lag_index);
+            SWITCH_MC_LAG_MAP_SET_(SWITCH_MCAST_NODE_INFO_LAG_MAP(node),
+                                   lag_index);
         } else {
-            SWITCH_MC_PORT_MAP_SET_(SWITCH_MCAST_L1_INFO_PORT_MAP(l1_node), port_id);
+            SWITCH_MC_PORT_MAP_SET_(SWITCH_MCAST_NODE_INFO_PORT_MAP(node),
+                                    port_id);
         }
     } else {
         if (lag_index) {
-            SWITCH_MC_LAG_MAP_CLEAR_(SWITCH_MCAST_L1_INFO_LAG_MAP(l1_node), lag_index);
+            SWITCH_MC_LAG_MAP_CLEAR_(SWITCH_MCAST_NODE_INFO_LAG_MAP(node),
+                                     lag_index);
         } else {
-            SWITCH_MC_PORT_MAP_CLEAR_(SWITCH_MCAST_L1_INFO_PORT_MAP(l1_node), port_id);
+            SWITCH_MC_PORT_MAP_CLEAR_(SWITCH_MCAST_NODE_INFO_PORT_MAP(node),
+                                      port_id);
         }
     }
     return SWITCH_STATUS_SUCCESS;
@@ -360,9 +362,9 @@ switch_api_multicast_member_add(switch_device_t device,
 {
     switch_mcast_info_t               *mcast_info = NULL;
     switch_mcast_rid_t                *rid_info = NULL;
-    switch_mcast_l1_node_t            *l1_node = NULL;
+    switch_mcast_node_t               *mcast_node = NULL;
     switch_bd_info_t                  *bd_info = NULL;
-    switch_mcast_rid_key_t            rid_key;
+    switch_mcast_rid_key_t             rid_key;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
     switch_interface_info_t           *intf_info = NULL;
     switch_handle_t                    intf_handle = 0;
@@ -378,9 +380,13 @@ switch_api_multicast_member_add(switch_device_t device,
         return SWITCH_STATUS_INVALID_HANDLE;
     }
 
-    bd_info = switch_bd_get(bd_handle);
-    if (!bd_info) {
-        return SWITCH_STATUS_INVALID_VLAN_ID;
+    if (bd_handle) {
+        bd_info = switch_bd_get(bd_handle);
+        if (!bd_info) {
+            SWITCH_API_ERROR("%s:%d: invalid bd handle %lx",
+                         __FUNCTION__, __LINE__, bd_handle);
+            return SWITCH_STATUS_INVALID_VLAN_ID;
+        }
     }
 
     for (index = 0; index < intf_handle_count; index++) {
@@ -391,6 +397,13 @@ switch_api_multicast_member_add(switch_device_t device,
             SWITCH_API_ERROR("%s:%d: invalid interface %lx",
                          __FUNCTION__, __LINE__, bd_handle);
             return SWITCH_STATUS_INVALID_INTERFACE;
+        }
+        if (!bd_handle) {
+            bd_handle = intf_info->bd_handle;
+            bd_info = switch_bd_get(bd_handle);
+            if (!bd_info) {
+                return SWITCH_STATUS_INVALID_VLAN_ID;
+            }
         }
 
         memset(&rid_key, 0, sizeof(switch_mcast_rid_key_t));
@@ -404,44 +417,45 @@ switch_api_multicast_member_add(switch_device_t device,
             intf_info->rid = switch_mcast_rid_allocate();
             rid = intf_info->rid;
 
-            l1_node = switch_malloc(sizeof(switch_mcast_l1_node_t), 1);
-            if (!l1_node) {
+            mcast_node = switch_malloc(sizeof(switch_mcast_node_t), 1);
+            if (!mcast_node) {
                 return SWITCH_STATUS_NO_MEMORY;
             }
-            memset(l1_node, 0, sizeof(switch_mcast_l1_node_t));
-            SWITCH_MCAST_L1_RID(l1_node) = rid;
+            memset(mcast_node, 0, sizeof(switch_mcast_node_t));
+            SWITCH_MCAST_NODE_RID(mcast_node) = rid;
             new_rid_node = TRUE;
-            tommy_list_insert_head(&mcast_info->l1_list,
-                               &(l1_node->node), l1_node);
+            tommy_list_insert_head(&mcast_info->node_list,
+                               &(mcast_node->node), mcast_node);
         } else {
             rid = rid_info->rid;
-            l1_node = switch_mcast_find_l1_node(mcast_info, SWITCH_NODE_TYPE_SINGLE, rid);
-            if (!l1_node) {
+            mcast_node = switch_mcast_find_node(mcast_info,
+                                                SWITCH_NODE_TYPE_SINGLE,
+                                                rid);
+            if (!mcast_node) {
                 // Found rid but not l1 node.
                 // This should never happen. 
                 return SWITCH_STATUS_ITEM_NOT_FOUND;
             }
         }
 
-        status = switch_mcast_update_port_map(l1_node, intf_handle, TRUE);
+        status = switch_mcast_update_port_map(mcast_node, intf_handle, TRUE);
 
         // Create a L1 Node
         if (new_rid_node) {
-            status = switch_pd_mcast_l1_add_entry(device, l1_node);
+            status = switch_pd_mcast_add_entry(device, mcast_node);
             //Associate L1 Node to multicast tree
             status = switch_pd_mcast_mgid_table_add_entry(device,
-                                              mcast_info->mgrp_hdl, l1_node);
+                                              mcast_info->mgrp_hdl, mcast_node);
             status = switch_pd_rid_table_add_entry(device, rid,
-                                           handle_to_id(bd_handle),
-                                           inner_replica,
-                                           handle_to_id(intf_info->nhop_handle),
-                                           &(SWITCH_MCAST_L1_RID_HW_ENTRY(l1_node)));
+                         handle_to_id(bd_handle),
+                         inner_replica,
+                         handle_to_id(intf_info->nhop_handle),
+                         &(SWITCH_MCAST_NODE_RID_HW_ENTRY(mcast_node)));
             SWITCH_API_TRACE("%s:%d: new l1 node allocated with rid %x", 
                          __FUNCTION__, __LINE__, rid);
+        } else {
+            status = switch_pd_mcast_update_entry(device, mcast_node);
         }
-        //Create or update L2 Node
-        status = switch_pd_mcast_l2_add_entry(device, l1_node);
-
     }
     return status;
 }
@@ -455,7 +469,7 @@ switch_api_multicast_member_delete(switch_device_t device,
 {
     switch_mcast_info_t               *mcast_info = NULL;
     switch_mcast_rid_t                *rid_info = NULL;
-    switch_mcast_l1_node_t            *l1_node = NULL;
+    switch_mcast_node_t               *mcast_node = NULL;
     switch_bd_info_t                  *bd_info = NULL;
     switch_handle_t                    intf_handle = 0;
     switch_interface_info_t           *intf_info = NULL;
@@ -464,7 +478,7 @@ switch_api_multicast_member_delete(switch_device_t device,
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
     uint16_t                           rid = 0;
     int                                index = 0;
-    bool                               delete_l1_node = FALSE;
+    bool                               delete_mcast_node = FALSE;
 
     mcast_info = switch_mcast_tree_get(mgid_handle);
     if (!mcast_info) {
@@ -482,6 +496,14 @@ switch_api_multicast_member_delete(switch_device_t device,
         if (!intf_info) {
             return SWITCH_STATUS_INVALID_INTERFACE;
         }
+        if (!bd_handle) {
+            bd_handle = intf_info->bd_handle;
+            bd_info = switch_bd_get(bd_handle);
+            if (!bd_info) {
+                return SWITCH_STATUS_INVALID_VLAN_ID;
+            }
+        }
+
         memset(&rid_key, 0, sizeof(switch_mcast_rid_key_t));
         rid_key.mgid_handle = mgid_handle;
         rid_key.bd_handle = bd_handle;
@@ -492,26 +514,30 @@ switch_api_multicast_member_delete(switch_device_t device,
             return SWITCH_STATUS_ITEM_NOT_FOUND;
         }
         rid = rid_info->rid;
-        l1_node = switch_mcast_find_l1_node(mcast_info, SWITCH_NODE_TYPE_SINGLE, rid);
-        if (!l1_node) {
+        mcast_node = switch_mcast_find_node(mcast_info,
+                                            SWITCH_NODE_TYPE_SINGLE,
+                                            rid);
+        if (!mcast_node) {
             // Found rid but not l1 node.
             // This should never happen. 
             return SWITCH_STATUS_ITEM_NOT_FOUND;
         }
 
-        status = switch_mcast_update_port_map(l1_node, intf_handle, FALSE);
-        delete_l1_node = switch_mcast_l1_node_empty(l1_node);
-        if (delete_l1_node) {
-            status = switch_pd_mcast_l2_delete_entry(device, l1_node);
-            status = switch_pd_mcast_l1_delete_entry(device, l1_node);
-            status = switch_pd_rid_table_delete_entry(device, SWITCH_MCAST_L1_RID_HW_ENTRY(l1_node));
-            l1_node = tommy_list_remove_existing(&mcast_info->l1_list, &(l1_node->node));
-            switch_free(l1_node);
+        status = switch_mcast_update_port_map(mcast_node,
+                                             intf_handle, FALSE);
+        delete_mcast_node = switch_mcast_node_empty(mcast_node);
+        if (delete_mcast_node) {
+            status = switch_pd_mcast_mgid_table_delete_entry(device,
+                                                             mcast_info->mgrp_hdl,
+                                                             mcast_node);
+            status = switch_pd_mcast_delete_entry(device, mcast_node);
+            status = switch_pd_rid_table_delete_entry(device,
+                         SWITCH_MCAST_NODE_RID_HW_ENTRY(mcast_node));
+            mcast_node = tommy_list_remove_existing(&mcast_info->node_list,
+                                                    &(mcast_node->node));
+            switch_free(mcast_node);
             switch_mcast_rid_delete_hash(&rid_key);
             switch_mcast_rid_switch_free(rid);
-        } else {
-            // Just update L2 node since the portmap/lagmap is not empty
-            status = switch_pd_mcast_l2_add_entry(device, l1_node);
         }
     }
     return status;

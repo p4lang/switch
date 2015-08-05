@@ -16,6 +16,9 @@ limitations under the License.
 
 #include <switchapi/switch_rmac.h>
 
+#ifndef _switch_rmac_int_h_
+#define _switch_rmac_int_h_
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -40,15 +43,21 @@ typedef struct switch_smac_entry_ {
     uint16_t smac_index;
     uint16_t ref_count;
     tommy_hashtable_node node;
+#ifdef SWITCH_PD
+    p4_pd_entry_hdl_t hw_smac_entry[3];
+#endif
 } switch_smac_entry_t;
 
 // Internal API Declarations
 switch_status_t switch_router_mac_init(switch_device_t device);
 switch_status_t switch_router_mac_free(switch_device_t device);
 switch_rmac_info_t * switch_api_rmac_info_get_internal(switch_handle_t rmac_handle);
- 
+
 uint16_t switch_smac_rewrite_add_entry(switch_mac_addr_t *mac);
 switch_status_t switch_smac_rewrite_delete_entry(switch_mac_addr_t *mac);
+uint16_t switch_smac_rewrite_index_from_rmac(switch_handle_t rmac_handle);
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* _switch_rmac_int_h */

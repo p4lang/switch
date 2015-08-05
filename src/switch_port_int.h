@@ -19,12 +19,11 @@ limitations under the License.
 
 #include "switchapi/switch_base_types.h"
 #include "switchapi/switch_handle.h"
+#include "switchapi/switch_capability.h"
 #include "switchapi/switch_port.h"
 
-#define CPU_PORT_ID 64
-#define CPU_MIRROR_SESSION_ID 250
-
-#define SWITCH_API_MAX_PORTS 256
+#define NULL_PORT_ID                   511
+#define CPU_PORT_ID                    64
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,7 +41,7 @@ typedef struct switch_port_info_ {
     switch_ifindex_t ifindex;
     switch_handle_t intf_handle;
     switch_handle_t port_handle;
-    switch_handle_t sup_intf_handle;
+    switch_handle_t hostif_handle;
     switch_port_type_t port_type;
 #ifdef SWITCH_PD
     p4_pd_entry_hdl_t hw_entry;             /* port mapping entry */

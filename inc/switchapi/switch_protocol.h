@@ -30,13 +30,14 @@ extern "C" {
 
 /** Encap type */
 typedef enum switch_encap_type_ {
-    SWITCH_API_ENCAP_TYPE_NONE=0,               /**< Not a tunnel */
-    SWITCH_API_ENCAP_TYPE_VLAN=1,               /**< VLAN encapsulation */
-    SWITCH_API_ENCAP_TYPE_QINQ=2,               /**< Double Tag encap */
-    SWITCH_API_ENCAP_TYPE_VXLAN=3,              /**< VxLAN encapsulation */
-    SWITCH_API_ENCAP_TYPE_GRE=4,                /**< GRE encapsulation */
-    SWITCH_API_ENCAP_TYPE_NVGRE=5,              /**< NVGRE encapsulation */
-    SWITCH_API_ENCAP_TYPE_GENEVE=6              /**< Geneve encapsulation */
+    SWITCH_API_ENCAP_TYPE_NONE=0,       /**< Not a tunnel */
+    SWITCH_API_ENCAP_TYPE_VLAN=1,       /**< VLAN encapsulation */
+    SWITCH_API_ENCAP_TYPE_QINQ=2,       /**< Double Tag encap */
+    SWITCH_API_ENCAP_TYPE_VXLAN=3,      /**< VxLAN encapsulation */
+    SWITCH_API_ENCAP_TYPE_GRE=4,        /**< GRE encapsulation */
+    SWITCH_API_ENCAP_TYPE_NVGRE=5,      /**< NVGRE encapsulation */
+    SWITCH_API_ENCAP_TYPE_GENEVE=6,     /**< Geneve encapsulation */
+    SWITCH_API_ENCAP_TYPE_ERSPAN_T3=7   /**< ERSPAN type III encapsulation */
 } switch_encap_type_t;
 
 /** IP Protocols supported */

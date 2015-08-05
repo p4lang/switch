@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include "switch_sup_int.h"
+#include "switch_hostif_int.h"
 #include "switch_capability_int.h"
 #include "switch_rmac_int.h"
 #include "switch_l3_int.h"
@@ -33,14 +33,18 @@ limitations under the License.
 
 #include <string.h>
 
-static int _api_inited = 0;
+#define CPU_MIRROR_SESSION_ID          250
+#define SWITCH_MAX_DEVICE 32
+
+static int _api_lib_inited = 0;
+static int _dev_inited[SWITCH_MAX_DEVICE];
 
 switch_status_t
 switch_api_lib_init(switch_device_t device)
 {
     SWITCH_API_TRACE("Initializing switch api!!");
     switch_pd_client_init(device);
-    switch_sup_init(device);
+    switch_hostif_init(device);
     switch_router_mac_init(device);
     switch_port_init(device);
     switch_bd_init(device);
@@ -97,6 +101,8 @@ switch_api_init_default_entries(switch_device_t device)
     switch_pd_tunnel_src_rewrite_table_add_default_entry(device);
     switch_pd_tunnel_dst_rewrite_table_add_default_entry(device);
     switch_pd_tunnel_table_add_default_entry(device);
+    switch_pd_bd_stats_table_add_default_entry(device);
+    switch_pd_mirror_nhop_table_add_default_entry(device);
 
     SWITCH_API_TRACE("Programming init entries!!");
     switch_pd_learn_notify_table_add_init_entry(device);
@@ -109,6 +115,14 @@ switch_api_init_default_entries(switch_device_t device)
     switch_pd_fabric_header_table_init_entry(device);
     switch_pd_egress_port_mapping_table_init_entry(device);
     switch_pd_compute_multicast_hashes_init_entry(device);
+    // CPU port mirroring session
+    switch_mirror_session_create(device, CPU_MIRROR_SESSION_ID,
+                                 SWITCH_API_DIRECTION_BOTH, CPU_PORT_ID,
+                                 SWITCH_MIRROR_TYPE_SIMPLE, 0/*cos*/,
+                                 0 /*length*/, 0 /*timeout*/);
+    // negative mirroring action
+    switch_pd_neg_mirror_add_entry(device);
+
     return SWITCH_STATUS_SUCCESS;
 }
 
@@ -131,7 +145,6 @@ switch_api_init_default_acl_entries(switch_device_t device)
     switch_api_acl_rule_create(device, acl_handle, 10001, 1,
                                &stp_acl_kvp, SWITCH_ACL_ACTION_DROP,
                                &action_params, &handle);
-    switch_api_acl_reference(device, acl_handle, 0);
     // STP state == learning, drop
     acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
     memset(&stp_acl_kvp, 0, sizeof(switch_acl_system_key_value_pair_t));
@@ -141,7 +154,6 @@ switch_api_init_default_acl_entries(switch_device_t device)
     switch_api_acl_rule_create(device, acl_handle, 10002, 1,
                                &stp_acl_kvp, SWITCH_ACL_ACTION_DROP,
                                &action_params, &handle);
-    switch_api_acl_reference(device, acl_handle, 0);
 
     /*
      * System acl for ACL_DENY check failure
@@ -155,7 +167,6 @@ switch_api_init_default_acl_entries(switch_device_t device)
     switch_api_acl_rule_create(device, acl_handle, 10003, 1,
                                &acl_deny_acl_kvp, SWITCH_ACL_ACTION_DROP,
                                &action_params, &handle);
-    switch_api_acl_reference(device, acl_handle, 0);
 
     /*
      * System acl for urpf check failure
@@ -169,7 +180,6 @@ switch_api_init_default_acl_entries(switch_device_t device)
     switch_api_acl_rule_create(device, acl_handle, 10004, 1,
                                &urpf_check_acl_kvp, SWITCH_ACL_ACTION_DROP,
                                &action_params, &handle);
-    switch_api_acl_reference(device, acl_handle, 0);
 
     // Broadcast packet on routed interfaces, copy to cpu
     switch_acl_system_key_value_pair_t bcast_acl_kvp[2];
@@ -189,7 +199,6 @@ switch_api_init_default_acl_entries(switch_device_t device)
     switch_api_acl_rule_create(device, acl_handle, 10005, 2,
                                bcast_acl_kvp, SWITCH_ACL_ACTION_COPY_TO_CPU,
                                &action_params, &handle);
-    switch_api_acl_reference(device, acl_handle, 0);
 
     return SWITCH_STATUS_SUCCESS;
 }
@@ -197,11 +206,21 @@ switch_api_init_default_acl_entries(switch_device_t device)
 switch_status_t
 switch_api_init(switch_device_t device)
 {
-    if(_api_inited == 0) {
-        switch_api_lib_init(device);
-        switch_api_init_default_acl_entries(device);
-        switch_api_init_default_entries(device);
-        _api_inited = 1;
+    switch_status_t status = SWITCH_STATUS_SUCCESS;
+
+    if (device > SWITCH_MAX_DEVICE) {
+        return SWITCH_STATUS_INVALID_DEVICE;
     }
-    return SWITCH_STATUS_SUCCESS;
+
+    if(_api_lib_inited == 0) {
+        switch_api_lib_init(device);
+        _api_lib_inited = 1;
+    }
+
+    if (_dev_inited[device] == 0) {
+        status = switch_api_init_default_acl_entries(device);
+        status = switch_api_init_default_entries(device);
+        _dev_inited[device] = 1;
+    }
+    return status;
 }

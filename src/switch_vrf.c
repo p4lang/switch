@@ -30,6 +30,7 @@ static void *switch_vrf_array;
 switch_status_t
 switch_vrf_init(switch_device_t device)
 {
+    UNUSED(device);
     switch_vrf_array = NULL;
     return switch_handle_type_init(SWITCH_HANDLE_TYPE_VRF, (16*1024));
 }
@@ -37,6 +38,7 @@ switch_vrf_init(switch_device_t device)
 switch_status_t
 switch_vrf_free(switch_device_t device)
 {
+    UNUSED(device);
     switch_handle_type_free(SWITCH_HANDLE_TYPE_VRF);
     return SWITCH_STATUS_SUCCESS;
 }
@@ -63,6 +65,7 @@ switch_api_vrf_create(switch_device_t device, switch_vrf_id_t vrf_id)
     switch_vrf_info_t                 *vrf_info = NULL;
     switch_handle_t                    handle;
 
+    UNUSED(device);
     if ((vrf_id == SWITCH_API_DEFAULT_VRF) &&
         (switch_api_default_vrf_internal() != 0)) {
         return switch_api_default_vrf_internal();
@@ -79,6 +82,11 @@ switch_api_vrf_delete(switch_device_t device, switch_handle_t handle)
 {
     switch_vrf_info_t *vrf_info = NULL;
 
+    if (!SWITCH_VRF_HANDLE_VALID(handle)) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
+
+    UNUSED(device);
     vrf_info = switch_vrf_get(handle);
     if (!vrf_info) {
         return SWITCH_STATUS_ITEM_NOT_FOUND;

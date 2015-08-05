@@ -28,13 +28,13 @@ extern "C" {
 
 #define SWITCH_API_VLAN_DEFAULT_AGE_INTERVAL (10)
 
-#define SWITCH_VLAN_PORT_HASH_KEY_SIZE 16 
+#define SWITCH_VLAN_PORT_HASH_KEY_SIZE 16
 #define SWITCH_VLAN_PORT_HASH_TABLE_SIZE 4096
 
 /** member of logcal network */
 typedef struct {
-    tommy_node node;            /**< linked list node */
-    switch_handle_t member;         /**< handle of member that belongs to bd */
+    tommy_node node;                            /**< linked list node */
+    switch_handle_t member;                     /**< handle of member that belongs to bd */
     switch_handle_t stp_handle;
 #ifdef SWITCH_PD
     p4_pd_entry_hdl_t pv_hw_entry;
@@ -44,6 +44,14 @@ typedef struct {
 #endif
 }  switch_ln_member_t;
 
+typedef struct switch_bd_stats_ {
+    uint16_t stats_idx[SWITCH_VLAN_STAT_MAX];
+    switch_counter_t counters[SWITCH_VLAN_STAT_MAX];
+#ifdef SWITCH_PD
+    p4_pd_entry_hdl_t stats_hw_entry[SWITCH_VLAN_STAT_MAX];
+#endif
+} switch_bd_stats_t;
+
 /** Logical Network information */
 typedef struct switch_bd_info_ {
     switch_logical_network_t ln_info;
@@ -51,13 +59,17 @@ typedef struct switch_bd_info_ {
     uint32_t umc_mc_index;
     uint32_t bcast_mc_index;
     switch_handle_t stp_handle;
-    tommy_list members;             /**< members of VLAN */
+    tommy_list members;                         /**< members of VLAN */
 
     switch_urpf_mode_t ipv4_urpf_mode;
     switch_urpf_mode_t ipv6_urpf_mode;
     uint16_t bd_label;
+    switch_bd_stats_t *bd_stats;
 #ifdef SWITCH_PD
-    p4_pd_mbr_hdl_t bd_entry;          /**< hw bd table entry */
+    p4_pd_mbr_hdl_t bd_entry;                   /**< hw bd table entry */
+    p4_pd_entry_hdl_t uuc_entry;                /**< hw uuc entry */
+    p4_pd_entry_hdl_t umc_entry;                /**< hw umc entry */
+    p4_pd_entry_hdl_t bcast_entry;              /**< hw bcast entry */
     switch_ip_encap_pd_hdl_t ip_encap_hdl;
 #endif
 } switch_bd_info_t;
@@ -106,6 +118,9 @@ typedef struct switch_vlan_port_info_ {
 #define SWITCH_BD_IS_CORE(ln) \
     ln->ln_info.flags.core_bd
 
+#define SWITCH_BD_STATS_START_INDEX(ln) \
+    (ln->bd_stats != NULL) ? ln->bd_stats->stats_idx[0] : 0
+
 // Internal API Declarations
 switch_handle_t switch_bd_create();
 switch_bd_info_t *switch_bd_get(switch_handle_t handle);
@@ -123,8 +138,10 @@ switch_status_t switch_bd_ipv4_urpf_mode_get(switch_handle_t bd_handle, uint64_t
 switch_status_t switch_bd_ipv6_urpf_mode_set(switch_handle_t bd_handle, uint64_t value);
 switch_status_t switch_bd_ipv6_urpf_mode_get(switch_handle_t bd_handle, uint64_t *value);
 switch_status_t switch_bd_router_mac_handle_set(switch_handle_t bd_handle, switch_handle_t rmac_handle);
-switch_status_t switch_api_vlan_xlate_add(switch_handle_t bd_handle, switch_handle_t intf_handle, switch_vlan_t vlan_id);
-switch_status_t switch_api_vlan_xlate_remove(switch_handle_t bd_handle, switch_handle_t intf_handle, switch_vlan_t vlan_id);
+switch_status_t switch_api_vlan_xlate_add(switch_device_t device, switch_handle_t bd_handle,
+                                          switch_handle_t intf_handle, switch_vlan_t vlan_id);
+switch_status_t switch_api_vlan_xlate_remove(switch_device_t device, switch_handle_t bd_handle,
+                                             switch_handle_t intf_handle, switch_vlan_t vlan_id);
 switch_ln_member_t *
 switch_api_logical_network_search_member(switch_handle_t bd_handle, switch_handle_t intf_handle);
 switch_status_t switch_intf_handle_get(switch_handle_t vlan_handle, switch_handle_t port_lag_handle,

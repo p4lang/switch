@@ -100,7 +100,8 @@ typedef enum _switch_vlan_stat_counter_t
     SWITCH_VLAN_STAT_IF_OUT_NON_UCAST_PKTS,
     SWITCH_VLAN_STAT_IF_OUT_DISCARDS,
     SWITCH_VLAN_STAT_IF_OUT_ERRORS,
-    SWITCH_VLAN_STAT_IF_OUT_QLEN
+    SWITCH_VLAN_STAT_IF_OUT_QLEN,
+    SWITCH_VLAN_STAT_MAX,
 } switch_vlan_stat_counter_t;
 
 /** vlan port info */
@@ -124,6 +125,7 @@ typedef struct switch_logical_network_ {
         uint8_t flood_enabled:1;              /**< default flood */
         uint8_t learn_enabled:1;              /**< learn enabled */
         uint8_t core_bd:1;                    /**< code or edge vlan */
+        uint8_t stats_enabled:1;
     } flags;                                  /**< vlan flags */
 
     switch_vlan_flood_type_t flood_type;      /**< flood type */
@@ -303,7 +305,6 @@ switch_status_t switch_api_vlan_ports_add(switch_device_t device, switch_handle_
 switch_status_t switch_api_vlan_ports_remove(switch_device_t device, switch_handle_t vlan_handle,
                                              uint16_t port_count, switch_vlan_port_t  *vlan_port);
 
-
 /**
  Create a Logical network
  @param device -  device to be programmed
@@ -334,10 +335,37 @@ switch_status_t switch_api_vlan_id_to_handle_set(switch_vlan_t vlan_id,
 */
 switch_status_t switch_api_vlan_id_to_handle_get(switch_vlan_t vlan_id,
                                                  switch_handle_t *vlan_handle);
+
 /**
  Dump vlan table
  */
 switch_status_t switch_api_vlan_print_all(void);
+
+/**
+ Enable vlan statistics
+ @param device device to be programmed
+ @param vlan_handle Vlan handle that identifies vlan uniquely
+ */
+switch_status_t switch_api_vlan_stats_enable(switch_device_t device, switch_handle_t vlan_handle);
+
+/**
+ Enable vlan statistics
+ @param device device to be programmed
+ @param vlan_handle Vlan handle that identifies vlan uniquely
+ */
+switch_status_t switch_api_vlan_stats_disable(switch_device_t device, switch_handle_t vlan_handle);
+
+/**
+ Enable vlan statistics
+ @param vlan_handle Vlan handle that identifies vlan uniquely
+ @param count number of counter ids
+ @param counter_ids list of counter ids
+ @param counters counter values to be returned
+ */
+switch_status_t switch_api_vlan_stats_get(switch_handle_t vlan_handle,
+                                uint8_t count,
+                                switch_vlan_stat_counter_t *counter_ids,
+                                switch_counter_t *counters);
 
 /** @} */ // end of VLAN
 
