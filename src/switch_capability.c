@@ -25,7 +25,7 @@ limitations under the License.
 #include "switch_capability_int.h"
 #include "switch_rmac_int.h"
 
-#define SWITCH_API_MAX_CONF_PORTS 32
+unsigned int switch_max_configured_ports = 256;
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,7 +56,7 @@ switch_capability_init(switch_device_t device)
     api_switch_info->default_vrf = SWITCH_API_DEFAULT_VRF;
     switch_info->default_vrf_handle = switch_api_vrf_create(device, SWITCH_API_DEFAULT_VRF);
 
-    api_switch_info->max_ports = SWITCH_API_MAX_CONF_PORTS;
+    api_switch_info->max_ports = switch_max_configured_ports;
     for (index = 0; index < SWITCH_API_MAX_PORTS; index++) {
         port_info = switch_api_port_get_internal((switch_port_t)index);
         api_switch_info->port_list[index] = port_info->port_handle;

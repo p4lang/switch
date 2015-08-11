@@ -39,6 +39,8 @@ limitations under the License.
 static int _api_lib_inited = 0;
 static int _dev_inited[SWITCH_MAX_DEVICE];
 
+extern unsigned int switch_max_configured_ports;
+
 switch_status_t
 switch_api_lib_init(switch_device_t device)
 {
@@ -204,13 +206,15 @@ switch_api_init_default_acl_entries(switch_device_t device)
 }
 
 switch_status_t
-switch_api_init(switch_device_t device)
+switch_api_init(switch_device_t device, unsigned int num_ports)
 {
     switch_status_t status = SWITCH_STATUS_SUCCESS;
 
     if (device > SWITCH_MAX_DEVICE) {
         return SWITCH_STATUS_INVALID_DEVICE;
     }
+
+    switch_max_configured_ports = num_ports;
 
     if(_api_lib_inited == 0) {
         switch_api_lib_init(device);

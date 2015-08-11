@@ -227,7 +227,7 @@ switch_api_interface_create_l3(switch_device_t device, switch_handle_t intf_hand
 }
 
 switch_status_t
-switch_api_interface_create_svi(switch_device_t device, switch_handle_t intf_handle,
+switch_api_interface_create_vlan_interface(switch_device_t device, switch_handle_t intf_handle,
                                switch_interface_info_t *intf_info)
 {
     switch_api_interface_info_t       *api_intf_info = NULL;
@@ -315,7 +315,7 @@ switch_api_interface_create(switch_device_t device, switch_api_interface_info_t 
             break;
 
         case SWITCH_API_INTERFACE_L3_VLAN:
-            switch_api_interface_create_svi(device, intf_handle, intf_info);
+            switch_api_interface_create_vlan_interface(device, intf_handle, intf_info);
             break;
 
         case SWITCH_API_INTERFACE_TUNNEL: // L3 tunnel
@@ -339,7 +339,7 @@ switch_api_interface_create(switch_device_t device, switch_api_interface_info_t 
 }
 
 switch_status_t
-switch_api_interface_delete_svi(switch_device_t device, switch_handle_t intf_handle)
+switch_api_interface_delete_vlan_interface(switch_device_t device, switch_handle_t intf_handle)
 {
     switch_interface_info_t           *intf_info = NULL;
     switch_bd_info_t                  *bd_info = NULL;
@@ -398,7 +398,7 @@ switch_api_interface_delete(switch_device_t device, switch_handle_t handle)
             }
         break;
         case SWITCH_API_INTERFACE_L3_VLAN:
-            switch_api_interface_delete_svi(device, handle);
+            switch_api_interface_delete_vlan_interface(device, handle);
             break;
         default:
         break;
