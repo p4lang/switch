@@ -331,11 +331,11 @@ switch_api_neighbor_entry_add(switch_device_t device, switch_api_neighbor_t *nei
             nhop_key.ip_addr = neighbor->ip_addr;
             nhop_key.intf_handle = neighbor->interface;
             nhop_key.ip_addr_valid = 1;
-            neighbor->nhop_handle = switch_api_nhop_create(device, &nhop_key);
+            neighbor_info->neighbor.nhop_handle = switch_api_nhop_create(device, &nhop_key);
         }
     }
-    if (neighbor->nhop_handle != SWITCH_API_INVALID_HANDLE && neighbor->nhop_handle) {
-        nhop_info = switch_nhop_get(neighbor->nhop_handle);
+    if (neighbor_info->neighbor.nhop_handle != SWITCH_API_INVALID_HANDLE && neighbor_info->neighbor.nhop_handle) {
+        nhop_info = switch_nhop_get(neighbor_info->neighbor.nhop_handle);
         if (!nhop_info) {
             return SWITCH_API_INVALID_HANDLE;
         }

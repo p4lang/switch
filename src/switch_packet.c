@@ -313,6 +313,23 @@ switch_packet_hostif_create(switch_device_t device, switch_hostif_info_t *hostif
     return SWITCH_STATUS_SUCCESS;
 }
 
+switch_status_t
+switch_packet_hostif_delete(switch_device_t device, switch_hostif_info_t *hostif_info)
+{
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+    void                              *temp = NULL;
+
+    JLG(temp, switch_intf_fd_array, hostif_info->intf_fd);
+    if (!temp) {
+        return SWITCH_STATUS_FAILURE;
+    }
+    JLD(status, switch_intf_fd_array, hostif_info->intf_fd);
+
+    switch_packet_write_to_pipe();
+
+    return status;
+}
+
 static int
 switch_packet_select_fd_get(fd_set *read_fds)
 {

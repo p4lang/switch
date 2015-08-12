@@ -104,7 +104,7 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   switch_api_rpcHandler() {
     // Your initialization goes here
     printf("RPC Initialization\n");
-  switch_api_init(0);
+  switch_api_init(0, 256);
   }
 
   switcht_status_t switcht_api_init(const switcht_device_t device) {

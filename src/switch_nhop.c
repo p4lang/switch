@@ -206,6 +206,12 @@ switch_api_nhop_create(switch_device_t device, switch_nhop_key_t *nhop_key)
 
     if((nhop_handle = switch_api_nhop_handle_get(nhop_key)) == SWITCH_API_INVALID_HANDLE) {
         nhop_handle = switch_nhop_create();
+    } else {
+        nhop_info = switch_nhop_get(nhop_handle);
+        if (!nhop_info) {
+            return SWITCH_API_INVALID_HANDLE;
+        }
+        return nhop_handle;
     }
     nhop_info = switch_nhop_get(nhop_handle);
     if (!nhop_info) {
@@ -295,9 +301,9 @@ switch_api_nhop_delete(switch_device_t device, switch_handle_t nhop_handle)
         }
     }
 #endif
-    switch_nhop_delete_hash(spath_info);
     nhop_info->valid = 0;
-    if (nhop_info->u.spath.neighbor_handle == 0) {
+    if(nhop_info->u.spath.neighbor_handle == 0) {
+        switch_nhop_delete_hash(spath_info);
         switch_nhop_delete(nhop_handle);
     }
     return SWITCH_STATUS_SUCCESS;

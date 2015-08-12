@@ -78,7 +78,7 @@ typedef struct switch_mac_addr {
 } switch_mac_addr_t;
 
 /* init */
-switch_status_t switch_api_init(switch_device_t device);
+switch_status_t switch_api_init(switch_device_t device, unsigned int num_ports);
 
 /** IP address type v4 or v6 */
 typedef enum {

@@ -24,6 +24,11 @@ limitations under the License.
 extern "C" {
 #endif /* __cplusplus */
 
+/** @defgroup HostInterface Host Interface API
+ *  API functions define and manipulate host interfaces
+ *  @{
+ */ // begin of Host Interface API
+
 /** switch hostif reason code */
 typedef enum switch_hostif_reason_code_ {
     SWITCH_HOSTIF_REASON_CODE_NONE = 0x0,
@@ -97,6 +102,7 @@ typedef struct switch_hostif_packet_ {
     uint32_t pkt_size;                          /**< packet buffer size */
 } switch_hostif_packet_t;
 
+/** Host interface name size */
 #define SWITCH_HOSTIF_NAME_SIZE 16
 
 /** host interface */
@@ -189,6 +195,9 @@ switch_api_hostif_delete(switch_device_t device, switch_handle_t hostif_handle);
  */
 switch_handle_t
 switch_api_cpu_nhop_get(switch_hostif_reason_code_t rcode);
+
+/** @} */ // end of Host Interface API
+
 #ifdef __cplusplus
 }
 #endif

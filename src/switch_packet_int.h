@@ -31,6 +31,8 @@ void
 switch_packet_tx_to_hw(switch_packet_header_t *packet_header, char *packet, int packet_size);
 switch_status_t
 switch_packet_hostif_create(switch_device_t device, switch_hostif_info_t *hostif_info);
+switch_status_t
+switch_packet_hostif_delete(switch_device_t device, switch_hostif_info_t *hostif_info);
 
 #ifdef __cplusplus
 }
