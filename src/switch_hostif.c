@@ -695,6 +695,7 @@ switch_api_hostif_delete(switch_device_t device, switch_handle_t hostif_handle)
     if (!hostif_info) {
         return SWITCH_STATUS_INVALID_HANDLE;
     }
+    switch_packet_hostif_delete(device, hostif_info);
     switch_hostif_delete(hostif_handle);
     SWITCH_API_TRACE("Host interface deleted %lu\n", hostif_handle);
     return SWITCH_STATUS_SUCCESS;
