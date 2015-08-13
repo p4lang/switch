@@ -22,7 +22,7 @@ limitations under the License.
 
 #include "p4features.h"
 #include "p4_sim/pd.h"
-#include "p4_sim/pre.h"
+#include "p4_sim/pd_pre.h"
 
 #ifdef __cplusplus
 extern "C" {
