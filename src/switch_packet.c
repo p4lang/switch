@@ -112,8 +112,8 @@ switch_packet_tx_to_hw(switch_packet_header_t *packet_header, char *packet, int 
                (struct sockaddr *)&addr, sizeof(addr)) < 0) {
         perror("packet send failed");
     }
-    SWITCH_API_TRACE("Sent packet to hw port %d\n",
-                     packet_header->fabric_header.dst_port_or_group);
+//    SWITCH_API_TRACE("Sent packet to hw port %d\n",
+//                     packet_header->fabric_header.dst_port_or_group);
 }
 
 static void
@@ -146,8 +146,8 @@ switch_packet_rx_from_hw()
             continue;
         packet_header->cpu_header.ingress_port =
             ntohs(packet_header->cpu_header.ingress_port);
-        SWITCH_API_TRACE("Received packet from hw ifindex %x\n",
-                         packet_header->fabric_header.ingress_ifindex);
+//         SWITCH_API_TRACE("Received packet from hw ifindex %x\n",
+//                          packet_header->fabric_header.ingress_ifindex);
         status = switch_api_hostif_rx_packet_from_hw(packet_header, packet, packet_size);
         if (status != SWITCH_STATUS_SUCCESS) {
             return;
@@ -163,8 +163,8 @@ switch_packet_tx_to_host(switch_hostif_info_t *hostif_info, char *packet, int pa
         perror("sendto host interface failed");
         return;
     }
-    SWITCH_API_TRACE("Sent packet to host interface %lu\n",
-                     hostif_info->hostif.handle);
+//     SWITCH_API_TRACE("Sent packet to host interface %lu\n",
+//                      hostif_info->hostif.handle);
     return;
 }
 
@@ -185,8 +185,8 @@ switch_packet_rx_from_host(int intf_fd)
             perror("invalid hostif fd");
             return;
         }
-        SWITCH_API_TRACE("Received packet from host interface %lu\n",
-                         hostif_info->hostif.handle);
+//         SWITCH_API_TRACE("Received packet from host interface %lu\n",
+//                          hostif_info->hostif.handle);
         status = switch_api_hostif_rx_packet_from_host(hostif_info, in_packet,
                                                     packet_size);
         if (status != SWITCH_STATUS_SUCCESS) {
