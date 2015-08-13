@@ -80,10 +80,10 @@ typedef enum switch_mcast_node_type_ {
 } switch_mcast_node_type_t;
 
 typedef struct switch_mcast_node_info_ {
-    mc_node_hdl_t hw_entry;
     switch_rid_t rid;
     switch_mc_port_map_t port_map;
     switch_mc_lag_map_t lag_map;
+    p4_pd_entry_hdl_t hw_entry;
     p4_pd_entry_hdl_t rid_hw_entry;
 } switch_mcast_node_info_t;
 
