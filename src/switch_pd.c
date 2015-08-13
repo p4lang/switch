@@ -3429,7 +3429,7 @@ switch_pd_mcast_update_entry(switch_device_t device, switch_mcast_node_t *node)
 {
     p4_pd_status_t            status = 0;
 #ifndef P4_MULTICAST_DISABLE
-    status = p4_pd_mc_node_update(g_mc_sess_hdl,
+    status = p4_pd_mc_node_update(g_mc_sess_hdl, device,
                  SWITCH_MCAST_NODE_INFO_HW_ENTRY(node),
                  SWITCH_MCAST_NODE_INFO_PORT_MAP(node),
                  SWITCH_MCAST_NODE_INFO_LAG_MAP(node));
@@ -3444,7 +3444,7 @@ switch_pd_mcast_delete_entry(switch_device_t device, switch_mcast_node_t *node)
     p4_pd_status_t            status = 0;
     UNUSED(device);
 #ifndef P4_MULTICAST_DISABLE
-    status = p4_pd_mc_node_destroy(g_mc_sess_hdl,
+    status = p4_pd_mc_node_destroy(g_mc_sess_hdl, device,
                              SWITCH_MCAST_NODE_INFO_HW_ENTRY(node));
     SWITCH_MCAST_NODE_INFO_HW_ENTRY(node) = 0;
     p4_pd_mc_complete_operations(g_mc_sess_hdl);
@@ -3459,7 +3459,7 @@ switch_pd_mcast_mgid_table_add_entry(switch_device_t device,
 {
     p4_pd_status_t               status = 0;
 #ifndef P4_MULTICAST_DISABLE
-    status = p4_pd_mc_associate_node(g_mc_sess_hdl, mgid_hdl,
+    status = p4_pd_mc_associate_node(g_mc_sess_hdl, device, mgid_hdl,
                                SWITCH_MCAST_NODE_INFO_HW_ENTRY(node));
     p4_pd_mc_complete_operations(g_mc_sess_hdl);
 #endif /* P4_MULTICAST_DISABLE */
@@ -3474,7 +3474,7 @@ switch_pd_mcast_mgid_table_delete_entry(switch_device_t device,
     p4_pd_status_t               status = 0;
     UNUSED(device);
 #ifndef P4_MULTICAST_DISABLE
-    status = p4_pd_mc_dissociate_node(g_mc_sess_hdl, mgid_hdl,
+    status = p4_pd_mc_dissociate_node(g_mc_sess_hdl, device, mgid_hdl,
                                 SWITCH_MCAST_NODE_INFO_HW_ENTRY(node));
     p4_pd_mc_complete_operations(g_mc_sess_hdl);
 #endif /* P4_MULTICAST_DISABLE */
