@@ -131,7 +131,6 @@ switch_api_hostif_reason_code_create(switch_device_t device, switch_api_hostif_r
     switch_acl_action_t                   acl_action;
     switch_acl_action_params_t            action_params;
     switch_handle_t                       acl_handle = 0;
-    int                                   priority_shift = 8;
     int                                   priority;
     int                                   field_count = 0;
     switch_status_t                       status = SWITCH_STATUS_SUCCESS;
@@ -150,7 +149,7 @@ switch_api_hostif_reason_code_create(switch_device_t device, switch_api_hostif_r
     memcpy(&rcode_info->rcode_api_info, rcode_api_info, sizeof(switch_api_hostif_rcode_info_t));
     acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
     memset(&acl_kvp, 0, sizeof(switch_acl_system_key_value_pair_t));
-    priority = rcode_api_info->priority << priority_shift;
+    priority = rcode_api_info->priority;
     switch (rcode_api_info->reason_code) {
         case SWITCH_HOSTIF_REASON_CODE_STP:
             // stp bpdu, redirect to cpu
@@ -198,6 +197,7 @@ switch_api_hostif_reason_code_create(switch_device_t device, switch_api_hostif_r
             acl_kvp[0].value.dest_mac.mac_addr[4] = 0x00;
             acl_kvp[0].value.dest_mac.mac_addr[5] = 0x0e;
             acl_kvp[0].mask.u.mask = 0xFFFFFFFFFFFF;
+            acl_kvp[1].field = SWITCH_ACL_SYSTEM_FIELD_ETH_TYPE;
             acl_kvp[1].value.eth_type = 0x88CC;
             acl_kvp[1].mask.u.mask = 0xFFFF;
             acl_action = rcode_api_info->action;
@@ -215,6 +215,7 @@ switch_api_hostif_reason_code_create(switch_device_t device, switch_api_hostif_r
             acl_kvp[0].value.dest_mac.mac_addr[4] = 0x00;
             acl_kvp[0].value.dest_mac.mac_addr[5] = 0x03;
             acl_kvp[0].mask.u.mask = 0xFFFFFFFFFFFF;
+            acl_kvp[1].field = SWITCH_ACL_SYSTEM_FIELD_ETH_TYPE;
             acl_kvp[1].value.eth_type = 0x88CC;
             acl_kvp[1].mask.u.mask = 0xFFFF;
             acl_action = rcode_api_info->action;
@@ -233,6 +234,7 @@ switch_api_hostif_reason_code_create(switch_device_t device, switch_api_hostif_r
             acl_kvp[0].value.dest_mac.mac_addr[4] = 0x00;
             acl_kvp[0].value.dest_mac.mac_addr[5] = 0x00;
             acl_kvp[0].mask.u.mask = 0xFFFFFFFFFFFF;
+            acl_kvp[1].field = SWITCH_ACL_SYSTEM_FIELD_ETH_TYPE;
             acl_kvp[1].value.eth_type = 0x88CC;
             acl_kvp[1].mask.u.mask = 0xFFFF;
             acl_action = rcode_api_info->action;
@@ -326,19 +328,25 @@ switch_api_hostif_reason_code_create(switch_device_t device, switch_api_hostif_r
             acl_kvp[0].field = SWITCH_ACL_SYSTEM_FIELD_TTL;
             acl_kvp[0].value.ttl = 0x0;
             acl_kvp[0].mask.u.mask = 0xFF;
+            acl_kvp[1].field = SWITCH_ACL_SYSTEM_FIELD_ROUTED;
+            acl_kvp[1].value.routed = 1;
+            acl_kvp[1].mask.u.mask = 0xFF;
             acl_action = rcode_api_info->action;
-            field_count = 1;
+            field_count = 2;
             action_params.cpu_redirect.reason_code = rcode_api_info->reason_code;
             switch_api_acl_rule_create(device, acl_handle, 
                                priority, field_count,
                                acl_kvp, acl_action,
                                &action_params, &ace_handle);
-            priority++;
+//            priority++;
             acl_kvp[0].field = SWITCH_ACL_SYSTEM_FIELD_TTL;
             acl_kvp[0].value.ttl = 0x1;
             acl_kvp[0].mask.u.mask = 0xFF;
+            acl_kvp[1].field = SWITCH_ACL_SYSTEM_FIELD_ROUTED;
+            acl_kvp[1].value.routed = 1;
+            acl_kvp[1].mask.u.mask = 0xFF;
             acl_action = rcode_api_info->action;
-            field_count = 1;
+            field_count = 2;
             action_params.cpu_redirect.reason_code = rcode_api_info->reason_code;
             switch_api_acl_rule_create(device, acl_handle, 
                                priority, field_count,
@@ -567,7 +575,7 @@ switch_api_hostif_tx_packet(switch_device_t device, switch_hostif_packet_t *host
     switch_cpu_header_t               *cpu_header = NULL;
     switch_port_info_t                *port_info = NULL;
 
-    SWITCH_API_TRACE("Received packet from host port %lu through cb\n",
+    SWITCH_API_TRACE("Received packet from host port %lx through cb\n",
                      hostif_packet->handle);
 
     memset(&packet_header, 0, sizeof(switch_packet_header_t));
@@ -599,7 +607,7 @@ switch_api_hostif_rx_packet_from_host(switch_hostif_info_t *hostif_info, char *p
     switch_device_t                    device = 0;
     switch_port_info_t                *port_info = NULL;
 
-    SWITCH_API_TRACE("Received packet from host port %lu through netdev\n",
+    SWITCH_API_TRACE("Received packet from host port %lx through netdev\n",
                      hostif_info->hostif.handle);
 
     fabric_header = &packet_header.fabric_header;
@@ -656,6 +664,8 @@ switch_api_hostif_create(switch_device_t device, switch_hostif_t *hostif)
     memcpy(&hostif_info->hostif, hostif, sizeof(switch_hostif_t));
     status = switch_packet_hostif_create(device, hostif_info);
     if (status != SWITCH_STATUS_SUCCESS) {
+        // delete handle
+        switch_hostif_delete(hostif_handle);
         return SWITCH_API_INVALID_HANDLE;
     }
     handle_type = switch_handle_get_type(hostif->handle);
