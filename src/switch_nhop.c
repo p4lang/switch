@@ -288,21 +288,20 @@ switch_api_nhop_delete(switch_device_t device, switch_handle_t nhop_handle)
     if (!intf_info) {
         return SWITCH_STATUS_INVALID_INTERFACE;
     }
+    nhop_info->valid = 0;
+    if(nhop_info->u.spath.neighbor_handle == 0) {
 #ifdef SWITCH_PD
-    status = switch_pd_nexthop_table_delete_entry(device, spath_info->hw_entry);
-    if (status != SWITCH_STATUS_SUCCESS) {
-        return status;
-    }
-
-    if (SWITCH_INTF_IS_PORT_L3(intf_info) && intf_info->bd_handle) {
-        status = switch_pd_urpf_bd_table_delete_entry(device, spath_info->urpf_hw_entry);
+        status = switch_pd_nexthop_table_delete_entry(device, spath_info->hw_entry);
         if (status != SWITCH_STATUS_SUCCESS) {
             return status;
         }
-    }
+        if (SWITCH_INTF_IS_PORT_L3(intf_info) && intf_info->bd_handle) {
+            status = switch_pd_urpf_bd_table_delete_entry(device, spath_info->urpf_hw_entry);
+            if (status != SWITCH_STATUS_SUCCESS) {
+                return status;
+            }
+        }
 #endif
-    nhop_info->valid = 0;
-    if(nhop_info->u.spath.neighbor_handle == 0) {
         switch_nhop_delete_hash(spath_info);
         switch_nhop_delete(nhop_handle);
     }
