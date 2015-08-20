@@ -118,7 +118,7 @@ p4_pd_status_t
 switch_pd_ecmp_group_table_delete_entry(switch_device_t device,
                              p4_pd_entry_hdl_t entry_hdl);
 
-p4_pd_entry_hdl_t
+p4_pd_status_t
 switch_pd_ip_fib_add_entry(switch_device_t device,
                            switch_handle_t vrf,
                            switch_ip_addr_t *ipaddr,
@@ -126,7 +126,7 @@ switch_pd_ip_fib_add_entry(switch_device_t device,
                            switch_handle_t nexthop,
                            p4_pd_entry_hdl_t *entry_hdl);
 
-p4_pd_entry_hdl_t
+p4_pd_status_t
 switch_pd_ip_fib_update_entry(switch_device_t device,
                            switch_handle_t vrf,
                            switch_ip_addr_t *ipaddr,
@@ -138,7 +138,7 @@ switch_pd_ip_fib_delete_entry(switch_device_t device,
                                switch_ip_addr_t *ip_addr,
                                p4_pd_entry_hdl_t entry_hdl);
 
-p4_pd_entry_hdl_t
+p4_pd_status_t
 switch_pd_inner_rmac_table_add_entry(switch_device_t device,
                                 switch_handle_t rmac_group,
                                 switch_mac_addr_t *mac,
@@ -147,7 +147,7 @@ p4_pd_status_t
 switch_pd_inner_rmac_table_delete_entry(switch_device_t device,
                                     p4_pd_entry_hdl_t entry_hdl);
 
-p4_pd_entry_hdl_t
+p4_pd_status_t
 switch_pd_outer_rmac_table_add_entry(switch_device_t device,
                                 switch_handle_t rmac_group,
                                 switch_mac_addr_t *mac,
