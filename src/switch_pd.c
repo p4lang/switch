@@ -21,6 +21,7 @@ limitations under the License.
 #include "switch_nhop_int.h"
 #include "switch_defines.h"
 #include "switch_mirror_int.h"
+#include "model_flags.h"
 #include <string.h>
 
 #define SWITCH_MAX_TXN_SZ  10
@@ -3643,7 +3644,10 @@ switch_pd_system_acl_table_add_entry(switch_device_t device,
         case SWITCH_ACL_ACTION_NEGATIVE_MIRROR:
             {
                 p4_pd_dc_negative_mirror_action_spec_t action_spec;
+		// temp for bmv2
+#ifndef BMV2
                 action_spec.action_clone_spec = action_params->mirror.clone_spec;
+#endif
                 action_spec.action_drop_reason = action_params->mirror.drop_reason;
                 status = p4_pd_dc_system_acl_table_add_with_negative_mirror(
                     g_sess_hdl,
