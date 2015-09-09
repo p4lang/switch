@@ -96,7 +96,7 @@ typedef struct switch_mcast_node_ {
 } switch_mcast_node_t;
 
 typedef struct switch_mcast_info_ {
-    mc_mgrp_hdl_t mgrp_hdl;
+    p4_pd_entry_hdl_t mgrp_hdl;
     tommy_list node_list;
 } switch_mcast_info_t;
 

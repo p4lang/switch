@@ -21,8 +21,14 @@ limitations under the License.
 #include <p4utils/tommylist.h>
 
 #include "p4features.h"
+#include "model_flags.h"
+#ifdef BMV2
+#include "pd/pd.h"
+#include "pd/pd_pre.h"
+#else
 #include "p4_sim/pd.h"
 #include "p4_sim/pd_pre.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {

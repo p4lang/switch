@@ -19,7 +19,12 @@ limitations under the License.
 
 #include "switch_base_types.h"
 #include "switch_handle.h"
+#include "model_flags.h"
+#ifdef BMV2
+#include "pd/pd_mirroring.h"
+#else
 #include "p4_sim/mirroring.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
