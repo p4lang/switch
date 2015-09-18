@@ -23,12 +23,16 @@ limitations under the License.
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-    
+
 #define SWITCH_L3_HASH_TABLE_SIZE (64*1024)
 #define SWITCH_L3_HASH_KEY_SIZE 24
 
 #define SWITCH_IPV4_PREFIX_LENGTH 32
 #define SWITCH_IPV6_PREFIX_LENGTH 128
+
+#define SWITCH_IP_TYPE_NONE       0
+#define SWITCH_IP_TYPE_IPv4       1
+#define SWITCH_IP_TYPE_IPv6       2
 
 typedef struct switch_ip_addr_info_ {
     tommy_node node;
@@ -75,6 +79,10 @@ typedef struct switch_vrf_route_list_ {
 
 switch_status_t switch_l3_init(switch_device_t device);
 switch_status_t switch_l3_free(switch_device_t device);
+switch_status_t
+switch_api_init_default_route_entries(switch_device_t device,
+                                      switch_handle_t vrf_handle);
+
 #ifdef __cplusplus
 }
 #endif

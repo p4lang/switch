@@ -69,7 +69,7 @@ switch_api_logical_network_member_remove_enhanced(switch_device_t device,
 uint16_t switch_tunnel_get_tunnel_vni(switch_encap_info_t *encap_info); 
 
 switch_tunnel_type_ingress_t
-switch_tunnel_get_ingress_tunnel_type(switch_encap_type_t encap_type, switch_ip_encap_t *ip_encap);
+switch_tunnel_get_ingress_tunnel_type(switch_ip_encap_t *ip_encap);
 
 switch_tunnel_type_egress_t
 switch_tunnel_get_egress_tunnel_type(switch_encap_type_t encap_type, switch_ip_encap_t *ip_encap);

@@ -22,6 +22,8 @@ limitations under the License.
 #include "switchapi/switch_nhop.h"
 #include "switchapi/switch_utils.h"
 #include "switch_nhop_int.h"
+#include "switch_neighbor_int.h"
+#include "switch_hostif_int.h"
 #include "switch_pd.h"
 #include "switch_log.h"
 
@@ -183,16 +185,120 @@ switch_api_neighbor_handle_get(switch_handle_t nhop_handle)
     return spath_info->neighbor_handle;
 }
 
+switch_status_t
+switch_nhop_ifindex_get(switch_handle_t nhop_handle,
+                        switch_ifindex_t *ifindex,
+                        bool *flood,
+                        uint32_t *mc_index)
+{
+    switch_nhop_info_t                *nhop_info = NULL;
+    switch_interface_info_t           *intf_info = NULL;
+    switch_neighbor_info_t            *neighbor_info = NULL;
+    switch_api_neighbor_t             *neighbor = NULL;
+    switch_api_mac_entry_t             mac_entry;
+    switch_mac_info_t                 *mac_info = NULL;
+    switch_handle_t                    neighbor_handle;
+    switch_bd_info_t                  *bd_info = NULL;
+    switch_port_info_t                *tmp_port_info = NULL;
+    switch_lag_info_t                 *tmp_lag_info = NULL;
+    switch_interface_info_t           *tmp_intf_info = NULL;
+    switch_api_mac_entry_t            *tmp_mac_entry = NULL;
+    switch_handle_type_t               handle_type = 0;
+    switch_handle_t                    encap_if;
+    switch_spath_info_t               *spath_info = NULL;
+
+    nhop_info = switch_nhop_get(nhop_handle);
+    if (!nhop_info) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
+
+    spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
+    intf_info = switch_api_interface_get(spath_info->nhop_key.intf_handle);
+    if (!intf_info) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
+
+    *ifindex = intf_info->ifindex;
+    *flood = FALSE;
+    *mc_index = 0;
+
+    if (SWITCH_INTF_TYPE(intf_info) == SWITCH_API_INTERFACE_TUNNEL) {
+        encap_if = SWITCH_INTF_TUNNEL_ENCAP_OUT_IF(intf_info);
+        intf_info = switch_api_interface_get(encap_if);
+        if (!intf_info) {
+            return SWITCH_STATUS_INVALID_HANDLE;
+        }
+        *ifindex = intf_info->ifindex;
+        SWITCH_API_TRACE("%s:%d ifindex for tunnel interface: %x",
+                         __FUNCTION__, __LINE__, *ifindex);
+    }
+
+    if (SWITCH_INTF_TYPE(intf_info) == SWITCH_API_INTERFACE_L3_VLAN) {
+        neighbor_handle = spath_info->neighbor_handle;
+        if (neighbor_handle == SWITCH_API_INVALID_HANDLE ||
+            neighbor_handle == 0) {
+            *ifindex = switch_api_cpu_glean_ifindex();
+        } else {
+            neighbor_info = switch_neighbor_info_get(neighbor_handle);
+            if (!neighbor_info) {
+                return SWITCH_STATUS_INVALID_HANDLE;
+            }
+            neighbor = &neighbor_info->neighbor;
+            memset(&mac_entry, 0, sizeof(switch_api_mac_entry_t));
+            mac_entry.vlan_handle = intf_info->bd_handle;
+            memcpy(&mac_entry.mac, &neighbor->mac_addr, ETH_LEN);
+            mac_info = switch_mac_table_entry_find(&mac_entry);
+            if (!mac_info) {
+                bd_info = switch_bd_get(intf_info->bd_handle);
+                if (!bd_info) {
+                    return SWITCH_STATUS_INVALID_HANDLE;
+                }
+                *mc_index = handle_to_id(bd_info->uuc_mc_index);
+                *flood = TRUE;
+            } else {
+                tmp_mac_entry = &mac_info->mac_entry;
+                handle_type = switch_handle_get_type(tmp_mac_entry->handle);
+                switch (handle_type) {
+                    case SWITCH_HANDLE_TYPE_PORT:
+                        tmp_port_info = switch_api_port_get_internal(tmp_mac_entry->handle);
+                        if (!tmp_port_info) {
+                            return SWITCH_STATUS_INVALID_HANDLE;
+                        }
+                        *ifindex = tmp_port_info->ifindex;
+                        break;
+                    case SWITCH_HANDLE_TYPE_LAG:
+                        tmp_lag_info = switch_api_lag_get_internal(tmp_mac_entry->handle);
+                        if (!tmp_lag_info) {
+                            return SWITCH_STATUS_INVALID_HANDLE;
+                        }
+                        *ifindex = tmp_lag_info->ifindex;
+                        break;
+                    case SWITCH_HANDLE_TYPE_INTERFACE:
+                        tmp_intf_info = switch_api_interface_get(tmp_mac_entry->handle);
+                        if (!tmp_intf_info) {
+                            return SWITCH_STATUS_INVALID_HANDLE;
+                        }
+                        *ifindex = tmp_intf_info->ifindex;
+                        break;
+                    default:
+                        return SWITCH_STATUS_INVALID_HANDLE;
+                }
+            }
+        }
+    }
+    return SWITCH_STATUS_SUCCESS;
+}
+
 switch_handle_t
 switch_api_nhop_create(switch_device_t device, switch_nhop_key_t *nhop_key)
 {
     switch_handle_t                    nhop_handle;
     switch_nhop_info_t                *nhop_info = NULL;
     switch_interface_info_t           *intf_info = NULL;
-    switch_handle_t                    encap_if;
-    switch_interface_info_t           *encap_intf_info = NULL;
     switch_spath_info_t               *spath_info = NULL;
     switch_ifindex_t                   ifindex = 0;
+    bool                               flood = FALSE;
+    uint32_t                           mc_index = 0;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
 
     if (!SWITCH_INTERFACE_HANDLE_VALID(nhop_key->intf_handle)) {
@@ -223,22 +329,18 @@ switch_api_nhop_create(switch_device_t device, switch_nhop_key_t *nhop_key)
     intf_info->nhop_handle = nhop_handle;
     nhop_info->valid = 1;
 
-    ifindex = intf_info->ifindex;
-    if (SWITCH_INTF_TYPE(intf_info) == SWITCH_API_INTERFACE_TUNNEL) {
-        encap_if = SWITCH_INTF_TUNNEL_ENCAP_OUT_IF(intf_info);
-        encap_intf_info = switch_api_interface_get(encap_if);
-        if (!encap_intf_info) {
-            return SWITCH_API_INVALID_HANDLE;
-        }
-        ifindex = encap_intf_info->ifindex;
-        SWITCH_API_TRACE("%s:%d ifindex for tunnel interface: %x",
-                         __FUNCTION__, __LINE__, ifindex);
+    status = switch_nhop_ifindex_get(nhop_handle, &ifindex, &flood, &mc_index);
+    if (status != SWITCH_STATUS_SUCCESS) {
+        return SWITCH_API_INVALID_HANDLE;
     }
 
 #ifdef SWITCH_PD
+    bool tunnel = (SWITCH_INTF_TYPE(intf_info) == SWITCH_API_INTERFACE_TUNNEL);
     status = switch_pd_nexthop_table_add_entry(device,
                                   handle_to_id(nhop_handle),
-                                  ifindex, &spath_info->hw_entry);
+                                  handle_to_id(intf_info->bd_handle),
+                                  ifindex, flood, mc_index, tunnel,
+                                  &spath_info->hw_entry);
     if (status != SWITCH_STATUS_SUCCESS) {
         return SWITCH_API_INVALID_HANDLE;
     }
@@ -256,6 +358,52 @@ switch_api_nhop_create(switch_device_t device, switch_nhop_key_t *nhop_key)
         switch_nhop_insert_hash(spath_info, nhop_key, nhop_handle);
     }
     return nhop_handle;
+}
+
+switch_status_t
+switch_api_nhop_update(switch_device_t device, switch_handle_t nhop_handle)
+{
+    switch_nhop_info_t                *nhop_info = NULL;
+    switch_interface_info_t           *intf_info = NULL;
+    switch_spath_info_t               *spath_info = NULL;
+    switch_ifindex_t                   ifindex = 0;
+    bool                               flood = FALSE;
+    uint32_t                           mc_index = 0;
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+
+    if (!SWITCH_NHOP_HANDLE_VALID(nhop_handle)) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
+
+    nhop_info = switch_nhop_get(nhop_handle);
+    if (!nhop_info) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
+
+    status = switch_nhop_ifindex_get(nhop_handle, &ifindex, &flood, &mc_index);
+    if (status != SWITCH_STATUS_SUCCESS) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
+
+    spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
+    intf_info = switch_api_interface_get(spath_info->nhop_key.intf_handle);
+    if (!intf_info) {
+        return SWITCH_STATUS_INVALID_INTERFACE;
+    }
+
+#ifdef SWITCH_PD
+    bool tunnel = (SWITCH_INTF_TYPE(intf_info) == SWITCH_API_INTERFACE_TUNNEL);
+    status = switch_pd_nexthop_table_update_entry(device,
+                                  handle_to_id(nhop_handle),
+                                  handle_to_id(intf_info->bd_handle),
+                                  ifindex, flood, mc_index, tunnel,
+                                  &spath_info->hw_entry);
+    if (status != SWITCH_STATUS_SUCCESS) {
+        return SWITCH_API_INVALID_HANDLE;
+    }
+
+#endif
+    return SWITCH_STATUS_SUCCESS;
 }
 
 switch_status_t

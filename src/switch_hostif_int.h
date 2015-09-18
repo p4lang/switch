@@ -28,6 +28,8 @@ extern "C" {
 #define SWITCH_PACKET_HEADER_OFFSET 12
 #define SWITCH_FABRIC_HEADER_ETHTYPE 0x9000
 
+#define SWITCH_CPU_MIRROR_SESSION_ID 250
+
 typedef struct switch_hostif_rcode_info_ {
     switch_handle_t acl_handle;
     switch_api_hostif_rcode_info_t rcode_api_info;
@@ -78,10 +80,12 @@ typedef struct switch_hostif_nhop_ {
     switch_handle_t intf_handle;
     switch_handle_t nhop_handle;
     switch_ifindex_t ifindex;
+    p4_pd_entry_hdl_t lag_entry;
+    p4_pd_mbr_hdl_t mbr_hdl;
 } switch_hostif_nhop_t;
 
 #define SWITCH_HOSTIF_COMPUTE_IFINDEX(index) \
-    (1 << SWITCH_IFINDEX_TYPE_CPU) | index
+    ((SWITCH_IFINDEX_TYPE_CPU << SWITCH_IFINDEX_PORT_WIDTH) | index)
 
 /*
  * Internal API's
@@ -99,6 +103,10 @@ void
 switch_packet_tx_to_host(switch_hostif_info_t *hostif_info, char *packet, int packet_size);
 switch_status_t
 switch_api_cpu_interface_create(switch_device_t device);
+
+switch_ifindex_t switch_api_cpu_glean_ifindex();
+switch_ifindex_t switch_api_cpu_myip_ifindex();
+switch_ifindex_t switch_api_drop_ifindex();
 
 #ifdef __cplusplus
 }

@@ -26,7 +26,7 @@ limitations under the License.
 extern "C" {
 #endif /* __cplusplus */
 
-#define SWITCH_API_VLAN_DEFAULT_AGE_INTERVAL (10)
+#define SWITCH_API_VLAN_DEFAULT_AGE_INTERVAL (10000)
 
 #define SWITCH_VLAN_PORT_HASH_KEY_SIZE 16
 #define SWITCH_VLAN_PORT_HASH_TABLE_SIZE 4096
@@ -39,7 +39,7 @@ typedef struct {
 #ifdef SWITCH_PD
     p4_pd_entry_hdl_t pv_hw_entry;
     p4_pd_entry_hdl_t xlate_entry;
-    p4_pd_entry_hdl_t tunnel_hw_entry;
+    p4_pd_entry_hdl_t tunnel_hw_entry[3];
     p4_pd_entry_hdl_t egress_bd_hw_entry;
 #endif
 }  switch_ln_member_t;

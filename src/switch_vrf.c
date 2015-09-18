@@ -68,12 +68,14 @@ switch_api_vrf_create(switch_device_t device, switch_vrf_id_t vrf_id)
     UNUSED(device);
     if ((vrf_id == SWITCH_API_DEFAULT_VRF) &&
         (switch_api_default_vrf_internal() != 0)) {
-        return switch_api_default_vrf_internal();
+        handle = switch_api_default_vrf_internal();
+    } else {
+        handle = switch_vrf_create();
+        vrf_info = switch_vrf_get(handle);
+        vrf_info->vrf_id = vrf_id;
     }
+    switch_api_init_default_route_entries(device, handle);
 
-    handle = switch_vrf_create();
-    vrf_info = switch_vrf_get(handle);
-    vrf_info->vrf_id = vrf_id;
     return handle;
 }
 

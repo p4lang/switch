@@ -139,6 +139,7 @@ struct switcht_ip_encap_t {
     4: byte ttl;
     5: switcht_protocol_t proto;
     6: optional switcht_udp_tcp_t u;
+    7: optional i16 gre_proto;
 }
 
 union interface_union {
@@ -415,7 +416,7 @@ struct switcht_hostif_t {
 }
 
 struct switcht_acl_action_mirror {
-    1: i32 clone_spec;
+    1: switcht_handle_t mirror_handle;
     2: i32 drop_reason;
 }
 
@@ -433,9 +434,27 @@ union switcht_acl_action_params_t {
     3: switcht_acl_action_redirect redirect;
 }
 
+struct switcht_mirror_info_t {
+    1: i32 session_id;
+    2: switcht_direction_t direction;
+    3: i32 egress_port;
+    4: i32 mirror_type;
+    5: byte cos;
+    6: i32 max_pkt_len;
+    7: i32 ttl;
+    8: bool enable;
+    9: switcht_handle_t nhop_handle;
+    10: i32 session_type;
+    11: switcht_vlan_t vlan_id;
+    12: switcht_tunnel_info_t tun_info;
+}
+
 service switch_api_rpc {
     /* init */
     switcht_status_t switcht_api_init(1:switcht_device_t device);
+
+    /* drop stats */
+    list<i64> switcht_api_drop_stats_get(1:switcht_device_t device);
 
     /* Port */
     switcht_status_t switcht_api_port_set(1:switcht_device_t device, 2:switcht_port_info_t port_info);
@@ -454,7 +473,7 @@ service switch_api_rpc {
 
     /* interface */
     switcht_interface_handle_t switcht_api_interface_create(1:switcht_device_t device, 2:switcht_interface_info_t interface_info);
-    void switcht_api_interface_delete(1:switcht_device_t device, 2:switcht_interface_handle_t interface_handle);
+    switcht_status_t switcht_api_interface_delete(1:switcht_device_t device, 2:switcht_interface_handle_t interface_handle);
     switcht_status_t switcht_api_interface_print_all();
     switcht_status_t switcht_api_interface_attribute_set(1: switcht_handle_t interface_handle, 2: switcht_intf_attr_t attr_type, 3:i64 value);
     switcht_status_t switcht_api_interface_ipv4_unicast_enabled_set(1: switcht_handle_t intf_handle, 2: i64 value);
@@ -564,11 +583,13 @@ service switch_api_rpc {
 
 
     /* MIRROR API */
-    switcht_status_t switcht_mirror_session_create(1:switcht_device_t device, 2:i32 id, 3:i32 direction, 4:i32 eg_port, 5: i32 type, 6:byte cos, 7:i32 length, 8:i32 timeout);
 
-    switcht_status_t switcht_mirror_session_update(1:switcht_device_t device, 2:i32 id, 3:i32 direction, 4:i32 eg_port, 5: i32 type, 6:byte cos, 7:i32 length, 8:i32 timeout, 9:i32 enable);
+    switcht_handle_t switcht_api_mirror_session_create(1:switcht_device_t device, 2:switcht_mirror_info_t api_mirror_info);
 
-    switcht_status_t switcht_mirror_session_delete(1:switcht_device_t device, 2:i32 id);
-    switcht_handle_t switcht_mirror_nhop_create(1:switcht_device_t device, 2:i32 sid, 3:switcht_handle_t nhop_hdl);
-    switcht_status_t switcht_mirror_nhop_delete(1:switcht_device_t device, 2:i32 sid);
+    switcht_status_t switcht_api_mirror_session_update(1:switcht_device_t device, 2:switcht_handle_t mirror_handle, 3:switcht_mirror_info_t api_mirror_info);
+
+    switcht_status_t switcht_api_mirror_session_delete(1:switcht_device_t device, 2:switcht_handle_t mirror_handle);
+
+    /* INT APIs */
+    switcht_status_t switcht_int_transit_enable(1:switcht_device_t device, 2:i32 switch_id, 3:i32 enable);
 }

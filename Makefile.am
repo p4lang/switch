@@ -67,6 +67,7 @@ src/switch_utils.c \
 src/switch_vlan.c \
 src/switch_vlan_int.h \
 src/switch_vrf.c \
+src/switch_INT.c \
 src/switch_vrf_int.h \
 src/thrift_cache.h \
 inc/switch_acl.h \
@@ -91,6 +92,7 @@ inc/switch_hostif.h \
 inc/switch_tunnel.h \
 inc/switch_utils.h \
 inc/switch_vlan.h \
+inc/switch_INT.h \
 inc/switch_vrf.h
 
 libswitchapi_a_SOURCES = $(libswitchapi_la_SOURCES)

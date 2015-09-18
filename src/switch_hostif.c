@@ -42,6 +42,8 @@ switch_hostif_init(switch_device_t device)
     switch_hostif_rcode_info_t           *rcode_info = NULL;
     switch_api_hostif_rcode_info_t       *rcode_api_info = NULL;
     void                                 *temp = NULL;
+    switch_handle_t                    mirror_handle;
+    switch_api_mirror_info_t           api_mirror_info;
 
     switch_hostif_group_array = NULL;
     switch_hostif_rcode_array = NULL;
@@ -56,6 +58,18 @@ switch_hostif_init(switch_device_t device)
     JLI(temp, switch_hostif_rcode_array, SWITCH_HOSTIF_REASON_CODE_NONE);
     rcode_api_info->reason_code = SWITCH_HOSTIF_REASON_CODE_NONE;
     *(unsigned long *)temp = (unsigned long) (rcode_info);
+
+    switch_api_cpu_interface_create(device);
+
+    // CPU port mirroring session
+    memset(&api_mirror_info, 0, sizeof(switch_api_mirror_info_t));
+    api_mirror_info.session_id = SWITCH_CPU_MIRROR_SESSION_ID;
+    api_mirror_info.egress_port = CPU_PORT_ID;
+    api_mirror_info.direction = SWITCH_API_DIRECTION_BOTH;
+    api_mirror_info.session_type = SWITCH_MIRROR_SESSION_TYPE_SIMPLE;
+    api_mirror_info.mirror_type = SWITCH_MIRROR_TYPE_LOCAL;
+    mirror_handle = switch_api_mirror_session_create(device, &api_mirror_info);
+    (void) mirror_handle;
     return SWITCH_STATUS_SUCCESS;
 }
 
@@ -338,7 +352,7 @@ switch_api_hostif_reason_code_create(switch_device_t device, switch_api_hostif_r
                                priority, field_count,
                                acl_kvp, acl_action,
                                &action_params, &ace_handle);
-//            priority++;
+
             acl_kvp[0].field = SWITCH_ACL_SYSTEM_FIELD_TTL;
             acl_kvp[0].value.ttl = 0x1;
             acl_kvp[0].mask.u.mask = 0xFF;
@@ -717,19 +731,39 @@ switch_cpu_nhop_create(switch_device_t device, switch_hostif_reason_code_t rcode
     switch_api_interface_info_t        api_intf_info;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
     switch_nhop_key_t                  nhop_key;
+    switch_interface_info_t           *intf_info = NULL;
+    switch_ifindex_t                   ifindex;
+    switch_handle_t                    intf_handle;
 
     memset(&api_intf_info, 0, sizeof(switch_api_interface_info_t));
     memset(&nhop_key, 0, sizeof(switch_nhop_key_t));
     api_intf_info.u.port_lag_handle = CPU_PORT_ID;
     api_intf_info.type = SWITCH_API_INTERFACE_L2_VLAN_ACCESS;
-    hostif_nhop[rcode].intf_handle = switch_api_interface_create(device, &api_intf_info);
-    if (hostif_nhop[rcode].intf_handle == SWITCH_API_INVALID_HANDLE) {
+    intf_handle = switch_api_interface_create(device, &api_intf_info);
+    if (intf_handle == SWITCH_API_INVALID_HANDLE) {
         return SWITCH_STATUS_FAILURE;
     }
-    nhop_key.intf_handle = hostif_nhop[rcode].intf_handle;
+
+    intf_info = switch_api_interface_get(intf_handle);
+    if (!intf_info) {
+        return SWITCH_STATUS_FAILURE;
+    }
+    ifindex = SWITCH_HOSTIF_COMPUTE_IFINDEX(handle_to_id(intf_handle));
+    intf_info->ifindex = ifindex;
+
+    memset(&nhop_key, 0, sizeof(switch_nhop_key_t));
+    nhop_key.intf_handle = intf_handle;
     nhop_key.ip_addr_valid = 0;
     hostif_nhop[rcode].nhop_handle = switch_api_nhop_create(device, &nhop_key);
-    hostif_nhop[rcode].ifindex = SWITCH_HOSTIF_COMPUTE_IFINDEX(handle_to_id(hostif_nhop[rcode].intf_handle));
+
+    hostif_nhop[rcode].ifindex = ifindex;
+    hostif_nhop[rcode].intf_handle = intf_handle;
+
+    status = switch_pd_lag_group_table_add_entry(device,
+                                     hostif_nhop[rcode].ifindex,
+                                     CPU_PORT_ID,
+                                     &(hostif_nhop[rcode].mbr_hdl),
+                                     &(hostif_nhop[rcode].lag_entry));
     return status;
 }
 
@@ -794,6 +828,18 @@ switch_handle_t switch_api_cpu_nhop_get(switch_hostif_reason_code_t rcode)
         return SWITCH_API_INVALID_HANDLE;
     }
     return hostif_nhop[rcode].nhop_handle;
+}
+
+switch_ifindex_t switch_api_cpu_glean_ifindex() {
+    return hostif_nhop[SWITCH_HOSTIF_REASON_CODE_GLEAN].ifindex;
+}
+
+switch_ifindex_t switch_api_cpu_myip_ifindex() {
+    return hostif_nhop[SWITCH_HOSTIF_REASON_CODE_MYIP].ifindex;
+}
+
+switch_ifindex_t switch_api_drop_ifindex() {
+    return hostif_nhop[SWITCH_HOSTIF_REASON_CODE_NULL_DROP].ifindex;
 }
 
 #ifdef __cplusplus

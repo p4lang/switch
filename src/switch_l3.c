@@ -23,6 +23,7 @@ limitations under the License.
 #include "switch_pd.h"
 #include "switch_nhop_int.h"
 #include "switch_l3_int.h"
+#include "switch_hostif_int.h"
 #include "switch_log.h"
 #include "arpa/inet.h"
 #include <string.h>
@@ -695,12 +696,35 @@ switch_status_t switch_api_l3_routes_print_all(void)
     return status;
 }
 
-#ifdef SWITCH_L3_TEST
-int l3_main (int argc, char **argv)
+switch_status_t
+switch_api_init_default_route_entries(switch_device_t device,
+                                      switch_handle_t vrf_handle)
 {
-    return 0;
+    switch_handle_t drop_nhop_handle;
+    switch_ip_addr_t ip_addr;
+    switch_status_t ret;
+
+    drop_nhop_handle =
+        switch_api_cpu_nhop_get(SWITCH_HOSTIF_REASON_CODE_NULL_DROP);
+
+    // 127/8, drop
+    memset(&ip_addr, 0, sizeof(ip_addr));
+    ip_addr.type = SWITCH_API_IP_ADDR_V4;
+    ip_addr.ip.v4addr = 0x7f000000;
+    ip_addr.prefix_len = 8;
+    ret = switch_api_l3_route_add(device, vrf_handle, &ip_addr,
+                                  drop_nhop_handle);
+
+    // ::1/128, drop
+    memset(&ip_addr, 0, sizeof(ip_addr));
+    ip_addr.type = SWITCH_API_IP_ADDR_V6;
+    ip_addr.ip.v6addr[15] = 1;
+    ip_addr.prefix_len = 128;
+    ret = switch_api_l3_route_add(device, vrf_handle, &ip_addr,
+                                  drop_nhop_handle);
+
+    return ret;
 }
-#endif
 
 #ifdef __cplusplus
 }

@@ -82,6 +82,21 @@ switch_handle_allocate(switch_handle_type_t type)
     }
     return SWITCH_API_INVALID_HANDLE;
 }
+
+switch_handle_t
+switch_handle_set_and_allocate(switch_handle_t type, unsigned int id)
+{
+    switch_handle_info_t              *handle_info = NULL;
+    void                              *p = NULL;
+
+    JLG(p, switch_handle_array, (unsigned int)type);
+    if((handle_info = (switch_handle_info_t *) (*(unsigned long *)p))) {
+        switch_api_id_allocator_set(handle_info->allocator, id);
+        handle_info->num_in_use++;
+        return ((type << HANDLE_TYPE_SHIFT) | id);
+    }
+    return SWITCH_API_INVALID_HANDLE;
+}
     
 void
 switch_handle_free(switch_handle_t handle)

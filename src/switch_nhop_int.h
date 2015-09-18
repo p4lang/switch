@@ -83,6 +83,8 @@ switch_status_t switch_nhop_init(switch_device_t device);
 switch_status_t switch_nhop_free(switch_device_t device);
 switch_nhop_info_t *switch_nhop_get();
 switch_handle_t switch_nhop_create();
+switch_status_t
+switch_api_nhop_update(switch_device_t device, switch_handle_t nhop_handle);
 
 #ifdef __cplusplus
 }

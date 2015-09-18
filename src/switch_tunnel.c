@@ -25,12 +25,17 @@ limitations under the License.
 #include "switch_tunnel_int.h"
 #include "switch_log.h"
 #include <string.h>
+#include <netinet/in.h>
 
 static tommy_hashtable switch_src_vtep_table;
 static tommy_hashtable switch_dst_vtep_table;
 switch_api_id_allocator *src_vtep_index_allocator = NULL;
 switch_api_id_allocator *dst_vtep_index_allocator = NULL;
 static void *mpls_transit_array = NULL;
+
+#define UDP_PORT_VXLAN         4789
+#define UDP_PORT_GENEVE        6081
+#define GRE_PROTO_NVGRE        0x6558
 
 switch_status_t
 switch_tunnel_init(switch_device_t device)
@@ -539,14 +544,14 @@ switch_api_logical_network_member_add_basic(switch_device_t device,
 
     intf_info = switch_api_interface_get(intf_handle);
     if (!intf_info) {
-        SWITCH_API_ERROR("%s:%d invalid interface handle %lx", 
+        SWITCH_API_ERROR("%s:%d invalid interface handle %lx",
                      __FUNCTION__, __LINE__, intf_handle);
         return SWITCH_STATUS_INVALID_INTERFACE;
     }
 
     bd_info = switch_bd_get(bd_handle);
     if (!bd_info) {
-        SWITCH_API_ERROR("%s:%d invalid logical network handle %lx", 
+        SWITCH_API_ERROR("%s:%d invalid logical network handle %lx",
                      __FUNCTION__, __LINE__, bd_handle);
         return SWITCH_STATUS_INVALID_VLAN_ID;
     }
@@ -572,7 +577,7 @@ switch_api_logical_network_member_add_basic(switch_device_t device,
                                            tunnel_vni, bd_info,
                                            ip_encap,
                                            handle_to_id(bd_handle),
-                                           &ln_member->tunnel_hw_entry);
+                                           ln_member->tunnel_hw_entry);
         if (status != SWITCH_STATUS_SUCCESS) {
             SWITCH_API_ERROR("%s:%d: unable to add tunnel entry for interface %lx ln %lx",
                          __FUNCTION__, __LINE__, intf_handle, bd_handle);
@@ -684,7 +689,7 @@ switch_api_logical_network_member_add_enhanced(switch_device_t device,
                                                tunnel_vni, bd_info,
                                                ip_encap,
                                                handle_to_id(bd_handle),
-                                               &ln_member->tunnel_hw_entry);
+                                               ln_member->tunnel_hw_entry);
             if (status != SWITCH_STATUS_SUCCESS) {
                 SWITCH_API_ERROR("%s:%d: unable to add tunnel entry for interface %lx ln %lx",
                              __FUNCTION__, __LINE__, intf_handle, bd_handle);
@@ -703,7 +708,7 @@ switch_api_logical_network_member_add_enhanced(switch_device_t device,
         } else if (tunnel_info->encap_mode == SWITCH_API_TUNNEL_ENCAP_MODE_MPLS) {
             mpls_encap = &(SWITCH_INTF_TUNNEL_MPLS_ENCAP(intf_info));
             status = switch_tunnel_mpls_table_add_entries(device, bd_handle,
-                                               &ln_member->tunnel_hw_entry, mpls_encap);
+                                               ln_member->tunnel_hw_entry, mpls_encap);
             if (status != SWITCH_STATUS_SUCCESS) {
                 SWITCH_API_ERROR("%s:%d unable to add mpls entry!", __FUNCTION__, __LINE__);
                 goto cleanup;
@@ -880,7 +885,7 @@ switch_api_logical_network_member_remove_enhanced(switch_device_t device,
             }
         } else if (tunnel_info->encap_mode == SWITCH_API_TUNNEL_ENCAP_MODE_MPLS) {
             mpls_encap = &(SWITCH_INTF_TUNNEL_MPLS_ENCAP(intf_info));
-            status = switch_tunnel_mpls_table_delete_entries(device, ln_member->tunnel_hw_entry, mpls_encap);
+            status = switch_tunnel_mpls_table_delete_entries(device, ln_member->tunnel_hw_entry[0], mpls_encap);
         }
 #endif
     } else {
@@ -974,23 +979,43 @@ switch_tunnel_get_tunnel_vni(switch_encap_info_t *encap_info)
 }
 
 switch_tunnel_type_ingress_t
-switch_tunnel_get_ingress_tunnel_type(switch_encap_type_t encap_type, switch_ip_encap_t *ip_encap)
+switch_tunnel_get_ingress_tunnel_type(switch_ip_encap_t *ip_encap)
 {
-    switch_tunnel_type_ingress_t tunnel_type = 0;
-    switch (encap_type)
+    switch_tunnel_type_ingress_t tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_NONE;
+    switch (ip_encap->proto)
     {
-        case SWITCH_API_ENCAP_TYPE_VXLAN:
-                tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_VXLAN;
+        case IPPROTO_IPIP:
+        case IPPROTO_IPV6:
+            tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_IP_IN_IP;
             break;
-        case SWITCH_API_ENCAP_TYPE_GENEVE:
-                tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_GENEVE;
+        case IPPROTO_GRE: {
+            switch (ip_encap->u.gre.protocol) {
+                case GRE_PROTO_NVGRE:
+                    tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_NVGRE;
+                    break;
+                default :
+                    tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_GRE;
+                    break;
+            }
             break;
-        case SWITCH_API_ENCAP_TYPE_NVGRE:
-                tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_NVGRE;
+        }
+        case IPPROTO_UDP: {
+            switch (SWITCH_IP_ENCAP_UDP_DST_PORT(ip_encap)) {
+                case UDP_PORT_VXLAN:
+                    tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_VXLAN;
+                    break;
+                case UDP_PORT_GENEVE:
+                    tunnel_type = SWITCH_INGRESS_TUNNEL_TYPE_GENEVE;
+                    break;
+                default :
+                    break;
+            }
             break;
+        }
         default:
-            tunnel_type = 0;
+            break;
     }
+
     return tunnel_type;
 }
 

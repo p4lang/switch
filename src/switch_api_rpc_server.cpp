@@ -33,6 +33,7 @@ limitations under the License.
 #include "switchapi/switch_stp.h"
 #include "switchapi/switch_mirror.h"
 #include "switchapi/switch_protocol.h"
+#include "switchapi/switch_INT.h"
 #include "arpa/inet.h"
 
 #define SWITCH_API_RPC_SERVER_PORT (9091)
@@ -77,7 +78,6 @@ unsigned int switch_string_to_v4_ip(const std::string s, unsigned int *m) {
         }
     }
     *m = (*m << 8) | (r & 0xFF);
-    std::cout << i << "\n";
     return (*m);
 }
 
@@ -111,6 +111,24 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     // Your implementation goes here
     printf("switcht_api_init\n");
     return 0;
+  }
+
+  void switcht_api_drop_stats_get(std::vector<int64_t> & _return, const switcht_device_t device) {
+    printf("switcht_api_drop_stats_get\n");
+    uint64_t *counters = NULL;
+    int num_counters = 0;
+
+    switch_api_drop_stats_get(device, &num_counters, &counters);
+    if (num_counters <= 0) {
+        return;
+    }
+
+    for (uint32_t i = 0; i < num_counters; i++) {
+        _return.push_back(counters[i]);
+    }
+
+    free(counters);
+    return;
   }
 
   switcht_status_t switcht_api_port_set(const switcht_device_t device, const switcht_port_info_t& port_info) {
@@ -184,27 +202,31 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   switcht_interface_handle_t switcht_api_interface_create(const switcht_device_t device, const switcht_interface_info_t& interface_info) {
     // Your implementation goes here
     switch_api_interface_info_t i_info;
+    memset(&i_info, 0, sizeof(switch_api_interface_info_t));
     i_info.type = (switch_interface_type_t)interface_info.type;
     i_info.vrf_handle = interface_info.vrf_handle;
     i_info.rmac_handle = interface_info.rmac_handle;
     i_info.flags.core_intf = interface_info.flags.core_intf;
     i_info.ipv4_urpf_mode = (switch_urpf_mode_t) interface_info.v4_urpf_mode;
 
-    if(i_info.type == SWITCH_API_INTERFACE_L3_PORT_VLAN || i_info.type == SWITCH_API_INTERFACE_L2_PORT_VLAN) {
+    if (i_info.type == SWITCH_API_INTERFACE_L3_PORT_VLAN || i_info.type == SWITCH_API_INTERFACE_L2_PORT_VLAN) {
         i_info.u.port_vlan.port_lag_handle = interface_info.u.port_vlan.port_lag_handle;
         i_info.u.port_vlan.vlan_id = interface_info.u.port_vlan.vlan_id;
-    }
-    else {
+    } else if (i_info.type == SWITCH_API_INTERFACE_L3_VLAN) {
+        i_info.u.vlan_id = interface_info.u.vlan_id;
+        i_info.ipv4_unicast_enabled = interface_info.v4_unicast_enabled;
+        i_info.ipv6_unicast_enabled = interface_info.v6_unicast_enabled;
+    } else {
         i_info.u.port_lag_handle = interface_info.u.port_lag_handle;
     }
     printf("switcht_api_interface_create\n");
     return switch_api_interface_create(device, &i_info);
   }
 
-  void switcht_api_interface_delete(const switcht_device_t device, const switcht_interface_handle_t interface_handle) {
+  switcht_status_t switcht_api_interface_delete(const switcht_device_t device, const switcht_interface_handle_t interface_handle) {
     // Your implementation goes here
     printf("switcht_api_interface_delete\n");
-    switch_api_interface_delete(device, interface_handle);
+    return switch_api_interface_delete(device, interface_handle);
   }
 
   switcht_status_t switcht_api_interface_print_all() {
@@ -563,9 +585,13 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
         }
         switch_parse_ip_address(tun_info.tunnel_encap.ip_encap.src_ip, &ltun_info.u.ip_encap.src_ip);
         switch_parse_ip_address(tun_info.tunnel_encap.ip_encap.dst_ip, &ltun_info.u.ip_encap.dst_ip);
-        ltun_info.u.ip_encap.proto = (switch_protocol_t)tun_info.tunnel_encap.ip_encap.proto;
-        ltun_info.u.ip_encap.u.udp.src_port = tun_info.tunnel_encap.ip_encap.u.udp.src_port;
-        ltun_info.u.ip_encap.u.udp.dst_port = tun_info.tunnel_encap.ip_encap.u.udp.dst_port;
+        ltun_info.u.ip_encap.proto = tun_info.tunnel_encap.ip_encap.proto;
+        if (ltun_info.u.ip_encap.proto == 17) {
+            ltun_info.u.ip_encap.u.udp.src_port = tun_info.tunnel_encap.ip_encap.u.udp.src_port;
+            ltun_info.u.ip_encap.u.udp.dst_port = tun_info.tunnel_encap.ip_encap.u.udp.dst_port;
+        } else if (ltun_info.u.ip_encap.proto == 47) {
+            ltun_info.u.ip_encap.u.gre.protocol = tun_info.tunnel_encap.ip_encap.gre_proto;
+        }
     } else {
         ltun_info.u.mpls_encap.bd_handle = tun_info.tunnel_encap.mpls_encap.bd_handle;
         ltun_info.u.mpls_encap.vrf_handle = tun_info.tunnel_encap.mpls_encap.vrf_handle;
@@ -763,7 +789,7 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
             ap.cpu_redirect.reason_code = action_params.cpu_redirect.reason_code;
             break;
         case SWITCH_ACL_ACTION_SET_MIRROR:
-            ap.mirror.clone_spec = action_params.mirror.clone_spec;
+            ap.mirror.mirror_handle = action_params.mirror.mirror_handle;
             break;
         default:
             break;
@@ -788,7 +814,7 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
         ((switch_acl_mirror_key_value_pair_t *)fields+i)->mask.u.mask = (switch_acl_mirror_field_t)f->mask;
     }
     memset(&ap, 0, sizeof(switch_acl_action_params_t));
-    ap.mirror.clone_spec = action_params.mirror.clone_spec;
+    ap.mirror.mirror_handle = action_params.mirror.mirror_handle;
     /*status =*/ switch_api_acl_rule_create(device, acl_handle, priority, key_value_count, fields, (switch_acl_action_t)action, &ap, &handle);
     free(fields);
     return handle;
@@ -829,7 +855,7 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
         memcpy(&(((switch_acl_system_key_value_pair_t *)fields+i)->value.egr_port), &v, sizeof(switch_acl_egr_port_value));
     }
     memset(&ap, 0, sizeof(switch_acl_action_params_t));
-    ap.mirror.clone_spec = action_params.mirror.clone_spec;
+    ap.mirror.mirror_handle = action_params.mirror.mirror_handle;
     switch_api_acl_rule_create(device, acl_handle, priority, key_value_count, fields, (switch_acl_action_t)action, &ap, &handle);
     free(fields);
     return handle;
@@ -905,32 +931,49 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     return (switch_api_vlan_learning_enabled_get(vlan_handle, (uint64_t *)&value));
   }
 
- switcht_status_t switcht_mirror_session_create(const switcht_device_t device, const int32_t id, const int32_t direction, const int32_t eg_port, const int32_t type, const int8_t cos, const int32_t length, const int32_t timeout) {
+ switcht_handle_t switcht_api_mirror_session_create(const switcht_device_t device, const switcht_mirror_info_t& api_mirror_info) {
     // Your implementation goes here
-    printf("switcht_mirror_session_create\n");
-    return switch_mirror_session_create(device, id, (switch_direction_t)direction, eg_port, (switch_mirror_type_t)type, (switch_cos_t) cos, length, timeout);
+    printf("switcht_api_mirror_session_create\n");
+    switch_api_mirror_info_t lapi_mirror_info;
+    memset(&lapi_mirror_info, 0, sizeof(switch_api_mirror_info_t));
+    lapi_mirror_info.mirror_type = (switch_mirror_type_t) api_mirror_info.mirror_type;
+    lapi_mirror_info.session_type = (switch_mirror_session_type_t) api_mirror_info.session_type;
+    lapi_mirror_info.cos = api_mirror_info.cos;
+    lapi_mirror_info.max_pkt_len = api_mirror_info.max_pkt_len;
+    lapi_mirror_info.egress_port = api_mirror_info.egress_port;
+    lapi_mirror_info.direction = (switch_direction_t) api_mirror_info.direction;
+    lapi_mirror_info.session_id = api_mirror_info.session_id;
+    lapi_mirror_info.nhop_handle = api_mirror_info.nhop_handle;
+    return switch_api_mirror_session_create(device, &lapi_mirror_info);
   }
 
- switcht_status_t switcht_mirror_session_update(const switcht_device_t device, const int32_t id, const int32_t direction, const int32_t eg_port, const int32_t type, const int8_t cos, const int32_t length, const int32_t timeout, const int32_t enable) {
+ switcht_status_t switcht_api_mirror_session_update(const switcht_device_t device, const switcht_handle_t mirror_handle, const switcht_mirror_info_t& api_mirror_info) {
     // Your implementation goes here
-    printf("switcht_mirror_session_update\n");
-    return switch_mirror_session_update(device, id, (switch_direction_t)direction, eg_port, (switch_mirror_type_t)type, (switch_cos_t) cos, length, timeout, enable);
+    printf("switcht_api_mirror_session_update\n");
+    switch_api_mirror_info_t lapi_mirror_info;
+    memset(&lapi_mirror_info, 0, sizeof(switch_api_mirror_info_t));
+    lapi_mirror_info.mirror_type = (switch_mirror_type_t) api_mirror_info.mirror_type;
+    lapi_mirror_info.session_type = (switch_mirror_session_type_t) api_mirror_info.session_type;
+    lapi_mirror_info.cos = api_mirror_info.cos;
+    lapi_mirror_info.max_pkt_len = api_mirror_info.max_pkt_len;
+    lapi_mirror_info.egress_port = api_mirror_info.egress_port;
+    lapi_mirror_info.direction = (switch_direction_t) api_mirror_info.direction;
+    lapi_mirror_info.session_id = api_mirror_info.session_id;
+    lapi_mirror_info.nhop_handle = api_mirror_info.nhop_handle;
+    lapi_mirror_info.enable = api_mirror_info.enable;
+    return switch_api_mirror_session_update(device, mirror_handle, &lapi_mirror_info);
   }
-  switcht_status_t switcht_mirror_session_delete(const switcht_device_t device, const int32_t id) {
+
+  switcht_status_t switcht_api_mirror_session_delete(const switcht_device_t device, const switcht_handle_t mirror_handle) {
     // Your implementation goes here
     printf("switcht_mirror_session_delete\n");
-    return switch_mirror_session_delete(device, id);
-  }
-  switcht_handle_t switcht_mirror_nhop_create(const switcht_device_t device, const int32_t sid, const switcht_handle_t nhop_hdl) {
-    // Your implementation goes here
-    printf("switcht_mirror_nhop_create\n");
-    return switch_mirror_nhop_create(device, sid, nhop_hdl);
+    return switch_api_mirror_session_delete(device, mirror_handle);
   }
 
-  switcht_status_t switcht_mirror_nhop_delete(const switcht_device_t device, const int32_t sid) {
+  switcht_status_t switcht_int_transit_enable(const switcht_device_t device, const int32_t switch_id, const int32_t enable) {
     // Your implementation goes here
-    printf("switcht_mirror_nhop_delete\n");
-    return switch_mirror_nhop_delete(device, sid);
+    printf("switcht_api_int_transit_enable/disable = %d\n", enable);
+    return switch_int_transit_enable(device, switch_id, enable);
   }
 
 

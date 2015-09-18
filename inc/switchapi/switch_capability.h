@@ -33,7 +33,7 @@ extern "C" {
 
 #define SWITCH_API_DEFAULT_VLAN          1                   /**< system default vlan */
 #define SWITCH_API_DEFAULT_VRF           1                   /**< system default vrf */
-#define SWITCH_API_MAX_PORTS             256                 /**< system default ports */
+#define SWITCH_API_MAX_PORTS             288                 /**< system default ports */
 
 /** switch operational status */
 typedef enum switch_oper_status_ {

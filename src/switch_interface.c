@@ -235,10 +235,7 @@ switch_api_interface_create_vlan_interface(switch_device_t device, switch_handle
     switch_vlan_t                      vlan_id = 0;
     switch_bd_info_t                  *bd_info = NULL;
     switch_logical_network_t          *ln_info = NULL;
-    switch_handle_t                    bd_handle;
-    tommy_node                        *node = NULL;
-    switch_interface_info_t           *member_intf_info = NULL;
-    switch_ln_member_t                *vlan_member = NULL;
+    switch_handle_t                    bd_handle = 0;
 
     vlan_id = SWITCH_INTF_VLAN_ID(intf_info);
     status = switch_api_vlan_id_to_handle_get(vlan_id, &bd_handle);
@@ -267,18 +264,7 @@ switch_api_interface_create_vlan_interface(switch_device_t device, switch_handle
     }
     ln_info->rmac_handle = api_intf_info->rmac_handle;
     intf_info->bd_handle = bd_handle;
-    node = tommy_list_head(&(bd_info->members));
-    while (node) {
-        vlan_member = (switch_ln_member_t *) node->data;
-        member_intf_info = switch_api_interface_get(vlan_member->member);
-        if (!member_intf_info) {
-            return SWITCH_STATUS_INVALID_INTERFACE;
-        } else {
-            intf_info->ifindex = member_intf_info->ifindex;
-            break;
-        }
-        node = node->next;
-    }
+    intf_info->ifindex = SWITCH_VLAN_INTERFACE_COMPUTE_IFINDEX(intf_handle);
     status = switch_pd_bd_table_update_entry(device,
                                         handle_to_id(bd_handle),
                                         bd_info,
@@ -301,6 +287,7 @@ switch_api_interface_create(switch_device_t device, switch_api_interface_info_t 
         return SWITCH_STATUS_NO_MEMORY;
     }
 
+    memset(intf_info, 0, sizeof(switch_interface_info_t));
     memcpy(&intf_info->api_intf_info, api_intf_info, sizeof(switch_api_interface_info_t));
 
     switch(SWITCH_INTF_TYPE(intf_info)) {

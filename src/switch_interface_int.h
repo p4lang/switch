@@ -132,6 +132,10 @@ typedef struct switch_interface_info_ {
 #define SWITCH_INTF_TUNNEL_ID(ifindex) \
     ifindex & ~(SWITCH_INTF_TUNNEL_IFINDEX << SWITCH_LOGICAL_IFINDEX_SHIFT)
 
+#define SWITCH_VLAN_INTERFACE_COMPUTE_IFINDEX(handle)                      \
+    (handle_to_id(handle) |                                                \
+    (SWITCH_IFINDEX_TYPE_VLAN_INTERFACE << SWITCH_IFINDEX_PORT_WIDTH))
+
 // Internal Interface API's
 switch_interface_info_t *switch_api_interface_get(switch_handle_t handle);
 switch_handle_t switch_api_interface_get_from_ifindex(switch_ifindex_t ifindex);
