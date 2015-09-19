@@ -31,7 +31,7 @@ extern "C" {
  *  API functions listed to configure the interfaces
     Interface API
     Interfaces are the basic element for provisioning services on the device.
-    Interfaces can be any of physical, link aggregation group, SVI or tunnels.
+    Interfaces can be any of physical, link aggregation group, or tunnels.
  *  @{
  */ // begin of interface
 
@@ -42,7 +42,7 @@ typedef enum switch_interface_type_ {
     SWITCH_API_INTERFACE_L2_VLAN_ACCESS,             /**< L2 interface on VLAN */
     SWITCH_API_INTERFACE_L2_VLAN_TRUNK,              /**< L2 interface on VLAN */
     SWITCH_API_INTERFACE_L3,                         /**< L3 interface on port */
-    SWITCH_API_INTERFACE_L3_VLAN,                    /**< SVI - L3 interface on VLAN */
+    SWITCH_API_INTERFACE_L3_VLAN,                    /**< L3 interface on VLAN */
     SWITCH_API_INTERFACE_L3_PORT_VLAN,               /**< Sub-Intf - L3 interface on VLAN on a port */
     SWITCH_API_INTERFACE_LAG,                        /**< Interface on lag */
     SWITCH_API_INTERFACE_TUNNEL,                     /**< L3 Tunnel interface  */
@@ -73,7 +73,7 @@ typedef struct switch_api_interface_info_ {
     switch_interface_type_t type;                     /**< type of interface */
     union {
         switch_handle_t port_lag_handle;              /**< Port or LAG handle */
-        switch_vlan_t vlan_id;                        /**< SVI Inteface */
+        switch_vlan_t vlan_id;                        /**< Vlan Inteface */
         switch_port_vlan_t port_vlan;                 /**< L3 sub Interface */
         switch_tunnel_info_t tunnel_info;             /**< Tunnel handle */
     } u;                                              /**< Base information */
