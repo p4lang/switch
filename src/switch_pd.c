@@ -5117,7 +5117,6 @@ switch_pd_validate_outer_ip_add_default_entry(switch_device_t device)
     /* invalid version */
     memset(&match_spec, 0,
            sizeof(p4_pd_dc_validate_outer_ipv4_packet_match_spec_t));
-    match_spec.ipv4_version_mask = 0xff;
     memset(&action_spec, 0,
            sizeof(p4_pd_dc_set_malformed_outer_ipv4_packet_action_spec_t));
     action_spec.action_drop_reason = DROP_OUTER_IP_VERSION_INVALID;
@@ -5190,7 +5189,6 @@ switch_pd_validate_outer_ip_add_default_entry(switch_device_t device)
     /* invalid version */
     memset(&v6_match_spec, 0,
            sizeof(p4_pd_dc_validate_outer_ipv6_packet_match_spec_t));
-    v6_match_spec.ipv6_version_mask = 0xff;
     memset(&v6_action_spec, 0,
            sizeof(p4_pd_dc_set_malformed_outer_ipv6_packet_action_spec_t));
     v6_action_spec.action_drop_reason = DROP_OUTER_IP_VERSION_INVALID;
