@@ -54,7 +54,6 @@ typedef enum switch_acl_ip_field_ {
     SWITCH_ACL_IP_FIELD_ICMP_CODE,      /**< ICMP code */
     SWITCH_ACL_IP_FIELD_TCP_FLAGS,      /**< TCP flags */
     SWITCH_ACL_IP_FIELD_TTL,            /**< TTL */
-    SWITCH_ACL_IP_FIELD_ETH_TYPE,       /**< Ether type */
     SWITCH_ACL_IP_FIELD_DSCP,           /**< DSCP */
     SWITCH_ACL_IP_FIELD_IP_FLAGS,       /**< IP flags */
     SWITCH_ACL_IP_FIELD_TOS,            /**< TOS */
@@ -362,20 +361,23 @@ typedef enum switch_acl_system_field_ {
     SWITCH_ACL_SYSTEM_FIELD_ETH_TYPE,               /**< Ether type */
     SWITCH_ACL_SYSTEM_FIELD_SOURCE_MAC,             /**< Source MAC address */
     SWITCH_ACL_SYSTEM_FIELD_DEST_MAC,               /**< Dest MAC address */
+    SWITCH_ACL_SYSTEM_FIELD_PORT_VLAN_MAPPING_MISS, /**< Port/vlan miss*/
     SWITCH_ACL_SYSTEM_FIELD_IPSG_CHECK,             /**< IP sourceguard check */
     SWITCH_ACL_SYSTEM_FIELD_ACL_DENY,               /**< IP ACL Deny check */
     SWITCH_ACL_SYSTEM_FIELD_RACL_DENY,              /**< Route ACL deny check */
     SWITCH_ACL_SYSTEM_FIELD_URPF_CHECK,             /**< URPF check */
-    SWITCH_ACL_SYSTEM_FIELD_SRC_VTEP_MISS,          /**< VTEP miss check */
+    SWITCH_ACL_SYSTEM_FIELD_DROP,                   /**< Dropped packet */
     SWITCH_ACL_SYSTEM_FIELD_ROUTED,                 /**< Routed packet check */
     SWITCH_ACL_SYSTEM_FIELD_LINK_LOCAL,             /**< Link local address (IPv6) */
     SWITCH_ACL_SYSTEM_FIELD_BD_CHECK,               /**< Bridge domain check */
     SWITCH_ACL_SYSTEM_FIELD_TTL,                    /**< TTL */
-    SWITCH_ACL_SYSTEM_FIELD_EGRESS_PORT,            /**< Egress port */
+    SWITCH_ACL_SYSTEM_FIELD_EGRESS_IFINDEX,         /**< Egress ifindex */
     SWITCH_ACL_SYSTEM_FIELD_STP_STATE,              /**< STP state */
     SWITCH_ACL_SYSTEM_FIELD_CONTROL_FRAME,          /**< Control frame */
     SWITCH_ACL_SYSTEM_FIELD_IPV4_ENABLED,           /**< IPv4 enabled on BD */
     SWITCH_ACL_SYSTEM_FIELD_RMAC_HIT,               /**< Rmac hit */
+    SWITCH_ACL_SYSTEM_FIELD_IF_CHECK,               /**< Same intf check */
+    SWITCH_ACL_SYSTEM_FIELD_TUNNEL_IF_CHECK,        /**< Tunnel intf check */
 
     SWITCH_ACL_SYSTEM_FIELD_MAX
 } switch_acl_system_field_t;
@@ -395,19 +397,20 @@ typedef union switch_acl_system_value_ {
              acl_deny:1,                              /**< acl deny */
              racl_deny:1,                             /**< racl deny */
              urpf_check_fail:1,                       /**< urpf check fail */
-             src_vtep_miss:1,                         /**< source tunnel end point miss */
+             port_vlan_mapping_miss:1,                /**< port vlan mapping miss */
+             drop_flag:1,                             /**< drop flag */
              routed:1,                                /**< routed */
              src_is_link_local:1,                     /**< link local source ip */
-             bd_check:1,                              /**< same bd check */
-             l2_miss:1,                               /**< mac table miss */
-             l2_move:10,                              /**< mac move */
+             tunnel_if_check:1,                       /**< tunnel if check */
              control_frame:1,                         /**< control frame */
              ipv4_enabled:1,                          /**< IPv4 enabled on BD */
              rmac_hit:1;                              /**< rmac hit */
+    unsigned short if_check:16;                       /**< same if check */
+    unsigned short bd_check:16;                       /**< same bd check */
     unsigned char ttl;                                /**< time to live */
-    unsigned short out_port;                          /**< egress port */
+    unsigned short out_ifindex;                       /**< egress ifindex */
     unsigned char stp_state;                          /**< spanning tree port state */
-    unsigned short egr_port;                          /**< egress port */
+    unsigned short egr_port;
 } switch_acl_system_value;
 
 /** Acl system mask */
@@ -429,14 +432,18 @@ typedef struct switch_acl_system_key_value_pair_ {
 /** Acl action parameters */
 typedef union switch_acl_action_params_ {
     struct {
-        unsigned int clone_spec, drop_reason;         /**< mirror acl actions parameters */
+        switch_handle_t mirror_handle;                /**< mirror session handle */
+        unsigned int switch_id;                       /**< mirror switch id */
     } mirror;                                         /**< mirror acl struct */
     struct {
         switch_handle_t handle;                       /**< port/nexthop handle */
     } redirect;                                       /**< port redirect struct */
     struct {
         uint16_t reason_code;                         /**< cpu reason code */
-    } cpu_redirect;                                   /**< cpu redirect struct */
+    } cpu_redirect;
+    struct {
+        uint8_t reason_code;                          /**< drop reason code */
+    } drop;
 } switch_acl_action_params_t;
 
 /** Egress port ACL */
@@ -448,8 +455,8 @@ typedef enum switch_acl_egr_port_field_ {
 
 /** Egress port value */
 typedef union switch_acl_egr_port_value_ {
-    unsigned short egr_port;                         /**< egress port */
-    bool           deflection_flag;                  /**< deflection flag */
+    unsigned short egr_port;
+    bool           deflection_flag;
 } switch_acl_egr_port_value;
 
 /** Egress acl port mask */
@@ -538,7 +545,7 @@ switch_status_t switch_api_acl_renumber(switch_device_t device, switch_handle_t 
  @param device device
  @param acl_handle handle created with list_create
  @param interface_handle - Interface handle
-*/ 
+*/
 switch_status_t switch_api_acl_reference(switch_device_t device, switch_handle_t acl_handle, switch_handle_t interface_handle);
 
 /**
@@ -546,14 +553,24 @@ switch_status_t switch_api_acl_reference(switch_device_t device, switch_handle_t
  @param device device
  @param acl_handle handle created with list_create
  @param interface_handle - Interface handle
-*/ 
+*/
 switch_status_t switch_api_acl_remove(switch_device_t device, switch_handle_t acl_handle, switch_handle_t interface_handle);
 
 /**
  Get ACL type, given the ACL handle
  @param acl_handle handle created with list_create
-*/ 
+*/
 switch_acl_info_t *switch_acl_get(switch_handle_t acl_handle);
+
+/**
+ Get drop statistics
+ @param device device
+ @param num_counters number of counters
+ @param counters pointer to counter array
+*/
+switch_status_t switch_api_drop_stats_get(switch_device_t device,
+                                          int *num_counters,
+                                          uint64_t **counters);
 
 /** @} */ // end of ACL API
 

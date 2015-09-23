@@ -17,26 +17,20 @@ limitations under the License.
 #ifndef _SWITCH_MIRROR_INT_H_
 #define _SWITCH_MIRROR_INT_H_
 
-typedef struct switch_mirror_session_ {
-    // local span and common params
-    switch_mirror_id_t      id;
-    switch_mirror_type_t    type;
-    switch_port_t           eg_port;
-    switch_direction_t      dir;
-    switch_cos_t            cos;
-    uint32_t                max_pkt_len; // 0 = do not truncate
-    // rspan params
-    // erspan params
-    // pd handle for mirror nhop table entry
-    p4_pd_entry_hdl_t       pd_mirror_nhop_hdl;
-    // coal params - can these be here? also typedefs ?
-    uint32_t                header[4];
-    uint32_t                header_len;
-    uint32_t                timeout;
-    uint32_t                min_pkt_len;
-    uint32_t                extract_len;
-    uint32_t                ver;
-    bool                    extract_len_by_p4;
-} switch_mirror_session_t;
+typedef struct switch_mirror_info_ {
+    switch_api_mirror_info_t api_mirror_info;
+    uint32_t max_pkt_len;
+    switch_handle_t intf_handle;
+    switch_handle_t vlan_handle;
+    switch_handle_t tunnel_intf_handle;
+    switch_handle_t inner_neigh_handle;
+    switch_handle_t outer_neigh_handle;
+    p4_pd_entry_hdl_t pd_hdl;
+} switch_mirror_info_t;
 
+switch_status_t
+switch_mirror_init(switch_device_t device);
+
+switch_mirror_info_t *
+switch_mirror_info_get(switch_handle_t mirror_handle);
 #endif /* _SWITCH_MIRROR_INT_H_ */

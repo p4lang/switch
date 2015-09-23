@@ -40,14 +40,6 @@ typedef enum switch_encap_type_ {
     SWITCH_API_ENCAP_TYPE_ERSPAN_T3=7   /**< ERSPAN type III encapsulation */
 } switch_encap_type_t;
 
-/** IP Protocols supported */
-typedef enum switch_protocol_ {
-    SWITCH_IP_PROTOCOL_NONE,                       /**< None */
-    SWITCH_IP_PROTOCOL_UDP,                        /**< UDP */
-    SWITCH_IP_PROTOCOL_TCP,                        /**< TCP */
-    SWITCH_IP_PROTOCOL_GRE                         /**< GRE tunnel */
-} switch_protocol_t;
-
 /** UDP fields that are relevant */
 typedef struct switch_udp_ {
     uint16_t src_port;                         /**< Source port number */
@@ -110,17 +102,17 @@ typedef struct {
 
 /** IP Header information relevant */
 typedef struct switch_ip_encap_ {
-    switch_handle_t vrf_handle;                           /**< VRF instance */
-    switch_ip_addr_t src_ip;                       /**< Source IP address of tunnel */
-    switch_ip_addr_t dst_ip;                       /**< Destination IP of tunnel */
-    unsigned short mtu;                        /**< IP MTU supported */
-    unsigned char ttl;                         /**< Time to live */
-    switch_protocol_t proto;                       /**< UDP/TCP/GRE */
+    switch_handle_t vrf_handle;              /**< VRF instance */
+    switch_ip_addr_t src_ip;                 /**< Source IP address of tunnel */
+    switch_ip_addr_t dst_ip;                 /**< Destination IP of tunnel */
+    unsigned short mtu;                      /**< IP MTU supported */
+    unsigned char ttl;                       /**< Time to live */
+    unsigned char proto;                     /**< UDP/TCP/GRE */
     union {
-        switch_udp_t udp;                          /**< UDP header */
-        switch_tcp_t tcp;                          /**< TCP header */
-        switch_gre_t gre;                          /**< IP GRE header */
-    } u;                                       /**< union */
+        switch_udp_t udp;                    /**< UDP header */
+        switch_tcp_t tcp;                    /**< TCP header */
+        switch_gre_t gre;                    /**< IP GRE header */
+    } u;                                     /**< union */
 } switch_ip_encap_t;
 
 /** Maximum mpls labels supported */

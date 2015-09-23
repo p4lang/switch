@@ -45,7 +45,7 @@ typedef enum {
     SWITCH_HANDLE_TYPE_HOSTIF_GROUP,
     SWITCH_HANDLE_TYPE_HOSTIF,
     SWITCH_HANDLE_TYPE_ACE,
-    SWITCH_HANDLE_TYPE_MIRROR_NHOP,
+    SWITCH_HANDLE_TYPE_MIRROR,
 
     SWITCH_HANDLE_TYPE_MAX=32
 } switch_handle_type_t;
@@ -68,6 +68,8 @@ typedef struct {
 int switch_handle_type_init(switch_handle_type_t type, unsigned int size);
 void switch_handle_type_free(switch_handle_type_t type);
 switch_handle_t switch_handle_allocate(switch_handle_type_t type);
+switch_handle_t switch_handle_set_and_allocate(switch_handle_t type,
+                                               unsigned int id);
 void switch_handle_free(switch_handle_t handle);
 switch_handle_type_t switch_handle_get_type(switch_handle_t handle);
 
@@ -143,7 +145,29 @@ switch_handle_type_t switch_handle_get_type(switch_handle_t handle);
             _handle = 0;                                                \
         }                                                               \
     }                                                                   \
-    
+ 
+#define _switch_handle_set_and_create(                                  \
+        _type, _info, _judy, _init, _id, _handle)                       \
+    _handle = switch_handle_set_and_allocate(_type, _id);               \
+    if(_handle) {                                                       \
+        _info *_i_info = (_info *)switch_malloc(sizeof(_info), 1);      \
+        if(_i_info) {                                                   \
+            char *_ap=NULL;                                             \
+            memset(_i_info, 0, sizeof(_info));                          \
+            JLI(_ap, _judy, (unsigned int)_handle);                     \
+            if(_ap) {                                                   \
+                *(unsigned long *)_ap = (unsigned long)_i_info;         \
+            } else {                                                    \
+                switch_free(_i_info);                                   \
+                switch_handle_free(_handle);                            \
+                 _handle = 0;                                           \
+            }                                                           \
+        } else {                                                        \
+            switch_handle_free(_handle);                                \
+            _handle = 0;                                                \
+        }                                                               \
+    }                                                                   \
+
 #define _switch_handle_delete(_info, _judy, _handle)                    \
     _info *_handle_info;                                                \
     int _ret = 0;                                                       \
@@ -154,7 +178,7 @@ switch_handle_type_t switch_handle_get_type(switch_handle_t handle);
         switch_free(_handle_info);                                      \
     }                                                                   \
     switch_handle_free(_handle);                                        \
-    
+
 #define _switch_handle_get(_info, _judy, _handle, _handle_info)         \
     void *_gp=NULL;                                                     \
     JLG(_gp, _judy, (unsigned int)_handle);                             \

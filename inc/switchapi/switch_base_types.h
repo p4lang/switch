@@ -20,6 +20,7 @@ limitations under the License.
 #include <p4utils/tommyhashtbl.h>
 #include <p4utils/tommylist.h>
 
+#include "drop_reasons.h"
 #include "p4features.h"
 #include "model_flags.h"
 #ifdef BMV2
@@ -102,12 +103,15 @@ typedef struct switch_ip_addr_ {
     unsigned int prefix_len;         /**< prefix length on interface */
 } switch_ip_addr_t;
 
+#define SWITCH_IFINDEX_PORT_WIDTH 9
+
 /** Ifindex type */
 typedef enum switch_ifindex_type_ {
-    SWITCH_IFINDEX_TYPE_LAG = 0x9,
-    SWITCH_IFINDEX_TYPE_TUNNEL = 0xa,
-    SWITCH_IFINDEX_TYPE_CPU = 0xb,
-    SWITCH_IFINDEX_TYPE_MAX = 0xf
+    SWITCH_IFINDEX_TYPE_VLAN_INTERFACE = 1,
+    SWITCH_IFINDEX_TYPE_LAG = 2,
+    SWITCH_IFINDEX_TYPE_TUNNEL = 3,
+    SWITCH_IFINDEX_TYPE_CPU = 4,
+    SWITCH_IFINDEX_TYPE_MAX = 128
 } switch_ifinedx_type_t;
 
 /** counter info */

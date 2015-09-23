@@ -42,6 +42,15 @@ typedef struct switch_dmac_rewrite_ {
 #endif
 } switch_dmac_rewrite_t;
 
+#define SWITCH_NEIGHBOR_DMAC_HASH_KEY_SIZE 14
+
+typedef struct switch_neighbor_dmac_ {
+    switch_handle_t handle;
+    switch_mac_addr_t mac;
+    tommy_hashtable_node node;
+    switch_handle_t neighbor_handle;
+} switch_neighbor_dmac_t;
+
 switch_status_t switch_neighbor_init(switch_device_t device);
 switch_status_t switch_neighbor_free(switch_device_t device);
 switch_status_t
@@ -49,6 +58,10 @@ switch_api_neighbor_entry_add_unicast_rewrite(switch_device_t device, switch_nei
 switch_status_t
 switch_api_neighbor_entry_add_tunnel_rewrite(switch_device_t device, switch_neighbor_info_t *neighbor_info);
     
+switch_neighbor_info_t * switch_neighbor_info_get(switch_handle_t handle);
+
+switch_neighbor_dmac_t *
+switch_neighbor_dmac_search_hash(switch_handle_t bd_handle, switch_mac_addr_t *mac);
 #ifdef __cplusplus
 }
 #endif

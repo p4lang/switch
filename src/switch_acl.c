@@ -735,6 +735,18 @@ switch_api_acl_remove(switch_device_t device,
     return SWITCH_STATUS_SUCCESS;
 }
 
+switch_status_t
+switch_api_drop_stats_get(switch_device_t device,
+                          int *num_counters,
+                          uint64_t **counters)
+{
+    *num_counters = 256;
+    *counters = (uint64_t *)malloc(sizeof(uint64_t) * (*num_counters));
+    memset(*counters, 0, sizeof(uint64_t) * (*num_counters));
+    switch_pd_drop_stats_get(device, *num_counters, *counters);
+    return SWITCH_STATUS_SUCCESS;
+}
+
 #ifdef __cplusplus
 }
 #endif

@@ -86,12 +86,24 @@ switch_api_port_set(switch_device_t device, switch_api_port_info_t *api_port_inf
 {
     switch_port_info_t *port_info = switch_api_port_get_internal(api_port_info->port_number);
     UNUSED(device);
-    if(port_info) {
+    if (port_info) {
         // blindly overwrite the values - may need to get a modify later!
         memcpy(&(port_info->api_port_info), api_port_info, sizeof(switch_api_port_info_t));
         return SWITCH_STATUS_SUCCESS;
     }
     return SWITCH_STATUS_FAILURE;
+}
+
+switch_status_t
+switch_api_port_get(switch_device_t device, switch_api_port_info_t *api_port_info)
+{
+    switch_port_info_t *port_info = switch_api_port_get_internal(api_port_info->port_number);
+    if (!port_info) {
+        api_port_info = NULL;
+        return SWITCH_STATUS_FAILURE;
+    }
+    memcpy(api_port_info, &port_info->api_port_info, sizeof(switch_api_port_info_t));
+    return SWITCH_STATUS_SUCCESS;
 }
 
 switch_status_t

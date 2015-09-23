@@ -89,34 +89,55 @@ switch_pd_mac_table_set_learning_timeout(switch_device_t device, uint32_t timeou
 p4_pd_status_t
 switch_pd_nexthop_table_add_entry(switch_device_t device,
                                   uint16_t nhop,
+                                  uint16_t bd,
                                   switch_ifindex_t ifindex,
+                                  bool flood,
+                                  uint32_t mc_index,
+                                  bool tunnel,
                                   p4_pd_entry_hdl_t *entry_hdl);
 
 p4_pd_status_t
 switch_pd_nexthop_table_update_entry(switch_device_t device,
                                      uint16_t nhop_index,
+                                     uint16_t bd,
                                      switch_ifindex_t ifindex,
+                                     bool flood,
+                                     uint32_t mc_index,
+                                     bool tunnel,
                                      p4_pd_entry_hdl_t *entry_hdl);
 
 p4_pd_status_t
 switch_pd_nexthop_table_delete_entry(switch_device_t device,
                                      p4_pd_entry_hdl_t entry_hdl);
 
-p4_pd_status_t switch_pd_ecmp_group_create(switch_device_t device, p4_pd_grp_hdl_t *p4_pd_group_hdl);
-p4_pd_status_t switch_pd_ecmp_group_delete(switch_device_t device, p4_pd_grp_hdl_t p4_pd_group_hdl);
-p4_pd_status_t switch_pd_ecmp_member_add(switch_device_t device, p4_pd_grp_hdl_t p4_pd_group_hdl, 
-                    uint16_t nhop_index, switch_interface_info_t *intf_info,
-                    p4_pd_mbr_hdl_t *mbr_hdl);
-p4_pd_status_t switch_pd_ecmp_member_delete(switch_device_t device, p4_pd_grp_hdl_t p4_pd_group_hdl, 
-            p4_pd_mbr_hdl_t mbr_hdl);
+p4_pd_status_t
+switch_pd_ecmp_group_create(switch_device_t device,
+                            p4_pd_grp_hdl_t *p4_pd_group_hdl);
 
-p4_pd_status_t switch_pd_ecmp_group_table_add_entry_with_selector(switch_device_t device,
-                               uint16_t ecmp_index, p4_pd_grp_hdl_t p4_pd_group_hdl,
-                               p4_pd_entry_hdl_t *entry_hdl);
+p4_pd_status_t
+switch_pd_ecmp_group_delete(switch_device_t device,
+                            p4_pd_grp_hdl_t p4_pd_group_hdl);
+p4_pd_status_t
+switch_pd_ecmp_member_add(switch_device_t device,
+                          p4_pd_grp_hdl_t p4_pd_group_hdl,
+                          uint16_t nhop_index,
+                          switch_interface_info_t *intf_info,
+                          p4_pd_mbr_hdl_t *mbr_hdl);
+
+p4_pd_status_t
+switch_pd_ecmp_member_delete(switch_device_t device,
+                             p4_pd_grp_hdl_t p4_pd_group_hdl,
+                             p4_pd_mbr_hdl_t mbr_hdl);
+
+p4_pd_status_t
+switch_pd_ecmp_group_table_add_entry_with_selector(
+    switch_device_t device, uint16_t ecmp_index,
+    p4_pd_grp_hdl_t p4_pd_group_hdl,
+    p4_pd_entry_hdl_t *entry_hdl);
 
 p4_pd_status_t
 switch_pd_ecmp_group_table_delete_entry(switch_device_t device,
-                             p4_pd_entry_hdl_t entry_hdl);
+                                        p4_pd_entry_hdl_t entry_hdl);
 
 p4_pd_status_t
 switch_pd_ip_fib_add_entry(switch_device_t device,
@@ -176,10 +197,12 @@ switch_pd_dest_vtep_table_delete_entry(switch_device_t device,
                                   switch_ip_encap_t *ip_encap,
                                   p4_pd_entry_hdl_t entry_hdl);
 p4_pd_status_t
-switch_pd_tunnel_rewrite_table_add_entry(switch_device_t device, uint16_t tunnel_index,
-                                    uint16_t sip_index, uint16_t dip_index,
-                                    uint16_t smac_index, uint16_t dmac_index,
-                                    p4_pd_entry_hdl_t *entry_hdl);
+switch_pd_tunnel_rewrite_table_add_entry(switch_device_t device,
+                                         uint16_t tunnel_index,
+                                         uint16_t sip_index, uint16_t dip_index,
+                                         uint16_t smac_index,
+                                         uint16_t dmac_index,
+                                         p4_pd_entry_hdl_t *entry_hdl);
 
 p4_pd_status_t
 switch_pd_rewrite_table_fabric_add_entry(switch_device_t device,
@@ -206,8 +229,7 @@ switch_pd_tunnel_table_add_entry(switch_device_t device,
 
 p4_pd_status_t
 switch_pd_tunnel_table_delete_entry(switch_device_t device,
-                               p4_pd_entry_hdl_t entry_hdl);
-
+                               p4_pd_entry_hdl_t *entry_hdl);
 
 p4_pd_status_t
 switch_pd_egress_vni_table_add_entry(switch_device_t device,
@@ -597,13 +619,11 @@ p4_pd_status_t
 switch_pd_egr_port_acl_table_delete_entry(switch_device_t device, p4_pd_entry_hdl_t entry_hdl);
 
 p4_pd_status_t
-switch_pd_vlan_stats_enable(switch_device_t device, switch_bd_stats_t *bd_stats);
-
-p4_pd_status_t
-switch_pd_vlan_stats_disable(switch_device_t device, switch_bd_stats_t *bd_stats);
-
-p4_pd_status_t
 switch_pd_vlan_stats_get(switch_device_t device, switch_bd_stats_t *bd_stats);
+
+p4_pd_status_t
+switch_pd_drop_stats_get(switch_device_t device, int num_counters,
+                         uint64_t *counters);
 
 p4_pd_status_t
 switch_pd_egress_lag_table_add_entry(switch_device_t device,
@@ -639,6 +659,9 @@ switch_pd_dest_vtep_table_add_default_entry(switch_device_t device);
 
 p4_pd_status_t
 switch_pd_validate_packet_table_add_default_entry(switch_device_t device);
+
+p4_pd_status_t
+switch_pd_port_vlan_mapping_table_add_default_entry(switch_device_t device);
 
 p4_pd_status_t
 switch_pd_acl_table_add_default_entry(switch_device_t device);
@@ -722,6 +745,9 @@ p4_pd_status_t
 switch_pd_bd_stats_table_add_default_entry(switch_device_t device);
 
 p4_pd_status_t
+switch_pd_bd_flood_table_add_default_entry(switch_device_t device);
+
+p4_pd_status_t
 switch_pd_learn_notify_table_add_init_entry(switch_device_t device);
 
 p4_pd_status_t
@@ -754,23 +780,24 @@ switch_pd_compute_multicast_hashes_init_entry(switch_device_t device);
 // mirroring apis
 p4_pd_status_t
 switch_pd_mirror_session_update(switch_device_t device,
-                                switch_mirror_session_t *mirror_info,
-                                int enable);
+                                switch_handle_t mirror_handle,
+                                switch_mirror_info_t *mirror_info);
+
+p4_pd_status_t
+switch_pd_mirror_session_delete(switch_device_t device,
+                                switch_handle_t mirror_handle);
+
+p4_pd_status_t
+switch_pd_mirror_table_entry_add(switch_device_t device,
+                             switch_handle_t mirror_handle,
+                             switch_mirror_info_t *mirror_info);
+
+p4_pd_status_t
+switch_pd_mirror_table_entry_delete(switch_device_t device,
+                             switch_mirror_info_t *mirror_info);
 
 switch_status_t
-switch_pd_mirror_session_delete(switch_device_t device, switch_mirror_id_t id);
-
-switch_status_t
-switch_pd_mirror_nhop_create(switch_device_t device,
-    switch_mirror_session_t *mirror_info,
-    int32_t nhop_idx);
-
-switch_status_t
-switch_pd_mirror_nhop_delete(switch_device_t device,
-    switch_mirror_session_t *mirror_info);
-
-switch_status_t
-switch_pd_mirror_nhop_table_add_default_entry(switch_device_t device);
+switch_pd_mirror_table_add_default_entry(switch_device_t device);
 
 switch_status_t
 switch_pd_neg_mirror_add_entry(switch_device_t device);
@@ -781,7 +808,20 @@ p4_pd_complete_operations(p4_pd_sess_hdl_t shdl);
 p4_pd_status_t
 p4_pd_client_init(p4_pd_sess_hdl_t *sess_hdl, uint32_t max_txn_size);
 
+#ifdef P4_INT_TRANSIT_ENABLE
+// INT APIs
+p4_pd_status_t
+switch_pd_int_tables_init(switch_device_t device);
 
+p4_pd_status_t
+switch_pd_int_transit_enable(switch_device_t device, int32_t swid,
+                             int32_t idx, p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_int_transit_disable(switch_device_t device,
+                              p4_pd_entry_hdl_t entry_hdl);
+
+#endif
 #ifdef __cplusplus
 }
 #endif

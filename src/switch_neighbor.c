@@ -35,6 +35,7 @@ extern "C" {
     
 static void *switch_neighbor_array=NULL;
 static tommy_hashtable switch_dmac_rewrite_table;
+static tommy_hashtable switch_neighbor_dmac_table;
 switch_api_id_allocator *dmac_rewrite_index_allocator = NULL;
     
 switch_status_t
@@ -43,6 +44,7 @@ switch_neighbor_init(switch_device_t device)
     UNUSED(device);
     switch_neighbor_array = NULL;
     tommy_hashtable_init(&switch_dmac_rewrite_table, SWITCH_DMAC_REWRITE_HASH_TABLE_SIZE);
+    tommy_hashtable_init(&switch_neighbor_dmac_table, SWITCH_NEIGHBOR_DMAC_HASH_KEY_SIZE);
     dmac_rewrite_index_allocator = switch_api_id_allocator_new(SWITCH_DMAC_REWRITE_HASH_TABLE_SIZE, FALSE);
     return switch_handle_type_init(SWITCH_HANDLE_TYPE_ARP, (64*1024));
 }
@@ -53,6 +55,7 @@ switch_neighbor_free(switch_device_t device)
     UNUSED(device);
     switch_handle_type_free(SWITCH_HANDLE_TYPE_ARP);
     tommy_hashtable_done(&switch_dmac_rewrite_table);
+    tommy_hashtable_done(&switch_neighbor_dmac_table);
     switch_api_id_allocator_destroy(dmac_rewrite_index_allocator);
     return SWITCH_STATUS_SUCCESS;
 }
@@ -171,8 +174,86 @@ switch_dmac_rewrite_delete_hash(switch_device_t device, switch_mac_addr_t *mac)
     return status; 
 }
 
+static void
+switch_neighbor_dmac_hash_key_init(uchar *key, switch_handle_t bd_handle,
+                                   switch_mac_addr_t *mac,
+                                   uint32_t *len, uint32_t *hash)
+{
+    *len=0;
+    memset(key, 0, SWITCH_NEIGHBOR_DMAC_HASH_KEY_SIZE);
+    memcpy(key, &bd_handle, sizeof(switch_handle_t));
+    *len += sizeof(switch_handle_t);
+    memcpy(key + *len, mac, sizeof(switch_mac_addr_t));
+    *len += sizeof(switch_mac_addr_t);
+    *hash = MurmurHash2(key, *len, 0x98761234);
+}
+
+static inline int
+switch_neighbor_dmac_hash_cmp(const void *key1, const void *key2)
+{
+    return memcmp(key1, key2, SWITCH_DMAC_REWRITE_HASH_KEY_SIZE);
+}
+
+switch_neighbor_dmac_t *
+switch_neighbor_dmac_search_hash(switch_handle_t bd_handle, switch_mac_addr_t *mac)
+{
+    unsigned char                      key[SWITCH_NEIGHBOR_DMAC_HASH_KEY_SIZE];
+    unsigned int                       len = 0;
+    uint32_t                           hash = 0;
+    switch_neighbor_dmac_t            *neighbor_dmac = NULL;
+
+    switch_neighbor_dmac_hash_key_init(key, bd_handle, mac, &len, &hash);
+    neighbor_dmac = tommy_hashtable_search(&switch_neighbor_dmac_table,
+                                          switch_neighbor_dmac_hash_cmp,
+                                          key, hash);
+    return neighbor_dmac;
+}
+
+static switch_status_t
+switch_neighbor_dmac_insert_hash(switch_device_t device, switch_handle_t bd_handle,
+                                switch_mac_addr_t *mac, switch_handle_t neighbor_handle)
+{
+    unsigned char                      key[SWITCH_NEIGHBOR_DMAC_HASH_KEY_SIZE];
+    unsigned int                       len = 0;
+    uint32_t                           hash = 0;
+    uint16_t                           mac_index = 0;
+    switch_neighbor_dmac_t            *neighbor_dmac = NULL;
+
+    switch_neighbor_dmac_hash_key_init(key, bd_handle, mac, &len, &hash);
+    neighbor_dmac = switch_malloc(sizeof(switch_neighbor_dmac_t), 1);
+    if (!neighbor_dmac) {
+       return mac_index;
+    }
+    memcpy(&neighbor_dmac->mac, mac, sizeof(switch_mac_addr_t));
+    neighbor_dmac->handle = bd_handle;
+    neighbor_dmac->neighbor_handle = neighbor_handle;
+    tommy_hashtable_insert(&switch_neighbor_dmac_table, &(neighbor_dmac->node), neighbor_dmac, hash);
+    return SWITCH_STATUS_SUCCESS;
+}
+
+static switch_status_t
+switch_neighbor_dmac_delete_hash(switch_device_t device, switch_handle_t bd_handle,
+                                 switch_mac_addr_t *mac)
+{
+    switch_neighbor_dmac_t            *neighbor_dmac = NULL;
+    unsigned char                      key[SWITCH_NEIGHBOR_DMAC_HASH_KEY_SIZE];
+    unsigned int                       len = 0;
+    uint32_t                           hash = 0;
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+
+    neighbor_dmac = switch_neighbor_dmac_search_hash(bd_handle, mac);
+    if (!neighbor_dmac) {
+        return SWITCH_STATUS_ITEM_NOT_FOUND;
+    }
+    switch_neighbor_dmac_hash_key_init(key, bd_handle, mac, &len, &hash);
+    neighbor_dmac = tommy_hashtable_remove(&switch_neighbor_dmac_table, switch_neighbor_dmac_hash_cmp, key, hash);
+    switch_free(neighbor_dmac);
+    return status; 
+}
+
 switch_status_t
 switch_api_neighbor_entry_add_rewrite(switch_device_t device,
+                                      switch_handle_t neighbor_handle,
                                       switch_neighbor_info_t *neighbor_info)
 {
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
@@ -228,6 +309,8 @@ switch_api_neighbor_entry_add_rewrite(switch_device_t device,
             device, bd, nhop_index, intf_info->smac_idx, neighbor->mac_addr,
             neighbor->rw_type, &neighbor_info->rewrite_entry);
     }
+    switch_neighbor_dmac_insert_hash(device, intf_info->bd_handle,
+                                     &neighbor->mac_addr, neighbor_handle);
 
     if (status != SWITCH_STATUS_SUCCESS) {
         SWITCH_API_ERROR("%s:%d: Unable to add unicast rewrite entry!.", __FUNCTION__, __LINE__);
@@ -241,8 +324,6 @@ switch_api_neighbor_entry_add_tunnel_rewrite(switch_device_t device,
 {
     switch_interface_info_t           *intf_info = NULL;
     switch_api_neighbor_t             *neighbor = NULL;
-    switch_bd_info_t                  *bd_info = NULL;
-    switch_handle_t                    ln_handle = 0;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
     uint16_t                           smac_index = 1;
     uint16_t                           dmac_index = 0;
@@ -260,13 +341,6 @@ switch_api_neighbor_entry_add_tunnel_rewrite(switch_device_t device,
     if (!intf_info) {
         SWITCH_API_ERROR("%s:%d: invalid interface for tunnel rewrite!", __FUNCTION__, __LINE__);
         return SWITCH_STATUS_INVALID_INTERFACE;
-    }
-
-    ln_handle = intf_info->ln_bd_handle;
-    bd_info = switch_bd_get(ln_handle);
-    if (!bd_info) {
-        SWITCH_API_ERROR("%s:%d: unable to find ln!.", __FUNCTION__, __LINE__);
-        return SWITCH_STATUS_ITEM_NOT_FOUND;
     }
 
     tunnel_info = &(SWITCH_INTF_TUNNEL_INFO(intf_info));
@@ -310,6 +384,7 @@ switch_api_neighbor_entry_add(switch_device_t device, switch_api_neighbor_t *nei
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
     switch_nhop_info_t                *nhop_info = NULL;
     switch_spath_info_t               *spath_info = NULL;
+    switch_handle_t                    nhop_handle = 0;
 
     intf_info = switch_api_interface_get(neighbor->interface);
     if (!intf_info) {
@@ -322,6 +397,7 @@ switch_api_neighbor_entry_add(switch_device_t device, switch_api_neighbor_t *nei
     memcpy(&neighbor_info->neighbor, neighbor, sizeof(switch_api_neighbor_t));
 
 #ifdef SWITCH_PD
+    nhop_handle = neighbor->nhop_handle;
     if (neighbor->nhop_handle == SWITCH_API_INVALID_HANDLE) {
         // check for neighbor type
         if(neighbor->neigh_type == SWITCH_API_NEIGHBOR_NONE && neighbor->rw_type == SWITCH_API_NEIGHBOR_RW_TYPE_L3) {
@@ -331,17 +407,19 @@ switch_api_neighbor_entry_add(switch_device_t device, switch_api_neighbor_t *nei
             nhop_key.ip_addr = neighbor->ip_addr;
             nhop_key.intf_handle = neighbor->interface;
             nhop_key.ip_addr_valid = 1;
-            neighbor_info->neighbor.nhop_handle = switch_api_nhop_create(device, &nhop_key);
+            nhop_handle = switch_api_nhop_create(device, &nhop_key);
         }
     }
-    if (neighbor_info->neighbor.nhop_handle != SWITCH_API_INVALID_HANDLE && neighbor_info->neighbor.nhop_handle) {
-        nhop_info = switch_nhop_get(neighbor_info->neighbor.nhop_handle);
+    if (nhop_handle != SWITCH_API_INVALID_HANDLE && nhop_handle) {
+        nhop_info = switch_nhop_get(nhop_handle);
         if (!nhop_info) {
             return SWITCH_API_INVALID_HANDLE;
         }
         spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
         spath_info->neighbor_handle = handle;
-        status = switch_api_neighbor_entry_add_rewrite(device, neighbor_info);
+        neighbor_info->neighbor.nhop_handle = nhop_handle;
+        status = switch_api_nhop_update(device, nhop_handle);
+        status = switch_api_neighbor_entry_add_rewrite(device, handle, neighbor_info);
     } else {
         status = switch_api_neighbor_entry_add_tunnel_rewrite(device, neighbor_info);
     }
@@ -356,7 +434,9 @@ switch_status_t
 switch_api_neighbor_entry_remove(switch_device_t device, switch_handle_t neighbor_handle)
 {
     switch_neighbor_info_t            *neighbor_info = NULL;
-    switch_nhop_info_t                *nhop_info=NULL;
+    switch_api_neighbor_t             *neighbor = NULL;
+    switch_nhop_info_t                *nhop_info = NULL;
+    switch_interface_info_t           *intf_info = NULL;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
 
     if (!SWITCH_NEIGHBOR_HANDLE_VALID(neighbor_handle)) {
@@ -373,6 +453,13 @@ switch_api_neighbor_entry_remove(switch_device_t device, switch_handle_t neighbo
         if (status != SWITCH_STATUS_SUCCESS) {
             return status;
         }
+        neighbor = &neighbor_info->neighbor;
+        intf_info = switch_api_interface_get(neighbor->interface);
+        if (!intf_info) {
+            SWITCH_API_ERROR("%s:%d invalid interface!", __FUNCTION__, __LINE__);
+            return SWITCH_STATUS_INVALID_INTERFACE;
+        }
+        switch_neighbor_dmac_delete_hash(device, intf_info->bd_handle, &neighbor->mac_addr);
     } else {
         status = switch_dmac_rewrite_delete_hash(device, &neighbor_info->neighbor.mac_addr);
         if (status != SWITCH_STATUS_SUCCESS) {
@@ -388,6 +475,7 @@ switch_api_neighbor_entry_remove(switch_device_t device, switch_handle_t neighbo
     nhop_info = switch_nhop_get(neighbor_info->neighbor.nhop_handle);
     if (nhop_info) {
         nhop_info->u.spath.neighbor_handle = 0;
+        status = switch_api_nhop_update(device, neighbor_info->neighbor.nhop_handle);
         if (nhop_info->valid == 0) {
             switch_api_nhop_delete(device, neighbor_info->neighbor.nhop_handle);
         }

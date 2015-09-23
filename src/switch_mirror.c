@@ -20,157 +20,311 @@ limitations under the License.
 #include "switch_mirror_int.h"
 #include "switch_nhop_int.h"
 #include "switch_pd.h"
+#include "switch_log.h"
+#include "switch_capability_int.h"
 
-static void *switch_mirror_sessions = NULL;
+static void *switch_mirror_array = NULL;
+static switch_api_id_allocator *session_id_allocator;
 
-static switch_mirror_session_t *
-switch_mirror_session_get(switch_mirror_id_t id)
+switch_status_t
+switch_mirror_init(switch_device_t device)
 {
-    void                        *temp = NULL;
-    switch_mirror_session_t     *mirror_info = NULL;
+    switch_mirror_array = NULL;
+    switch_handle_type_init(SWITCH_HANDLE_TYPE_MIRROR, (1024));
+    session_id_allocator = switch_api_id_allocator_new(1024/32, FALSE);
 
-    JLG(temp, switch_mirror_sessions, id);
-    if(!temp) {
-        return NULL;
-    }
-    mirror_info = (switch_mirror_session_t *)(*(unsigned long *)temp);
+    // negative mirroring action
+    switch_pd_neg_mirror_add_entry(device);
+    return SWITCH_STATUS_SUCCESS;
+}
+
+switch_handle_t
+switch_mirror_create()
+{
+    switch_handle_t mirror_handle;
+    _switch_handle_create(SWITCH_HANDLE_TYPE_MIRROR,
+                          switch_mirror_info_t,
+                          switch_mirror_array,
+                          NULL, mirror_handle);
+    return mirror_handle;
+}
+
+switch_handle_t
+switch_mirror_set_and_create(unsigned int id)
+{
+    switch_handle_t mirror_handle;
+    _switch_handle_set_and_create(SWITCH_HANDLE_TYPE_MIRROR,
+                          switch_mirror_info_t,
+                          switch_mirror_array,
+                          NULL, id, mirror_handle);
+    return mirror_handle;
+}
+
+switch_mirror_info_t *
+switch_mirror_info_get(switch_handle_t mirror_handle)
+{
+    switch_mirror_info_t *mirror_info = NULL;
+    _switch_handle_get(switch_mirror_info_t, switch_mirror_array, mirror_handle, mirror_info);
     return mirror_info;
 }
 
 switch_status_t
-switch_mirror_session_create(switch_device_t device, switch_mirror_id_t id,
-                            switch_direction_t direction, switch_port_t eg_port,
-                            switch_mirror_type_t type, switch_cos_t cos,
-                            unsigned int length, unsigned int timeout)
+switch_mirror_delete(switch_handle_t mirror_handle)
 {
-    switch_mirror_session_t           *mirror_info = NULL;
-    void                              *temp = NULL;
-    switch_status_t                   status;
-
-    mirror_info = switch_mirror_session_get(id);
-    if(mirror_info) {
-        return SWITCH_STATUS_ITEM_ALREADY_EXISTS;
-    }
-    // create new mirror session
-    mirror_info = switch_malloc(sizeof(switch_mirror_session_t), 1);
-    if(!mirror_info) {
-        return SWITCH_STATUS_NO_MEMORY;
-    }
-    JLI(temp, switch_mirror_sessions, id);
-    if(!temp) {
-        return SWITCH_STATUS_NO_MEMORY;
-    }
-    *(unsigned long *)temp = (unsigned long)mirror_info;
-    status = switch_mirror_session_update(device, id, direction, eg_port,
-                                          type, cos,
-                                          length, timeout, 1/*enable*/);
-    if (status != SWITCH_STATUS_SUCCESS) {
-        // delete the session
-        JLD(status, switch_mirror_sessions, id);
-        switch_free(mirror_info);
-    }
-    return status;
-}
-
-switch_status_t
-switch_mirror_session_update(switch_device_t device, switch_mirror_id_t id,
-                            switch_direction_t direction, switch_port_t eg_port,
-                            switch_mirror_type_t type, switch_cos_t cos,
-                            unsigned int length, unsigned int timeout,
-                            int enable)
-{
-    switch_status_t                   status=SWITCH_STATUS_SUCCESS;
-    switch_mirror_session_t           *mirror_info = NULL;
-    switch_mirror_session_t           tmp_info;
-
-    mirror_info = switch_mirror_session_get(id);
-    if (!mirror_info) {
-        return SWITCH_STATUS_ITEM_NOT_FOUND;
-    }
-    memset(&tmp_info, 0, sizeof(tmp_info));
-    tmp_info.id = id;
-    tmp_info.eg_port = eg_port;
-    tmp_info.type = type;
-    tmp_info.dir = direction;
-    tmp_info.cos = cos;
-    tmp_info.max_pkt_len = length;
-    tmp_info.pd_mirror_nhop_hdl = 0;
-
-    switch (type) {
-        case SWITCH_MIRROR_TYPE_SIMPLE:
-            status = switch_pd_mirror_session_update(device, &tmp_info, enable);
-            break;
-        case SWITCH_MIRROR_TYPE_TRUNCATE:
-        case SWITCH_MIRROR_TYPE_COALESCE:
-            break;
-        default:
-            break;
-    }
-    if (status != SWITCH_STATUS_SUCCESS) {
-        return status;
-    }
-    *mirror_info = tmp_info;
-    return status;
-}
-
-switch_status_t
-switch_mirror_session_delete(switch_device_t device, switch_mirror_id_t id)
-{
-    unsigned int                       status=0;
-    switch_mirror_session_t            *mirror_info = NULL;
-
-    mirror_info = switch_mirror_session_get(id);
-    if (!mirror_info) {
-        return SWITCH_STATUS_ITEM_NOT_FOUND;
-    }
-
-    switch (mirror_info->type) {
-        case SWITCH_MIRROR_TYPE_SIMPLE:
-            switch_pd_mirror_session_delete(device, id);
-            break;
-        case SWITCH_MIRROR_TYPE_TRUNCATE:
-        case SWITCH_MIRROR_TYPE_COALESCE:
-            break;
-        default:
-            break;
-    }
-    JLD(status, switch_mirror_sessions, id);
-    switch_free(mirror_info);
+    _switch_handle_delete(switch_mirror_info_t,
+                          switch_mirror_array,
+                          mirror_handle);
     return SWITCH_STATUS_SUCCESS;
 }
 
-switch_status_t
-switch_mirror_nhop_create(switch_device_t device, switch_mirror_id_t id, switch_handle_t nhop_hdl)
+switch_handle_t
+switch_api_mirror_session_create(switch_device_t device,
+                                 switch_api_mirror_info_t *api_mirror_info)
 {
-    switch_mirror_session_t     *mirror_info = NULL;
-    int32_t                     nhop_idx;
+    switch_mirror_info_t              *mirror_info = NULL;
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+    switch_handle_t                    mirror_handle = 0;
+    switch_handle_t                    intf_handle = 0;
+    switch_api_interface_info_t        api_intf_info;
+    switch_handle_t                    tunnel_intf_handle = 0;
+    switch_tunnel_info_t              *tunnel_info = NULL;
+    switch_handle_t                    inner_neigh_handle = 0;
+    switch_handle_t                    outer_neigh_handle = 0;
+    switch_api_neighbor_t              api_neighbor;
+    switch_nhop_key_t                  nhop_key;
+    switch_handle_t                    nhop_handle = 0;
+    switch_handle_t                    vlan_handle = 0;
+    switch_vlan_port_t                 vlan_port;
+    switch_ip_encap_t                 *ip_encap = NULL;
 
-    mirror_info = switch_mirror_session_get(id);
+    if (api_mirror_info->session_id) {
+        mirror_handle = switch_mirror_set_and_create(api_mirror_info->session_id);
+    } else {
+        mirror_handle = switch_mirror_create();
+        api_mirror_info->session_id = handle_to_id(mirror_handle);
+    }
+    mirror_info = switch_mirror_info_get(mirror_handle);
     if (!mirror_info) {
-        return SWITCH_STATUS_ITEM_NOT_FOUND;
+        return SWITCH_API_INVALID_HANDLE;
     }
-    if (switch_nhop_get(nhop_hdl) == NULL) {
-        return SWITCH_STATUS_ITEM_NOT_FOUND;
+
+    api_mirror_info->enable = TRUE;
+    memcpy(&mirror_info->api_mirror_info, api_mirror_info, sizeof(switch_api_mirror_info_t));
+    switch_api_id_allocator_set(session_id_allocator,
+                                api_mirror_info->session_id);
+
+    switch (api_mirror_info->session_type) {
+        case SWITCH_MIRROR_SESSION_TYPE_SIMPLE:
+            status = switch_pd_mirror_session_update(device, mirror_handle, mirror_info);
+            break;
+        case SWITCH_MIRROR_SESSION_TYPE_TRUNCATE:
+        case SWITCH_MIRROR_SESSION_TYPE_COALESCE:
+            break;
+        default:
+            break;
     }
-    if (mirror_info->pd_mirror_nhop_hdl) {
-        return SWITCH_STATUS_ITEM_ALREADY_EXISTS;
+
+    if (SWITCH_NHOP_HANDLE_VALID(api_mirror_info->nhop_handle)) {
+        status = switch_pd_mirror_table_entry_add(device,
+                                        mirror_handle,
+                                        mirror_info);
+    } else if (api_mirror_info->tunnel_create || api_mirror_info->vlan_create) {
+        switch (api_mirror_info->mirror_type) {
+            case SWITCH_MIRROR_TYPE_LOCAL:
+                break;
+            case SWITCH_MIRROR_TYPE_REMOTE:
+                vlan_handle = switch_api_vlan_create(device,
+                                                     api_mirror_info->vlan_id);
+                memset(&api_intf_info, 0, sizeof(switch_api_interface_info_t));
+                api_intf_info.type = SWITCH_API_INTERFACE_L2_VLAN_TRUNK;
+                api_intf_info.u.port_lag_handle = api_mirror_info->egress_port;
+                intf_handle = switch_api_interface_create(device, &api_intf_info);
+                if (intf_handle == SWITCH_API_INVALID_HANDLE) {
+                    SWITCH_API_TRACE("%s:%d: failed to create encap interface\n",
+                                     __FUNCTION__, __LINE__);
+                    return SWITCH_API_INVALID_HANDLE;
+                }
+                vlan_port.tagging_mode = 0;
+                vlan_port.handle = intf_handle;
+                status = switch_api_vlan_ports_add(device, vlan_handle,
+                                                   1, &vlan_port);
+                mirror_info->vlan_handle = vlan_handle;
+                mirror_info->intf_handle = intf_handle;
+                break;
+            case SWITCH_MIRROR_TYPE_ENHANCED_REMOTE:
+                //Create the encap interface
+                memset(&api_intf_info, 0, sizeof(switch_api_interface_info_t));
+                api_intf_info.type = SWITCH_API_INTERFACE_L2_VLAN_ACCESS;
+                api_intf_info.u.port_lag_handle = api_mirror_info->egress_port;
+                intf_handle = switch_api_interface_create(device, &api_intf_info);
+                if (intf_handle == SWITCH_API_INVALID_HANDLE) {
+                    SWITCH_API_TRACE("%s:%d: failed to create encap interface\n",
+                                     __FUNCTION__, __LINE__);
+                    return SWITCH_API_INVALID_HANDLE;
+                }
+        
+                tunnel_info = &api_mirror_info->tunnel_info;
+                tunnel_info->u.ip_encap.vrf_handle = switch_api_default_vrf_internal();
+                tunnel_info->encap_mode = SWITCH_API_TUNNEL_ENCAP_MODE_IP;
+                tunnel_info->out_if = intf_handle;
+                tunnel_intf_handle = switch_api_tunnel_interface_create(device, 0,
+                                                                        tunnel_info);
+                if (intf_handle == SWITCH_API_INVALID_HANDLE) {
+                    SWITCH_API_TRACE("failed to create tunnel interface %s:%d\n",
+                                     __FUNCTION__, __LINE__);
+                    return SWITCH_API_INVALID_HANDLE;
+                }
+        
+                memset(&nhop_key, 0, sizeof(switch_nhop_key_t));
+                nhop_key.intf_handle = tunnel_intf_handle;
+                nhop_handle = switch_api_nhop_create(device, &nhop_key);
+                if (nhop_handle == SWITCH_API_INVALID_HANDLE) {
+                    SWITCH_API_TRACE("%s:%d: failed to create nhop for tunnel interface\n",
+                                     __FUNCTION__, __LINE__);
+                    return SWITCH_API_INVALID_HANDLE;
+                }
+        
+                ip_encap = &tunnel_info->u.ip_encap;
+                memset(&api_neighbor, 0, sizeof(switch_api_neighbor_t));
+                api_neighbor.vrf_handle = switch_api_default_vrf_internal();
+                api_neighbor.interface = tunnel_intf_handle;
+                api_neighbor.nhop_handle = nhop_handle;
+                api_neighbor.rw_type = SWITCH_API_NEIGHBOR_RW_TYPE_L2;
+                if (SWITCH_IP_ENCAP_SRC_IP_TYPE(ip_encap) == SWITCH_API_IP_ADDR_V4) {
+                    api_neighbor.neigh_type = SWITCH_API_NEIGHBOR_IPV4_TUNNEL;
+                } else {
+                    api_neighbor.neigh_type = SWITCH_API_NEIGHBOR_IPV4_TUNNEL;
+                }
+                inner_neigh_handle = switch_api_neighbor_entry_add(device, &api_neighbor);
+                if (inner_neigh_handle == SWITCH_API_INVALID_HANDLE) {
+                    SWITCH_API_TRACE("%s:%d: failed to create inner neighbor for tunnel interface\n",
+                                     __FUNCTION__, __LINE__);
+                    return SWITCH_API_INVALID_HANDLE;
+                }
+        
+                memset(&api_neighbor, 0, sizeof(switch_api_neighbor_t));
+                api_neighbor.vrf_handle = switch_api_default_vrf_internal();
+                api_neighbor.interface = tunnel_intf_handle;
+                memcpy(&api_neighbor.mac_addr, &api_mirror_info->dst_mac,
+                       sizeof(switch_mac_addr_t));
+                outer_neigh_handle = switch_api_neighbor_entry_add(device, &api_neighbor);
+                if (outer_neigh_handle == SWITCH_API_INVALID_HANDLE) {
+                    SWITCH_API_TRACE("%s:%d failed to create inner neighbor for tunnel interface\n",
+                                     __FUNCTION__, __LINE__);
+                    return SWITCH_API_INVALID_HANDLE;
+                }
+        
+                mirror_info->intf_handle = intf_handle;
+                mirror_info->tunnel_intf_handle = tunnel_intf_handle;
+                mirror_info->inner_neigh_handle = inner_neigh_handle;
+                mirror_info->outer_neigh_handle = outer_neigh_handle;
+                mirror_info->api_mirror_info.nhop_handle = nhop_handle;
+        
+                status = switch_pd_mirror_table_entry_add(device,
+                                                mirror_handle,
+                                                mirror_info);
+                break;
+            default:
+                return SWITCH_API_INVALID_HANDLE;
+            }
     }
-    nhop_idx = handle_to_id(nhop_hdl);
-    return switch_pd_mirror_nhop_create(device, mirror_info, nhop_idx);
+
+    if (status != SWITCH_STATUS_SUCCESS) {
+        return SWITCH_API_INVALID_HANDLE;
+    }
+    return mirror_handle;
 }
 
 switch_status_t
-switch_mirror_nhop_delete(switch_device_t device, switch_mirror_id_t id)
+switch_api_mirror_session_update(switch_device_t device, 
+                                 switch_handle_t mirror_handle,
+                                 switch_api_mirror_info_t *api_mirror_info)
 {
-    switch_mirror_session_t     *mirror_info = NULL;
+    switch_status_t                   status = SWITCH_STATUS_SUCCESS;
+    switch_mirror_info_t             *mirror_info = NULL;
+    switch_api_mirror_info_t         *tmp_api_mirror_info = NULL;
 
-    mirror_info = switch_mirror_session_get(id);
+    mirror_info = switch_mirror_info_get(mirror_handle);
     if (!mirror_info) {
         return SWITCH_STATUS_ITEM_NOT_FOUND;
     }
-    if (!mirror_info->pd_mirror_nhop_hdl) {
-        return SWITCH_STATUS_ITEM_NOT_FOUND;
+
+    tmp_api_mirror_info = &mirror_info->api_mirror_info;
+    memcpy(&mirror_info->api_mirror_info, api_mirror_info, sizeof(switch_api_mirror_info_t));
+    switch (api_mirror_info->session_type) {
+        case SWITCH_MIRROR_SESSION_TYPE_SIMPLE:
+            status = switch_pd_mirror_session_update(device, mirror_handle, mirror_info);
+            break;
+        case SWITCH_MIRROR_SESSION_TYPE_TRUNCATE:
+        case SWITCH_MIRROR_SESSION_TYPE_COALESCE:
+            break;
+        default:
+            break;
     }
-    return switch_pd_mirror_nhop_delete(device, mirror_info);
+    if (!SWITCH_NHOP_HANDLE_VALID(tmp_api_mirror_info->nhop_handle) &&
+         SWITCH_NHOP_HANDLE_VALID(api_mirror_info->nhop_handle)) {
+        status = switch_pd_mirror_table_entry_add(device,
+                                        mirror_handle,
+                                        mirror_info);
+    }
+    return status;
 }
 
+switch_status_t
+switch_api_mirror_session_delete(switch_device_t device, switch_handle_t mirror_handle)
+{
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+    switch_mirror_info_t              *mirror_info = NULL;
+    switch_api_mirror_info_t          *api_mirror_info = NULL;
+    switch_vlan_port_t                 vlan_port;
+
+    mirror_info = switch_mirror_info_get(mirror_handle);
+    if (!mirror_info) {
+        return SWITCH_STATUS_ITEM_NOT_FOUND;
+    }
+
+    api_mirror_info = &mirror_info->api_mirror_info;
+    switch (api_mirror_info->session_type) {
+        case SWITCH_MIRROR_SESSION_TYPE_SIMPLE:
+            status = switch_pd_mirror_session_delete(device, mirror_handle);
+            break;
+        case SWITCH_MIRROR_SESSION_TYPE_TRUNCATE:
+        case SWITCH_MIRROR_SESSION_TYPE_COALESCE:
+            break;
+        default:
+            break;
+    }
+
+    if (SWITCH_NHOP_HANDLE_VALID(api_mirror_info->nhop_handle)) {
+        status = switch_pd_mirror_table_entry_delete(device, mirror_info);
+    } else if (api_mirror_info->tunnel_create || api_mirror_info->vlan_create) {
+        switch (api_mirror_info->mirror_type) {
+            case SWITCH_MIRROR_TYPE_LOCAL:
+                break;
+            case SWITCH_MIRROR_TYPE_REMOTE:
+                vlan_port.tagging_mode = 0;
+                vlan_port.handle = mirror_info->intf_handle;
+                status = switch_api_vlan_ports_remove(device, 
+                                                      mirror_info->vlan_handle,
+                                                      1, &vlan_port);
+                status = switch_api_interface_delete(device, mirror_info->intf_handle);
+                status = switch_api_vlan_delete(device, mirror_info->vlan_handle);
+                break;
+            case SWITCH_MIRROR_TYPE_ENHANCED_REMOTE:
+                status = switch_api_neighbor_entry_remove(device, mirror_info->outer_neigh_handle);
+                status = switch_api_neighbor_entry_remove(device, mirror_info->inner_neigh_handle);
+                status = switch_api_nhop_delete(device, mirror_info->api_mirror_info.nhop_handle);
+                status = switch_api_tunnel_interface_delete(device, mirror_info->tunnel_intf_handle);
+                status = switch_api_interface_delete(device, mirror_info->intf_handle);
+                status = switch_pd_mirror_table_entry_delete(device, mirror_info);
+                break;
+            default:
+                return SWITCH_STATUS_FAILURE;
+        }
+    }
+
+    switch_api_id_allocator_release(session_id_allocator,
+                                    api_mirror_info->session_id);
+    switch_mirror_delete(mirror_handle);
+    return status;
+}

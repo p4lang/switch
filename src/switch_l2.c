@@ -20,6 +20,7 @@ limitations under the License.
 #include "switchapi/switch_status.h"
 #include "switchapi/switch_utils.h"
 #include "switch_nhop_int.h"
+#include "switch_neighbor_int.h"
 #include "switch_pd.h"
 #include "switch_log.h"
 
@@ -86,6 +87,7 @@ switch_mac_insert_into_vlan_list(switch_mac_info_t *mac_info)
     if (!temp) {
         mac_vlan_list = switch_malloc(sizeof(switch_mac_vlan_list_t), 1);
         if (!mac_vlan_list) {
+            SWITCH_API_ERROR("%s:%d: No memory!", __FUNCTION__, __LINE__);
             return SWITCH_STATUS_NO_MEMORY;
         }
         tommy_list_init(&(mac_vlan_list->mac_entries));
@@ -111,6 +113,7 @@ switch_mac_insert_into_interface_list(switch_mac_info_t *mac_info)
     if (!temp) {
         mac_intf_list = switch_malloc(sizeof(switch_mac_intf_list_t), 1);
         if (!mac_intf_list) {
+            SWITCH_API_ERROR("%s:%d: No memory!", __FUNCTION__, __LINE__);
             return SWITCH_STATUS_NO_MEMORY;
         }
         tommy_list_init(&(mac_intf_list->mac_entries));
@@ -246,7 +249,7 @@ cleanup:
     return status;
 }
 
-static switch_mac_info_t *
+switch_mac_info_t *
 switch_mac_table_entry_find(switch_api_mac_entry_t *mac_entry)
 {
     switch_mac_info_t                 *mac_info = NULL;
@@ -438,6 +441,51 @@ switch_mac_table_free(void)
     return SWITCH_STATUS_SUCCESS;
 }
 
+static switch_status_t
+switch_mac_update_nhop(switch_device_t device,
+                       switch_handle_t intf_handle,
+                       switch_api_mac_entry_t *mac_entry)
+{
+    switch_interface_info_t           *intf_info = NULL;
+    switch_neighbor_dmac_t            *neighbor_dmac = NULL;
+    switch_neighbor_info_t            *neighbor_info = NULL;
+    switch_handle_t                    nhop_handle = 0;
+    switch_nhop_info_t                *nhop_info = NULL;
+    switch_spath_info_t               *spath_info = NULL;
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+
+    if (!SWITCH_INTERFACE_HANDLE_VALID(intf_handle)) {
+        return SWITCH_STATUS_SUCCESS;
+    }
+
+    intf_info = switch_api_interface_get(intf_handle);
+    if (!intf_info) {
+        return SWITCH_STATUS_SUCCESS;
+    }
+
+    neighbor_dmac = switch_neighbor_dmac_search_hash(mac_entry->vlan_handle, &mac_entry->mac);
+    if (!neighbor_dmac) {
+        return SWITCH_STATUS_SUCCESS;
+    }
+
+    neighbor_info = switch_neighbor_info_get(neighbor_dmac->neighbor_handle);
+    if (!neighbor_info) {
+        return SWITCH_STATUS_FAILURE;
+    }
+
+    nhop_handle = neighbor_info->neighbor.nhop_handle;
+    if (SWITCH_NHOP_HANDLE_VALID(nhop_handle)) {
+        nhop_info = switch_nhop_get(nhop_handle);
+        if (!nhop_info) {
+            return SWITCH_STATUS_INVALID_HANDLE;
+        }
+        spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
+        spath_info->nhop_key.intf_handle = intf_handle;
+        status = switch_api_nhop_update(device, nhop_handle);
+    }
+    return status;
+}
+
 /*
  * Routine Description:
  * Add an entry to Dmac table and smac table
@@ -551,12 +599,15 @@ switch_api_mac_table_entry_add(switch_device_t device,
         goto cleanup;
     }
 
+    switch_mac_update_nhop(device, intf_handle, mac_entry);
+
     if (mac_entry->entry_type == SWITCH_MAC_ENTRY_DYNAMIC) {
         aging_time = switch_api_mac_get_default_aging_time_internal();
         if (ln_info->age_interval) {
             aging_time = ln_info->age_interval;
         }
     }
+
 #ifdef SWITCH_PD
     mac_info->smac_entry = SWITCH_HW_INVALID_HANDLE;
     mac_info->dmac_entry = SWITCH_HW_INVALID_HANDLE;
@@ -669,6 +720,13 @@ switch_api_mac_table_entry_update(switch_device_t device,
                 status = SWITCH_STATUS_INVALID_INTERFACE;
                 goto cleanup;
             }
+            if (SWITCH_INTF_TYPE(intf_info) == SWITCH_API_INTERFACE_TUNNEL) {
+                nhop_info = switch_nhop_get(intf_info->nhop_handle);
+                if (!nhop_info) {
+                    return SWITCH_STATUS_INVALID_NHOP;
+                }
+                nhop_index = handle_to_id(intf_info->nhop_handle);
+            }
         break;
 
         case SWITCH_HANDLE_TYPE_NHOP:
@@ -698,6 +756,8 @@ switch_api_mac_table_entry_update(switch_device_t device,
         status = SWITCH_STATUS_INVALID_VLAN_ID;
         goto cleanup;
     }
+
+    switch_mac_update_nhop(device, intf_handle, mac_entry);
 
 #ifdef SWITCH_PD
     status = switch_pd_dmac_table_update_entry(device, mac_entry,
@@ -757,6 +817,10 @@ switch_api_mac_table_entry_delete(switch_device_t device,
 {
     switch_mac_info_t                 *mac_info = NULL;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+    switch_interface_info_t           *intf_info = NULL;
+    switch_handle_t                    intf_handle = 0;
+    switch_handle_t                    handle = 0;
+    switch_handle_type_t               handle_type = 0;
     char                               buffer[200];
  
     mac_info = switch_mac_table_entry_find(mac_entry);
@@ -765,6 +829,34 @@ switch_api_mac_table_entry_delete(switch_device_t device,
         goto cleanup;
     }
 
+    handle = mac_info->mac_entry.handle;
+    handle_type = switch_handle_get_type(handle);
+    switch(handle_type) {
+        case SWITCH_HANDLE_TYPE_PORT:
+        case SWITCH_HANDLE_TYPE_LAG:
+            status = switch_intf_handle_get(mac_entry->vlan_handle, handle,
+                                            &intf_handle);
+            if (status != SWITCH_STATUS_SUCCESS) {
+                goto cleanup;
+            }
+            intf_info = switch_api_interface_get(intf_handle);
+            if (!intf_info) {
+                status = SWITCH_STATUS_INVALID_INTERFACE;
+                goto cleanup;
+            }
+            break;
+        case SWITCH_HANDLE_TYPE_INTERFACE:
+            intf_handle = handle;
+            intf_info = switch_api_interface_get(intf_handle);
+            if (!intf_info) {
+                status = SWITCH_STATUS_INVALID_INTERFACE;
+                goto cleanup;
+            }
+        break;
+        default:
+            intf_handle = 0;
+    }
+    switch_mac_update_nhop(device, intf_handle, mac_entry);
 #ifdef SWITCH_PD
     if (mac_info->smac_entry != SWITCH_HW_INVALID_HANDLE) {
         status = switch_pd_smac_table_delete_entry(device, mac_info->smac_entry);
@@ -1143,7 +1235,6 @@ switch_api_mac_table_set_learning_timeout(switch_device_t device, uint32_t timeo
     status = switch_pd_mac_table_set_learning_timeout(device, timeout);
     return status;
 }
-
 
 switch_status_t
 switch_api_mac_table_print_all()

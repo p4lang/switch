@@ -119,9 +119,17 @@ switch_api_router_mac_add(switch_device_t device, switch_handle_t rmac_handle, s
     status = switch_pd_inner_rmac_table_add_entry(device,
                                               handle_to_id(rmac_handle), mac,
                                               &rmac_info->inner_rmac_entry);
+    if(status != SWITCH_STATUS_SUCCESS) {
+        printf("Inner RMAC table add failed with error code %d\n", status);
+        return status;
+    }
+
     status = switch_pd_outer_rmac_table_add_entry(device,
                                               handle_to_id(rmac_handle), mac,
                                               &rmac_info->outer_rmac_entry);
+    if(status != SWITCH_STATUS_SUCCESS) {
+        printf("Outer RMAC table add failed with error code %d\n", status);
+    }
 #endif
     return status; 
 }

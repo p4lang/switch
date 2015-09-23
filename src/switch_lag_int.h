@@ -73,15 +73,17 @@ typedef struct switch_lag_weighted_member_ {
 #endif
 } switch_lag_weighted_member_t;
 
-#define SWITCH_LAG_ID_FROM_IFINDEX(ifindex) \
-    (ifindex & 0x1FF)
+#define SWITCH_LAG_ID_FROM_IFINDEX(ifindex)                             \
+    (ifindex &                                                          \
+    (~(SWITCH_IFINDEX_TYPE_LAG << SWITCH_IFINDEX_PORT_WIDTH)))
 
-//Set the 10th bit to indicate it is a lag
-#define SWITCH_LAG_COMPUTE_IFINDEX(handle) \
-    (handle_to_id(handle) | 0x200) 
+#define SWITCH_LAG_COMPUTE_IFINDEX(handle)                              \
+    (handle_to_id(handle) |                                             \
+    (SWITCH_IFINDEX_TYPE_LAG << SWITCH_IFINDEX_PORT_WIDTH))
 
-#define SWITCH_IS_LAG_IFINDEX(ifindex) \
-    (ifindex & 0x200)
+#define SWITCH_IS_LAG_IFINDEX(ifindex)                                  \
+    ((ifindex >> SWITCH_IFINDEX_PORT_WIDTH) ==                          \
+     SWITCH_IFINDEX_TYPE_LAG)
 
 switch_status_t switch_lag_init(switch_device_t device);
 switch_status_t switch_lag_free(switch_device_t device);
