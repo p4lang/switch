@@ -371,7 +371,7 @@ struct switcht_acl_ipv6racl_key_value_pair_t {
     3: i64 mask;
 }
 
-struct switcht_acl_egr_port_key_value_pair_t {
+struct switcht_acl_egr_key_value_pair_t {
     1: i32 field;
     2: i16 value;
     3: i16 mask;
@@ -568,7 +568,7 @@ service switch_api_rpc {
     switcht_handle_t switcht_api_acl_ip_rule_create(1:switcht_device_t device, 2:switcht_handle_t acl_handle, 3:i32 priority, 4:i32 key_value_count, 5:list<switcht_acl_ip_key_value_pair_t> acl_kvp, 6:switcht_acl_action_t action, 7:switcht_acl_action_params_t action_params);
     switcht_handle_t switcht_api_acl_mirror_rule_create(1:switcht_device_t device, 2:switcht_handle_t acl_handle, 3:i32 priority, 4:i32 key_value_count, 5:list<switcht_acl_mirror_key_value_pair_t> acl_kvp, 6:switcht_acl_action_t action, 7:switcht_acl_action_params_t action_params);
     switcht_handle_t switcht_api_acl_system_rule_create(1:switcht_device_t device, 2:switcht_handle_t acl_handle, 3:i32 priority, 4:i32 key_value_count, 5:list<switcht_acl_system_key_value_pair_t> acl_kvp, 6:switcht_acl_action_t action, 7:switcht_acl_action_params_t action_params);
-    switcht_handle_t switcht_api_acl_egr_port_rule_create(1:switcht_device_t device, 2:switcht_handle_t acl_handle, 3:i32 priority, 4:i32 key_value_count, 5:list<switcht_acl_egr_port_key_value_pair_t> acl_kvp, 6:switcht_acl_action_t action, 7:switcht_acl_action_params_t action_params);
+    switcht_handle_t switcht_api_acl_egr_rule_create(1:switcht_device_t device, 2:switcht_handle_t acl_handle, 3:i32 priority, 4:i32 key_value_count, 5:list<switcht_acl_egr_key_value_pair_t> acl_kvp, 6:switcht_acl_action_t action, 7:switcht_acl_action_params_t action_params);
     switcht_status_t switcht_api_acl_rule_delete(1:switcht_device_t device, 2:switcht_handle_t acl_handle, 3:switcht_handle_t handle);
     switcht_status_t switcht_api_acl_reference(1:switcht_device_t device, 2:switcht_handle_t acl_handle, 3:switcht_handle_t interface_handle);
     switcht_status_t switcht_api_acl_remove(1:switcht_device_t device, 2:switcht_handle_t acl_handle, 3:switcht_handle_t interface_handle);

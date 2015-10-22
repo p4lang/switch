@@ -606,17 +606,18 @@ p4_pd_status_t
 switch_pd_system_acl_table_delete_entry(switch_device_t device, p4_pd_entry_hdl_t entry_hdl);
 
 p4_pd_status_t
-switch_pd_egr_port_acl_table_add_entry(switch_device_t device,
-                            uint16_t if_label, uint16_t bd_label,
-                            uint16_t priority,
-                            unsigned int count,
-                            switch_acl_egr_port_key_value_pair_t *egr_port_acl,
-                            switch_acl_egr_port_action_t action,
-                            switch_acl_action_params_t *action_params,
-                            p4_pd_entry_hdl_t *entry_hdl);
+switch_pd_egr_acl_table_add_entry(switch_device_t device,
+                                  uint16_t if_label, uint16_t bd_label,
+                                  uint16_t priority,
+                                  unsigned int count,
+                                  switch_acl_egr_key_value_pair_t *egr_acl,
+                                  switch_acl_egr_action_t action,
+                                  switch_acl_action_params_t *action_params,
+                                  p4_pd_entry_hdl_t *entry_hdl);
 
 p4_pd_status_t
-switch_pd_egr_port_acl_table_delete_entry(switch_device_t device, p4_pd_entry_hdl_t entry_hdl);
+switch_pd_egr_acl_table_delete_entry(switch_device_t device,
+                                     p4_pd_entry_hdl_t entry_hdl);
 
 p4_pd_status_t
 switch_pd_vlan_stats_get(switch_device_t device, switch_bd_stats_t *bd_stats);
@@ -775,7 +776,7 @@ p4_pd_status_t
 switch_pd_egress_port_mapping_table_init_entry(switch_device_t device);
 
 p4_pd_status_t
-switch_pd_compute_multicast_hashes_init_entry(switch_device_t device);
+switch_pd_compute_hashes_init_entry(switch_device_t device);
 
 // mirroring apis
 p4_pd_status_t

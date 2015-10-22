@@ -39,7 +39,6 @@ typedef enum switch_acl_type_ {
     SWITCH_ACL_TYPE_EGRESS_SYSTEM,  /**< Egress System ACL */
     SWITCH_ACL_TYPE_IP_RACL,        /**< IPv4 Route ACL */
     SWITCH_ACL_TYPE_IPV6_RACL,      /**< IPv6 Route ACL */
-    SWITCH_ACL_TYPE_EGR_PORT,       /**< Egress Port ACL */
     SWITCH_ACL_TYPE_MAX
 } switch_acl_type_t;
 
@@ -447,39 +446,43 @@ typedef union switch_acl_action_params_ {
 } switch_acl_action_params_t;
 
 /** Egress port ACL */
-typedef enum switch_acl_egr_port_field_ {
-    SWITCH_ACL_EGR_PORT_DEST_PORT,
+typedef enum switch_acl_egr_field_ {
+    SWITCH_ACL_EGR_DEST_PORT,
     SWITCH_ACL_EGR_DEFLECT,
-    SWITCH_ACL_EGR_PORT_FIELD_MAX
-} switch_acl_egr_port_field_t;
+    SWITCH_ACL_EGR_L3_MTU_CHECK,
+    SWITCH_ACL_EGR_FIELD_MAX
+} switch_acl_egr_field_t;
 
 /** Egress port value */
-typedef union switch_acl_egr_port_value_ {
-    unsigned short egr_port;
-    bool           deflection_flag;
-} switch_acl_egr_port_value;
+typedef union switch_acl_egr_value_ {
+    switch_handle_t  egr_port;
+    bool             deflection_flag;
+    unsigned short   l3_mtu_check;
+} switch_acl_egr_value_t;
 
 /** Egress acl port mask */
-typedef union switch_acl_egr_port_mask_ {
+typedef union switch_acl_egr_mask_ {
     unsigned type:1;                                  /**< acl mask type */
     union {
-        uint32_t mask;                                /**< mask value */
+        uint64_t mask;                                /**< mask value */
         unsigned int start, end;                      /**< mask range */
     } u;                                              /**< ip mask union */
-} switch_acl_egr_port_mask;
+} switch_acl_egr_mask_t;
 
 /** Egress acl key value pair */
-typedef struct switch_acl_egr_port_key_value_pair_ {
-    switch_acl_egr_port_field_t field;               /**< acl ip field type */
-    switch_acl_egr_port_value value;                 /**< acl ip field value */
-    switch_acl_egr_port_mask mask;                   /**< acl ip field mask */
-} switch_acl_egr_port_key_value_pair_t;
+typedef struct switch_acl_egr_key_value_pair_ {
+    switch_acl_egr_field_t field;                     /**< acl ip field type */
+    switch_acl_egr_value_t value;                     /**< acl ip field value */
+    switch_acl_egr_mask_t mask;                       /**< acl ip field mask */
+} switch_acl_egr_key_value_pair_t;
 
 /** Egress acl port action */
-typedef enum switch_acl_egr_port_action_ {
-    SWITCH_ACL_EGR_PORT_ACTION_NOP,                  /**< Do nothing action */
-    SWITCH_ACL_EGR_PORT_ACTION_SET_MIRROR,           /**< Set mirror session */
-} switch_acl_egr_port_action_t;
+typedef enum switch_acl_egr_action_ {
+    SWITCH_ACL_EGR_ACTION_NOP,                       /**< Do nothing action */
+    SWITCH_ACL_EGR_ACTION_SET_MIRROR,                /**< Set mirror session */
+    SWITCH_ACL_EGR_ACTION_REDIRECT_TO_CPU,           /**< redirect to cpu */
+    SWITCH_ACL_EGR_ACTION_SET_MIRROR_META,           /**< Set mirror session and switch_id */
+} switch_acl_egr_action_t;
 
 typedef switch_acl_action_t switch_acl_ip_action_t;   /**< acl action */
 typedef switch_acl_action_t switch_acl_ipv6_action_t; /**< IPv6 acl action */
@@ -500,6 +503,16 @@ typedef struct switch_acl_info_ {
 */
 switch_handle_t switch_api_acl_list_create(switch_device_t device, switch_acl_type_t type);
     
+/**
+ ACL Key list update
+ @param device device
+ @param acl_handle handle of created ACL
+ @param type - acl type
+*/
+switch_handle_t switch_api_acl_list_update(switch_device_t device,
+                                           switch_handle_t acl_handle,
+                                           switch_acl_type_t type);
+
 /**
  Delete the ACL key list
  @param device device
