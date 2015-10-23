@@ -117,7 +117,7 @@ switch_api_init_default_entries(switch_device_t device)
     switch_pd_validate_mpls_packet_table_init_entry(device);
     switch_pd_fabric_header_table_init_entry(device);
     switch_pd_egress_port_mapping_table_init_entry(device);
-    switch_pd_compute_multicast_hashes_init_entry(device);
+    switch_pd_compute_hashes_init_entry(device);
 
 #ifdef P4_INT_ENABLE
     // Setup INT tables

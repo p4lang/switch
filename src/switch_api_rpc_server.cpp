@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+#include <iostream>
 
 #include "switch_api_rpc.h"
 #include "thrift_cache.h"
@@ -32,8 +33,8 @@ limitations under the License.
 #include "switchapi/switch_mcast.h"
 #include "switchapi/switch_stp.h"
 #include "switchapi/switch_mirror.h"
-#include "switchapi/switch_protocol.h"
 #include "switchapi/switch_INT.h"
+#include "switchapi/switch_protocol.h"
 #include "arpa/inet.h"
 
 #define SWITCH_API_RPC_SERVER_PORT (9091)
@@ -189,7 +190,7 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     // Your implementation goes here
     switch_mac_addr_t lmac;
     switch_string_to_mac(mac, lmac.mac_addr);
-    printf("switcht_api_router_mac_add\n");
+    printf("switcht_api_router_mac_delete\n");
     return switch_api_router_mac_delete(device, rmac_handle, &lmac);
   }
 
@@ -841,18 +842,19 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     return handle;
   }
 
-   switcht_handle_t switcht_api_acl_egr_port_rule_create(const switcht_device_t device, const switcht_handle_t acl_handle, const int32_t priority, const int32_t key_value_count, const std::vector<switcht_acl_egr_port_key_value_pair_t> & acl_kvp, const switcht_acl_action_t action, const switcht_acl_action_params_t& action_params) {
-    printf("switcht_api_acl_egr_port_rule_create\n");
+   switcht_handle_t switcht_api_acl_egr_rule_create(const switcht_device_t device, const switcht_handle_t acl_handle, const int32_t priority, const int32_t key_value_count, const std::vector<switcht_acl_egr_key_value_pair_t> & acl_kvp, const switcht_acl_action_t action, const switcht_acl_action_params_t& action_params) {
+    printf("switcht_api_acl_egr_rule_create\n");
     switch_handle_t handle;
-    std::vector<switcht_acl_egr_port_key_value_pair_t>::const_iterator f = acl_kvp.begin();
+    std::vector<switcht_acl_egr_key_value_pair_t>::const_iterator f = acl_kvp.begin();
     switch_acl_action_params_t ap;
 
-    void *fields = calloc(sizeof(switch_acl_egr_port_key_value_pair_t)*acl_kvp.size(), 1);
+    void *fields = calloc(sizeof(switch_acl_egr_key_value_pair_t)*acl_kvp.size(), 1);
     for (uint32_t i=0;i<acl_kvp.size();i++,f++) {
         unsigned long long v = (unsigned long long)((switch_acl_mirror_field_t)f->value);
-        ((switch_acl_egr_port_key_value_pair_t *)fields+i)->field =
-            (switch_acl_egr_port_field_t)f->field;
-        memcpy(&(((switch_acl_system_key_value_pair_t *)fields+i)->value.egr_port), &v, sizeof(switch_acl_egr_port_value));
+        ((switch_acl_egr_key_value_pair_t *)fields+i)->field =
+            (switch_acl_egr_field_t)f->field;
+        memcpy(&(((switch_acl_egr_key_value_pair_t *)fields+i)->value.egr_port), &v, sizeof(switch_acl_egr_value_t));
+        ((switch_acl_egr_key_value_pair_t *)fields+i)->mask.u.mask = (switch_acl_egr_field_t)f->mask;
     }
     memset(&ap, 0, sizeof(switch_acl_action_params_t));
     ap.mirror.mirror_handle = action_params.mirror.mirror_handle;

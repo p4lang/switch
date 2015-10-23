@@ -84,6 +84,21 @@ switch_api_acl_list_create(switch_device_t device, switch_acl_type_t type)
     return acl_handle;
 }
 
+switch_handle_t
+switch_api_acl_list_update(switch_device_t device,
+                           switch_handle_t acl_handle,
+                           switch_acl_type_t type)
+{
+    switch_acl_info_t                 *acl_info = NULL;
+
+    acl_info = switch_acl_get(acl_handle);
+    if (!acl_info) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
+    acl_info->type = type;
+    return acl_handle;
+}
+
 switch_status_t
 switch_api_acl_list_delete(switch_device_t device, switch_handle_t acl_handle)
 {
@@ -340,37 +355,41 @@ switch_acl_system_set_fields_actions(switch_device_t device, switch_acl_rule_t *
 }
 
 static switch_status_t
-switch_acl_egr_port_set_fields_actions(switch_device_t device,
+switch_acl_egr_set_fields_actions(switch_device_t device,
                                        switch_acl_rule_t *p,
                                        switch_handle_t interface_handle,
                                        p4_pd_entry_hdl_t *entry)
 {
-    switch_acl_egr_port_key_value_pair_t    *egr_port_acl = NULL;
+    switch_acl_egr_key_value_pair_t         *egr_acl = NULL;
     switch_interface_info_t                 *intf_info = NULL;
     uint16_t                                bd_label = 0;
     uint16_t                                if_label = 0;
     switch_status_t                         status = SWITCH_STATUS_SUCCESS;
 
     if (interface_handle) {
-        intf_info = switch_api_interface_get(interface_handle);
-        if (!intf_info) {
-            return SWITCH_STATUS_INVALID_INTERFACE;
-        }
-        switch(switch_handle_get_type(interface_handle)) {
-            case SWITCH_HANDLE_TYPE_INTERFACE:
-                if_label = intf_info->api_intf_info.u.port_lag_handle;
-                break;
-            case SWITCH_HANDLE_TYPE_BD:
-                bd_label = handle_to_id(interface_handle);;
-                break;
-            default:
-                return SWITCH_STATUS_INVALID_HANDLE;
+        if(switch_handle_get_type(interface_handle)== SWITCH_HANDLE_TYPE_PORT) {
+            if_label = handle_to_id(interface_handle);
+        } else {
+            intf_info = switch_api_interface_get(interface_handle);
+            if (!intf_info) {
+                return SWITCH_STATUS_INVALID_INTERFACE;
+            }
+            switch(switch_handle_get_type(interface_handle)) {
+                case SWITCH_HANDLE_TYPE_INTERFACE:
+                    if_label = intf_info->api_intf_info.u.port_lag_handle;
+                    break;
+                case SWITCH_HANDLE_TYPE_BD:
+                    bd_label = handle_to_id(interface_handle);;
+                    break;
+                default:
+                    return SWITCH_STATUS_INVALID_HANDLE;
+            }
         }
     }
-    egr_port_acl = (switch_acl_egr_port_key_value_pair_t *)p->fields;
+    egr_acl = (switch_acl_egr_key_value_pair_t *)p->fields;
 
-    status = switch_pd_egr_port_acl_table_add_entry(device, if_label, bd_label,
-                p->priority, p->field_count, egr_port_acl, p->action,
+    status = switch_pd_egr_acl_table_add_entry(device, if_label, bd_label,
+                p->priority, p->field_count, egr_acl, p->action,
                 &p->action_params, entry);
     return status;
 }
@@ -406,8 +425,8 @@ acl_hw_set(switch_device_t device, switch_acl_info_t *acl_info,
         case SWITCH_ACL_TYPE_QOS:
             status = switch_acl_qos_set_fields_actions(device, p, interface_handle, &entry);
             break;
-        case SWITCH_ACL_TYPE_EGR_PORT:
-            status = switch_acl_egr_port_set_fields_actions(device, p, interface_handle, &entry);
+        case SWITCH_ACL_TYPE_EGRESS_SYSTEM:
+            status = switch_acl_egr_set_fields_actions(device, p, interface_handle, &entry);
             break;
         default:
             break;
@@ -453,8 +472,8 @@ acl_hw_del(switch_device_t device, switch_acl_info_t *acl_info,
             case SWITCH_ACL_TYPE_QOS:
                 status = switch_pd_qos_acl_table_delete_entry(device, *(unsigned long *) hw_entry);
                 break;
-            case SWITCH_ACL_TYPE_EGR_PORT:
-                status = switch_pd_egr_port_acl_table_delete_entry(device, *(unsigned long *) hw_entry);
+            case SWITCH_ACL_TYPE_EGRESS_SYSTEM:
+                status = switch_pd_egr_acl_table_delete_entry(device, *(unsigned long *) hw_entry);
                 break;
             default:
                 break;
@@ -476,7 +495,7 @@ switch_api_acl_rule_create(switch_device_t device, switch_handle_t acl_handle,
     switch_acl_system_key_value_pair_t          *system_acl = NULL;
     switch_acl_ipv6_key_value_pair_t            *ipv6_acl  =NULL;
     switch_acl_mac_key_value_pair_t             *mac_acl = NULL;
-    switch_acl_egr_port_key_value_pair_t        *egr_port_acl = NULL;
+    switch_acl_egr_key_value_pair_t             *egr_acl = NULL;
     unsigned long                               *jp = NULL;
     void                                        *fields = NULL;
     switch_acl_rule_t                           *p = NULL;
@@ -533,13 +552,13 @@ switch_api_acl_rule_create(switch_device_t device, switch_handle_t acl_handle,
                 }
                 memset(fields, 0, sizeof(switch_acl_mac_key_value_pair_t )*SWITCH_ACL_MAC_FIELD_MAX);
                 break;
-            case SWITCH_ACL_TYPE_EGR_PORT:
-                egr_port_acl = (switch_acl_egr_port_key_value_pair_t *)acl_kvp;
-                fields = switch_malloc(sizeof(switch_acl_egr_port_key_value_pair_t )*SWITCH_ACL_EGR_PORT_FIELD_MAX, 1);
+            case SWITCH_ACL_TYPE_EGRESS_SYSTEM:
+                egr_acl = (switch_acl_egr_key_value_pair_t *)acl_kvp;
+                fields = switch_malloc(sizeof(switch_acl_egr_key_value_pair_t )*SWITCH_ACL_EGR_FIELD_MAX, 1);
                 if (!fields) {
                     return SWITCH_STATUS_NO_MEMORY;
                 }
-                memset(fields, 0, sizeof(switch_acl_egr_port_key_value_pair_t )*SWITCH_ACL_EGR_PORT_FIELD_MAX);
+                memset(fields, 0, sizeof(switch_acl_egr_key_value_pair_t )*SWITCH_ACL_EGR_FIELD_MAX);
                 break;
             default:
                 break;
@@ -564,8 +583,8 @@ switch_api_acl_rule_create(switch_device_t device, switch_handle_t acl_handle,
                     case SWITCH_ACL_TYPE_MAC:
                         *((switch_acl_mac_key_value_pair_t  *)fields + i) = mac_acl[i];
                         break;
-                    case SWITCH_ACL_TYPE_EGR_PORT:
-                        *((switch_acl_egr_port_key_value_pair_t  *)fields + i) = egr_port_acl[i];
+                    case SWITCH_ACL_TYPE_EGRESS_SYSTEM:
+                        *((switch_acl_egr_key_value_pair_t  *)fields + i) = egr_acl[i];
                         break;
                     default:
                         break;
@@ -590,7 +609,7 @@ switch_api_acl_rule_create(switch_device_t device, switch_handle_t acl_handle,
                 node = node->next;
             }
         } else {
-            if (acl_info->type == SWITCH_ACL_TYPE_SYSTEM) {
+            if ((acl_info->type == SWITCH_ACL_TYPE_SYSTEM)) {
                 // update system ACL H/W entries
                 acl_hw_set(device, acl_info, p, NULL, 0, ace_handle);
             }

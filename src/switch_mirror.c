@@ -295,9 +295,7 @@ switch_api_mirror_session_delete(switch_device_t device, switch_handle_t mirror_
             break;
     }
 
-    if (SWITCH_NHOP_HANDLE_VALID(api_mirror_info->nhop_handle)) {
-        status = switch_pd_mirror_table_entry_delete(device, mirror_info);
-    } else if (api_mirror_info->tunnel_create || api_mirror_info->vlan_create) {
+    if (api_mirror_info->tunnel_create || api_mirror_info->vlan_create) {
         switch (api_mirror_info->mirror_type) {
             case SWITCH_MIRROR_TYPE_LOCAL:
                 break;
@@ -321,6 +319,8 @@ switch_api_mirror_session_delete(switch_device_t device, switch_handle_t mirror_
             default:
                 return SWITCH_STATUS_FAILURE;
         }
+    } else if (SWITCH_NHOP_HANDLE_VALID(api_mirror_info->nhop_handle)) {
+        status = switch_pd_mirror_table_entry_delete(device, mirror_info);
     }
 
     switch_api_id_allocator_release(session_id_allocator,
