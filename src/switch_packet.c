@@ -138,8 +138,8 @@ switch_packet_rx_from_hw()
                in_packet + SWITCH_PACKET_HEADER_OFFSET +
                sizeof(switch_packet_header_t),
                packet_size - SWITCH_PACKET_HEADER_OFFSET);
-        packet_header->fabric_header.ingress_ifindex =
-            ntohs(packet_header->fabric_header.ingress_ifindex);
+        packet_header->cpu_header.ingress_ifindex =
+            ntohs(packet_header->cpu_header.ingress_ifindex);
         packet_header->cpu_header.reason_code =
             ntohs(packet_header->cpu_header.reason_code);
         if(packet_header->cpu_header.reason_code == SWITCH_HOSTIF_REASON_CODE_NULL_DROP)

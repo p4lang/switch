@@ -512,7 +512,6 @@ switch_api_hostif_code_string(switch_hostif_reason_code_t reason_code)
 switch_status_t
 switch_api_hostif_rx_packet_from_hw(switch_packet_header_t *packet_header, char *packet, int packet_size)
 {
-    switch_fabric_header_t            *fabric_header = NULL;
     switch_cpu_header_t               *cpu_header = NULL;
     switch_hostif_rcode_info_t        *rcode_info = NULL;
     switch_interface_info_t           *intf_info = NULL;
@@ -525,7 +524,6 @@ switch_api_hostif_rx_packet_from_hw(switch_packet_header_t *packet_header, char 
     switch_port_info_t                *port_info = NULL;
 
     memset(&hostif_packet, 0, sizeof(switch_hostif_packet_t));
-    fabric_header = &packet_header->fabric_header;
     cpu_header = &packet_header->cpu_header;
 
     JLG(temp, switch_hostif_rcode_array, cpu_header->reason_code);
@@ -535,7 +533,7 @@ switch_api_hostif_rx_packet_from_hw(switch_packet_header_t *packet_header, char 
 
     SWITCH_API_TRACE("Received packet with %s trap on ifindex %x\n",
                      switch_api_hostif_code_string(cpu_header->reason_code),
-                     fabric_header->ingress_ifindex);
+                     cpu_header->ingress_ifindex);
 
     rcode_info = (switch_hostif_rcode_info_t *) (*(unsigned long *)temp);
     if ((rcode_info->rcode_api_info.reason_code == SWITCH_HOSTIF_REASON_CODE_NONE) ||
@@ -544,13 +542,13 @@ switch_api_hostif_rx_packet_from_hw(switch_packet_header_t *packet_header, char 
         hostif_packet.pkt = packet;
         hostif_packet.pkt_size = packet_size;
 
-        intf_handle = switch_api_interface_get_from_ifindex(fabric_header->ingress_ifindex);
+        intf_handle = switch_api_interface_get_from_ifindex(cpu_header->ingress_ifindex);
         intf_info = switch_api_interface_get(intf_handle);
         if (!intf_info) {
             return SWITCH_STATUS_INVALID_INTERFACE;
         }
         hostif_packet.handle = intf_info->api_intf_info.u.port_lag_handle;
-        if (SWITCH_IS_LAG_IFINDEX(fabric_header->ingress_ifindex)) {
+        if (SWITCH_IS_LAG_IFINDEX(cpu_header->ingress_ifindex)) {
             hostif_packet.is_lag = TRUE;
         }
         if (rx_callback_set) {
@@ -560,7 +558,7 @@ switch_api_hostif_rx_packet_from_hw(switch_packet_header_t *packet_header, char 
     }
     if ((rcode_info->rcode_api_info.reason_code == SWITCH_HOSTIF_REASON_CODE_NONE) ||
        (rcode_info->rcode_api_info.channel == SWITCH_HOSTIF_CHANNEL_NETDEV)) {
-        intf_handle = switch_api_interface_get_from_ifindex(fabric_header->ingress_ifindex);
+        intf_handle = switch_api_interface_get_from_ifindex(cpu_header->ingress_ifindex);
         intf_info = switch_api_interface_get(intf_handle);
         if (!intf_info) {
             return SWITCH_STATUS_INVALID_INTERFACE;
