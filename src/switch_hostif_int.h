@@ -59,8 +59,6 @@ typedef struct __attribute__((__packed__)) switch_fabric_header_ {
     uint8_t fabric_qos : 5;
     uint8_t dst_device;
     uint16_t dst_port_or_group;
-    uint16_t ingress_ifindex;
-    uint16_t ingress_bd;
 } switch_fabric_header_t;
 
 typedef struct __attribute__((__packed__)) switch_cpu_header_ {
@@ -68,6 +66,8 @@ typedef struct __attribute__((__packed__)) switch_cpu_header_ {
     uint16_t tx_bypass : 1;
     uint16_t egress_queue : 5;
     uint16_t ingress_port;
+    uint16_t ingress_ifindex;
+    uint16_t ingress_bd;
     uint16_t reason_code;
 } switch_cpu_header_t;
 
