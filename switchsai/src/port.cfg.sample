@@ -1,0 +1,10 @@
+# Configured ports to advertise
+num_ports = 32
+# Default RMT log level (NOT SAI log level)
+log_level = 0
+# Format of port config <port number>:<interface name> [<pcap filename>]
+1:veth0 port01.pcap
+2:veth2 port02.pcap
+3:veth4
+# The line below is mandatory (pcap filename may be removed)
+64:veth250 veth250.pcap

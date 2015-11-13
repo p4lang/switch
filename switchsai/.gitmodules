@@ -1,0 +1,3 @@
+[submodule "submodules/ocpsai"]
+	path = submodules/ocpsai
+	url = https://github.com/p4lang/ocpsai.git
