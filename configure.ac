@@ -1,8 +1,6 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AM_EXTRA_RECURSIVE_TARGETS([multi_device_switch])
-AM_EXTRA_RECURSIVE_TARGETS([multi_device_switch-install])
 AM_EXTRA_RECURSIVE_TARGETS([switch])
 AM_EXTRA_RECURSIVE_TARGETS([switch-install])
 
@@ -91,7 +89,7 @@ AC_SUBST([AM_CPPFLAGS], ["-I$(if test x$prefix != xNONE; then \
                              )/include"])
 # Generate makefiles
 AC_CONFIG_FILES([Makefile
-		 switchapi/Makefile switchsai/Makefile 
-         switchlink/third-party/xxhash/Makefile switchlink/Makefile
-         switchapi/third-party/tommyds/Makefile p4src/Makefile p4src/multi_device_switch.mk])
+		 switchapi/Makefile switchsai/Makefile switchlink/Makefile
+         switchapi/third-party/tommyds/Makefile
+         switchlink/third-party/xxhash/Makefile p4src/Makefile])
 AC_OUTPUT
