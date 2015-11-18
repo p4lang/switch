@@ -1102,12 +1102,12 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
                 break;
             case SAI_ACL_ENTRY_ATTR_FIELD_IN_PORTS:
                 {
-                    int count = attribute.value.aclfield.data.objlist.object_id_list.size();
+                    unsigned int count = attribute.value.aclfield.data.objlist.object_id_list.size();
                     sai_object_id_t *oid=NULL;
                     std::vector<sai_thrift_object_id_t>::const_iterator it = attribute.value.aclfield.data.objlist.object_id_list.begin();
                     oid = (sai_object_id_t *)malloc(sizeof(sai_object_id_t)*count);
-                    for(int i=0;i<count;i++, it++)
-                        *(oid+i) = (sai_object_id_t) *it;
+                    for(unsigned int j=0;j<count;j++, it++)
+                        *(oid+j) = (sai_object_id_t) *it;
                     attr_list[i].value.aclfield.data.objlist.list =  oid;
                     attr_list[i].value.aclfield.data.objlist.count =  count;
 

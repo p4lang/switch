@@ -91,5 +91,5 @@ AC_SUBST([AM_CPPFLAGS], ["-I$(if test x$prefix != xNONE; then \
 AC_CONFIG_FILES([Makefile
 		 switchapi/Makefile switchsai/Makefile switchlink/Makefile
          switchapi/third-party/tommyds/Makefile
-         switchlink/third-party/xxhash/Makefile p4src/Makefile])
+         switchlink/third-party/xxhash/Makefile])
 AC_OUTPUT
