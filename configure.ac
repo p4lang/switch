@@ -88,8 +88,7 @@ AC_SUBST([AM_CPPFLAGS], ["-I$(if test x$prefix != xNONE; then \
                               fi \
                              )/include"])
 # Generate makefiles
-AC_CONFIG_FILES([Makefile
-		 switchapi/Makefile switchsai/Makefile switchlink/Makefile
-         switchapi/third-party/tommyds/Makefile
-         switchlink/third-party/xxhash/Makefile])
+AC_CONFIG_FILES([switchapi/third-party/tommyds/Makefile switchapi/Makefile
+         switchsai/Makefile 
+         switchlink/third-party/xxhash/Makefile switchlink/Makefile Makefile])
 AC_OUTPUT

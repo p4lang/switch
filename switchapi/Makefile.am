@@ -18,6 +18,7 @@ $(BUILT_SOURCES): src/switch_api.thrift
 	$(THRIFT) -o $(srcdir)/src/ --gen cpp -r $(srcdir)/src/switch_api.thrift
 
 lib_LIBRARIES = libswitchapi.a
+lib_LTLIBRARIES = libswitchapi.la
 
 libswitchapi_la_SOURCES = \
 $(BUILT_SOURCES) \
@@ -96,3 +97,4 @@ inc/switch_INT.h \
 inc/switch_vrf.h
 
 libswitchapi_a_SOURCES = $(libswitchapi_la_SOURCES)
+
