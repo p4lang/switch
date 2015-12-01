@@ -206,8 +206,10 @@ control ingress {
     /* resolve fabric port to destination device */
     process_fabric_lag();
 
-    /* system acls */
-    process_system_acl();
+    if (ingress_metadata.port_type == PORT_TYPE_NORMAL) {
+        /* system acls */
+        process_system_acl();
+    }
 }
 
 control egress {
