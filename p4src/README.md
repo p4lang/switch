@@ -16,11 +16,11 @@ Supported Features
 9. Host interface
 10. Mirroring: Ingress and egress mirroring with ERSPAN
 11. Counters/Statistics
+12. Inband Network Telemetry (INT)  
 
 Upcoming Features
 -----------------
-1. Multicast: IP, PIM-SM
-2. NAT
-3. Ingress Policers
+1. IP Multicast - IGMP, PIM-SM
+2. Ingress Policers
+3. NAT
 4. QoS
-

@@ -34,10 +34,9 @@ The switch repository contains the switch.p4 sample P4 program along with all th
 
 Directory Structure
 ------------------
-p4src - P4 sources
-switchsai - SAI library
-switchapi - SwitchAPI
-switchlink - Linux netlink listener
-tests - PTF tests - P4 dependent(PD), SAI and API
-        Openflow tests
-
+p4src - P4 sources  
+switchsai - SAI library  
+switchapi - SwitchAPI  
+switchlink - Linux netlink listener      
+tests/ptf-tests - P4 dependent(PD), SAI and API tests  
+tests/of-tests - Openflow tests  
