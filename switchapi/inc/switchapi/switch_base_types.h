@@ -17,8 +17,8 @@ limitations under the License.
 #ifndef _switch_base_types_h_
 #define _switch_base_types_h_
 
-#include <p4utils/tommyhashtbl.h>
-#include <p4utils/tommylist.h>
+#include "tommyds/tommyhashtbl.h"
+#include "tommyds/tommylist.h"
 
 #include "drop_reasons.h"
 #include "p4features.h"

@@ -1,7 +1,11 @@
 ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS} -I m4
 
+SUBDIRS = third-party/tommyds
+
 libswitchapi_la_CFLAGS = -I$(srcdir)/inc
 libswitchapi_la_CFLAGS += -I$(srcdir)/src/gen-cpp
+libswitchapi_la_CFLAGS += -I$(srcdir)/third-party/tommyds/include
+libswitchapi_la_CFLAGS += -I$(srcdir)/../p4src/include
 libswitchapi_la_CXXFLAGS = $(libswitchapi_la_CFLAGS)
 libswitchapi_a_CFLAGS = $(libswitchapi_la_CFLAGS)
 libswitchapi_a_CXXFLAGS = $(libswitchapi_a_CFLAGS)
@@ -97,4 +101,4 @@ inc/switch_INT.h \
 inc/switch_vrf.h
 
 libswitchapi_a_SOURCES = $(libswitchapi_la_SOURCES)
-
+libswitchapi_la_LIBADD = third-party/tommyds/libtommyds.la

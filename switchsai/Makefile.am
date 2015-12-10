@@ -2,6 +2,8 @@ ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS} -I m4
 
 libswitchsai_la_CFLAGS = -I$(srcdir)/submodules/ocpsai/sai/inc -I$(srcdir)/../../modules/BMI/module/inc
 libswitchsai_la_CFLAGS += -I$(builddir)/src/gen-cpp
+libswitchsai_la_CFLAGS += -I$(top_srcdir)/switchapi/third-party/tommyds/include
+libswitchsai_la_CFLAGS += -I$(top_srcdir)/p4src/includes
 libswitchsai_la_CXXFLAGS = $(libswitchsai_la_CFLAGS)
 libswitchsai_a_CFLAGS = $(libswitchsai_la_CFLAGS)
 libswitchsai_a_CXXFLAGS = $(libswitchsai_a_CFLAGS)
