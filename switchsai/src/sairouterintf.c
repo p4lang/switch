@@ -140,6 +140,19 @@ sai_status_t sai_remove_router_interface(
     return (sai_status_t) status;
 }
 
+// just a helper function
+sai_status_t sai_get_switch_api_interface(
+        sai_object_id_t rif_id,
+        switch_api_interface_info_t **intf) {
+
+    sai_status_t status = SAI_STATUS_SUCCESS;
+    switch_interface_info_t *info = switch_api_interface_get(
+        (switch_handle_t) rif_id);
+
+    *intf = &info->api_intf_info;
+    return status;
+}
+
 /*
 * Routine Description:
 *    Set router interface attribute
@@ -165,6 +178,24 @@ sai_status_t sai_set_router_interface_attribute(
         SAI_LOG_ERROR("null attribute: %s",
                        sai_status_to_string(status));
         return status;
+    }
+
+    switch_api_interface_info_t *intf;
+    status = sai_get_switch_api_interface(rif_id, &intf);
+
+    // only support values labeled READ-WRITE
+    switch (attribute->id) {
+        case SAI_ROUTER_INTERFACE_ATTR_SRC_MAC_ADDRESS:
+            memcpy(intf->mac.mad_addr, attribute->value.mac, sizeof(sai_mac_t));
+            break;
+        case SAI_ROUTER_INTERFACE_ATTR_ADMIN_V4_STATE:
+            intf->ipv4_unicast_enabled = attribute->value.booldata;
+            break;
+        case SAI_ROUTER_INTERFACE_ATTR_ADMIN_V6_STATE:
+            intf->ipv6_unicast_enabled = attribute->value.booldata;
+            break;
+        default:
+            return SAI_STATUS_INVALID_PARAMETER; 
     }
 
     SAI_ASSERT(sai_object_type_query(rif_id) == SAI_OBJECT_TYPE_ROUTER_INTERFACE);
@@ -201,6 +232,38 @@ sai_status_t sai_get_router_interface_attribute(
         SAI_LOG_ERROR("null attribute: %s",
                        sai_status_to_string(status));
         return status;
+    }
+
+    switch_api_interface_info_t *intf;
+    status = sai_get_switch_api_interface(rif_id, &intf);
+
+    int index;
+    for (index = 0; index < attr_count; index++) {
+        attribute = &attr_list[index];
+        switch (attribute->id) {
+            case SAI_ROUTER_INTERFACE_ATTR_VIRTUAL_ROUTER_ID:
+                attribute->value.oid = info->vrf_handle;
+                break;
+            case SAI_ROUTER_INTERFACE_ATTR_TYPE:
+                break;
+            case SAI_ROUTER_INTERFACE_ATTR_PORT_ID:
+                attribute->value.oid = intf->u.port_lag_handle;
+                break;
+            case SAI_ROUTER_INTERFACE_ATTR_VLAN_ID:
+                attribute->value.u16 = intf->u.vlan_id;
+                break;
+            case SAI_ROUTER_INTERFACE_ATTR_SRC_MAC_ADDRESS:
+                memcpy(attribute->value.mac, intf->mac, 6);
+                break;
+            case SAI_ROUTER_INTERFACE_ATTR_ADMIN_V4_STATE:
+                attribute->value.booldata = intf->ipv4_unicast_enabled;
+                break;
+            case SAI_ROUTER_INTERFACE_ATTR_ADMIN_V6_STATE:
+                attribute->value.booldata = intf->ipv6_unicast_enabled;
+                break;
+            default:
+                return SAI_STATUS_INVALID_PARAMETER; 
+        }
     }
 
     SAI_ASSERT(sai_object_type_query(rif_id) == SAI_OBJECT_TYPE_ROUTER_INTERFACE);
