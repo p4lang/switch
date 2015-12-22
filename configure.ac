@@ -27,7 +27,7 @@ AS_IF([test "x$enable_coverage" = "xyes"], [
     COVERAGE_FLAGS="--coverage"
 ])
 
-AC_PROG_CC_STDC
+#AC_PROG_CC_STDC
 AC_PROG_CXX
 LT_INIT
 
@@ -90,5 +90,5 @@ AC_SUBST([AM_CPPFLAGS], ["-I$(if test x$prefix != xNONE; then \
 # Generate makefiles
 AC_CONFIG_FILES([switchapi/third-party/tommyds/Makefile switchapi/Makefile
          switchsai/Makefile 
-         switchlink/third-party/xxhash/Makefile switchlink/Makefile Makefile])
+         switchlink/third-party/xxhash/Makefile switchlink/Makefile p4src/Makefile Makefile])
 AC_OUTPUT
