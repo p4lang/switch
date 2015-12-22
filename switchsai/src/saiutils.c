@@ -16,6 +16,8 @@ limitations under the License.
 
 #include "saiinternal.h"
 
+// maps from SAI types to switchapi types
+
 char *sai_status_to_string(
         _In_ const sai_status_t status) {
     switch (status) {
@@ -242,3 +244,17 @@ sai_status_t sai_ipprefix_to_string(
 
     return SAI_STATUS_SUCCESS;
 }
+
+// maps from switchapi types to SAI types
+
+sai_status_t switch_ip_addr_to_sai_ip_addr(
+        const _In_ sai_ip_address_t *sai_ip_addr,
+        _Out_ switch_ip_addr_t *ip_addr) {
+    if (ip_addr->type == SWITCH_API_IP_ADDR_V4) {
+        sai_ip_addr->addr_family == SAI_IP_ADDR_FAMILY_IPV4;
+        sai_ip_addr->addr.ip4 = htonl(ip_addr->ip.v4addr);
+    } else if (ip_addr->type == SWITCH_API_IP_ADDR_V6) {
+        sai_ip_addr->addr_family = SAI_IP_ADDR_FAMILY_IPV6;
+        memcpy(sai_ip_addr->addr.ip6, ip_addr->ip.v6addr, 16);
+    }
+    return SAI_STATUS_SUCCESS;

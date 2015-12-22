@@ -115,6 +115,7 @@ sai_status_t sai_hostif_initialize(sai_api_service_t *sai_api_service);
 sai_status_t sai_acl_initialize(sai_api_service_t *sai_api_service);
 sai_status_t sai_mirror_initialize(sai_api_service_t *sai_api_service);
 
+// maps SAI types to switchapi types
 char *sai_status_to_string(
         _In_ const sai_status_t status);
 
@@ -160,6 +161,12 @@ sai_status_t sai_ip_prefix_to_switch_ip_prefix(
         _Out_ switch_ip_addr_t *ip_addr);
 
 sai_status_t sai_ip_addr_to_switch_ip_addr(
+        const _In_ sai_ip_address_t *sai_ip_addr,
+        _Out_ switch_ip_addr_t *ip_addr);
+
+// maps switchapi types to SAI types
+
+sai_status_t switch_ip_addr_to_sai_ip_addr(
         const _In_ sai_ip_address_t *sai_ip_addr,
         _Out_ switch_ip_addr_t *ip_addr);
 
