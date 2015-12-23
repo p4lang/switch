@@ -41,9 +41,27 @@ typedef struct switch_nhop_key_ {
 /**
  Create a Nexthop
  @param device - device to program the nexthop
- @param nhop_key- Interface to be associated with the nexthop and nexthop ip
+ @param nhop_key - Interface to be associated with the nexthop and nexthop ip
 */
 switch_handle_t switch_api_nhop_create(switch_device_t device, switch_nhop_key_t *nhop_key);
+
+/**
+ Update a Nexthop
+ @param device - device to program the nexthop
+ @param handle - handle of the next hop to update
+ @param nhop_key - nhop key with new info
+*/
+switch_status_t switch_api_nhop_update(switch_device_t device,
+    switch_handle_t handle, switch_nhop_key_t *nhop_key);
+
+/**
+ Get attributes of a Nexthop
+ @param device - device to program the nexthop
+ @param handle - handle of the next hop to get 
+ @param [out]nhop_key - pointer to the attribute obj 
+*/
+switch_status_t switch_api_nhop_get(switch_device_t device,
+    switch_handle_t handle, switch_nhop_key_t **nhop_key);
 
 /**
  Delete a Nexthop
