@@ -59,6 +59,14 @@ typedef struct switch_port_vlan_ {
 
 /** Interface attributes */
 typedef enum switch_intf_attr_ {
+    // READ ONLY
+    SWITCH_INTF_ATTR_VRF,
+    SWITCH_INTF_ATTR_TYPE,
+    SWITCH_INTF_ATTR_PORT_ID,
+    SWITCH_INTF_ATTR_VLAN_ID,
+
+    // READ-WRITE
+    SWITCH_INTF_ATTR_RMAC_ADDR,
     SWITCH_INTF_ATTR_V4_UNICAST,                      /**< IPv4 Unicast */
     SWITCH_INTF_ATTR_V6_UNICAST,                      /**< IPv6 Unicast */
     SWITCH_INTF_ATTR_V4_URPF_MODE,                    /**< IPv4 Urpf mode */

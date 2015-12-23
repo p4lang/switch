@@ -437,22 +437,45 @@ switch_api_interface_attribute_get(switch_handle_t intf_handle,
     }
 
     switch (attr_type) {
+        case SWITCH_INTF_ATTR_VRF:
+            *value = intf_info->api_intf_info.vrf_handle;
+            break;
+        case SWITCH_INTF_ATTR_TYPE:
+            // not sure yet
+            break;
+        case SWITCH_INTF_ATTR_PORT_ID:
+            if (!SWITCH_INTF_IS_PORT_L3(intf_info)
+                && !SWITCH_INTF_IS_PORT_L2(intf_info)) {
+                return SWITCH_STATUS_INVALID_INTERFACE;
+            }
+            *value = intf_info->api_intf_info.u.port_lag_handle;
+            break;
+        case SWITCH_INTF_ATTR_VLAN_ID:
+            if (SWITCH_INTF_IS_PORT_L3(intf_info)
+                || SWITCH_INTF_IS_PORT_L2(intf_info)) {
+                return SWITCH_STATUS_INVALID_INTERFACE;
+            }
+            *value = intf_info->api_intf_info.u.vlan_id;
+            break;
+        case SWITCH_INTF_ATTR_RMAC_ADDR:
+            memcpy((uint8_t *) value, intf_info->api_intf_info.mac.mac_addr, 6);
+            break;
         case SWITCH_INTF_ATTR_V4_UNICAST:
             status = switch_api_interface_ipv4_unicast_enabled_get(intf_handle, value);
-        break;
+            break;
         case SWITCH_INTF_ATTR_V6_UNICAST:
             status = switch_api_interface_ipv6_unicast_enabled_get(intf_handle, value);
-        break;
+            break;
         case SWITCH_INTF_ATTR_NATIVE_VLAN:
             status = switch_api_interface_native_vlan_get(intf_handle, value);
-        break;
+            break;
 
         default:
             status = SWITCH_STATUS_INVALID_ATTRIBUTE;
     }
     return status;
 }
-    
+
 switch_status_t
 switch_api_interface_ipv4_unicast_enabled_set(switch_handle_t intf_handle, uint64_t value)
 {
