@@ -19,6 +19,7 @@ limitations under the License.
 
 #include <switchapi/switch_base_types.h>
 #include <switchapi/switch_status.h>
+#include <switchapi/switch_port.h>
 
 #include <assert.h>
 #include <stdio.h>
@@ -164,10 +165,17 @@ sai_status_t sai_ip_addr_to_switch_ip_addr(
         const _In_ sai_ip_address_t *sai_ip_addr,
         _Out_ switch_ip_addr_t *ip_addr);
 
+sai_status_t sai_port_speed_to_switch_port_speed(
+        uint32_t sai_port_speed,
+        _Out_ switch_port_speed_t *switch_port_speed);
+
 // maps switchapi types to SAI types
 
 sai_status_t switch_ip_addr_to_sai_ip_addr(
-        const _In_ sai_ip_address_t *sai_ip_addr,
-        _Out_ switch_ip_addr_t *ip_addr);
+        _Out_ sai_ip_address_t *sai_ip_addr,
+        const _In_ switch_ip_addr_t *ip_addr);
+
+sai_status_t switch_port_enabled_to_sai_oper_status(
+        _In_ _Out_ sai_attribute_t *attr);
 
 #endif  // __SAIINTERNAL_H_

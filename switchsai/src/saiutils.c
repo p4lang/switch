@@ -245,11 +245,44 @@ sai_status_t sai_ipprefix_to_string(
     return SAI_STATUS_SUCCESS;
 }
 
+sai_status_t
+sai_port_speed_to_switch_port_speed(
+        uint32_t sai_port_speed,
+        _Out_ switch_port_speed_t *switch_port_speed)
+{
+    // speeds are in mbps
+    switch (sai_port_speed) {
+        case 1000:
+            *switch_port_speed = SWITCH_API_PORT_SPEED_1G;
+            break;
+        case 10000:
+            *switch_port_speed = SWITCH_API_PORT_SPEED_10G;
+            break;
+        case 25000:
+            *switch_port_speed = SWITCH_API_PORT_SPEED_25G;
+            break;
+        case 40000:
+            *switch_port_speed = SWITCH_API_PORT_SPEED_40G;
+            break;
+        case 50000:
+            *switch_port_speed = SWITCH_API_PORT_SPEED_50G;
+            break;
+        case 100000:
+            *switch_port_speed = SWITCH_API_PORT_SPEED_100G;
+            break;
+        default:
+            return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    return SAI_STATUS_SUCCESS;
+}
+
 // maps from switchapi types to SAI types
 
-sai_status_t switch_ip_addr_to_sai_ip_addr(
-        const _In_ sai_ip_address_t *sai_ip_addr,
-        _Out_ switch_ip_addr_t *ip_addr) {
+sai_status_t
+switch_ip_addr_to_sai_ip_addr(
+        _Out_ sai_ip_address_t *sai_ip_addr,
+        const _In_ switch_ip_addr_t *ip_addr) {
     if (ip_addr->type == SWITCH_API_IP_ADDR_V4) {
         sai_ip_addr->addr_family == SAI_IP_ADDR_FAMILY_IPV4;
         sai_ip_addr->addr.ip4 = htonl(ip_addr->ip.v4addr);
@@ -258,3 +291,20 @@ sai_status_t switch_ip_addr_to_sai_ip_addr(
         memcpy(sai_ip_addr->addr.ip6, ip_addr->ip.v6addr, 16);
     }
     return SAI_STATUS_SUCCESS;
+}
+
+sai_status_t
+switch_port_enabled_to_sai_oper_status(
+        _In_ _Out_ sai_attribute_t *attr)
+{
+    switch (attr->value.booldata) {
+        case 1:
+            attr->value.u8 = SAI_PORT_OPER_STATUS_UP;
+            break;
+        case 0:
+            attr->value.u8 = SAI_PORT_OPER_STATUS_DOWN;
+            break;
+    }
+
+    return SAI_STATUS_SUCCESS;
+}
