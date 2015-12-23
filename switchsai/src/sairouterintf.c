@@ -140,19 +140,6 @@ sai_status_t sai_remove_router_interface(
     return (sai_status_t) status;
 }
 
-// just a helper function
-sai_status_t sai_get_switch_api_interface(
-        sai_object_id_t rif_id,
-        switch_api_interface_info_t **intf) {
-
-    sai_status_t status = SAI_STATUS_SUCCESS;
-    switch_interface_info_t *info = switch_api_interface_get(
-        (switch_handle_t) rif_id);
-
-    *intf = &info->api_intf_info;
-    return status;
-}
-
 /*
 * Routine Description:
 *    Set router interface attribute
@@ -180,19 +167,21 @@ sai_status_t sai_set_router_interface_attribute(
         return status;
     }
 
-    switch_api_interface_info_t *intf;
-    status = sai_get_switch_api_interface(rif_id, &intf);
-
-    // only support values labeled READ-WRITE
-    switch (attribute->id) {
+    switch_status_t switch_status;
+    switch (attr->id) {
         case SAI_ROUTER_INTERFACE_ATTR_SRC_MAC_ADDRESS:
-            memcpy(intf->mac.mad_addr, attribute->value.mac, sizeof(sai_mac_t));
             break;
         case SAI_ROUTER_INTERFACE_ATTR_ADMIN_V4_STATE:
-            intf->ipv4_unicast_enabled = attribute->value.booldata;
+            switch_status = switch_api_interface_attribute_set(
+                (switch_handle_t) rif_id,
+                SWITCH_INTF_ATTR_V4_UNICAST,
+                attr->value.booldata);
             break;
         case SAI_ROUTER_INTERFACE_ATTR_ADMIN_V6_STATE:
-            intf->ipv6_unicast_enabled = attribute->value.booldata;
+            switch_status = switch_api_interface_attribute_set(
+                (switch_handle_t) rif_id,
+                SWITCH_INTF_ATTR_V6_UNICAST,
+                attr->value.booldata);
             break;
         default:
             return SAI_STATUS_INVALID_PARAMETER; 
@@ -234,35 +223,57 @@ sai_status_t sai_get_router_interface_attribute(
         return status;
     }
 
-    switch_api_interface_info_t *intf;
-    status = sai_get_switch_api_interface(rif_id, &intf);
-
     int index;
+    switch_status_t switch_status;
+    sai_attribute_t *attribute;
     for (index = 0; index < attr_count; index++) {
         attribute = &attr_list[index];
         switch (attribute->id) {
             case SAI_ROUTER_INTERFACE_ATTR_VIRTUAL_ROUTER_ID:
-                attribute->value.oid = info->vrf_handle;
+                switch_status = switch_api_interface_attribute_get(
+                    (switch_handle_t) rif_id, 
+                    SWITCH_INTF_ATTR_VRF,
+                    (uint64_t*)&attribute->value.oid);
                 break;
             case SAI_ROUTER_INTERFACE_ATTR_TYPE:
                 break;
             case SAI_ROUTER_INTERFACE_ATTR_PORT_ID:
-                attribute->value.oid = intf->u.port_lag_handle;
+                switch_status = switch_api_interface_attribute_get(
+                    (switch_handle_t) rif_id, 
+                    SWITCH_INTF_ATTR_PORT_ID,
+                    (uint64_t*)&attribute->value.oid);
                 break;
             case SAI_ROUTER_INTERFACE_ATTR_VLAN_ID:
-                attribute->value.u16 = intf->u.vlan_id;
+                switch_status = switch_api_interface_attribute_get(
+                    (switch_handle_t) rif_id, 
+                    SWITCH_INTF_ATTR_VLAN_ID,
+                    (uint64_t*)&attribute->value.u16);
                 break;
             case SAI_ROUTER_INTERFACE_ATTR_SRC_MAC_ADDRESS:
-                memcpy(attribute->value.mac, intf->mac, 6);
+                switch_status = switch_api_interface_attribute_get(
+                    (switch_handle_t) rif_id, 
+                    SWITCH_INTF_ATTR_RMAC_ADDR,
+                    (uint64_t*)attribute->value.mac);
                 break;
             case SAI_ROUTER_INTERFACE_ATTR_ADMIN_V4_STATE:
-                attribute->value.booldata = intf->ipv4_unicast_enabled;
+                switch_status = switch_api_interface_attribute_get(
+                    (switch_handle_t) rif_id, 
+                    SWITCH_INTF_ATTR_V4_UNICAST,
+                    (uint64_t*)&attribute->value.booldata);
                 break;
             case SAI_ROUTER_INTERFACE_ATTR_ADMIN_V6_STATE:
-                attribute->value.booldata = intf->ipv6_unicast_enabled;
+                switch_status = switch_api_interface_attribute_get(
+                    (switch_handle_t) rif_id, 
+                    SWITCH_INTF_ATTR_V6_UNICAST,
+                    (uint64_t*)&attribute->value.booldata);
                 break;
             default:
                 return SAI_STATUS_INVALID_PARAMETER; 
+        }
+
+        if ((status = sai_switch_status_to_sai_status(switch_status))
+            != SAI_STATUS_SUCCESS) {
+            return status;
         }
     }
 
