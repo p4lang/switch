@@ -2,10 +2,13 @@ ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS} -I m4
 
 prog_CFLAGS = $(AM_CFLAGS)
 
+BMV2_INC_DIR = $(includedir)/bm_sim
+P4C_BMV2_INC_DIR = $(includedir)/p4c_bm
 libbmv2pd_la_CXXFLAGS = -I $(srcdir)/bmv2_p4_pd
-libbmv2pd_la_CXXFLAGS += -I /usr/local/include/p4c_bm \
-	-I /usr/local/include/p4c_bm/pd \
-	-I /usr/local/include/bm_sim -std=c++11
+libbmv2pd_la_CXXFLAGS += -I $(P4C_BMV2_INC_DIR)/pdfixed \
+	-I $(P4C_BMV2_INC_DIR)/pdfixed/pd \
+	-I $(P4C_BMV2_INC_DIR)/pdfixed/src \
+	-I $(BMV2_INC_DIR) -std=c++11
 
 # take all the pd files created by the compiler
 # pd_file = $(shell ls p4_pd/src/*.cpp)
@@ -57,4 +60,4 @@ $(p4_bmv2_output) : $(p4_files)
 	@mkdir -p bmv2_p4_pd
 	$(P4CC_BM) --pd bmv2_p4_pd --p4-prefix dc --json $@ $(p4_prg)
 
-CLEANFILES = bmv2_pd_files.ts $(p4_bmv2_output)
+CLEANFILES = bmv2_pd_files.ts $(p4_bmv2_output) $(BUILT_SOURCES)
