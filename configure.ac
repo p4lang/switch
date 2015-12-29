@@ -87,6 +87,9 @@ AC_SUBST([AM_CPPFLAGS], ["-I$(if test x$prefix != xNONE; then \
                                 echo $ac_default_prefix; \
                               fi \
                              )/include"])
+
+#AM_CONDITIONAL(TARGET_BMV2, [test "x$(TARGET)" =  "xbmv2"])
+
 # Generate makefiles
 AC_CONFIG_FILES([switchapi/third-party/tommyds/Makefile switchapi/Makefile
          switchsai/Makefile 
