@@ -87,8 +87,16 @@ AC_SUBST([AM_CPPFLAGS], ["-I$(if test x$prefix != xNONE; then \
                                 echo $ac_default_prefix; \
                               fi \
                              )/include"])
+p4target=unknown
 
-#AM_CONDITIONAL(TARGET_BMV2, [test "x$(TARGET)" =  "xbmv2"])
+AC_ARG_ENABLE([bmv2], \
+	[ --enable-bmv2 	Enable bmv2 as p4target],
+	[case "${enableval}" in
+		yes) p4target=bmv2 ;;
+		*) ;;
+	esac], [])
+
+AM_CONDITIONAL(TARGET_BMV2, [test "x$p4target" =  "xbmv2"])
 
 # Generate makefiles
 AC_CONFIG_FILES([switchapi/third-party/tommyds/Makefile switchapi/Makefile

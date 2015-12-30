@@ -36,6 +36,18 @@ AC_CHECK_HEADER_STDBOOL
 AC_TYPE_SIZE_T
 AC_TYPE_UINT64_T
 
+p4target=unknown
+
+AC_ARG_ENABLE([bmv2], \
+	[ --enable-bmv2 	Enable bmv2 as p4target],
+	[case "${enableval}" in
+		yes) p4target=bmv2 ;;
+		*) ;;
+	esac], [])
+
+AM_CONDITIONAL(TARGET_BMV2, [test "x$p4target" =  "xbmv2"])
+
+
 # Generate makefiles
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

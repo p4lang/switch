@@ -2,16 +2,17 @@ ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS} -I m4
 
 SUBDIRS = third-party/tommyds
 
-#if TARGET_BMV2
-#TARGET_CFLAGS = -D BMV2
-#TARGET_CFLAGS += -I (includedir)/p4c_bm/pdfixed
-#endif
+if TARGET_BMV2
+TARGET_CFLAGS = -D BMV2
+TARGET_CFLAGS += -I $(includedir)/p4c_bm/
+TARGET_CFLAGS += -I $(includedir)/p4c_bm/pdfixed
+endif
 
 libswitchapi_la_CFLAGS = -I$(srcdir)/inc
 libswitchapi_la_CFLAGS += -I$(srcdir)/src/gen-cpp
 libswitchapi_la_CFLAGS += -I$(srcdir)/third-party/tommyds/include
 libswitchapi_la_CFLAGS += -I$(srcdir)/../p4src/includes
-#libswitchapi_la_CFLAGS += -I$(TARGET_CFLAGS)
+libswitchapi_la_CFLAGS += $(TARGET_CFLAGS)
 libswitchapi_la_CXXFLAGS = $(libswitchapi_la_CFLAGS)
 libswitchapi_a_CFLAGS = $(libswitchapi_la_CFLAGS)
 libswitchapi_a_CXXFLAGS = $(libswitchapi_a_CFLAGS)

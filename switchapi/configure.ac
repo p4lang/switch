@@ -14,6 +14,17 @@ AS_IF([test "x$enable_coverage" = "xyes"], [
     COVERAGE_FLAGS="--coverage"
 ])
 
+p4target=unknown
+AC_ARG_ENABLE([bmv2], \
+	[ --enable-bmv2 	Enable bmv2 as p4target],
+	[case "${enableval}" in
+		yes) p4target=bmv2 ;;
+		*) ;;
+	esac], [])
+
+AM_CONDITIONAL(TARGET_BMV2, [test "x$p4target" =  "xbmv2"])
+AM_CONDITIONAL(TARGET_TOFINO, [test "x$p4target" =  "xtofino"])
+
 # Checks for programs.
 CFLAGS="-g -Wall -Wextra -Wno-unused-parameter"
 AC_PROG_CC_STDC

@@ -22,7 +22,7 @@ limitations under the License.
 #include "switch_defines.h"
 #include "switch_mirror_int.h"
 #include "switch_tunnel_int.h"
-#include "model_flags.h"
+//#include "model_flags.h"
 #include <string.h>
 
 #define SWITCH_MAX_TXN_SZ  10

@@ -22,7 +22,7 @@ limitations under the License.
 
 #include "drop_reasons.h"
 #include "p4features.h"
-#include "model_flags.h"
+//#include "model_flags.h"
 #ifdef BMV2
 #include "pd/pd.h"
 #include "pd/pd_pre.h"

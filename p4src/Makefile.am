@@ -2,6 +2,13 @@ ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS} -I m4
 
 prog_CFLAGS = $(AM_CFLAGS)
 
+p4_files = $(shell ls *.p4)
+p4_files += $(shell ls includes/*.p4)
+p4_name = switch
+p4_prg = $(p4_name).p4
+
+#if TARGET_BMV2
+TARGET=bmv2
 BMV2_INC_DIR = $(includedir)/bm_sim
 P4C_BMV2_INC_DIR = $(includedir)/p4c_bm
 libbmv2pd_la_CXXFLAGS = -I $(srcdir)/bmv2_p4_pd
@@ -31,23 +38,9 @@ bmv2_p4_pd/pd/pd_types.h \
 bmv2_p4_pd/pd/pd_mirroring.h
 
 lib_LTLIBRARIES = libbmv2pd.la
-
 BUILT_SOURCES = $(bmv2_pd_files) $(bmv2_pd_headers)
 
-# TARGETs are bmv2, tofino, bm-tofino ...
-$(BUILT_SOURCES) : $(TARGET)_pd_files.ts
-	@touch $(TARGET)_pd_files.ts
-
 libbmv2pd_la_SOURCES = $(BUILT_SOURCES)
-
-p4_files = $(shell ls *.p4)
-p4_files += $(shell ls includes/*.p4)
-p4_name = switch
-p4_prg = $(p4_name).p4
-
-pd_files_.ts:
-	@echo "Error"
-	exit
 
 P4CC_BM = p4c-bmv2
 
@@ -59,5 +52,15 @@ bmv2_pd_files.ts : $(p4_bmv2_output)
 $(p4_bmv2_output) : $(p4_files)
 	@mkdir -p bmv2_p4_pd
 	$(P4CC_BM) --pd bmv2_p4_pd --p4-prefix dc --json $@ $(p4_prg)
+
+#endif
+
+# TARGETs are bmv2, tofino, bm-tofino ...
+$(BUILT_SOURCES) : $(TARGET)_pd_files.ts
+	@touch $(TARGET)_pd_files.ts
+
+_pd_files.ts:
+	@echo "Error"
+	exit
 
 CLEANFILES = bmv2_pd_files.ts $(p4_bmv2_output) $(BUILT_SOURCES)
