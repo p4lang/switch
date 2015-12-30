@@ -7,7 +7,7 @@ p4_files += $(shell ls includes/*.p4)
 p4_name = switch
 p4_prg = $(p4_name).p4
 
-#if TARGET_BMV2
+if TARGET_BMV2
 TARGET=bmv2
 BMV2_INC_DIR = $(includedir)/bm_sim
 P4C_BMV2_INC_DIR = $(includedir)/p4c_bm
@@ -53,7 +53,7 @@ $(p4_bmv2_output) : $(p4_files)
 	@mkdir -p bmv2_p4_pd
 	$(P4CC_BM) --pd bmv2_p4_pd --p4-prefix dc --json $@ $(p4_prg)
 
-#endif
+endif
 
 # TARGETs are bmv2, tofino, bm-tofino ...
 $(BUILT_SOURCES) : $(TARGET)_pd_files.ts
