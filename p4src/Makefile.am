@@ -12,10 +12,10 @@ TARGET=bmv2
 BMV2_INC_DIR = $(includedir)/bm_sim
 P4C_BMV2_INC_DIR = $(includedir)/p4c_bm
 libbmv2pd_la_CXXFLAGS = -I $(srcdir)/bmv2_p4_pd
-libbmv2pd_la_CXXFLAGS += -I $(P4C_BMV2_INC_DIR)/pdfixed \
-	-I $(P4C_BMV2_INC_DIR)/pdfixed/pd \
-	-I $(P4C_BMV2_INC_DIR)/pdfixed/src \
-	-I $(BMV2_INC_DIR) -std=c++11
+libbmv2pd_la_CXXFLAGS += -I $(includedir)/p4c_bm/pdfixed \
+	-I $(includedir)/p4c_bm/pdfixed/pd \
+	-I $(includedir)/p4c_bm/pdfixed/src \
+	-I $(includedir)/bm_sim -std=c++11
 
 # take all the pd files created by the compiler
 # pd_file = $(shell ls p4_pd/src/*.cpp)
