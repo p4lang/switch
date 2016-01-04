@@ -30,7 +30,7 @@ $(BUILT_SOURCES): src/switch_api.thrift
 	$(THRIFT) -o $(srcdir)/src/ --gen cpp -r $(srcdir)/src/switch_api.thrift
 
 #lib_LIBRARIES = libswitchapi.a
-lib_LTLIBRARIES = libswitchapi.la
+pkglib_LTLIBRARIES = libswitchapi.la
 
 libswitchapi_la_SOURCES = \
 $(BUILT_SOURCES) \

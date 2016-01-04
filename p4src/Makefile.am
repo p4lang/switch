@@ -37,7 +37,7 @@ bmv2_p4_pd/pd/pd_tables.h \
 bmv2_p4_pd/pd/pd_types.h \
 bmv2_p4_pd/pd/pd_mirroring.h
 
-lib_LTLIBRARIES = libbmv2pd.la
+pkglib_LTLIBRARIES = libbmv2pd.la
 BUILT_SOURCES = $(bmv2_pd_files) $(bmv2_pd_headers)
 
 libbmv2pd_la_SOURCES = $(BUILT_SOURCES)
@@ -52,6 +52,8 @@ bmv2_pd_files.ts : $(p4_bmv2_output)
 $(p4_bmv2_output) : $(p4_files)
 	@mkdir -p bmv2_p4_pd
 	$(P4CC_BM) --pd bmv2_p4_pd --p4-prefix dc --json $@ $(p4_prg)
+
+# pkgdata_DATA = $(p4_bmv2_output)
 
 endif
 
