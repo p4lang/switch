@@ -14,22 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#ifdef SAI_BMLIB
-
-#include "saiinternal.h"
-#include <p4_sim/rmt.h>
-#include <BMI/bmi_port.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-static unsigned int initialized = 0;
-static int log_level = P4_LOG_LEVEL_NONE;
-static bmi_port_mgr_t *port_mgr;
-static sai_api_t api_id = SAI_API_UNSPECIFIED;
+#include "saiinternal.h"
 
-extern int start_switch_api_packet_driver(void);
+#include <pd/pd_static.h>
+#include <pd/pd.h>
+#include <sai.h>
+
+static unsigned int initialized = 0;
 
 const char *
 sai_profile_get_value(_In_ sai_switch_profile_id_t profile_id,
@@ -37,7 +32,6 @@ sai_profile_get_value(_In_ sai_switch_profile_id_t profile_id,
 {
     return NULL;
 }
-
 
 /*
  * Enumerate all the K/V pairs in a profile.
@@ -56,6 +50,17 @@ const service_method_table_t sai_services = {
     .profile_get_value = sai_profile_get_value,
     .profile_get_next_value = sai_profile_get_next_value
 };
+
+#ifdef SAI_BMLIB
+
+#include <p4_sim/rmt.h>
+#include <BMI/bmi_port.h>
+
+static int log_level = P4_LOG_LEVEL_NONE;
+static bmi_port_mgr_t *port_mgr;
+static sai_api_t api_id = SAI_API_UNSPECIFIED;
+
+extern int start_switch_api_packet_driver(void);
 
 static void sai_log_packet(
         _In_ int port_num,
@@ -184,8 +189,34 @@ sai_api_uninitialize(void) {
     return status;
 }
 
+#else
+
+sai_status_t
+sai_api_initialize(_In_ uint64_t flags,
+                   _In_ const service_method_table_t* services) {
+    sai_status_t status =  SAI_STATUS_SUCCESS;
+    unsigned int num_ports = 32;
+    UNUSED(services);
+
+    p4_pd_init();
+    p4_pd_dc_init();
+    switch_api_init(0, num_ports);
+    start_switch_api_packet_driver();
+    initialized = 1;
+    sai_initialize();
+
+    services = &sai_services;
+    return status;
+}
+
+sai_status_t
+sai_api_uninitialize(void) {
+    sai_status_t status =  SAI_STATUS_SUCCESS;
+    return status;
+}
+
+#endif /* SAI_BMLIB */
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-
-#endif /* SAI_BMLIB */
