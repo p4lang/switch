@@ -31,10 +31,6 @@ AC_LANG_PUSH(C)
 AC_CHECK_HEADERS([assert.h stdio.h string.h sys/stat.h sys/types.h unistd.h], \
 [], [AC_MSG_ERROR([Missing header file])])
 
-# Check for thrift support (Facebook's Thrift RPC library)
-AS_IF([test x"$THRIFT" = x],
-[AC_MSG_ERROR([cannot find thrift])])
-
 AC_CHECK_LIB([pcap], [pcap_create], [], [AC_MSG_ERROR([Missing libpcap])])
 if test -n "$COVERAGE_FLAGS"; then
     AC_CHECK_LIB([gcov], [__gcov_init], [], [AC_MSG_ERROR([Missing gcov library])])
