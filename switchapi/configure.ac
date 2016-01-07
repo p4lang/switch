@@ -7,6 +7,14 @@ AM_INIT_AUTOMAKE([foreign subdir-objects])
 AM_SILENT_RULES([yes])
 AC_CONFIG_HEADERS([config.h])
 
+# Thrift
+AC_ARG_WITH([thrift],
+    [AS_HELP_STRING([--with-thrift], [Thrift selector])],
+    [THRIFT=$withval],
+    [AC_PATH_PROG([THRIFT], [thrift], [])])
+AS_IF([test x"$THRIFT" = x],
+[AC_MSG_ERROR([cannot find thrift])])
+
 AC_ARG_ENABLE([coverage],
     AS_HELP_STRING([--enable-coverage], [Enable gcov flags]))
 AS_IF([test "x$enable_coverage" = "xyes"], [
