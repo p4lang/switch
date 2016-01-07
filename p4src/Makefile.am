@@ -7,15 +7,16 @@ p4_files += $(shell ls includes/*.p4)
 p4_name = switch
 p4_prg = $(p4_name).p4
 
+PFX ?=
 if TARGET_BMV2
 TARGET=bmv2
-BMV2_INC_DIR = $(includedir)/bm_sim
-P4C_BMV2_INC_DIR = $(includedir)/p4c_bm
+BMV2_INC_DIR = $(PFX)/$(includedir)/bm_sim
+P4C_BMV2_INC_DIR = $(PFX)/$(includedir)/p4c_bm
 libbmv2pd_la_CXXFLAGS = -I $(srcdir)/bmv2_p4_pd
-libbmv2pd_la_CXXFLAGS += -I $(includedir)/p4c_bm/pdfixed \
-	-I $(includedir)/p4c_bm/pdfixed/pd \
-	-I $(includedir)/p4c_bm/pdfixed/src \
-	-I $(includedir)/bm_sim -std=c++11
+libbmv2pd_la_CXXFLAGS += -I $(PFX)/$(includedir)/p4c_bm/pdfixed \
+	-I $(PFX)/$(includedir)/p4c_bm/pdfixed/pd \
+	-I $(PFX)/$(includedir)/p4c_bm/pdfixed/src \
+	-I $(PFX)/$(includedir)/bm_sim -std=c++11
 
 # take all the pd files created by the compiler
 # pd_file = $(shell ls p4_pd/src/*.cpp)

@@ -2,10 +2,12 @@ ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS} -I m4
 
 SUBDIRS = third-party/tommyds
 
+PFX ?=
+
 if TARGET_BMV2
 TARGET_CFLAGS = -D BMV2
-TARGET_CFLAGS += -I $(includedir)/p4c_bm/
-TARGET_CFLAGS += -I $(includedir)/p4c_bm/pdfixed
+TARGET_CFLAGS += -I $(PFX)/$(includedir)/p4c_bm/
+TARGET_CFLAGS += -I $(PFX)/$(includedir)/p4c_bm/pdfixed
 TARGET_CFLAGS += -I $(srcdir)/../p4src/bmv2_p4_pd
 endif
 
