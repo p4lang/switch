@@ -32,7 +32,6 @@ AC_CHECK_HEADERS([assert.h stdio.h string.h sys/stat.h sys/types.h unistd.h], \
 [], [AC_MSG_ERROR([Missing header file])])
 
 # Check for thrift support (Facebook's Thrift RPC library)
-AC_PATH_PROG([THRIFT], [thrift], [])
 AS_IF([test x"$THRIFT" = x],
 [AC_MSG_ERROR([cannot find thrift])])
 
