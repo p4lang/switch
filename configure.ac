@@ -13,13 +13,6 @@ AM_INIT_AUTOMAKE([foreign subdir-objects])
 AM_SILENT_RULES([yes])
 AC_CONFIG_HEADERS([config.h])
 
-# Check for thrift support (Apache Thrift RPC library)
-AC_PATH_PROG([THRIFT], [thrift], [])
-AS_IF([test x"$THRIFT" = x], [AC_MSG_ERROR([Missing thrift executable])])
-# Thrift must always be enabled by default. A real check is performed in
-# p4factory/release/pkg-configure.ac.
-AM_CONDITIONAL([IS_THRIFT_ENABLED], [test "x" = "x"])
-
 AC_ARG_ENABLE([coverage],
     AS_HELP_STRING([--enable-coverage], [Enable gcov flags]))
 AS_IF([test "x$enable_coverage" = "xyes"], [
