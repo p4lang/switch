@@ -7,15 +7,15 @@ p4_files += $(shell ls includes/*.p4)
 p4_name = switch
 p4_prg = $(p4_name).p4
 
+PFX ?=
 if TARGET_BMV2
 TARGET=bmv2
-BMV2_INC_DIR = $(includedir)/bm_sim
-P4C_BMV2_INC_DIR = $(includedir)/p4c_bm
 libbmv2pd_la_CXXFLAGS = -I $(srcdir)/bmv2_p4_pd
-libbmv2pd_la_CXXFLAGS += -I $(includedir)/p4c_bm/pdfixed \
-	-I $(includedir)/p4c_bm/pdfixed/pd \
-	-I $(includedir)/p4c_bm/pdfixed/src \
-	-I $(includedir)/bm_sim -std=c++11
+libbmv2pd_la_CXXFLAGS += \
+	-I $(PFX)$(includedir)/pdfixed \
+	-I $(PFX)$(includedir)/pdfixed/pd \
+	-I $(PFX)$(includedir)/pdfixed/src \
+	-std=c++11
 
 # take all the pd files created by the compiler
 # pd_file = $(shell ls p4_pd/src/*.cpp)
@@ -37,7 +37,7 @@ bmv2_p4_pd/pd/pd_tables.h \
 bmv2_p4_pd/pd/pd_types.h \
 bmv2_p4_pd/pd/pd_mirroring.h
 
-pkglib_LTLIBRARIES = libbmv2pd.la
+noinst_LTLIBRARIES = libbmv2pd.la
 BUILT_SOURCES = $(bmv2_pd_files) $(bmv2_pd_headers)
 
 libbmv2pd_la_SOURCES = $(BUILT_SOURCES)
