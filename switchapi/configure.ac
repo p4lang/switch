@@ -3,6 +3,7 @@
 
 AC_PREREQ([2.69])
 AC_INIT([switchapi], [0.1], [])
+LT_INIT()
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 AM_SILENT_RULES([yes])
 AC_CONFIG_HEADERS([config.h])
