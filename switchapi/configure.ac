@@ -39,7 +39,6 @@ AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 # Checks for header files.
 AC_LANG_PUSH(C)
 
-
 # Check for thrift support (Facebook's Thrift RPC library)
 AC_PATH_PROG([THRIFT], [thrift], [])
 AS_IF([test x"$THRIFT" = x],
