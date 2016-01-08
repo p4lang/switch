@@ -10,13 +10,12 @@ p4_prg = $(p4_name).p4
 PFX ?=
 if TARGET_BMV2
 TARGET=bmv2
-BMV2_INC_DIR = $(PFX)/$(includedir)/bm_sim
-P4C_BMV2_INC_DIR = $(PFX)/$(includedir)/p4c_bm
 libbmv2pd_la_CXXFLAGS = -I $(srcdir)/bmv2_p4_pd
-libbmv2pd_la_CXXFLAGS += -I $(PFX)/$(includedir)/p4c_bm/pdfixed \
-	-I $(PFX)/$(includedir)/p4c_bm/pdfixed/pd \
-	-I $(PFX)/$(includedir)/p4c_bm/pdfixed/src \
-	-I $(PFX)/$(includedir)/bm_sim -std=c++11
+libbmv2pd_la_CXXFLAGS += \
+	-I $(PFX)$(includedir)/pdfixed \
+	-I $(PFX)$(includedir)/pdfixed/pd \
+	-I $(PFX)$(includedir)/pdfixed/src \
+	-std=c++11
 
 # take all the pd files created by the compiler
 # pd_file = $(shell ls p4_pd/src/*.cpp)
@@ -38,7 +37,7 @@ bmv2_p4_pd/pd/pd_tables.h \
 bmv2_p4_pd/pd/pd_types.h \
 bmv2_p4_pd/pd/pd_mirroring.h
 
-pkglib_LTLIBRARIES = libbmv2pd.la
+noinst_LTLIBRARIES = libbmv2pd.la
 BUILT_SOURCES = $(bmv2_pd_files) $(bmv2_pd_headers)
 
 libbmv2pd_la_SOURCES = $(BUILT_SOURCES)
@@ -54,7 +53,7 @@ $(p4_bmv2_output) : $(p4_files)
 	@mkdir -p bmv2_p4_pd
 	$(P4CC_BM) --pd bmv2_p4_pd --p4-prefix dc --json $@ $(p4_prg)
 
-# pkgdata_DATA = $(p4_bmv2_output)
+pkgdata_DATA = $(p4_bmv2_output)
 
 endif
 

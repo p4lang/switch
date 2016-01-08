@@ -40,9 +40,6 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_LANG_PUSH(C)
 AC_LANG_PUSH(C++)
 
-AC_CHECK_HEADERS([assert.h stdio.h string.h sys/stat.h sys/types.h unistd.h], \
-[], [AC_MSG_ERROR([Missing header file])])
-
 AC_CHECK_HEADER([thrift/Thrift.h], [], \
   [AC_MSG_ERROR([Thrift headers not found])])
 
@@ -61,12 +58,6 @@ AC_CHECK_FUNCS([memset])
 AC_CHECK_FUNCS([select])
 AC_CHECK_FUNCS([socket])
 AC_CHECK_HEADER_STDBOOL
-AC_CHECK_HEADERS([arpa/inet.h])
-AC_CHECK_HEADERS([fcntl.h])
-AC_CHECK_HEADERS([stddef.h])
-AC_CHECK_HEADERS([sys/ioctl.h])
-AC_CHECK_HEADERS([sys/socket.h])
-AC_CHECK_TYPES([ptrdiff_t])
 AC_C_INLINE
 AC_FUNC_MALLOC
 AC_PROG_RANLIB

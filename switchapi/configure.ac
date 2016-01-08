@@ -39,8 +39,6 @@ AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 # Checks for header files.
 AC_LANG_PUSH(C)
 
-AC_CHECK_HEADERS([assert.h stdio.h string.h sys/stat.h sys/types.h unistd.h], \
-[], [AC_MSG_ERROR([Missing header file])])
 
 # Check for thrift support (Facebook's Thrift RPC library)
 AC_PATH_PROG([THRIFT], [thrift], [])

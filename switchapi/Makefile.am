@@ -6,8 +6,7 @@ PFX ?=
 
 if TARGET_BMV2
 TARGET_CFLAGS = -D BMV2
-TARGET_CFLAGS += -I $(PFX)/$(includedir)/p4c_bm/
-TARGET_CFLAGS += -I $(PFX)/$(includedir)/p4c_bm/pdfixed
+TARGET_CFLAGS += -I $(PFX)/$(includedir)/pdfixed
 TARGET_CFLAGS += -I $(srcdir)/../p4src/bmv2_p4_pd
 endif
 
@@ -32,7 +31,7 @@ $(BUILT_SOURCES): src/switch_api.thrift
 	$(THRIFT) -o $(srcdir)/src/ --gen cpp -r $(srcdir)/src/switch_api.thrift
 
 #lib_LIBRARIES = libswitchapi.a
-pkglib_LTLIBRARIES = libswitchapi.la
+noinst_LTLIBRARIES = libswitchapi.la
 
 libswitchapi_la_SOURCES = \
 $(BUILT_SOURCES) \
