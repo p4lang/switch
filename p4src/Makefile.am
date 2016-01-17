@@ -42,7 +42,7 @@ BUILT_SOURCES = $(bmv2_pd_files) $(bmv2_pd_headers)
 
 libbmv2pd_la_SOURCES = $(BUILT_SOURCES)
 
-P4CC_BM = p4c-bmv2
+P4CC_BM = $(PFX)$(bindir)/p4c_bm/p4c-bmv2
 
 # target specific definitions - each target may require different output files
 p4_bmv2_output = $(p4_name)_bmv2.json
