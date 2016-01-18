@@ -195,13 +195,8 @@ sai_status_t
 sai_api_initialize(_In_ uint64_t flags,
                    _In_ const service_method_table_t* services) {
     sai_status_t status =  SAI_STATUS_SUCCESS;
-    unsigned int num_ports = 32;
     UNUSED(services);
 
-    p4_pd_init();
-    p4_pd_dc_init();
-    switch_api_init(0, num_ports);
-    start_switch_api_packet_driver();
     initialized = 1;
     sai_initialize();
 
