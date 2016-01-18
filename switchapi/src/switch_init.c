@@ -300,40 +300,40 @@ switch_api_init_default_acl_entries(switch_device_t device)
                                &action_params, &handle);
 
     // routed, ingress bd == egress bd, copy to cpu
-    acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
-    memset(acl_kvp, 0, sizeof(acl_kvp));
-    acl_kvp[0].field = SWITCH_ACL_SYSTEM_FIELD_ROUTED;
-    acl_kvp[0].value.routed = true;
-    acl_kvp[0].mask.u.mask = 0xFF;
-    acl_kvp[1].field = SWITCH_ACL_SYSTEM_FIELD_BD_CHECK;
-    acl_kvp[1].value.bd_check = 0;
-    acl_kvp[1].mask.u.mask = 0xFFFF;
-    memset(&action_params, 0, sizeof(switch_acl_action_params_t));
-    action_params.cpu_redirect.reason_code =
-        SWITCH_HOSTIF_REASON_CODE_ICMP_REDIRECT;
-    switch_api_acl_rule_create(device, acl_handle, priority++, 2,
-                               acl_kvp, SWITCH_ACL_ACTION_COPY_TO_CPU,
-                               &action_params, &handle);
+//    acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
+//    memset(acl_kvp, 0, sizeof(acl_kvp));
+//    acl_kvp[0].field = SWITCH_ACL_SYSTEM_FIELD_ROUTED;
+//    acl_kvp[0].value.routed = true;
+//    acl_kvp[0].mask.u.mask = 0xFF;
+//    acl_kvp[1].field = SWITCH_ACL_SYSTEM_FIELD_BD_CHECK;
+//    acl_kvp[1].value.bd_check = 0;
+//    acl_kvp[1].mask.u.mask = 0xFFFF;
+//    memset(&action_params, 0, sizeof(switch_acl_action_params_t));
+//    action_params.cpu_redirect.reason_code =
+//        SWITCH_HOSTIF_REASON_CODE_ICMP_REDIRECT;
+//    switch_api_acl_rule_create(device, acl_handle, priority++, 2,
+//                               acl_kvp, SWITCH_ACL_ACTION_COPY_TO_CPU,
+//                               &action_params, &handle);
 
     // Broadcast packet on routed interfaces, copy to cpu
-    acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
-    memset(acl_kvp, 0, sizeof(acl_kvp));
-    acl_kvp[0].field = SWITCH_ACL_SYSTEM_FIELD_DEST_MAC;
-    acl_kvp[0].value.dest_mac.mac_addr[0] = 0xFF;
-    acl_kvp[0].value.dest_mac.mac_addr[1] = 0xFF;
-    acl_kvp[0].value.dest_mac.mac_addr[2] = 0xFF;
-    acl_kvp[0].value.dest_mac.mac_addr[3] = 0xFF;
-    acl_kvp[0].value.dest_mac.mac_addr[4] = 0xFF;
-    acl_kvp[0].value.dest_mac.mac_addr[5] = 0xFF;
-    acl_kvp[0].mask.u.mask = 0xFFFFFFFFFFFF;
-    acl_kvp[1].field = SWITCH_ACL_SYSTEM_FIELD_IPV4_ENABLED;
-    acl_kvp[1].value.ipv4_enabled = 1;
-    acl_kvp[1].mask.u.mask = 0xFFFFFFFF;
-    memset(&action_params, 0, sizeof(switch_acl_action_params_t));
-    action_params.cpu_redirect.reason_code = 0;
-    switch_api_acl_rule_create(device, acl_handle, priority++, 2,
-                               acl_kvp, SWITCH_ACL_ACTION_COPY_TO_CPU,
-                               &action_params, &handle);
+//    acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
+//    memset(acl_kvp, 0, sizeof(acl_kvp));
+//    acl_kvp[0].field = SWITCH_ACL_SYSTEM_FIELD_DEST_MAC;
+//    acl_kvp[0].value.dest_mac.mac_addr[0] = 0xFF;
+//    acl_kvp[0].value.dest_mac.mac_addr[1] = 0xFF;
+//    acl_kvp[0].value.dest_mac.mac_addr[2] = 0xFF;
+//    acl_kvp[0].value.dest_mac.mac_addr[3] = 0xFF;
+//    acl_kvp[0].value.dest_mac.mac_addr[4] = 0xFF;
+//    acl_kvp[0].value.dest_mac.mac_addr[5] = 0xFF;
+//    acl_kvp[0].mask.u.mask = 0xFFFFFFFFFFFF;
+//    acl_kvp[1].field = SWITCH_ACL_SYSTEM_FIELD_IPV4_ENABLED;
+//    acl_kvp[1].value.ipv4_enabled = 1;
+//    acl_kvp[1].mask.u.mask = 0xFFFFFFFF;
+//    memset(&action_params, 0, sizeof(switch_acl_action_params_t));
+//    action_params.cpu_redirect.reason_code = 0;
+//    switch_api_acl_rule_create(device, acl_handle, priority++, 2,
+//                               acl_kvp, SWITCH_ACL_ACTION_COPY_TO_CPU,
+//                               &action_params, &handle);
 
     return SWITCH_STATUS_SUCCESS;
 }
