@@ -173,6 +173,8 @@ sai_status_t sai_get_switch_attribute(
             case SAI_SWITCH_ATTR_CPU_PORT:
                 attr_list->value.oid = api_switch_info.port_list[64];
                 break;
+            case SAI_SWITCH_ATTR_DEFAULT_PORT_VLAN_ID:
+                break;
         }
     }
 
