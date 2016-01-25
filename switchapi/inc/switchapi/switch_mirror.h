@@ -74,6 +74,8 @@ typedef struct switch_api_mirror_info_ {
     uint32_t max_pkt_len;
     switch_handle_t nhop_handle;
     bool enable;
+    uint32_t extract_len;
+    uint32_t timeout_usec;
 } switch_api_mirror_info_t;
 
 /**

@@ -25,6 +25,8 @@ typedef struct switch_mirror_info_ {
     switch_handle_t tunnel_intf_handle;
     switch_handle_t inner_neigh_handle;
     switch_handle_t outer_neigh_handle;
+    uint32_t pkt_hdr;
+    uint8_t hdr_len;
     p4_pd_entry_hdl_t pd_hdl;
 } switch_mirror_info_t;
 

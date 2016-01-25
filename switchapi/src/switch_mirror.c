@@ -108,6 +108,8 @@ switch_api_mirror_session_create(switch_device_t device,
         return SWITCH_API_INVALID_HANDLE;
     }
 
+    memset(mirror_info, 0, sizeof(switch_mirror_info_t));
+
     api_mirror_info->enable = TRUE;
     memcpy(&mirror_info->api_mirror_info, api_mirror_info, sizeof(switch_api_mirror_info_t));
     switch_api_id_allocator_set(session_id_allocator,

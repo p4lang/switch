@@ -7018,6 +7018,10 @@ switch_pd_mirror_session_update(switch_device_t device,
                                 api_mirror_info->max_pkt_len,
                                 api_mirror_info->cos,
                                 false,
+                                api_mirror_info->extract_len,
+                                api_mirror_info->timeout_usec,
+                                (uint32_t *) &mirror_info->pkt_hdr,
+                                mirror_info->hdr_len,
                                 api_mirror_info->enable);
 
     p4_pd_complete_operations(g_sess_hdl);
