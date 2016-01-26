@@ -149,13 +149,31 @@ sai_status_t sai_get_vlan_entry_attribute(
 
     SAI_LOG_ENTER();
 
-    sai_status_t status = SAI_STATUS_SUCCESS;
+    sai_status_t         status = SAI_STATUS_SUCCESS;
+    switch_status_t      switch_status;
+    switch_vlan_port_t   *switch_vlan_port_list = NULL;
 
     if (!attr_list) {
         status = SAI_STATUS_INVALID_PARAMETER;
         SAI_LOG_ERROR("null attribute list: %s",
                       sai_status_to_string(status));
         return status;
+    }
+
+    int index;
+    for (index = 0; index < attr_count; index++) {
+        sai_attribute_t *attr = &attr_list[index];
+        switch (attr->id) {
+            case SAI_VLAN_ATTR_PORT_LIST:
+//                switch_vlan_member_list =
+//                    malloc(attr_list->value.vlanportlist.count);
+//                switch_api_vlan_ports_get(device, vlan_id,
+//                    switch_vlan_member_port_list)
+//
+                break;
+            default:
+                status = SAI_STATUS_NOT_SUPPORTED;
+        }
     }
 
     SAI_LOG_EXIT();
