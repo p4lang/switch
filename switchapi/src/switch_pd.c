@@ -3629,8 +3629,12 @@ switch_pd_mcast_mgid_table_add_entry(switch_device_t device,
 {
     p4_pd_status_t               status = 0;
 #ifndef P4_MULTICAST_DISABLE
-    status = p4_pd_mc_associate_node(g_mc_sess_hdl, device, mgid_hdl,
-                               SWITCH_MCAST_NODE_INFO_HW_ENTRY(node));
+    status = p4_pd_mc_associate_node(
+                             g_mc_sess_hdl,
+                             device,
+                             mgid_hdl,
+                             SWITCH_MCAST_NODE_INFO_HW_ENTRY(node),
+                             0, FALSE);
     p4_pd_mc_complete_operations(g_mc_sess_hdl);
 #endif /* P4_MULTICAST_DISABLE */
     return status;
