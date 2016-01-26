@@ -64,7 +64,8 @@ typedef enum switch_vlan_attr_
     SWITCH_VLAN_ATTR_AGE_INTERVAL,
     SWITCH_VLAN_ATTR_IGMP_SNOOPING,
     SWITCH_VLAN_ATTR_MLD_SNOOPING,
-    SWITCH_VLAN_ATTR_MAC_LEARNING
+    SWITCH_VLAN_ATTR_MAC_LEARNING,
+    SWITCH_VLAN_ATTR_MEMBERS
 } switch_vlan_attr_t;
 
 typedef enum switch_ln_attr_
@@ -304,6 +305,15 @@ switch_status_t switch_api_vlan_ports_add(switch_device_t device, switch_handle_
 */
 switch_status_t switch_api_vlan_ports_remove(switch_device_t device, switch_handle_t vlan_handle,
                                              uint16_t port_count, switch_vlan_port_t  *vlan_port);
+
+
+/**
+  Get ports in a vlan;
+  @param device device
+  @param vlan_handle - Vlan handle that identifies vlan uniquely
+  @param value - start address of port array
+*/
+switch_status_t switch_api_vlan_ports_get(switch_device_t device, switch_handle_t vlan_handle, switch_vlan_port_t *ports);
 
 /**
  Create a Logical network
