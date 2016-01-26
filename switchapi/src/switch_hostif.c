@@ -367,6 +367,12 @@ switch_api_hostif_reason_code_create(switch_device_t device, switch_api_hostif_r
                                acl_kvp, acl_action,
                                &action_params, &ace_handle);
             break;
+        case SWITCH_HOSTIF_REASON_CODE_DHCP:
+            // TODO:
+            break;
+        case SWITCH_HOSTIF_REASON_CODE_IPV6_NEIGHBOR_DISCOVERY:
+            // TODO:
+            break;
         default:
             status = SWITCH_STATUS_NOT_SUPPORTED;
             break;
