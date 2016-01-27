@@ -51,7 +51,8 @@ bmv2_pd_files.ts : $(p4_bmv2_output)
 
 $(p4_bmv2_output) : $(p4_files)
 	@mkdir -p bmv2_p4_pd
-	$(P4CC_BM) --pd bmv2_p4_pd --p4-prefix dc --json $@ $(p4_prg)
+	PYTHONPATH=$(PFX)/$(libdir)/python$(PYTHON_VERSION)/site-packages \
+	PATH=$(PFX)$(bindir):$(PATH) $(P4CC_BM) --pd bmv2_p4_pd --p4-prefix dc --json $@ $(p4_prg)
 
 pkgdata_DATA = $(p4_bmv2_output)
 

@@ -7,6 +7,8 @@ AM_INIT_AUTOMAKE([foreign subdir-objects])
 AM_SILENT_RULES([yes])
 AC_CONFIG_HEADERS([config.h])
 
+AM_PATH_PYTHON([2.7],,)
+
 # This prevents autotools from automatically adding -O2 flag.
 : ${CXXFLAGS=""}
 # XXX find a way to identify all available P4 compilers (hlir and backends)??
