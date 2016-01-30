@@ -1,0 +1,62 @@
+{
+    "module_name"          :      "lag",
+    "attributes"           : [
+    {
+        "attribute_desc"          :      "lag attributes",
+        "attribute_list"          : [
+            {
+                "name"          :     "SAI_LAG_ATTR_PORT_LIST",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "oid_list"
+            }
+        ]
+    },
+    {
+        "attribute_desc"          :      "lag member attributes",
+        "attribute_list"          : [
+            {
+                "name"          :     "SAI_LAG_MEMBER_ATTR_LAG_ID",
+                "mandatory"     :     "true",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid"
+            },
+            {
+                "name"          :     "SAI_LAG_MEMBER_ATTR_PORT_ID",
+                "mandatory"     :     "true",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid"
+            },
+            {
+                "name"          :     "SAI_LAG_MEMBER_ATTR_EGRESS_DISABLE",
+                "mandatory"     :     "true",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool",
+                "default"       :     "false"
+            },
+            {
+                "name"          :     "SAI_LAG_MEMBER_ATTR_INGRESS_DISABLE",
+                "mandatory"     :     "true",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool",
+                "default"       :     "false"
+            }
+        ]
+    }
+    ]
+}

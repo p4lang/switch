@@ -28,6 +28,8 @@ typedef byte sai_thrift_ip_addr_family_t
 typedef byte sai_thrift_port_stp_port_state_t
 typedef i32 sai_thrift_hostif_trap_id_t
 typedef i32 sai_thrift_next_hop_type_t
+typedef i32 sai_thrift_vlan_stat_counter_t
+typedef i32 sai_thrift_policer_stat_counter_t
 
 struct sai_thrift_fdb_entry_t {
     1: sai_thrift_mac_t mac_address;
@@ -169,6 +171,10 @@ service switch_sai_rpc {
     sai_thrift_status_t sai_thrift_delete_vlan(1: sai_thrift_vlan_id_t vlan_id);
     sai_thrift_status_t sai_thrift_add_ports_to_vlan(1: sai_thrift_vlan_id_t vlan_id, 2: list<sai_thrift_vlan_port_t> thrift_port_list);
     sai_thrift_status_t sai_thrift_remove_ports_from_vlan(1: sai_thrift_vlan_id_t vlan_id, 2: list<sai_thrift_vlan_port_t> thrift_port_list);
+    list<i64> sai_thrift_get_vlan_stats(
+                             1: sai_thrift_vlan_id_t vlan_id,
+                             2: list<sai_thrift_vlan_stat_counter_t> counter_ids,
+                             3: i32 number_of_counters);
 
     //virtual router API
     sai_thrift_object_id_t sai_thrift_create_virtual_router(1: list<sai_thrift_attribute_t> thrift_attr_list);
@@ -193,10 +199,10 @@ service switch_sai_rpc {
     sai_thrift_status_t sai_thrift_remove_next_hop_from_group(1: sai_thrift_object_id_t next_hop_group_id, 2: list<sai_thrift_object_id_t> thrift_nexthops);
 
     //lag API
-    sai_thrift_object_id_t sai_thrift_create_lag(1: list<sai_thrift_attribute_t> thrift_attr_list);
+    sai_thrift_object_id_t sai_thrift_create_lag();
     sai_thrift_status_t sai_thrift_remove_lag(1: sai_thrift_object_id_t lag_id);
-    sai_thrift_status_t sai_thrift_add_ports_to_lag(1: sai_thrift_object_id_t lag_id, 2: list<sai_thrift_object_id_t> thrift_port_list);
-    sai_thrift_status_t sai_thrift_remove_ports_from_lag(1: sai_thrift_object_id_t lag_id, 2: list<sai_thrift_object_id_t> thrift_port_list);
+    sai_thrift_object_id_t sai_thrift_create_lag_member(1: list<sai_thrift_attribute_t> thrift_attr_list);
+    sai_thrift_status_t sai_thrift_remove_lag_member(1: sai_thrift_object_id_t lag_member_id);
 
     //stp API
     sai_thrift_object_id_t sai_thrift_create_stp_entry(1: list<sai_thrift_attribute_t> thrift_attr_list);
@@ -228,8 +234,20 @@ service switch_sai_rpc {
     sai_thrift_object_id_t sai_thrift_create_acl_entry(1: list<sai_thrift_attribute_t> thrift_attr_list);
     sai_thrift_status_t sai_thrift_delete_acl_entry(1: sai_thrift_object_id_t acl_entry);
 
+    sai_thrift_object_id_t sai_thrift_create_acl_counter(1: list<sai_thrift_attribute_t> thrift_attr_list);
+    sai_thrift_status_t sai_thrift_delete_acl_counter(1: sai_thrift_object_id_t acl_counter_id);
+    list<sai_thrift_attribute_value_t> sai_thrift_get_acl_counter_attribute(
+                             1: sai_thrift_object_id_t acl_counter_id,
+                             2: list<i32> thrift_attr_ids);
+
     // Mirror API
     sai_thrift_object_id_t sai_thrift_create_mirror_session(1: list<sai_thrift_attribute_t> thrift_attr_list);
     sai_thrift_status_t sai_thrift_remove_mirror_session(1: sai_thrift_object_id_t session_id);
 
+    // Policer API
+    sai_thrift_object_id_t sai_thrift_create_policer(1: list<sai_thrift_attribute_t> thrift_attr_list);
+    sai_thrift_status_t sai_thrift_remove_policer(1: sai_thrift_object_id_t policer_id);
+    list<i64> sai_thrift_get_policer_stats(
+                             1: sai_thrift_object_id_t policer_id,
+                             2: list<sai_thrift_policer_stat_counter_t> counter_ids)
 }

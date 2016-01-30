@@ -20,6 +20,7 @@ limitations under the License.
 #include "switch_base_types.h"
 #include "switch_handle.h"
 #include "switch_vlan.h"
+#include "switch_meter.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -263,6 +264,44 @@ switch_status_t switch_api_port_set(switch_device_t device, switch_api_port_info
  (portnumber specified in port_info->port_number)
 */
 switch_status_t switch_api_port_get(switch_device_t device, switch_api_port_info_t *api_port_info);
+
+/**
+ Set meter handle for port
+ @param device device to use
+ @param port port on device
+ @param pkt_type packet type
+ @param meter_handle meter handle
+ */
+switch_status_t switch_api_port_storm_control_set(switch_device_t device,
+                                                  switch_port_t port,
+                                                  switch_packet_type_t pkt_type,
+                                                  switch_handle_t meter_handle);
+
+/**
+ Get meter handle for port
+ @param device device to use
+ @param port port on device
+ @param pkt_type packet type
+ @param meter_handle meter handle
+ */
+switch_status_t switch_api_port_storm_control_get(switch_device_t device,
+                                                  switch_port_t port,
+                                                  switch_packet_type_t pkt_type,
+                                                  switch_handle_t *meter_handle);
+/**
+ Meter stats
+ @param device device
+ @param meter_handle meter handle
+ @param count number of counters
+ @param counter_ids meter counter ids
+ @param counters counter values
+ */
+switch_status_t
+switch_api_storm_control_stats_get(switch_device_t device,
+                          switch_handle_t meter_handle,
+                          uint8_t count,
+                          switch_meter_stats_t *counter_ids,
+                          switch_counter_t *counters);
 
 /**
  Dump port table

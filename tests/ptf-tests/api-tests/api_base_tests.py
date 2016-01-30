@@ -23,7 +23,6 @@ import os
 import logging
 import unittest
 
-
 import ptf
 from ptf.base_tests import BaseTest
 from ptf import config
@@ -39,7 +38,6 @@ import switch_api_thrift.switch_api_rpc as switch_api_rpc
 from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
-
 
 class ThriftInterface(BaseTest):
 

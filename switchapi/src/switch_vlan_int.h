@@ -36,6 +36,7 @@ typedef struct {
     tommy_node node;                            /**< linked list node */
     switch_handle_t member;                     /**< handle of member that belongs to bd */
     switch_handle_t stp_handle;
+    switch_rid_t rid;
 #ifdef SWITCH_PD
     p4_pd_entry_hdl_t pv_hw_entry;
     p4_pd_entry_hdl_t xlate_entry;
@@ -45,10 +46,10 @@ typedef struct {
 }  switch_ln_member_t;
 
 typedef struct switch_bd_stats_ {
-    uint16_t stats_idx[SWITCH_VLAN_STAT_MAX];
-    switch_counter_t counters[SWITCH_VLAN_STAT_MAX];
+    uint16_t stats_idx[SWITCH_VLAN_STATS_MAX];
+    switch_counter_t counters[SWITCH_VLAN_STATS_MAX];
 #ifdef SWITCH_PD
-    p4_pd_entry_hdl_t stats_hw_entry[SWITCH_VLAN_STAT_MAX];
+    p4_pd_entry_hdl_t stats_hw_entry[SWITCH_VLAN_STATS_MAX];
 #endif
 } switch_bd_stats_t;
 
@@ -58,15 +59,19 @@ typedef struct switch_bd_info_ {
     uint32_t uuc_mc_index;
     uint32_t umc_mc_index;
     uint32_t bcast_mc_index;
+    switch_rid_t rid;
+    uint16_t smac_index;
     switch_handle_t stp_handle;
     tommy_list members;                         /**< members of VLAN */
 
     switch_urpf_mode_t ipv4_urpf_mode;
     switch_urpf_mode_t ipv6_urpf_mode;
     uint16_t bd_label;
-    switch_bd_stats_t *bd_stats;
+    switch_bd_stats_t *ingress_bd_stats;
+    switch_bd_stats_t *egress_bd_stats;
 #ifdef SWITCH_PD
     p4_pd_mbr_hdl_t bd_entry;                   /**< hw bd table entry */
+    p4_pd_entry_hdl_t egress_bd_entry;          /**< hw bd table entry */
     p4_pd_entry_hdl_t uuc_entry;                /**< hw uuc entry */
     p4_pd_entry_hdl_t umc_entry;                /**< hw umc entry */
     p4_pd_entry_hdl_t bcast_entry;              /**< hw bcast entry */
@@ -119,7 +124,7 @@ typedef struct switch_vlan_port_info_ {
     ln->ln_info.flags.core_bd
 
 #define SWITCH_BD_STATS_START_INDEX(ln) \
-    (ln->bd_stats != NULL) ? ln->bd_stats->stats_idx[0] : 0
+    (ln->ingress_bd_stats != NULL) ? ln->ingress_bd_stats->stats_idx[0] : 0
 
 // Internal API Declarations
 switch_handle_t switch_bd_create();
@@ -133,6 +138,10 @@ switch_status_t switch_bd_ipv4_unicast_enabled_set(switch_handle_t bd_handle, ui
 switch_status_t switch_bd_ipv4_unicast_enabled_get(switch_handle_t bd_handle, uint64_t *value);
 switch_status_t switch_bd_ipv6_unicast_enabled_set(switch_handle_t bd_handle, uint64_t value);
 switch_status_t switch_bd_ipv6_unicast_enabled_get(switch_handle_t bd_handle, uint64_t *value);
+switch_status_t switch_bd_ipv4_multicast_enabled_set(switch_handle_t bd_handle, uint64_t value);
+switch_status_t switch_bd_ipv4_multicast_enabled_get(switch_handle_t bd_handle, uint64_t *value);
+switch_status_t switch_bd_ipv6_multicast_enabled_set(switch_handle_t bd_handle, uint64_t value);
+switch_status_t switch_bd_ipv6_multicast_enabled_get(switch_handle_t bd_handle, uint64_t *value);
 switch_status_t switch_bd_ipv4_urpf_mode_set(switch_handle_t bd_handle, uint64_t value);
 switch_status_t switch_bd_ipv4_urpf_mode_get(switch_handle_t bd_handle, uint64_t *value);
 switch_status_t switch_bd_ipv6_urpf_mode_set(switch_handle_t bd_handle, uint64_t value);

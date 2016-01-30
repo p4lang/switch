@@ -34,7 +34,7 @@ limitations under the License.
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-    
+
 static void *switch_interface_array;
 
 switch_status_t
@@ -43,7 +43,7 @@ switch_interface_init(switch_device_t device)
     UNUSED(device);
     return switch_handle_type_init(SWITCH_HANDLE_TYPE_INTERFACE, (16*1024));
 }
-    
+
 switch_status_t
 switch_interface_free(switch_device_t device)
 {
@@ -64,10 +64,56 @@ switch_interface_handle_create()
 switch_interface_info_t *
 switch_api_interface_get(switch_handle_t interface_handle)
 {
-    switch_interface_info_t *interface_info=NULL;
+    switch_interface_info_t *interface_info = NULL;
     _switch_handle_get(switch_interface_info_t, switch_interface_array,
                    interface_handle, interface_info);
     return interface_info;
+}
+
+switch_status_t
+switch_api_interface_get_type(switch_handle_t intf_handle,
+                              switch_interface_type_t *type)
+{
+    switch_interface_info_t * intf_info = NULL;
+    intf_info = switch_api_interface_get(intf_handle);
+    if (!intf_info) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
+
+    *type = SWITCH_INTF_TYPE(intf_info);
+    return SWITCH_STATUS_SUCCESS;
+}
+
+switch_status_t
+switch_api_interface_get_port_handle(switch_handle_t intf_handle,
+                                     switch_handle_t *port_handle)
+{
+    switch_interface_info_t * intf_info = NULL;
+    intf_info = switch_api_interface_get(intf_handle);
+    if (!intf_info) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
+
+    if (SWITCH_INTF_TYPE(intf_info) == SWITCH_API_INTERFACE_L2_PORT_VLAN) {
+        *port_handle = SWITCH_INTF_PV_PORT_HANDLE(intf_info);
+    } else {
+        *port_handle = SWITCH_INTF_PORT_HANDLE(intf_info);
+    }
+    return SWITCH_STATUS_SUCCESS;
+}
+
+switch_status_t
+switch_api_interface_get_vlan_handle(switch_handle_t intf_handle,
+                                     switch_handle_t *vlan_handle)
+{
+    switch_interface_info_t * intf_info = NULL;
+    intf_info = switch_api_interface_get(intf_handle);
+    if (!intf_info) {
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
+
+    *vlan_handle = intf_info->bd_handle;
+    return SWITCH_STATUS_SUCCESS;
 }
 
 switch_handle_t
@@ -202,22 +248,23 @@ switch_api_interface_create_l3(switch_device_t device, switch_handle_t intf_hand
     ln_info->rmac_handle = api_intf_info->rmac_handle;
     ln_info->flags.ipv4_unicast_enabled = TRUE;
     ln_info->flags.ipv6_unicast_enabled = TRUE;
+    ln_info->flags.ipv4_multicast_enabled =
+        api_intf_info->ipv4_multicast_enabled;
+    ln_info->flags.ipv6_multicast_enabled =
+        api_intf_info->ipv6_multicast_enabled;
     if (!api_intf_info->rmac_handle) {
         if (api_intf_info->mac_valid) {
             api_intf_info->rmac_handle = switch_api_router_mac_group_create(device);
             status = switch_api_router_mac_add(device, api_intf_info->rmac_handle,
                                                &api_intf_info->mac);
-            intf_info->smac_idx = switch_smac_rewrite_index_from_rmac(api_intf_info->rmac_handle);
         } else {
             api_intf_info->rmac_handle = switch_api_capability_rmac_handle_get();
-            intf_info->smac_idx = switch_api_capability_smac_index_get();
         }
-    } else {
-        intf_info->smac_idx = switch_smac_rewrite_index_from_rmac(api_intf_info->rmac_handle);
     }
     ln_info->rmac_handle = api_intf_info->rmac_handle;
     intf_info->bd_handle = switch_api_logical_network_create(device, ln_info);
-    switch_api_interface_ipv4_urpf_mode_set(intf_handle, api_intf_info->ipv4_urpf_mode);
+    switch_api_interface_ipv4_urpf_mode_set(intf_handle,
+                                            api_intf_info->ipv4_urpf_mode);
     bd_info = switch_bd_get(intf_info->bd_handle);
     status = switch_pd_port_vlan_mapping_table_add_entry(device, vlan_id, 0,
                                            intf_info,
@@ -227,8 +274,9 @@ switch_api_interface_create_l3(switch_device_t device, switch_handle_t intf_hand
 }
 
 switch_status_t
-switch_api_interface_create_vlan_interface(switch_device_t device, switch_handle_t intf_handle,
-                               switch_interface_info_t *intf_info)
+switch_api_interface_create_vlan_interface(switch_device_t device,
+                                           switch_handle_t intf_handle,
+                                           switch_interface_info_t *intf_info)
 {
     switch_api_interface_info_t       *api_intf_info = NULL;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
@@ -249,29 +297,26 @@ switch_api_interface_create_vlan_interface(switch_device_t device, switch_handle
     ln_info->vrf_handle = api_intf_info->vrf_handle;
     ln_info->flags.ipv4_unicast_enabled = api_intf_info->ipv4_unicast_enabled;
     ln_info->flags.ipv6_unicast_enabled = api_intf_info->ipv6_unicast_enabled;
+    ln_info->flags.ipv4_multicast_enabled =
+        api_intf_info->ipv4_multicast_enabled;
+    ln_info->flags.ipv6_multicast_enabled =
+        api_intf_info->ipv6_multicast_enabled;
     if (!api_intf_info->rmac_handle) {
         if (api_intf_info->mac_valid) {
             api_intf_info->rmac_handle = switch_api_router_mac_group_create(device);
             status = switch_api_router_mac_add(device, api_intf_info->rmac_handle,
                                                &api_intf_info->mac);
-            intf_info->smac_idx = switch_smac_rewrite_index_from_rmac(api_intf_info->rmac_handle);
         } else {
             api_intf_info->rmac_handle = switch_api_capability_rmac_handle_get();
-            intf_info->smac_idx = switch_api_capability_smac_index_get();
         }
-    } else {
-        intf_info->smac_idx = switch_smac_rewrite_index_from_rmac(api_intf_info->rmac_handle);
     }
     ln_info->rmac_handle = api_intf_info->rmac_handle;
     intf_info->bd_handle = bd_handle;
     intf_info->ifindex = SWITCH_VLAN_INTERFACE_COMPUTE_IFINDEX(intf_handle);
-    status = switch_pd_bd_table_update_entry(device,
-                                        handle_to_id(bd_handle),
-                                        bd_info,
-                                        bd_info->bd_entry);
+    switch_api_logical_network_update(device, bd_handle, ln_info);
     return status;
 }
-    
+
 switch_handle_t
 switch_api_interface_create(switch_device_t device, switch_api_interface_info_t *api_intf_info)
 {
@@ -312,7 +357,7 @@ switch_api_interface_create(switch_device_t device, switch_api_interface_info_t 
             if (!encap_if) {
                 SWITCH_API_TRACE("%s:%d: invalid encap interface handle",
                                   __FUNCTION__, __LINE__);
-                return SWITCH_API_INVALID_HANDLE;
+                return SWITCH_STATUS_INVALID_HANDLE;
             }
             intf_info->ifindex = SWITCH_INTF_COMPUTE_TUNNEL_IFINDEX(intf_handle);
         break;
@@ -326,7 +371,8 @@ switch_api_interface_create(switch_device_t device, switch_api_interface_info_t 
 }
 
 switch_status_t
-switch_api_interface_delete_vlan_interface(switch_device_t device, switch_handle_t intf_handle)
+switch_api_interface_delete_vlan_interface(switch_device_t device,
+                                           switch_handle_t intf_handle)
 {
     switch_interface_info_t           *intf_info = NULL;
     switch_bd_info_t                  *bd_info = NULL;
@@ -348,9 +394,41 @@ switch_api_interface_delete_vlan_interface(switch_device_t device, switch_handle
     ln_info->flags.ipv6_unicast_enabled = FALSE;
     ln_info->rmac_handle = 0;
     status = switch_pd_bd_table_update_entry(device,
-                                        handle_to_id(intf_info->bd_handle),
-                                        bd_info,
-                                        bd_info->bd_entry);
+                                             handle_to_id(intf_info->bd_handle),
+                                             bd_info,
+                                             bd_info->bd_entry);
+    return status;
+}
+
+switch_status_t
+switch_api_interface_delete_l3_interface(switch_device_t device,
+                                         switch_handle_t intf_handle)
+{
+    switch_interface_info_t           *intf_info = NULL;
+    switch_bd_info_t                  *bd_info = NULL;
+    switch_api_interface_info_t       *api_intf_info = NULL;
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+
+    intf_info = switch_api_interface_get(intf_handle);
+    if (!intf_info) {
+        return SWITCH_STATUS_INVALID_INTERFACE;
+    }
+    bd_info = switch_bd_get(intf_info->bd_handle);
+    if (!bd_info) {
+        return SWITCH_STATUS_INVALID_VLAN_ID;
+    }
+
+    switch_pd_port_vlan_mapping_table_delete_entry(device, intf_info->pv_entry);
+    switch_api_logical_network_delete(device, intf_info->bd_handle);
+    intf_info->bd_handle = 0;
+    api_intf_info = &intf_info->api_intf_info;
+    if (api_intf_info->mac_valid) {
+        status = switch_api_router_mac_delete(device,
+                                              api_intf_info->rmac_handle,
+                                              &api_intf_info->mac);
+        status = switch_api_router_mac_group_delete(device,
+                                                    api_intf_info->rmac_handle);
+    }
     return status;
 }
 
@@ -358,7 +436,6 @@ switch_status_t
 switch_api_interface_delete(switch_device_t device, switch_handle_t handle)
 {
     switch_interface_info_t           *intf_info = NULL;
-    switch_api_interface_info_t       *api_intf_info = NULL;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
 
     if (!SWITCH_INTERFACE_HANDLE_VALID(handle)) {
@@ -370,32 +447,25 @@ switch_api_interface_delete(switch_device_t device, switch_handle_t handle)
         return SWITCH_STATUS_INVALID_INTERFACE;
     }
 
-    api_intf_info = &intf_info->api_intf_info;
     switch(SWITCH_INTF_TYPE(intf_info))
     {
         case SWITCH_API_INTERFACE_L3:
         case SWITCH_API_INTERFACE_L3_PORT_VLAN:
-            switch_pd_port_vlan_mapping_table_delete_entry(device, intf_info->pv_entry);
-            switch_api_logical_network_delete(device, intf_info->bd_handle);
-            intf_info->bd_handle = 0;
-            if (api_intf_info->mac_valid) {
-                status = switch_api_router_mac_delete(device, api_intf_info->rmac_handle,
-                                                      &api_intf_info->mac);
-                status = switch_api_router_mac_group_delete(device, api_intf_info->rmac_handle);
-            }
-        break;
+            switch_api_interface_delete_l3_interface(device, handle);
+            break;
         case SWITCH_API_INTERFACE_L3_VLAN:
             switch_api_interface_delete_vlan_interface(device, handle);
             break;
         default:
         break;
     }
+
     _switch_handle_delete(switch_interface_info_t, switch_interface_array, handle);
     return status;
 }
 
 switch_status_t
-switch_api_interface_attribute_set(switch_handle_t intf_handle, 
+switch_api_interface_attribute_set(switch_handle_t intf_handle,
                                    switch_intf_attr_t attr_type,
                                    uint64_t value)
 {
@@ -409,22 +479,25 @@ switch_api_interface_attribute_set(switch_handle_t intf_handle,
 
     switch (attr_type) {
         case SWITCH_INTF_ATTR_V4_UNICAST:
-            status = switch_api_interface_ipv4_unicast_enabled_set(intf_handle, value);
-        break;
+            status = switch_api_interface_ipv4_unicast_enabled_set(
+                intf_handle, value);
+            break;
         case SWITCH_INTF_ATTR_V6_UNICAST:
-            status = switch_api_interface_ipv6_unicast_enabled_set(intf_handle, value);
-        break;
+            status = switch_api_interface_ipv6_unicast_enabled_set(
+                intf_handle, value);
+            break;
         case SWITCH_INTF_ATTR_NATIVE_VLAN:
             status = switch_api_interface_native_vlan_set(intf_handle, value);
-        break;
+            break;
         default:
             status = SWITCH_STATUS_INVALID_ATTRIBUTE;
+            break;
     }
     return status;
 }
 
 switch_status_t
-switch_api_interface_attribute_get(switch_handle_t intf_handle, 
+switch_api_interface_attribute_get(switch_handle_t intf_handle,
                                    switch_intf_attr_t attr_type,
                                    uint64_t *value)
 {
@@ -438,28 +511,29 @@ switch_api_interface_attribute_get(switch_handle_t intf_handle,
 
     switch (attr_type) {
         case SWITCH_INTF_ATTR_V4_UNICAST:
-            status = switch_api_interface_ipv4_unicast_enabled_get(intf_handle, value);
-        break;
+            status = switch_api_interface_ipv4_unicast_enabled_get(
+                intf_handle, value);
+            break;
         case SWITCH_INTF_ATTR_V6_UNICAST:
-            status = switch_api_interface_ipv6_unicast_enabled_get(intf_handle, value);
-        break;
+            status = switch_api_interface_ipv6_unicast_enabled_get(
+                intf_handle, value);
+            break;
         case SWITCH_INTF_ATTR_NATIVE_VLAN:
             status = switch_api_interface_native_vlan_get(intf_handle, value);
-        break;
-
+            break;
         default:
             status = SWITCH_STATUS_INVALID_ATTRIBUTE;
+            break;
     }
     return status;
 }
-    
+
 switch_status_t
-switch_api_interface_ipv4_unicast_enabled_set(switch_handle_t intf_handle, uint64_t value)
+switch_api_interface_ipv4_unicast_enabled_set(switch_handle_t intf_handle,
+                                              uint64_t value)
 {
     switch_interface_info_t           *intf_info = NULL;
     switch_api_interface_info_t       *api_intf_info = NULL;
-    switch_bd_info_t                  *bd_info = NULL;
-    switch_handle_t                    bd_handle;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
 
     intf_info = switch_api_interface_get(intf_handle);
@@ -473,21 +547,15 @@ switch_api_interface_ipv4_unicast_enabled_set(switch_handle_t intf_handle, uint6
     }
 
     api_intf_info->ipv4_unicast_enabled = value;
-    bd_handle = intf_info->bd_handle;
-    // This should never happen. Assert here
-    if (!bd_info) {
-        return SWITCH_STATUS_INVALID_VLAN_ID;
-    }
-    status = switch_bd_ipv4_unicast_enabled_set(bd_handle, value);
+    status = switch_bd_ipv4_unicast_enabled_set(intf_info->bd_handle, value);
     return status;
 }
 
 switch_status_t
-switch_api_interface_ipv4_unicast_enabled_get(switch_handle_t intf_handle, uint64_t *value)
+switch_api_interface_ipv4_unicast_enabled_get(switch_handle_t intf_handle,
+                                              uint64_t *value)
 {
     switch_interface_info_t           *intf_info = NULL;
-    switch_bd_info_t                  *bd_info = NULL;
-    switch_handle_t                    bd_handle;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
 
     intf_info = switch_api_interface_get(intf_handle);
@@ -499,22 +567,16 @@ switch_api_interface_ipv4_unicast_enabled_get(switch_handle_t intf_handle, uint6
         return SWITCH_STATUS_INVALID_INTERFACE;
     }
 
-    bd_handle = intf_info->bd_handle;
-    // This should never happen. Assert here
-    if (!bd_info) {
-        return SWITCH_STATUS_INVALID_VLAN_ID;
-    }
-    status = switch_bd_ipv4_unicast_enabled_get(bd_handle, value);
+    status = switch_bd_ipv4_unicast_enabled_get(intf_info->bd_handle, value);
     return status;
 }
-    
+
 switch_status_t
-switch_api_interface_ipv6_unicast_enabled_set(switch_handle_t intf_handle, uint64_t value)
+switch_api_interface_ipv6_unicast_enabled_set(switch_handle_t intf_handle,
+                                              uint64_t value)
 {
     switch_interface_info_t           *intf_info = NULL;
     switch_api_interface_info_t       *api_intf_info = NULL;
-    switch_bd_info_t                  *bd_info = NULL;
-    switch_handle_t                    bd_handle;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
 
     intf_info = switch_api_interface_get(intf_handle);
@@ -528,21 +590,15 @@ switch_api_interface_ipv6_unicast_enabled_set(switch_handle_t intf_handle, uint6
     }
 
     api_intf_info->ipv6_unicast_enabled = value;
-    bd_handle = intf_info->bd_handle;
-    // This should never happen. Assert here
-    if (!bd_info) {
-        return SWITCH_STATUS_INVALID_VLAN_ID;
-    }
-    status = switch_bd_ipv6_unicast_enabled_set(bd_handle, value);
+    status = switch_bd_ipv6_unicast_enabled_set(intf_info->bd_handle, value);
     return status;
 }
 
 switch_status_t
-switch_api_interface_ipv6_unicast_enabled_get(switch_handle_t intf_handle, uint64_t *value)
+switch_api_interface_ipv6_unicast_enabled_get(switch_handle_t intf_handle,
+                                              uint64_t *value)
 {
     switch_interface_info_t           *intf_info = NULL;
-    switch_bd_info_t                  *bd_info = NULL;
-    switch_handle_t                    bd_handle;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
 
     intf_info = switch_api_interface_get(intf_handle);
@@ -554,12 +610,179 @@ switch_api_interface_ipv6_unicast_enabled_get(switch_handle_t intf_handle, uint6
         return SWITCH_STATUS_INVALID_INTERFACE;
     }
 
-    bd_handle = intf_info->bd_handle;
-    // This should never happen. Assert here
-    if (!bd_info) {
-        return SWITCH_STATUS_INVALID_VLAN_ID;
+    status = switch_bd_ipv6_unicast_enabled_get(intf_info->bd_handle, value);
+    return status;
+}
+
+switch_status_t
+switch_api_interface_ipv4_multicast_enabled_set(switch_handle_t intf_handle,
+                                                uint64_t value)
+{
+    switch_interface_info_t           *intf_info = NULL;
+    switch_api_interface_info_t       *api_intf_info = NULL;
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+
+    intf_info = switch_api_interface_get(intf_handle);
+    if (!intf_info) {
+        return SWITCH_STATUS_INVALID_INTERFACE;
     }
-    status = switch_bd_ipv6_unicast_enabled_get(bd_handle, value);
+
+    api_intf_info = &intf_info->api_intf_info;
+    if (!SWITCH_INTF_IS_PORT_L3(intf_info)) {
+        return SWITCH_STATUS_INVALID_INTERFACE;
+    }
+
+    api_intf_info->ipv4_multicast_enabled = value;
+    status = switch_bd_ipv4_multicast_enabled_set(intf_info->bd_handle, value);
+    return status;
+}
+
+switch_status_t
+switch_api_interface_ipv4_multicast_enabled_get(switch_handle_t intf_handle,
+                                                uint64_t *value)
+{
+    switch_interface_info_t           *intf_info = NULL;
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+
+    intf_info = switch_api_interface_get(intf_handle);
+    if (!intf_info) {
+        return SWITCH_STATUS_INVALID_INTERFACE;
+    }
+
+    if (!SWITCH_INTF_IS_PORT_L3(intf_info)) {
+        return SWITCH_STATUS_INVALID_INTERFACE;
+    }
+
+    status = switch_bd_ipv4_multicast_enabled_get(intf_info->bd_handle, value);
+    return status;
+}
+
+switch_status_t
+switch_api_interface_ipv6_multicast_enabled_set(switch_handle_t intf_handle,
+                                                uint64_t value)
+{
+    switch_interface_info_t           *intf_info = NULL;
+    switch_api_interface_info_t       *api_intf_info = NULL;
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+
+    intf_info = switch_api_interface_get(intf_handle);
+    if (!intf_info) {
+        return SWITCH_STATUS_INVALID_INTERFACE;
+    }
+
+    api_intf_info = &intf_info->api_intf_info;
+    if (!SWITCH_INTF_IS_PORT_L3(intf_info)) {
+        return SWITCH_STATUS_INVALID_INTERFACE;
+    }
+
+    api_intf_info->ipv6_multicast_enabled = value;
+    status = switch_bd_ipv6_multicast_enabled_set(intf_info->bd_handle, value);
+    return status;
+}
+
+switch_status_t
+switch_api_interface_ipv6_multicast_enabled_get(switch_handle_t intf_handle,
+                                                uint64_t *value)
+{
+    switch_interface_info_t           *intf_info = NULL;
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+
+    intf_info = switch_api_interface_get(intf_handle);
+    if (!intf_info) {
+        return SWITCH_STATUS_INVALID_INTERFACE;
+    }
+
+    if (!SWITCH_INTF_IS_PORT_L3(intf_info)) {
+        return SWITCH_STATUS_INVALID_INTERFACE;
+    }
+
+    status = switch_bd_ipv6_multicast_enabled_get(intf_info->bd_handle, value);
+    return status;
+}
+
+switch_status_t
+switch_api_interface_ipv4_urpf_mode_set(switch_handle_t intf_handle,
+                                        uint64_t value)
+{
+    switch_interface_info_t           *intf_info = NULL;
+    switch_api_interface_info_t       *api_intf_info = NULL;
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+
+    intf_info = switch_api_interface_get(intf_handle);
+    if (!intf_info) {
+        return SWITCH_STATUS_INVALID_INTERFACE;
+    }
+
+    api_intf_info = &intf_info->api_intf_info;
+    if (!SWITCH_INTF_IS_PORT_L3(intf_info)) {
+        return SWITCH_STATUS_INVALID_INTERFACE;
+    }
+
+    api_intf_info->ipv4_urpf_mode = value;
+    status = switch_bd_ipv4_urpf_mode_set(intf_info->bd_handle, value);
+    return status;
+}
+
+switch_status_t
+switch_api_interface_ipv4_urpf_mode_get(switch_handle_t intf_handle,
+                                        uint64_t *value)
+{
+    switch_interface_info_t           *intf_info = NULL;
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+
+    intf_info = switch_api_interface_get(intf_handle);
+    if (!intf_info) {
+        return SWITCH_STATUS_INVALID_INTERFACE;
+    }
+
+    if (!SWITCH_INTF_IS_PORT_L3(intf_info)) {
+        return SWITCH_STATUS_INVALID_INTERFACE;
+    }
+
+    status = switch_bd_ipv4_urpf_mode_get(intf_info->bd_handle, value);
+    return status;
+}
+
+switch_status_t
+switch_api_interface_ipv6_urpf_mode_set(switch_handle_t intf_handle,
+                                        uint64_t value)
+{
+    switch_interface_info_t           *intf_info = NULL;
+    switch_api_interface_info_t       *api_intf_info = NULL;
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+
+    intf_info = switch_api_interface_get(intf_handle);
+    if (!intf_info) {
+        return SWITCH_STATUS_INVALID_INTERFACE;
+    }
+
+    api_intf_info = &intf_info->api_intf_info;
+    if (!SWITCH_INTF_IS_PORT_L3(intf_info)) {
+        return SWITCH_STATUS_INVALID_INTERFACE;
+    }
+
+    api_intf_info->ipv6_urpf_mode = value;
+    status = switch_bd_ipv6_urpf_mode_set(intf_info->bd_handle, value);
+    return status;
+}
+
+switch_status_t
+switch_api_interface_ipv6_urpf_mode_get(switch_handle_t intf_handle,
+                                        uint64_t *value)
+{
+    switch_interface_info_t           *intf_info = NULL;
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+
+    intf_info = switch_api_interface_get(intf_handle);
+    if (!intf_info) {
+        return SWITCH_STATUS_INVALID_INTERFACE;
+    }
+
+    if (!SWITCH_INTF_IS_PORT_L3(intf_info)) {
+        return SWITCH_STATUS_INVALID_INTERFACE;
+    }
+
+    status = switch_bd_ipv6_urpf_mode_get(intf_info->bd_handle, value);
     return status;
 }
 

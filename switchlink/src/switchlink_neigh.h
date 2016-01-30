@@ -21,4 +21,9 @@ extern void
 neigh_create(switchlink_handle_t vrf_h, switchlink_ip_addr_t *ipaddr,
              switchlink_mac_addr_t mac_addr, switchlink_handle_t intf_h);
 
+extern void
+switchlink_linux_mac_update(switchlink_mac_addr_t mac_addr,
+                            switchlink_handle_t bridge_h,
+                            switchlink_handle_t intf_h, bool create);
+
 #endif /* __SWITCHLINK_NEIGH_H__ */

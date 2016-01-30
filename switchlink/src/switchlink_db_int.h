@@ -29,7 +29,8 @@ typedef struct switchlink_db_intf_obj_ {
 } switchlink_db_intf_obj_t;
 
 typedef struct switchlink_db_bridge_obj_ {
-    tommy_trie_inplace_node node;
+    tommy_trie_inplace_node ifindex_node;
+    tommy_trie_inplace_node handle_node;
     uint32_t ifindex;
     switchlink_db_bridge_info_t bridge;
 } switchlink_db_bridge_obj_t;
@@ -54,9 +55,26 @@ typedef struct switchlink_db_ecmp_obj_ {
     switchlink_db_ecmp_info_t ecmp_info;
 } switchlink_db_ecmp_obj_t;
 
+typedef struct switchlink_db_oifl_obj_ {
+    tommy_node list_node;
+    int32_t ref_count;
+    tommy_trie_inplace_node handle_node;
+    switchlink_db_oifl_info_t oifl_info;
+} switchlink_db_oifl_obj_t;
+
 typedef struct switchlink_db_route_obj_ {
     tommy_node list_node;
     switchlink_db_route_info_t route_info;
 } switchlink_db_route_obj_t;
+
+typedef struct switchlink_db_mroute_obj_ {
+    tommy_node list_node;
+    switchlink_db_mroute_info_t mroute_info;
+} switchlink_db_mroute_obj_t;
+
+typedef struct switchlink_db_mdb_obj_ {
+    tommy_node list_node;
+    switchlink_db_mdb_info_t mdb_info;
+} switchlink_db_mdb_obj_t;
 
 #endif /* __SWITCHLINK_DB_INT_H__ */

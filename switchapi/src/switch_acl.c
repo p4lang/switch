@@ -26,6 +26,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 static void *switch_acl_array;
+switch_api_id_allocator *acl_counter_index = NULL;
 
 switch_status_t
 switch_acl_init(switch_device_t device)
@@ -33,12 +34,14 @@ switch_acl_init(switch_device_t device)
     switch_acl_array = NULL;
     switch_handle_type_init(SWITCH_HANDLE_TYPE_ACL, (4*1024));
     switch_handle_type_init(SWITCH_HANDLE_TYPE_ACE, (4*1024));
+    acl_counter_index = switch_api_id_allocator_new(4 * 1024, FALSE);
     return SWITCH_STATUS_SUCCESS;
 }
 
 switch_status_t
 switch_acl_free(switch_device_t device)
 {
+    switch_api_id_allocator_destroy(acl_counter_index);
     switch_handle_type_free(SWITCH_HANDLE_TYPE_ACE);
     switch_handle_type_free(SWITCH_HANDLE_TYPE_ACL);
     return SWITCH_STATUS_SUCCESS;
@@ -66,6 +69,17 @@ switch_acl_delete(switch_handle_t handle)
     _switch_handle_delete(switch_acl_info_t, switch_acl_array, handle);
     return SWITCH_STATUS_SUCCESS;
 }
+
+unsigned int switch_acl_counter_index_allocate()
+{
+    return switch_api_id_allocator_allocate(acl_counter_index);
+}
+
+void switch_acl_counter_index_free(unsigned int index)
+{
+    switch_api_id_allocator_release(acl_counter_index, index);
+}
+
 
 switch_handle_t
 switch_api_acl_list_create(switch_device_t device, switch_acl_type_t type)
@@ -166,7 +180,7 @@ switch_acl_ip_set_fields_actions(switch_device_t device, switch_acl_rule_t *p,
                     break;
                 case SWITCH_HANDLE_TYPE_BD:
                     bd_label = handle_to_id(interface_handle);;
-                    break; 
+                    break;
                 default:
                     return SWITCH_STATUS_INVALID_HANDLE;
             }
@@ -174,8 +188,17 @@ switch_acl_ip_set_fields_actions(switch_device_t device, switch_acl_rule_t *p,
     }
     ip_acl = (switch_acl_ip_key_value_pair_t *)p->fields;
 
-    status = switch_pd_ipv4_acl_table_add_entry(device, if_label, bd_label,
-                        p->priority, p->field_count, ip_acl, p->action, &(p->action_params), entry);
+    status = switch_pd_ipv4_acl_table_add_entry(
+                             device,
+                             if_label,
+                             bd_label,
+                             p->priority,
+                             p->field_count,
+                             ip_acl,
+                             p->action,
+                             &(p->action_params),
+                             &(p->opt_action_params),
+                             entry);
     return status;
 }
 
@@ -206,8 +229,17 @@ switch_acl_ipv6_set_fields_actions(switch_device_t device, switch_acl_rule_t *p,
         }
     }
     ipv6_acl = (switch_acl_ipv6_key_value_pair_t *)p->fields;
-    status = switch_pd_ipv6_acl_table_add_entry(device, if_label, bd_label, p->priority,
-                     p->field_count, ipv6_acl, p->action, &(p->action_params), entry);
+    status = switch_pd_ipv6_acl_table_add_entry(
+                             device,
+                             if_label,
+                             bd_label,
+                             p->priority,
+                             p->field_count,
+                             ipv6_acl,
+                             p->action,
+                             &(p->action_params),
+                             &(p->opt_action_params),
+                             entry);
     return status;
 }
 
@@ -232,15 +264,24 @@ switch_acl_mac_set_fields_actions(switch_device_t device, switch_acl_rule_t *p,
                 break;
             case SWITCH_HANDLE_TYPE_BD:
                 bd_label = handle_to_id(interface_handle);;
-                break; 
+                break;
             default:
                 return SWITCH_STATUS_INVALID_HANDLE;
         }
     }
 
     mac_acl = (switch_acl_mac_key_value_pair_t *)p->fields;
-    status = switch_pd_mac_acl_table_add_entry(device, if_label, bd_label,
-                    p->priority, p->field_count, mac_acl, p->action, &(p->action_params), entry);
+    status = switch_pd_mac_acl_table_add_entry(
+                             device,
+                             if_label,
+                             bd_label,
+                             p->priority,
+                             p->field_count,
+                             mac_acl,
+                             p->action,
+                             &(p->action_params),
+                             &(p->opt_action_params),
+                             entry);
     return status;
 }
 
@@ -263,8 +304,17 @@ switch_acl_ip_racl_set_fields_actions(switch_device_t device, switch_acl_rule_t 
         }
     }
     ip_racl = (switch_acl_ip_racl_key_value_pair_t *)p->fields;
-    status = switch_pd_ipv4_racl_table_add_entry(device, if_label, bd_label, p->priority,
-                             p->field_count, ip_racl, p->action, &(p->action_params), entry);
+    status = switch_pd_ipv4_racl_table_add_entry(
+                             device,
+                             if_label,
+                             bd_label,
+                             p->priority,
+                             p->field_count,
+                             ip_racl,
+                             p->action,
+                             &(p->action_params),
+                             &(p->opt_action_params),
+                             entry);
     return status;
 }
 
@@ -288,8 +338,17 @@ switch_acl_ipv6_racl_set_fields_actions(switch_device_t device, switch_acl_rule_
         }
     }
     ipv6_racl = (switch_acl_ipv6_racl_key_value_pair_t *)p->fields;
-    status = switch_pd_ipv6_racl_table_add_entry(device, if_label, bd_label, p->priority,
-                             p->field_count, ipv6_racl, p->action, &(p->action_params), entry);
+    status = switch_pd_ipv6_racl_table_add_entry(
+                             device,
+                             if_label,
+                             bd_label,
+                             p->priority,
+                             p->field_count,
+                             ipv6_racl,
+                             p->action,
+                             &(p->action_params),
+                             &(p->opt_action_params),
+                             entry);
     return status;
 }
 
@@ -317,8 +376,15 @@ switch_acl_qos_set_fields_actions(switch_device_t device, switch_acl_rule_t *p,
         }
     }
     qos_acl = (switch_acl_qos_key_value_pair_t *)p->fields;
-    status = switch_pd_qos_acl_table_add_entry(device, if_label, bd_label, p->priority,
-                           p->field_count, qos_acl, p->action, entry);
+    status = switch_pd_qos_acl_table_add_entry(
+                             device,
+                             if_label,
+                             bd_label,
+                             p->priority,
+                             p->field_count,
+                             qos_acl,
+                             p->action,
+                             entry);
     return status;
 }
 
@@ -343,14 +409,23 @@ switch_acl_system_set_fields_actions(switch_device_t device, switch_acl_rule_t *
                 break;
             case SWITCH_HANDLE_TYPE_BD:
                 bd_label = handle_to_id(interface_handle);;
-                break; 
+                break;
             default:
                 return SWITCH_STATUS_INVALID_HANDLE;
         }
     }
     system_acl = (switch_acl_system_key_value_pair_t *)p->fields;
-    status = switch_pd_system_acl_table_add_entry(device, if_label, bd_label, p->priority,
-                                            p->field_count, system_acl, p->action, &p->action_params, entry);
+    status = switch_pd_system_acl_table_add_entry(
+                             device,
+                             if_label,
+                             bd_label,
+                             p->priority,
+                             p->field_count,
+                             system_acl,
+                             p->action,
+                             &p->action_params,
+                             &p->opt_action_params,
+                             entry);
     return status;
 }
 
@@ -388,9 +463,17 @@ switch_acl_egr_set_fields_actions(switch_device_t device,
     }
     egr_acl = (switch_acl_egr_key_value_pair_t *)p->fields;
 
-    status = switch_pd_egr_acl_table_add_entry(device, if_label, bd_label,
-                p->priority, p->field_count, egr_acl, p->action,
-                &p->action_params, entry);
+    status = switch_pd_egr_acl_table_add_entry(
+                             device,
+                             if_label,
+                             bd_label,
+                             p->priority,
+                             p->field_count,
+                             egr_acl,
+                             p->action,
+                             &p->action_params,
+                             &p->opt_action_params,
+                             entry);
     return status;
 }
 
@@ -488,6 +571,7 @@ switch_api_acl_rule_create(switch_device_t device, switch_handle_t acl_handle,
                            unsigned int priority, unsigned int key_value_count,
                            void *acl_kvp, switch_acl_action_t action,
                            switch_acl_action_params_t *action_params,
+                           switch_acl_opt_action_params_t *opt_action_params,
                            switch_handle_t *ace)
 {
     switch_acl_info_t                           *acl_info = NULL;
@@ -595,6 +679,7 @@ switch_api_acl_rule_create(switch_device_t device, switch_handle_t acl_handle,
             p->fields = fields;
             p->action = action;
             p->action_params = *action_params;
+            p->opt_action_params = *opt_action_params;
             p->priority = priority;
         }
         *(unsigned long *)jp = (unsigned long)p;
@@ -764,6 +849,45 @@ switch_api_drop_stats_get(switch_device_t device,
     memset(*counters, 0, sizeof(uint64_t) * (*num_counters));
     switch_pd_drop_stats_get(device, *num_counters, *counters);
     return SWITCH_STATUS_SUCCESS;
+}
+
+switch_handle_t
+switch_api_acl_counter_create(
+        switch_device_t device)
+{
+    switch_handle_t counter_handle = 0;
+    unsigned int id = 0;
+
+    id = switch_acl_counter_index_allocate();
+    counter_handle = id_to_handle(SWITCH_HANDLE_TYPE_ACL_COUNTER, id);
+    return counter_handle;
+}
+
+switch_status_t
+switch_api_acl_counter_delete(
+        switch_device_t device,
+        switch_handle_t counter_handle)
+{
+    unsigned int id = 0;
+
+    id = handle_to_id(counter_handle);
+    switch_acl_counter_index_free(id);
+    return SWITCH_STATUS_SUCCESS;
+}
+
+switch_status_t
+switch_api_acl_stats_get(
+        switch_device_t device,
+        switch_handle_t counter_handle,
+        switch_counter_t *counter)
+{
+    switch_status_t status = SWITCH_STATUS_SUCCESS;
+
+    status = switch_pd_acl_stats_get(
+                             device,
+                             handle_to_id(counter_handle),
+                             counter);
+    return status;
 }
 
 #ifdef __cplusplus

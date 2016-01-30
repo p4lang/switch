@@ -41,7 +41,7 @@ static sai_acl_table_match_qualifiers ip_acl = {
         -1, -1,   // v6
         -1, -1, // MAC
         SWITCH_ACL_IP_FIELD_IPV4_SRC, SWITCH_ACL_IP_FIELD_IPV4_DEST, // v4
-        -2, -2, -1, -1, // ports
+        -2, -2, -2, -1, // ports
         -1, -1, -1, -1, -1, -1, // VLAN outer and inner
         SWITCH_ACL_IP_FIELD_L4_SOURCE_PORT, SWITCH_ACL_IP_FIELD_L4_DEST_PORT, // l4 ports
         -1,
@@ -181,16 +181,16 @@ static sai_status_t sai_acl_match_table_type_get(
 }
 
 static sai_status_t sai_acl_match_table_field(
-        _In_ int table_id, 
+        _In_ int table_id,
         _In_ uint32_t attr_count,
         _In_ const sai_attribute_t *attr_list,
         _Out_ int *match_fields,
-        _Out_ int *actions) 
+        _Out_ int *actions)
 {
     uint32_t index = 0;
     int id = 0;
     int *table;
-    
+
     table = sai_acl_p4_match_table_get(table_id);
     if (!table) {
         return SAI_STATUS_FAILURE;
@@ -198,7 +198,8 @@ static sai_status_t sai_acl_match_table_field(
 
     for (index = 0; index < attr_count; index++) {
         id = attr_list[index].id;
-        if (id >= SAI_ACL_TABLE_ATTR_FIELD_START && id <= SAI_ACL_TABLE_ATTR_FIELD_END) {
+        if ((id >= SAI_ACL_TABLE_ATTR_FIELD_START) &&
+            (id <= SAI_ACL_TABLE_ATTR_FIELD_END)) {
            id -= SAI_ACL_TABLE_ATTR_FIELD_START;
            if (table[id] != -1) {
                match_fields[index] = table[id];
@@ -284,7 +285,6 @@ static sai_status_t sai_acl_xform_field_value(
                 case SWITCH_ACL_IPV6_FIELD_ICMP_CODE:
                 case SWITCH_ACL_IPV6_FIELD_TCP_FLAGS:
                 case SWITCH_ACL_IPV6_FIELD_TTL:
-                case SWITCH_ACL_IPV6_FIELD_ETH_TYPE:
                 case SWITCH_ACL_IPV6_FIELD_FLOW_LABEL:
                     break;
                 default:
@@ -454,8 +454,10 @@ sai_status_t sai_create_acl_entry(
     int *match_fields = NULL;
     switch_acl_ip_key_value_pair_t *kvp=NULL;
     unsigned int field_size;
+    sai_packet_action_t packet_action = 0;
     switch_acl_action_t acl_action = 0;
-    switch_acl_action_params_t         action_params;
+    switch_acl_action_params_t action_params;
+    switch_acl_opt_action_params_t opt_action_params;
     uint32_t priority = 0;
     switch_acl_info_t *acl_info = NULL;
     switch_acl_type_t acl_type;
@@ -475,6 +477,7 @@ sai_status_t sai_create_acl_entry(
 
     *acl_entry_id = 0ULL;
     memset(&action_params, 0, sizeof(switch_acl_action_params_t));
+    memset(&opt_action_params, 0, sizeof(switch_acl_opt_action_params_t));
     tommy_list_init(&handle_list);
     // get the table id
     for (index1 = 0; index1 < attr_count; index1++) {
@@ -551,7 +554,13 @@ sai_status_t sai_create_acl_entry(
                 }
                 break;
             case SAI_ACL_ENTRY_ATTR_PACKET_ACTION:
-                acl_action = SWITCH_ACL_ACTION_DROP;
+                acl_action = 0;
+                packet_action = attr_list[index1].value.aclfield.data.u8;
+                if (packet_action == SAI_PACKET_ACTION_DROP) {
+                    acl_action = SWITCH_ACL_ACTION_DROP;
+                } else if (packet_action == SAI_PACKET_ACTION_FORWARD) {
+                    acl_action = SWITCH_ACL_ACTION_PERMIT;
+                }
                 break;
             case SAI_ACL_ENTRY_ATTR_ACTION_FLOOD:
                 acl_action = SWITCH_ACL_ACTION_FLOOD_TO_VLAN;
@@ -560,16 +569,29 @@ sai_status_t sai_create_acl_entry(
                 {
                     switch_handle_t handle = (switch_handle_t)attr_list[index1].value.aclfield.data.oid;
                     acl_action = SWITCH_ACL_ACTION_SET_MIRROR;
-                    action_params.mirror.mirror_handle = handle;
+                    opt_action_params.mirror_handle = handle;
                 }
                 break;
             case SAI_ACL_ENTRY_ATTR_ACTION_MIRROR_EGRESS:
                 {
                     switch_handle_t handle = (switch_handle_t)attr_list[index1].value.aclfield.data.oid;
                     acl_action = SWITCH_ACL_EGR_ACTION_SET_MIRROR;
-                    action_params.mirror.mirror_handle = handle;
+                    opt_action_params.mirror_handle = handle;
                 }
                 break;
+            case SAI_ACL_ENTRY_ATTR_ACTION_SET_POLICER:
+                {
+                    switch_handle_t handle = (switch_handle_t)attr_list[index1].value.aclfield.data.oid;
+                    opt_action_params.meter_handle = handle;
+                }
+                break;
+            case SAI_ACL_ENTRY_ATTR_ACTION_COUNTER:
+                {
+                    switch_handle_t handle = (switch_handle_t)attr_list[index1].value.aclfield.data.oid;
+                    opt_action_params.counter_handle = handle;
+                }
+                break;
+
         }
     }
 
@@ -581,9 +603,9 @@ sai_status_t sai_create_acl_entry(
         return status;
     }
     acl_type = acl_info->type;
-    
+
     // switch on type to get more values!
-    field_size = SWITCH_ACL_IP_FIELD_MAX;   
+    field_size = SWITCH_ACL_IP_FIELD_MAX;
     match_fields = SAI_MALLOC(sizeof(int) * field_size);
     if (!match_fields) {
         status = SAI_STATUS_NO_MEMORY;
@@ -641,6 +663,7 @@ sai_status_t sai_create_acl_entry(
         switch_status = switch_api_acl_rule_create(device, acl_table_id,
                                    priority, index2, kvp,
                                    acl_action, &action_params,
+                                   &opt_action_params,
                                    acl_entry_id);
         status = sai_switch_status_to_sai_status(switch_status);
         if (status != SAI_STATUS_SUCCESS) {
@@ -710,6 +733,181 @@ sai_status_t sai_delete_acl_entry(
     return (sai_status_t) status;
 }
 
+
+/**
+ * Routine Description:
+ *   @brief Create an ACL counter
+ *
+ * Arguments:
+ *   @param[out] acl_counter_id - the acl counter id
+ *   @param[in] attr_count - number of attributes
+ *   @param[in] attr_list - array of attributes
+ *
+ * Return Values:
+ *    @return  SAI_STATUS_SUCCESS on success
+ *             Failure status code on error
+ */
+sai_status_t sai_create_acl_counter(
+    _Out_ sai_object_id_t *acl_counter_id,
+    _In_ uint32_t attr_count,
+    _In_ const sai_attribute_t *attr_list)
+{
+    sai_status_t status = SAI_STATUS_SUCCESS;
+
+    SAI_LOG_ENTER();
+
+    if (!attr_list) {
+        status = SAI_STATUS_INVALID_PARAMETER;
+        SAI_LOG_ERROR("null attribute list: %s",
+                       sai_status_to_string(status));
+        return status;
+    }
+
+    *acl_counter_id = switch_api_acl_counter_create(device);
+    status = (*acl_counter_id == SWITCH_API_INVALID_HANDLE) ?
+              SAI_STATUS_FAILURE :
+              SAI_STATUS_SUCCESS;
+    if (status != SAI_STATUS_SUCCESS) {
+        SAI_LOG_ERROR("failed to create acl counter: %s",
+                      sai_status_to_string(status));
+        return status;
+    }
+
+    SAI_LOG_EXIT();
+
+    return status;
+}
+
+/**
+ * Routine Description:
+ *   @brief Delete an ACL counter
+ *
+ * Arguments:
+ *  @param[in] acl_counter_id - the acl counter id
+ *
+ * Return Values:
+ *    @return  SAI_STATUS_SUCCESS on success
+ *             Failure status code on error
+ */
+sai_status_t sai_delete_acl_counter(
+    _In_ sai_object_id_t acl_counter_id)
+{
+    SAI_LOG_ENTER();
+
+    sai_status_t status = SAI_STATUS_SUCCESS;
+    switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
+
+    SAI_ASSERT(sai_object_type_query(acl_counter_id) == SAI_OBJECT_TYPE_ACL_COUNTER);
+
+    switch_status = switch_api_acl_counter_delete(device, (switch_handle_t) acl_counter_id);
+    status = sai_switch_status_to_sai_status(switch_status);
+
+    if (status != SAI_STATUS_SUCCESS) {
+        SAI_LOG_ERROR("failed to delete acl counter%lx : %s",
+                       acl_counter_id,
+                       sai_status_to_string(status));
+    }
+
+    SAI_LOG_EXIT();
+
+    return (sai_status_t) status;
+}
+
+/**
+ * Routine Description:
+ *   @brief Set ACL counter attribute
+ *
+ * Arguments:
+ *    @param[in] acl_counter_id - the acl counter id
+ *    @param[in] attr - attribute
+ *
+ * Return Values:
+ *    @return SAI_STATUS_SUCCESS on success
+ *            Failure status code on error
+ */
+sai_status_t sai_set_acl_counter_attribute(
+    _In_ sai_object_id_t acl_counter_id,
+    _In_ const sai_attribute_t *attr)
+{
+    SAI_LOG_ENTER();
+
+    sai_status_t status = SAI_STATUS_SUCCESS;
+
+    SAI_ASSERT(sai_object_type_query(acl_counter_id) == SAI_OBJECT_TYPE_ACL_COUNTER);
+
+    if (!attr) {
+        status = SAI_STATUS_INVALID_PARAMETER;
+        SAI_LOG_ERROR("null attribute: %s",
+                       sai_status_to_string(status));
+        return status;
+    }
+
+    SAI_LOG_EXIT();
+
+    return (sai_status_t) status;
+}
+
+/**
+ * Routine Description:
+ *   @brief Get ACL counter attribute
+ *
+ * Arguments:
+ *    @param[in] acl_counter_id - acl counter id
+ *    @param[in] attr_count - number of attributes
+ *    @param[out] attr_list - array of attributes
+ *
+ * Return Values:
+ *    @return SAI_STATUS_SUCCESS on success
+ *            Failure status code on error
+ */
+sai_status_t sai_get_acl_counter_attribute(
+    _In_ sai_object_id_t acl_counter_id,
+    _In_ uint32_t attr_count,
+    _Out_ sai_attribute_t *attr_list)
+{
+    SAI_LOG_ENTER();
+
+    sai_status_t status = SAI_STATUS_SUCCESS;
+    switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
+    switch_counter_t counter;
+    sai_attribute_t *attribute = NULL;
+    uint32_t index = 0;
+
+    SAI_ASSERT(sai_object_type_query(acl_counter_id) == SAI_OBJECT_TYPE_ACL_COUNTER);
+
+    if (!attr_list) {
+        status = SAI_STATUS_INVALID_PARAMETER;
+        SAI_LOG_ERROR("null attribute: %s",
+                       sai_status_to_string(status));
+        return status;
+    }
+
+    memset(&counter, 0, sizeof(switch_counter_t));
+    switch_status = switch_api_acl_stats_get(
+                             device,
+                             acl_counter_id,
+                             &counter);
+    status = sai_switch_status_to_sai_status(switch_status);
+    for (index = 0; index < attr_count; index++) {
+        attribute = &attr_list[index];
+        switch (attribute->id) {
+            case SAI_ACL_COUNTER_ATTR_ENABLE_PACKET_COUNT:
+            case SAI_ACL_COUNTER_ATTR_ENABLE_BYTE_COUNT:
+                break;
+            case SAI_ACL_COUNTER_ATTR_PACKETS:
+                attribute->value.u64 = counter.num_packets;
+                break;
+            case SAI_ACL_COUNTER_ATTR_BYTES:
+                attribute->value.u64 = counter.num_bytes;
+                break;
+        }
+    }
+
+    SAI_LOG_EXIT();
+
+    return (sai_status_t) status;
+}
+
 /*
 *  ACL methods table retrieved with sai_api_query()
 */
@@ -717,7 +915,12 @@ sai_acl_api_t acl_api = {
     .create_acl_table                  =             sai_create_acl_table,
     .delete_acl_table                  =             sai_delete_acl_table,
     .create_acl_entry                  =             sai_create_acl_entry,
-    .delete_acl_entry                  =             sai_delete_acl_entry
+    .delete_acl_entry                  =             sai_delete_acl_entry,
+    .create_acl_counter                =             sai_create_acl_counter,
+    .delete_acl_counter                =             sai_delete_acl_counter,
+    .set_acl_counter_attribute         =             sai_set_acl_counter_attribute,
+    .get_acl_counter_attribute         =             sai_get_acl_counter_attribute
+
 };
 
 sai_status_t sai_acl_initialize(sai_api_service_t *sai_api_service) {

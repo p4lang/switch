@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 #include "p4features.h"
-#include <switchapi/switch_base_types.h>
+#include <switchapi/switch_status.h>
 
 #define SWITCH_API_ERROR printf
 #define SWITCH_API_WARN printf

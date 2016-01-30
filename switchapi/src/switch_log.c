@@ -15,9 +15,6 @@ limitations under the License.
 */
 
 #include "p4features.h"
-#include <stdio.h>
-#include <switchapi/switch_base_types.h>
-#include <switchapi/switch_status.h>
 #include "switch_log.h"
 
 char * switch_print_error(switch_status_t status)

@@ -32,10 +32,13 @@ extern "C" {
 
 /** Lag member is one of the ports that can be a member of LAG */
 typedef struct switch_lag_member_ {
-    tommy_node ingress_node;         /**< linked list node */
-    tommy_node egress_node;          /**< linked list node */
-    switch_port_t port;              /**< physical port */
-    uint8_t index;                   /**< Index relative to base */
+    tommy_node ingress_node;               /**< linked list node */
+    tommy_node egress_node;                /**< linked list node */
+    switch_port_t port;                    /**< physical port */
+    uint8_t index;                         /**< Index relative to base */
+    switch_handle_t lag_member_handle;     /**< lag member handle */
+    switch_handle_t lag_handle;            /**< lag member handle */
+    switch_direction_t direction;          /**< direction */
 #ifdef SWITCH_PD
     p4_pd_mbr_hdl_t mbr_hdl;         /**< Member handle */
     p4_pd_entry_hdl_t xlate_entry;

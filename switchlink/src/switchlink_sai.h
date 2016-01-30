@@ -25,6 +25,18 @@ switchlink_interface_create(switchlink_db_interface_info_t *intf,
                             switchlink_handle_t *intf_h);
 
 extern int
+switchlink_interface_forwarding_update(switchlink_handle_t intf_h, int af,
+                                       bool value);
+
+extern int
+switchlink_interface_mc_forwarding_update(switchlink_handle_t intf_h, int af,
+                                          bool value);
+
+extern int
+switchlink_interface_urpf_mode_update(switchlink_handle_t intf_h, int af,
+                                      bool value);
+
+extern int
 switchlink_interface_delete(switchlink_db_interface_info_t *intf,
                             switchlink_handle_t intf_h);
 
@@ -62,6 +74,11 @@ switchlink_mac_create(switchlink_mac_addr_t mac_addr,
                       switchlink_handle_t intf_h);
 
 extern int
+switchlink_mac_update(switchlink_mac_addr_t mac_addr,
+                      switchlink_handle_t bridge_h,
+                      switchlink_handle_t intf_h);
+
+extern int
 switchlink_mac_delete(switchlink_mac_addr_t mac_addr,
                       switchlink_handle_t bridge_h);
 
@@ -88,6 +105,18 @@ switchlink_route_create(switchlink_db_route_info_t *route_info);
 
 extern int
 switchlink_route_delete(switchlink_db_route_info_t *route_info);
+
+extern int
+switchlink_mroute_create(switchlink_db_mroute_info_t *mroute_info);
+
+extern int
+switchlink_mroute_delete(switchlink_db_mroute_info_t *mroute_info);
+
+extern int
+switchlink_mdb_create(switchlink_db_mdb_info_t *mdb_info);
+
+extern int
+switchlink_mdb_delete(switchlink_db_mdb_info_t *mdb_info);
 
 extern int
 switchlink_send_packet(char *buf, uint32_t buf_size, uint16_t port_id);

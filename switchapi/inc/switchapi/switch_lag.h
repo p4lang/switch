@@ -47,6 +47,7 @@ typedef enum switch_lag_type_ {
     SWITCH_API_LAG_RESILIENT        /**< weighted/resilient hash */
 } switch_lag_type_t;
     
+
 // Simple LAG API
 /**
  Link Aggregation Group creation
@@ -81,6 +82,30 @@ switch_status_t switch_api_lag_member_add(switch_device_t device, switch_handle_
 switch_status_t switch_api_lag_member_delete(switch_device_t device, switch_handle_t lag_handle,
                                      switch_direction_t side, switch_port_t port);
     
+/**
+ Link Aggregation Group member add by handle
+ @param device device to use
+ @param lag_handle handle of group returned on creation
+ @param side allow rx and rx member add separately
+ @param port port in the same device on which lag_handle was created
+ */
+switch_handle_t
+switch_api_lag_member_create(
+        switch_device_t device,
+        switch_handle_t lag_handle,
+        switch_direction_t direction,
+        switch_port_t port);
+
+/**
+ Link Aggregation Group member deletion by handle
+ @param device device to use
+ @param lag_member_handle handle of member returned on creation
+ */
+switch_status_t
+switch_api_lag_member_remove(
+        switch_device_t device,
+        switch_handle_t lag_member_handle);
+
 /**
  Link Aggregation group member count
  @param lag_handle handle of the link aggregation group

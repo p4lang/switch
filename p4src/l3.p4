@@ -49,6 +49,7 @@ header_type l3_metadata_t {
         routed : 1;                            /* is packet routed? */
         outer_routed : 1;                      /* is outer packet routed? */
         mtu_index : 8;                         /* index into mtu table */
+        l3_copy : 1;                           /* copy packet to CPU */
         l3_mtu_check : 16 (saturating);        /* result of mtu check */
     }
 }
@@ -132,70 +133,121 @@ control process_urpf_bd {
 
 
 /*****************************************************************************/
-/* Egress MAC rewrite                                                        */
+/* Egress L3 rewrite                                                         */
 /*****************************************************************************/
-action rewrite_ipv4_unicast_mac(smac) {
+action rewrite_smac(smac) {
     modify_field(ethernet.srcAddr, smac);
-    modify_field(ethernet.dstAddr, egress_metadata.mac_da);
-    add_to_field(ipv4.ttl, -1);
 }
 
-action rewrite_ipv4_multicast_mac(smac) {
-    modify_field(ethernet.srcAddr, smac);
-#ifndef __TARGET_BMV2__
-    modify_field(ethernet.dstAddr, 0x01005E000000, 0xFFFFFF800000);
-#else
-    modify_field(ethernet.dstAddr, 0x01005E000000 & 0xFFFFFF800000);
-#endif
-    add_to_field(ipv4.ttl, -1);
-}
-
-action rewrite_ipv6_unicast_mac(smac) {
-    modify_field(ethernet.srcAddr, smac);
-    modify_field(ethernet.dstAddr, egress_metadata.mac_da);
-    add_to_field(ipv6.hopLimit, -1);
-}
-
-action rewrite_ipv6_multicast_mac(smac) {
-    modify_field(ethernet.srcAddr, smac);
-#ifndef __TARGET_BMV2__
-    modify_field(ethernet.dstAddr, 0x333300000000, 0xFFFF00000000);
-#else
-    modify_field(ethernet.dstAddr, 0x333300000000 & 0xFFFF00000000);
-#endif
-    add_to_field(ipv6.hopLimit, -1);
-}
-
-action rewrite_mpls_mac(smac) {
-    modify_field(ethernet.srcAddr, smac);
-    modify_field(ethernet.dstAddr, egress_metadata.mac_da);
-    add_to_field(mpls[0].ttl, -1);
-}
-
-table mac_rewrite {
+table smac_rewrite {
     reads {
         egress_metadata.smac_idx : exact;
-        ipv4 : valid;
-        ipv6 : valid;
-        mpls[0] : valid;
     }
     actions {
-        nop;
-        rewrite_ipv4_unicast_mac;
-        rewrite_ipv4_multicast_mac;
-#ifndef IPV6_DISABLE
-        rewrite_ipv6_unicast_mac;
-        rewrite_ipv6_multicast_mac;
-#endif /* IPV6_DISABLE */
-#ifndef MPLS_DISABLE
-        rewrite_mpls_mac;
-#endif /* MPLS_DISABLE */
+        rewrite_smac;
     }
     size : MAC_REWRITE_TABLE_SIZE;
 }
 
+
+action ipv4_unicast_rewrite() {
+    modify_field(ethernet.dstAddr, egress_metadata.mac_da);
+    add_to_field(ipv4.ttl, -1);
+}
+
+action ipv4_multicast_rewrite() {
+    bit_or(ethernet.dstAddr, ethernet.dstAddr, 0x01005E000000);
+    add_to_field(ipv4.ttl, -1);
+}
+
+action ipv6_unicast_rewrite() {
+    modify_field(ethernet.dstAddr, egress_metadata.mac_da);
+    add_to_field(ipv6.hopLimit, -1);
+}
+
+action ipv6_multicast_rewrite() {
+    bit_or(ethernet.dstAddr, ethernet.dstAddr, 0x333300000000);
+    add_to_field(ipv6.hopLimit, -1);
+}
+
+action mpls_rewrite() {
+    modify_field(ethernet.dstAddr, egress_metadata.mac_da);
+    add_to_field(mpls[0].ttl, -1);
+}
+
+table l3_rewrite {
+    reads {
+        ipv4 : valid;
+#ifndef IPV6_DISABLE
+        ipv6 : valid;
+#endif /* IPV6_DISABLE */
+#ifndef MPLS_DISABLE
+        mpls[0] : valid;
+#endif /* MPLS_DISABLE */
+        ipv4.dstAddr mask 0xF0000000 : ternary;
+#ifndef IPV6_DISABLE
+        ipv6.dstAddr mask 0xFF000000000000000000000000000000 : ternary;
+#endif /* IPV6_DISABLE */
+    }
+    actions {
+        nop;
+        ipv4_unicast_rewrite;
+#ifndef MULTICAST_DISABLE
+        ipv4_multicast_rewrite;
+#endif /* MULTICAST_DISABLE */
+#ifndef IPV6_DISABLE
+        ipv6_unicast_rewrite;
+#ifndef MULTICAST_DISABLE
+        ipv6_multicast_rewrite;
+#endif /* MULTICAST_DISABLE */
+#endif /* IPV6_DISABLE */
+#ifndef MPLS_DISABLE
+        mpls_rewrite;
+#endif /* MPLS_DISABLE */
+    }
+}
+
 control process_mac_rewrite {
     if (egress_metadata.routed == TRUE) {
-        apply(mac_rewrite);
+        apply(l3_rewrite);
+        apply(smac_rewrite);
     }
+}
+
+
+/*****************************************************************************/
+/* Egress MTU check                                                          */
+/*****************************************************************************/
+#if !defined(L3_DISABLE)
+action ipv4_mtu_check(l3_mtu) {
+    subtract(l3_metadata.l3_mtu_check, l3_mtu, ipv4.totalLen);
+}
+
+action ipv6_mtu_check(l3_mtu) {
+    subtract(l3_metadata.l3_mtu_check, l3_mtu, ipv6.payloadLen);
+}
+
+action mtu_miss() {
+    modify_field(l3_metadata.l3_mtu_check, 0xFFFF);
+}
+
+table mtu {
+    reads {
+        l3_metadata.mtu_index : exact;
+        ipv4 : valid;
+        ipv6 : valid;
+    }
+    actions {
+        mtu_miss;
+        ipv4_mtu_check;
+        ipv6_mtu_check;
+    }
+    size : L3_MTU_TABLE_SIZE;
+}
+#endif /* L3_DISABLE */
+
+control process_mtu {
+#if !defined(L3_DISABLE)
+    apply(mtu);
+#endif /* L3_DISABLE */
 }

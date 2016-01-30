@@ -1,0 +1,568 @@
+{
+    "module_name"          :      "port",
+    "attributes"           : [
+    {
+        "attribute_desc"          :      "port attributes",
+        "attribute_list"          : [
+            {
+                "name"          :     "SAI_PORT_ATTR_TYPE",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_OPER_STATUS",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_HW_LANE_LIST",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u32_list"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_SUPPORTED_BREAKOUT_MODE",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "s32_list"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_CURRENT_BREAKOUT_MODE",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_QOS_NUMBER_OF_QUEUES",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u32"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_QOS_QUEUE_LIST",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "oid_list"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_QOS_NUMBER_OF_SCHEDULER_GROUPS",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u32"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_QOS_SCHEDULER_GROUP_LIST",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "oid_list"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_SUPPORTED_SPEED",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u32_list"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_NUMBER_OF_PRIORITY_GROUPS",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u32"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_PRIORITY_GROUP_LIST",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "oid_list"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_SPEED",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u32"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_FULL_DUPLEX_MODE",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool",
+                "default"       :     "true"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_AUTO_NEG_MODE",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool",
+                "default"       :     "false"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_ADMIN_STATE",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool",
+                "default"       :     "false"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_MEDIA_TYPE",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8",
+                "default"       :     "SAI_PORT_MEDIA_TYPE_NOT_PRESENT"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_PORT_VLAN_ID",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u16",
+                "default"       :     "1"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_DEFAULT_VLAN_PRIORITY",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8",
+                "default"       :     "0"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_INGRESS_FILTERING",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool",
+                "default"       :     "false"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_DROP_UNTAGGED",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool",
+                "default"       :     "false"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_DROP_TAGGED",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool",
+                "default"       :     "false"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_INTERNAL_LOOPBACK",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8",
+                "default"       :     "SAI_PORT_INTERNAL_LOOPBACK_NONE"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_FDB_LEARNING",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8",
+                "default"       :     "SAI_PORT_LEARN_MODE_HW"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_UPDATE_DSCP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool",
+                "default"       :     "false"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_MTU",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u32",
+                "default"       :     "1514"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_FLOOD_STORM_CONTROL_POLICER_ID",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_BROADCAST_STORM_CONTROL_POLICER_ID",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_MULTICAST_STORM_CONTROL_POLICER_ID",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_GLOBAL_FLOW_CONTROL",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8",
+                "default"       :     "SAI_PORT_FLOW_CONTROL_DISABLE"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_MAX_LEARNED_ADDRESSES",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u32"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_FDB_LEARNING_LIMIT_VIOLATION",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u32",
+                "default"       :     "SAI_PACKET_ACTION_DROP"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_INGRESS_MIRROR_SESSION",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid_list"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_EGRESS_MIRROR_SESSION",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid_list"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_INGRESS_SAMPLEPACKET_ENABLE",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_EGRESS_SAMPLEPACKET_ENABLE",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_POLICER_ID",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_QOS_DEFAULT_TC",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_QOS_DOT1P_TO_TC_MAP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_QOS_DOT1P_TO_COLOR_MAP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_QOS_DOT1P_TO_TC_AND_COLOR_MAP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_QOS_DSCP_TO_TC_MAP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_QOS_DSCP_TO_COLOR_MAP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_QOS_DSCP_TO_TC_AND_COLOR_MAP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_QOS_TC_TO_QUEUE_MAP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_QOS_TC_TO_DOT1P_MAP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_QOS_TC_AND_COLOR_TO_DOT1P_MAP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_QOS_TC_TO_DSCP_MAP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_QOS_TC_AND_COLOR_TO_DSCP_MAP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_QOS_TC_TO_PRIORITY_GROUP_MAP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_QOS_PRIORITY_GROUP_TO_PFC_PRIORITY_MAP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_QOS_PFC_PRIORITY_TO_QUEUE_MAP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_QOS_WRED_PROFILE_ID",
+                "mandatory"     :     "true",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "dependency"    : {
+                    "attr1"         :     "SAI_PORT_ATTR_QOS_DROP_TYPE",
+                    "value1"        :     "SAI_QOS_DROP_TYPE_WRED"
+                }
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_QOS_SCHEDULER_PROFILE_ID",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_QOS_BUFFER_PROFILE_ID",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_PRIORITY_FLOW_CONTROL",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_META_DATA",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u32"
+            },
+            {
+                "name"          :     "SAI_PORT_ATTR_EGRESS_BLOCK_PORT_LIST",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid_list"
+            }
+        ]
+    }
+    ]
+}

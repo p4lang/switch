@@ -11,7 +11,7 @@ AC_CONFIG_HEADERS([config.h])
 CFLAGS="-g -Wall -Wextra -Wno-unused-parameter"
 AC_PROG_CC_STDC
 AC_PROG_CXX
-AC_PROG_RANLIB
+LT_INIT
 
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -29,6 +29,6 @@ AC_TYPE_SIZE_T
 AC_TYPE_UINT64_T
 
 # Generate makefiles
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile third-party/xxhash/Makefile])
 
 AC_OUTPUT

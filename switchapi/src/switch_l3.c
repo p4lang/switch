@@ -27,6 +27,7 @@ limitations under the License.
 #include "switch_log.h"
 #include "arpa/inet.h"
 #include <string.h>
+#include <assert.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -429,104 +430,6 @@ switch_api_l3_route_delete(switch_device_t device, switch_handle_t vrf,
 }
 
 switch_status_t
-switch_api_interface_ipv4_urpf_mode_set(switch_handle_t intf_handle, uint64_t value)
-{
-    switch_interface_info_t           *intf_info = NULL;
-    switch_api_interface_info_t       *api_intf_info = NULL;       
-    switch_bd_info_t                  *bd_info = NULL;
-    switch_handle_t                    bd_handle;
-    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
-
-    intf_info = switch_api_interface_get(intf_handle);
-    if (!intf_info) {
-        return SWITCH_STATUS_INVALID_INTERFACE;
-    }
-
-    api_intf_info = &intf_info->api_intf_info;
-    if (!SWITCH_INTF_IS_PORT_L3(intf_info)) {
-        return SWITCH_STATUS_INVALID_INTERFACE;
-    }
-
-    api_intf_info->ipv4_urpf_mode = (switch_urpf_mode_t) value;
-    bd_handle = intf_info->bd_handle;
-    bd_info = switch_bd_get(bd_handle);
-    if (!bd_info) {
-        return SWITCH_STATUS_INVALID_VLAN_ID;
-    }
-    status = switch_bd_ipv4_urpf_mode_set(bd_handle, value);
-    return status;
-}
-
-switch_status_t
-switch_api_interface_ipv4_urpf_mode_get(switch_handle_t intf_handle, uint64_t *value)
-{
-    switch_interface_info_t           *intf_info = NULL;
-    switch_api_interface_info_t       *api_intf_info = NULL;       
-
-    intf_info = switch_api_interface_get(intf_handle);
-    if (!intf_info) {
-        return SWITCH_STATUS_INVALID_INTERFACE;
-    }
-
-    api_intf_info = &intf_info->api_intf_info;
-    if (!SWITCH_INTF_IS_PORT_L3(intf_info)) {
-        return SWITCH_STATUS_INVALID_INTERFACE;
-    }
-
-    *value = (uint64_t) api_intf_info->ipv4_urpf_mode;
-    return SWITCH_STATUS_SUCCESS;
-}
-
-switch_status_t
-switch_api_interface_ipv6_urpf_mode_set(switch_handle_t intf_handle, uint64_t value)
-{
-    switch_interface_info_t           *intf_info = NULL;
-    switch_api_interface_info_t       *api_intf_info = NULL;       
-    switch_bd_info_t                  *bd_info = NULL;
-    switch_handle_t                    bd_handle;
-    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
-
-    intf_info = switch_api_interface_get(intf_handle);
-    if (!intf_info) {
-        return SWITCH_STATUS_INVALID_INTERFACE;
-    }
-
-    api_intf_info = &intf_info->api_intf_info;
-    if (!SWITCH_INTF_IS_PORT_L3(intf_info)) {
-        return SWITCH_STATUS_INVALID_INTERFACE;
-    }
-
-    api_intf_info->ipv6_urpf_mode = (switch_urpf_mode_t) value;
-    bd_handle = intf_info->bd_handle;
-    bd_info = switch_bd_get(bd_handle);
-    if (!bd_info) {
-        return SWITCH_STATUS_INVALID_VLAN_ID;
-    }
-    status = switch_bd_ipv6_urpf_mode_set(bd_handle, value);
-    return status;
-}
-
-switch_status_t
-switch_api_interface_ipv6_urpf_mode_get(switch_handle_t intf_handle, uint64_t *value)
-{
-    switch_interface_info_t           *intf_info = NULL;
-    switch_api_interface_info_t       *api_intf_info = NULL;       
-
-    intf_info = switch_api_interface_get(intf_handle);
-    if (!intf_info) {
-        return SWITCH_STATUS_INVALID_INTERFACE;
-    }
-
-    api_intf_info = &intf_info->api_intf_info;
-    if (!SWITCH_INTF_IS_PORT_L3(intf_info)) {
-        return SWITCH_STATUS_INVALID_INTERFACE;
-    }
-
-    *value = (uint64_t) api_intf_info->ipv6_urpf_mode;
-    return SWITCH_STATUS_SUCCESS;
-}
-
-switch_status_t
 switch_api_l3_v4_route_entries_get_by_vrf(switch_handle_t vrf_handle, switch_l3_table_iterator_fn iterator_fn)
 {
     switch_l3_hash_t                  *hash_entry = NULL;
@@ -688,7 +591,8 @@ switch_api_l3_v6_routes_print_all(void)
     return status;
 }
 
-switch_status_t switch_api_l3_routes_print_all(void)
+switch_status_t
+switch_api_l3_routes_print_all(void)
 {
     switch_status_t status = SWITCH_STATUS_SUCCESS;
     status = switch_api_l3_v4_routes_print_all();
@@ -714,6 +618,7 @@ switch_api_init_default_route_entries(switch_device_t device,
     ip_addr.prefix_len = 8;
     ret = switch_api_l3_route_add(device, vrf_handle, &ip_addr,
                                   drop_nhop_handle);
+    assert(ret == SWITCH_STATUS_SUCCESS);
 
     // ::1/128, drop
     memset(&ip_addr, 0, sizeof(ip_addr));
@@ -722,8 +627,9 @@ switch_api_init_default_route_entries(switch_device_t device,
     ip_addr.prefix_len = 128;
     ret = switch_api_l3_route_add(device, vrf_handle, &ip_addr,
                                   drop_nhop_handle);
+    assert(ret == SWITCH_STATUS_SUCCESS);
 
-    return ret;
+    return SWITCH_STATUS_SUCCESS;
 }
 
 #ifdef __cplusplus

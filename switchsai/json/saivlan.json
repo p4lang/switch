@@ -1,0 +1,59 @@
+{
+    "module_name"          :      "vlan",
+    "attributes"           : [
+    {
+        "attribute_desc"          :      "vlan attributes",
+        "attribute_list"          : [
+            {
+                "name"          :     "SAI_VLAN_ATTR_PORT_LIST",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "vlan_port_list"
+            },
+            {
+                "name"          :     "SAI_VLAN_ATTR_MAX_LEARNED_ADDRESSES",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u32",
+                "default"       :     "0"
+            },
+            {
+                "name"          :     "SAI_VLAN_ATTR_STP_INSTANCE",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u32",
+                "default"       :     "SAI_SWITCH_ATTR_DEFAULT_STP_INST_ID",
+                "default_query" :     "switch"
+            },
+            {
+                "name"          :     "SAI_VLAN_ATTR_LEARN_DISABLE",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool",
+                "default"       :     "false"
+            },
+            {
+                "name"          :     "SAI_VLAN_ATTR_META_DATA",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u32"
+            }
+        ]
+    }
+    ]
+}

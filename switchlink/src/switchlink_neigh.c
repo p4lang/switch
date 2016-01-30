@@ -17,8 +17,10 @@ limitations under the License.
 #include <assert.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <linux/if_ether.h>
 #include <netlink/netlink.h>
 #include <netlink/msg.h>
+#include <netlink/route/neighbour.h>
 #include "switchlink.h"
 #include "switchlink_link.h"
 #include "switchlink_neigh.h"
@@ -28,6 +30,12 @@ limitations under the License.
 
 static void
 mac_delete(switchlink_mac_addr_t mac_addr, switchlink_handle_t bridge_h) {
+    switchlink_handle_t intf_h;
+    switchlink_db_status_t status;
+    status = switchlink_db_mac_get_intf(mac_addr, bridge_h, &intf_h);
+    if (status != SWITCHLINK_DB_STATUS_SUCCESS) {
+        return;
+    }
     switchlink_mac_delete(mac_addr, bridge_h);
     switchlink_db_mac_delete(mac_addr, bridge_h);
 }
@@ -39,12 +47,10 @@ mac_create(switchlink_mac_addr_t mac_addr, switchlink_handle_t bridge_h,
     switchlink_db_status_t status;
     status = switchlink_db_mac_get_intf(mac_addr, bridge_h, &old_intf_h);
     if (status == SWITCHLINK_DB_STATUS_SUCCESS) {
-       if (old_intf_h == intf_h) {
-           // no change
+       if (old_intf_h != intf_h) {
+           switchlink_mac_update(mac_addr, bridge_h, intf_h);
+           switchlink_db_mac_set_intf(mac_addr, bridge_h, intf_h);
            return;
-       } else {
-           // update handled as delete followed by add
-           mac_delete(mac_addr, bridge_h);
        }
     }
 
@@ -180,11 +186,6 @@ process_neigh_msg(struct nlmsghdr *nlmsg, int type) {
         attr = nla_next(attr, &attrlen);
     }
 
-    if ((nbh->ndm_family == AF_BRIDGE) && (nbh->ndm_state & NUD_PERMANENT)) {
-        // this is bridge's own mac address, ignore this for now
-        return;
-    }
-
     switchlink_handle_t intf_h = ifinfo.intf_h;
     switchlink_handle_t bridge_h = 0;
     if (ifinfo.intf_type == SWITCHLINK_INTF_TYPE_L2_ACCESS) {
@@ -212,4 +213,57 @@ process_neigh_msg(struct nlmsghdr *nlmsg, int type) {
             neigh_delete(g_default_vrf_h, &ipaddr, intf_h);
         }
     }
+}
+
+void
+switchlink_linux_mac_update(switchlink_mac_addr_t mac_addr,
+                            switchlink_handle_t bridge_h,
+                            switchlink_handle_t intf_h, bool create) {
+    switchlink_db_status_t status;
+    uint32_t vlan_ifindex;
+    uint32_t ifindex;
+
+    status = switchlink_db_bridge_get_ifindex(bridge_h, &vlan_ifindex);
+    if (status != SWITCHLINK_DB_STATUS_SUCCESS) {
+        assert(false);
+        return;
+    }
+
+    if (!create) {
+        status = switchlink_db_mac_get_intf(mac_addr, bridge_h, &intf_h);
+        if (status != SWITCHLINK_DB_STATUS_SUCCESS) {
+            assert(false);
+            return;
+        }
+    }
+
+    status = switchlink_db_interface_get_ifindex(intf_h, &ifindex);
+    if (status != SWITCHLINK_DB_STATUS_SUCCESS) {
+        assert(false);
+        return;
+    }
+
+    struct nl_sock *nlsk = switchlink_get_nl_sock();
+    if (!nlsk) {
+        return;
+    }
+
+    struct nl_addr *nl_addr = nl_addr_build(AF_LLC, mac_addr, ETH_ALEN);
+    struct rtnl_neigh *rtnl_neigh = rtnl_neigh_alloc();
+    rtnl_neigh_set_ifindex(rtnl_neigh, ifindex);
+    rtnl_neigh_set_lladdr(rtnl_neigh, nl_addr);
+    rtnl_neigh_set_state(rtnl_neigh, rtnl_neigh_str2state("permanent"));
+    rtnl_neigh_set_family(rtnl_neigh, AF_BRIDGE);
+
+    if (create) {
+        status = switchlink_db_mac_add(mac_addr, bridge_h, intf_h);
+        assert(status == SWITCHLINK_DB_STATUS_SUCCESS);
+        rtnl_neigh_add(nlsk, rtnl_neigh, NLM_F_CREATE|NLM_F_REPLACE);
+    } else {
+        status = switchlink_db_mac_delete(mac_addr, bridge_h);
+        assert(status == SWITCHLINK_DB_STATUS_SUCCESS);
+        rtnl_neigh_delete(nlsk, rtnl_neigh, 0);
+    }
+    rtnl_neigh_put(rtnl_neigh);
+    nl_addr_put(nl_addr);
 }
