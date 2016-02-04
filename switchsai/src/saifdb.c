@@ -18,6 +18,7 @@ limitations under the License.
 #include "saiinternal.h"
 #include <switchapi/switch_l2.h>
 #include <switchapi/switch_vlan.h>
+#include <linux/if_ether.h>
 
 static sai_api_t api_id = SAI_API_FDB;
 
@@ -40,7 +41,7 @@ static void sai_fdb_entry_parse(
         const sai_fdb_entry_t *fdb_entry,
         switch_api_mac_entry_t *mac_entry) {
     switch_api_vlan_id_to_handle_get(fdb_entry->vlan_id, &mac_entry->vlan_handle);
-    memcpy(mac_entry->mac.mac_addr, fdb_entry->mac_address, 6);
+    memcpy(mac_entry->mac.mac_addr, fdb_entry->mac_address, ETH_ALEN);
 }
 
 static void sai_fdb_entry_attribute_parse(
@@ -67,7 +68,7 @@ static void sai_fdb_entry_attribute_parse(
                 }
                 break;
 
-            case SAI_FDB_ENTRY_ATTR_PORT_ID: 
+            case SAI_FDB_ENTRY_ATTR_PORT_ID:
                 mac_entry->handle = (switch_handle_t) attribute->value.oid;
                 break;
 
@@ -131,11 +132,11 @@ sai_status_t sai_create_fdb_entry(
     sai_fdb_entry_parse(fdb_entry, &mac_entry);
     sai_fdb_entry_attribute_parse(attr_count, attr_list, &mac_entry);
 
-    sai_fdb_entry_to_string(fdb_entry, entry_string);
     switch_status = switch_api_mac_table_entry_add(device, &mac_entry);
     status = sai_switch_status_to_sai_status(switch_status);
 
     if (status != SAI_STATUS_SUCCESS) {
+        sai_fdb_entry_to_string(fdb_entry, entry_string);
         SAI_LOG_ERROR("failed to create fdb entry %s : %s",
                        entry_string,
                        sai_status_to_string(status));
@@ -176,12 +177,11 @@ sai_status_t sai_remove_fdb_entry(
     memset(&mac_entry, 0, sizeof(mac_entry));
     sai_fdb_entry_parse(fdb_entry, &mac_entry);
 
-    sai_fdb_entry_to_string(fdb_entry, entry_string);
-
     switch_status = switch_api_mac_table_entry_delete(device, &mac_entry);
     status = sai_switch_status_to_sai_status(switch_status);
 
     if (status != SAI_STATUS_SUCCESS) {
+        sai_fdb_entry_to_string(fdb_entry, entry_string);
         SAI_LOG_ERROR("failed to remove fdb entry %s : %s",
                        entry_string,
                        sai_status_to_string(status));
@@ -209,6 +209,8 @@ sai_status_t sai_set_fdb_entry_attribute(
         _In_ const sai_attribute_t *attr) {
     switch_api_mac_entry_t mac_entry;
     sai_status_t status = SAI_STATUS_SUCCESS;
+    switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
+    char entry_string[SAI_MAX_ENTRY_STRING_LEN];
 
     SAI_LOG_ENTER();
 
@@ -228,6 +230,17 @@ sai_status_t sai_set_fdb_entry_attribute(
 
     memset(&mac_entry, 0, sizeof(mac_entry));
     sai_fdb_entry_parse(fdb_entry, &mac_entry);
+    sai_fdb_entry_attribute_parse(1, attr, &mac_entry);
+
+    switch_status = switch_api_mac_table_entry_update(device, &mac_entry);
+    status = sai_switch_status_to_sai_status(switch_status);
+
+    if (status != SAI_STATUS_SUCCESS) {
+        sai_fdb_entry_to_string(fdb_entry, entry_string);
+        SAI_LOG_ERROR("failed to update fdb entry %s : %s",
+                       entry_string,
+                       sai_status_to_string(status));
+    }
 
     SAI_LOG_EXIT();
 
@@ -353,19 +366,97 @@ sai_status_t sai_flush_fdb_entries(
     return status;
 }
 
+static void
+sai_mac_learn_notify_cb(switch_api_mac_entry_t *mac_entry)
+{
+
+    SAI_LOG_ENTER();
+
+    if (!sai_switch_notifications.on_fdb_event) {
+        return;
+    }
+
+    if (!mac_entry) {
+        SAI_LOG_ERROR("invalid argument");
+        return;
+    }
+
+    switch_vlan_t vlan_id;
+    switch_handle_t intf_h;
+    switch_status_t status = SWITCH_STATUS_SUCCESS;
+    status = switch_api_vlan_handle_to_id_get(mac_entry->vlan_handle, &vlan_id);
+    assert(status == SWITCH_STATUS_SUCCESS);
+    status = switch_api_interface_get_port_handle(mac_entry->handle, &intf_h);
+    assert(status == SWITCH_STATUS_SUCCESS);
+
+    sai_fdb_event_notification_data_t fdb_event;
+    memset(&fdb_event, 0, sizeof(fdb_event));
+    fdb_event.event_type = SAI_FDB_EVENT_LEARNED;
+    memcpy(fdb_event.fdb_entry.mac_address, mac_entry->mac.mac_addr, ETH_ALEN);
+    fdb_event.fdb_entry.vlan_id = vlan_id;
+    sai_attribute_t attr_list[3];
+    memset(attr_list, 0, sizeof(attr_list));
+    attr_list[0].id = SAI_FDB_ENTRY_ATTR_TYPE;
+    attr_list[0].value.u8 = SAI_FDB_ENTRY_DYNAMIC;
+    attr_list[1].id = SAI_FDB_ENTRY_ATTR_PORT_ID;
+    attr_list[1].value.oid = intf_h;
+    attr_list[2].id = SAI_FDB_ENTRY_ATTR_PACKET_ACTION;
+    attr_list[2].value.u8 = SAI_PACKET_ACTION_FORWARD;
+    fdb_event.attr = attr_list;
+    fdb_event.attr_count = 3;
+    sai_switch_notifications.on_fdb_event(1, &fdb_event);
+
+    SAI_LOG_EXIT();
+
+    return;
+}
+
+static void
+sai_mac_age_notify_cb(switch_api_mac_entry_t *mac_entry)
+{
+    if (!sai_switch_notifications.on_fdb_event) {
+        return;
+    }
+
+    if (!mac_entry) {
+        SAI_LOG_ERROR("invalid argument");
+        return;
+    }
+
+    switch_vlan_t vlan_id;
+    switch_status_t status = SWITCH_STATUS_SUCCESS;
+    status = switch_api_vlan_handle_to_id_get(mac_entry->vlan_handle, &vlan_id);
+    assert(status == SWITCH_STATUS_SUCCESS);
+
+    sai_fdb_event_notification_data_t fdb_event;
+    memset(&fdb_event, 0, sizeof(fdb_event));
+    fdb_event.event_type = SAI_FDB_EVENT_AGED;
+    memcpy(fdb_event.fdb_entry.mac_address, mac_entry->mac.mac_addr, ETH_ALEN);
+    fdb_event.fdb_entry.vlan_id = vlan_id;
+    fdb_event.attr = NULL;
+    fdb_event.attr_count = 0;
+    sai_switch_notifications.on_fdb_event(1, &fdb_event);
+
+    SAI_LOG_EXIT();
+
+    return;
+}
+
 /*
 *  FDB methods table retrieved with sai_api_query()
 */
 sai_fdb_api_t fdb_api = {
-    .create_fdb_entry                  =             sai_create_fdb_entry,
-    .remove_fdb_entry                  =             sai_remove_fdb_entry,
-    .set_fdb_entry_attribute           =             sai_set_fdb_entry_attribute,
-    .get_fdb_entry_attribute           =             sai_get_fdb_entry_attribute,
-    .flush_fdb_entries                 =             sai_flush_fdb_entries
+    .create_fdb_entry                  =         sai_create_fdb_entry,
+    .remove_fdb_entry                  =         sai_remove_fdb_entry,
+    .set_fdb_entry_attribute           =         sai_set_fdb_entry_attribute,
+    .get_fdb_entry_attribute           =         sai_get_fdb_entry_attribute,
+    .flush_fdb_entries                 =         sai_flush_fdb_entries
 };
 
 sai_status_t sai_fdb_initialize(sai_api_service_t *sai_api_service) {
     SAI_LOG_DEBUG("initializing fdb");
     sai_api_service->fdb_api = fdb_api;
+    switch_api_mac_register_learning_callback(&sai_mac_learn_notify_cb);
+    switch_api_mac_register_aging_callback(&sai_mac_age_notify_cb);
     return SAI_STATUS_SUCCESS;
 }

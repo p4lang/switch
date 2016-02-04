@@ -34,7 +34,9 @@ limitations under the License.
 #include "switchapi/switch_stp.h"
 #include "switchapi/switch_mirror.h"
 #include "switchapi/switch_INT.h"
+#include "switchapi/switch_config.h"
 #include "switchapi/switch_protocol.h"
+#include "switchapi/switch_meter.h"
 #include "arpa/inet.h"
 
 #define SWITCH_API_RPC_SERVER_PORT (9091)
@@ -91,6 +93,7 @@ void switch_string_to_v6_ip(const std::string s, unsigned char *v6_ip)
 
 void switch_parse_ip_address(const switcht_ip_addr_t ip_addr, switch_ip_addr_t *lip_addr)
 {
+    memset(lip_addr, 0, sizeof(switch_ip_addr_t));
     lip_addr->type = (switch_ip_addr_type_t)ip_addr.addr_type;
     lip_addr->prefix_len = ip_addr.prefix_length;
     if (lip_addr->type == SWITCH_API_IP_ADDR_V4) {
@@ -103,13 +106,11 @@ void switch_parse_ip_address(const switcht_ip_addr_t ip_addr, switch_ip_addr_t *
 class switch_api_rpcHandler : virtual public switch_api_rpcIf {
  public:
   switch_api_rpcHandler() {
-    // Your initialization goes here
     printf("RPC Initialization\n");
   switch_api_init(0, 256);
   }
 
   switcht_status_t switcht_api_init(const switcht_device_t device) {
-    // Your implementation goes here
     printf("switcht_api_init\n");
     return 0;
   }
@@ -124,7 +125,7 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
         return;
     }
 
-    for (uint32_t i = 0; i < num_counters; i++) {
+    for (int i = 0; i < num_counters; i++) {
         _return.push_back(counters[i]);
     }
 
@@ -133,7 +134,6 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   }
 
   switcht_status_t switcht_api_port_set(const switcht_device_t device, const switcht_port_info_t& port_info) {
-    // Your implementation goes here
     switch_api_port_info_t port;
     port.port_number = port_info.port_number;
     port.ipv4_term = port_info.ipv4_term;
@@ -149,37 +149,69 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   }
 
   switcht_status_t switcht_api_port_print_all() {
-    // Your implementation goes here
     printf("switcht_api_port_print_all\n");
     return switch_api_port_print_all();
   }
 
+  switcht_status_t switcht_api_port_storm_control_set(
+          const switcht_device_t device,
+          const switcht_port_t port_id,
+          const switcht_packet_type_t pkt_type,
+          const switcht_handle_t meter_handle) {
+    printf("switcht_api_port_storm_control_set\n");
+    return switch_api_port_storm_control_set(
+            (switch_device_t) device,
+            (switch_port_t) port_id,
+            (switch_packet_type_t) pkt_type,
+            (switch_handle_t) meter_handle);
+  }
+
+  void switcht_api_storm_control_stats_get(
+          std::vector<switcht_counter_t> & _counters,
+          const switcht_device_t device,
+          const switcht_handle_t meter_handle,
+          const std::vector<int16_t> & counter_ids) {
+    printf("switcht_api_storm_control_stats_get\n");
+    std::vector<int16_t>::const_iterator it = counter_ids.begin();
+    switcht_counter_t _counter;
+    switch_meter_stats_t *counter_id_list = (switch_meter_stats_t *) malloc(sizeof(switch_meter_stats_t) * counter_ids.size());
+    switch_counter_t *counters = (switch_counter_t *) malloc(sizeof(switch_counter_t) * counter_ids.size());
+    for(uint32_t i = 0; i < counter_ids.size(); i++, it++) {
+        counter_id_list[i] = (switch_meter_stats_t) *it;
+    }
+    printf("\nnumber of counterids %d\n", (int)(counter_ids.size()));
+    switch_api_storm_control_stats_get(device, meter_handle, counter_ids.size(), counter_id_list, counters);
+    for (uint32_t i = 0; i < counter_ids.size(); i++) {
+        _counter.num_packets = counters[i].num_packets;
+        _counter.num_bytes = counters[i].num_bytes;
+        _counters.push_back(_counter);
+    }
+    free(counter_id_list);
+    free(counters);
+    return;
+  }
+
   switcht_status_t switcht_api_vrf_create(const switcht_device_t device, const switcht_vrf_id_t vrf) {
-    // Your implementation goes here
     printf("switcht_api_l3_vrf_create\n");
     return switch_api_vrf_create(device, vrf);
   }
 
   switcht_status_t switcht_api_vrf_delete(const switcht_device_t device, const switcht_handle_t vrf_handle) {
-    // Your implementation goes here
     printf("switcht_api_l3_vrf_delete\n");
     return switch_api_vrf_delete(device, vrf_handle);
   }
 
   switcht_handle_t switcht_api_router_mac_group_create(const switcht_device_t device) {
-    // Your implementation goes here
     printf("switcht_api_router_mac_group_create\n");
     return switch_api_router_mac_group_create(device);
   }
 
   switcht_status_t switcht_api_router_mac_group_delete(const switcht_device_t device, const switcht_handle_t rmac_handle) {
-    // Your implementation goes here
     printf("switcht_api_router_mac_group_delete\n");
     return switch_api_router_mac_group_delete(device, rmac_handle);
   }
 
   switcht_status_t switcht_api_router_mac_add(const switcht_device_t device, const switcht_handle_t rmac_handle, const switcht_mac_addr_t& mac) {
-    // Your implementation goes here
     switch_mac_addr_t lmac;
     switch_string_to_mac(mac, lmac.mac_addr);
     printf("switcht_api_router_mac_add\n");
@@ -187,7 +219,6 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   }
 
   switcht_status_t switcht_api_router_mac_delete(const switcht_device_t device, const switcht_handle_t rmac_handle, const switcht_mac_addr_t& mac) {
-    // Your implementation goes here
     switch_mac_addr_t lmac;
     switch_string_to_mac(mac, lmac.mac_addr);
     printf("switcht_api_router_mac_delete\n");
@@ -195,13 +226,11 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   }
 
   switcht_status_t switcht_api_router_mac_group_print_all() {
-    // Your implementation goes here
     printf("switcht_api_router_mac_group_print_all\n");
     return switch_api_router_mac_group_print_all();
   }
 
   switcht_interface_handle_t switcht_api_interface_create(const switcht_device_t device, const switcht_interface_info_t& interface_info) {
-    // Your implementation goes here
     switch_api_interface_info_t i_info;
     memset(&i_info, 0, sizeof(switch_api_interface_info_t));
     i_info.type = (switch_interface_type_t)interface_info.type;
@@ -215,59 +244,54 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
         i_info.u.port_vlan.vlan_id = interface_info.u.port_vlan.vlan_id;
     } else if (i_info.type == SWITCH_API_INTERFACE_L3_VLAN) {
         i_info.u.vlan_id = interface_info.u.vlan_id;
-        i_info.ipv4_unicast_enabled = interface_info.v4_unicast_enabled;
-        i_info.ipv6_unicast_enabled = interface_info.v6_unicast_enabled;
     } else {
         i_info.u.port_lag_handle = interface_info.u.port_lag_handle;
     }
+    i_info.ipv4_unicast_enabled = interface_info.v4_unicast_enabled;
+    i_info.ipv6_unicast_enabled = interface_info.v6_unicast_enabled;
+    i_info.ipv4_multicast_enabled = interface_info.v4_multicast_enabled;
+    i_info.ipv6_multicast_enabled = interface_info.v6_multicast_enabled;
+
     printf("switcht_api_interface_create\n");
     return switch_api_interface_create(device, &i_info);
   }
 
   switcht_status_t switcht_api_interface_delete(const switcht_device_t device, const switcht_interface_handle_t interface_handle) {
-    // Your implementation goes here
     printf("switcht_api_interface_delete\n");
     return switch_api_interface_delete(device, interface_handle);
   }
 
   switcht_status_t switcht_api_interface_print_all() {
-    // Your implementation goes here
     printf("switcht_api_interface_print_all\n");
     return switch_api_interface_print_all();
   }
 
   switcht_status_t switcht_api_interface_attribute_set(const switcht_handle_t interface_handle, const switcht_intf_attr_t attr_type, const int64_t value) {
-    // Your implementation goes here
     printf("switcht_api_set_interface_attribute\n");
     return switch_api_interface_attribute_set(interface_handle, (switch_intf_attr_t)attr_type, (uint64_t) value);
   }
 
   switcht_status_t switcht_api_interface_ipv4_unicast_enabled_set(const switcht_handle_t interface_handle, const int64_t value) {
-    // Your implementation goes here
     printf("switcht_api_set_interface_attribute\n");
     return switch_api_interface_ipv4_unicast_enabled_set(interface_handle, (uint64_t) value);
   }
 
   switcht_status_t switcht_api_interface_ipv6_unicast_enabled_set(const switcht_handle_t interface_handle, const int64_t value) {
-    // Your implementation goes here
     printf("switcht_api_set_interface_attribute\n");
     return switch_api_interface_ipv6_unicast_enabled_set(interface_handle, (uint64_t) value);
   }
 
   switcht_status_t switcht_api_interface_ipv4_urpf_mode_set(const switcht_handle_t interface_handle, const int64_t value) {
-    // Your implementation goes here
     printf("switcht_api_set_interface_attribute\n");
     return switch_api_interface_ipv4_urpf_mode_set(interface_handle, (uint64_t) value);
   }
 
   switcht_status_t switcht_api_interface_ipv6_urpf_mode_set(const switcht_handle_t interface_handle, const int64_t value) {
-    // Your implementation goes here
     printf("switcht_api_set_interface_attribute\n");
     return switch_api_interface_ipv6_urpf_mode_set(interface_handle, (uint64_t) value);
   }
 
   switcht_status_t switcht_api_l3_interface_address_add(const switcht_device_t device, const switcht_interface_handle_t interface_handle, const switcht_handle_t vrf, const switcht_ip_addr_t& ip_addr) {
-    // Your implementation goes here
     printf("switcht_api_l3_interface_address_add\n");
     switch_ip_addr_t lip_addr;
     switch_parse_ip_address(ip_addr, &lip_addr);
@@ -275,7 +299,6 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   }
 
   switcht_status_t switcht_api_l3_interface_address_delete(const switcht_device_t device, const switcht_interface_handle_t interface_handle, const switcht_handle_t vrf, const switcht_ip_addr_t& ip_addr) {
-    // Your implementation goes here
     printf("switcht_api_l3_interface_address_delete\n");
     switch_ip_addr_t lip_addr;
     switch_parse_ip_address(ip_addr, &lip_addr);
@@ -283,7 +306,6 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   }
 
   switcht_handle_t switcht_api_nhop_create(const switcht_device_t device, const switcht_nhop_key_t& nhop_key) {
-    // Your implementation goes here
     printf("switcht_api_nhop_create\n");
     switch_nhop_key_t lnhop_key;
     memset(&lnhop_key, 0, sizeof(switch_nhop_key_t));
@@ -295,13 +317,11 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   }
 
   switcht_status_t switcht_api_nhop_delete(const switcht_device_t device, const switcht_handle_t handle) {
-    // Your implementation goes here
     printf("switcht_api_nhop_delete\n");
     return switch_api_nhop_delete(device, handle);
   }
 
   switcht_status_t switcht_api_nhop_print_all(void) {
-    // Your implementation goes here
     printf("switcht_api_nhop_print_all\n");
     return switch_api_nhop_print_all();
   }
@@ -326,7 +346,6 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   }
 
   switcht_status_t switcht_api_neighbor_print_all() {
-    // Your implementation goes here
     printf("switcht_api_neighbor_print_all\n");
     return switch_api_neighbor_print_all();
   }
@@ -346,53 +365,50 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   }
 
   switcht_status_t switcht_api_l3_routes_print_all() {
-    // Your implementation goes here
     printf("switcht_api_l3_routes_print_all\n");
     return switch_api_l3_routes_print_all();
   }
 
   switcht_handle_t switcht_api_vlan_create(const switcht_device_t device, const switcht_vlan_t vlan_id) {
-    // Your implementation goes here
     printf("switcht_api_vlan_create\n");
     return switch_api_vlan_create(device, vlan_id);
   }
 
   switcht_status_t switcht_api_vlan_delete(const switcht_device_t device, const switcht_handle_t vlan_handle) {
-    // Your implementation goes here
     printf("switcht_api_vlan_delete\n");
     return switch_api_vlan_delete(device, vlan_handle);
   }
 
   switcht_status_t switcht_api_vlan_print_all() {
-    // Your implementation goes here
     printf("switcht_api_vlan_print_all\n");
     return switch_api_vlan_print_all();
   }
 
   switcht_status_t switcht_api_vlan_stats_enable(const switcht_device_t device, const switcht_handle_t vlan_handle) {
-    // Your implementation goes here
-    printf("switcht_api_vlan_stats_enable\n");
+    printf("switcht_api_ingress_vlan_stats_enable\n");
     return switch_api_vlan_stats_enable(device, vlan_handle);
   }
 
   switcht_status_t switcht_api_vlan_stats_disable(const switcht_device_t device, const switcht_handle_t vlan_handle) {
-    // Your implementation goes here
-    printf("switcht_api_vlan_stats_disable\n");
+    printf("switcht_api_vlan_ingress_stats_disable\n");
     return switch_api_vlan_stats_disable(device, vlan_handle);
   }
 
-  void switcht_api_vlan_stats_get(std::vector<switcht_counter_t> & _counters, const switcht_handle_t vlan_handle, const std::vector<int16_t> & counter_ids) {
-    // Your implementation goes here
-    printf("switcht_api_vlan_stats_get\n");
+  void switcht_api_vlan_stats_get(
+          std::vector<switcht_counter_t> & _counters,
+          const switcht_device_t device,
+          const switcht_handle_t vlan_handle,
+          const std::vector<int16_t> & counter_ids) {
+    printf("switcht_api_vlan_ingress_stats_get\n");
     std::vector<int16_t>::const_iterator it = counter_ids.begin();
     switcht_counter_t _counter;
-    switch_vlan_stat_counter_t *counter_id_list = (switch_vlan_stat_counter_t *) malloc(sizeof(switch_vlan_stat_counter_t) * counter_ids.size());
+    switch_vlan_stats_t *counter_id_list = (switch_vlan_stats_t *) malloc(sizeof(switch_vlan_stats_t) * counter_ids.size());
     switch_counter_t *counters = (switch_counter_t *) malloc(sizeof(switch_counter_t) * counter_ids.size());
     for(uint32_t i = 0; i < counter_ids.size(); i++, it++) {
-        counter_id_list[i] = (switch_vlan_stat_counter_t) *it;
+        counter_id_list[i] = (switch_vlan_stats_t) *it;
     }
     printf("\nnumber of counterids %d\n", (int)(counter_ids.size()));
-    switch_api_vlan_stats_get(vlan_handle, counter_ids.size(), counter_id_list, counters);
+    switch_api_vlan_stats_get(device, vlan_handle, counter_ids.size(), counter_id_list, counters);
     for (uint32_t i = 0; i < counter_ids.size(); i++) {
         _counter.num_packets = counters[i].num_packets;
         _counter.num_bytes = counters[i].num_bytes;
@@ -404,7 +420,6 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   }
 
   switcht_status_t switcht_api_mac_table_entry_create(const switcht_device_t device, const switcht_handle_t vlan_handle, const switcht_mac_addr_t& mac, const int8_t entry_type, const switcht_interface_handle_t interface_handle) {
-    // Your implementation goes here
     switch_api_mac_entry_t mac_entry;
     switch_string_to_mac(mac, mac_entry.mac.mac_addr);
     printf("switcht_api_l2_mac_add\n");
@@ -415,7 +430,6 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   }
 
   switcht_status_t switcht_api_mac_table_entry_update(const switcht_device_t device, const switcht_handle_t vlan_handle, const switcht_mac_addr_t& mac, const int8_t entry_type, const switcht_interface_handle_t interface_handle) {
-    // Your implementation goes here
     switch_api_mac_entry_t mac_entry;
     switch_string_to_mac(mac, mac_entry.mac.mac_addr);
     printf("switcht_api_l2_mac_update\n");
@@ -426,7 +440,6 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   }
 
   switcht_status_t switcht_api_mac_table_entry_delete(const switcht_device_t device, const switcht_handle_t vlan_handle, const switcht_mac_addr_t& mac) {
-    // Your implementation goes here
     switch_api_mac_entry_t mac_entry;
     switch_string_to_mac(mac, mac_entry.mac.mac_addr);
     mac_entry.vlan_handle = vlan_handle;
@@ -435,43 +448,36 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   }
 
   switcht_status_t switcht_api_mac_table_print_all() {
-    // Your implementation goes here
     printf("switcht_api_interface_print_all\n");
     return switch_api_mac_table_print_all();
   }
 
   switcht_status_t switcht_api_mac_table_entries_delete_by_vlan(const switcht_device_t device, const switcht_handle_t vlan_handle) {
-    // Your implementation goes here
     printf("switcht_api_mac_table_entries_delete_by_vlan\n");
     return switch_api_mac_table_entries_delete_by_vlan(device, vlan_handle);
   }
 
   switcht_status_t switcht_api_mac_table_entries_delete_by_interface(const switcht_device_t device, const switcht_handle_t intf_handle) {
-    // Your implementation goes here
     printf("switcht_api_mac_table_entries_delete_by_interface\n");
     return switch_api_mac_table_entries_delete_by_interface(device, intf_handle);
   }
 
   switcht_status_t switcht_api_mac_table_entries_delete_all(const switcht_device_t device) {
-    // Your implementation goes here
     printf("switcht_api_mac_table_entries_delete_all\n");
     return switch_api_mac_table_entries_delete_all(device);
   }
 
   switcht_handle_t switcht_api_l3_ecmp_create(const switcht_device_t device) {
-    // Your implementation goes here
     printf("switcht_api_l3_ecmp_create\n");
     return switch_api_ecmp_create(device);
   }
 
   switcht_status_t switcht_api_l3_ecmp_delete(const switcht_device_t device, const switcht_handle_t handle) {
-    // Your implementation goes here
     printf("switcht_api_l3_ecmp_delete\n");
     return switch_api_ecmp_delete(device, handle);
   }
 
   switcht_status_t switcht_api_l3_ecmp_member_add(const switcht_device_t device, const switcht_handle_t handle, const int16_t nhop_count, const std::vector<switcht_handle_t> & nhop_handle) {
-    // Your implementation goes here
     printf("switcht_api_l3_ecmp_member_add\n");
     switch_status_t status=0;
     std::vector<switcht_handle_t>::const_iterator it = nhop_handle.begin();
@@ -486,7 +492,6 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   }
 
   switcht_status_t switcht_api_l3_ecmp_member_delete(const switcht_device_t device, const switcht_handle_t handle, const int16_t nhop_count, const std::vector<switcht_handle_t> & nhop_handle) {
-    // Your implementation goes here
     printf("switcht_api_l3_ecmp_member_delete\n");
     switch_status_t status=0;
     std::vector<switcht_handle_t>::const_iterator it = nhop_handle.begin();
@@ -501,25 +506,21 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   }
 
   switcht_handle_t switcht_api_lag_create(const switcht_device_t device) {
-    // Your implementation goes here
     printf("switcht_api_lag_create\n");
     return switch_api_lag_create(device);
   }
 
   switcht_status_t switcht_api_lag_delete(const switcht_device_t device, const switcht_handle_t lag_handle) {
-    // Your implementation goes here
     printf("switcht_api_lag_delete\n");
     return switch_api_lag_delete(device, lag_handle);
   }
 
   switcht_status_t switcht_api_lag_member_add(const switcht_device_t device, const switcht_handle_t lag_handle, const switcht_direction_t side, const switcht_port_t port) {
-    // Your implementation goes here
     printf("switcht_api_lag_member_add\n");
     return switch_api_lag_member_add(device, lag_handle, (switch_direction_t)side, port);
   }
 
   switcht_status_t switcht_api_lag_member_delete(const switcht_device_t device, const switcht_handle_t lag_handle, const switcht_direction_t side, const switcht_port_t port) {
-    // Your implementation goes here
     printf("switcht_api_lag_member_delete\n");
     return switch_api_lag_member_delete(device, lag_handle, (switch_direction_t)side, port);
   }
@@ -530,7 +531,6 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   }
 
   switcht_handle_t switcht_api_logical_network_create(const switcht_device_t device, const switcht_logical_network_t& info) {
-    // Your implementation goes here
     switch_logical_network_t linfo;
     memset(&linfo, 0, sizeof(switch_logical_network_t));
     linfo.type = (switch_logical_network_type_t)info.type;
@@ -549,6 +549,8 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     linfo.flags.core_bd = info.flags.core_bd;
     linfo.flags.ipv4_unicast_enabled = info.flags.ipv4_unicast_enabled;
     linfo.flags.ipv6_unicast_enabled = info.flags.ipv6_unicast_enabled;
+    linfo.flags.ipv4_multicast_enabled = info.flags.ipv4_multicast_enabled;
+    linfo.flags.ipv6_multicast_enabled = info.flags.ipv6_multicast_enabled;
     linfo.vrf_handle = info.vrf;
     linfo.rmac_handle = info.rmac_handle;
     printf("switcht_api_logical_network_create\n");
@@ -556,13 +558,11 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   }
 
   switcht_status_t switcht_api_logical_network_delete(const switcht_device_t device, const switcht_handle_t network_handle) {
-    // Your implementation goes here
     printf("switcht_api_logical_network_delete\n");
     return switch_api_logical_network_delete(device, network_handle);
   }
 
   switcht_tunnel_handle_t switcht_api_tunnel_interface_create(const switcht_device_t device, const switcht_direction_t direction, const switcht_tunnel_info_t& tun_info) {
-    // Your implementation goes here
     switch_tunnel_info_t ltun_info;
     memset(&ltun_info, 0, sizeof(switch_tunnel_info_t));
     ltun_info.encap_mode = (switch_encap_mode_t) tun_info.encap_mode;
@@ -668,19 +668,16 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   }
 
   switcht_status_t switcht_api_tunnel_interface_delete(const switcht_device_t device, const switcht_tunnel_handle_t tun_handle) {
-    // Your implementation goes here
     printf("switcht_api_tunnel_interface_delete\n");
     return switch_api_tunnel_interface_delete(device, tun_handle);
   }
 
   switcht_status_t switcht_api_logical_network_member_add(const switcht_device_t device, const switcht_handle_t network_handle, const switcht_interface_handle_t interface_handle) {
-    // Your implementation goes here
     printf("switcht_api_logical_network_add_member\n");
     return switch_api_logical_network_member_add(device, network_handle, interface_handle);
   }
 
   switcht_status_t switcht_api_logical_network_member_remove(const switcht_device_t device, const switcht_handle_t network_handle, const switcht_interface_handle_t interface_handle) {
-    // Your implementation goes here
     printf("switcht_api_logical_network_delete_member\n");
     return switch_api_logical_network_member_remove(device, network_handle, interface_handle);
   }
@@ -766,20 +763,43 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     return switch_api_acl_list_delete(device, handle);
   }
 
-  switcht_handle_t switcht_api_acl_ip_rule_create(const switcht_device_t device, const switcht_handle_t acl_handle, const int32_t priority, const int32_t key_value_count, const std::vector<switcht_acl_ip_key_value_pair_t> & acl_kvp, const switcht_acl_action_t action, const switcht_acl_action_params_t& action_params) {
-    printf("switcht_api_acl_ip_rule_create\n");
-//    switch_status_t status=0;
+  switcht_handle_t switcht_api_acl_mac_rule_create(
+          const switcht_device_t device,
+          const switcht_handle_t acl_handle,
+          const int32_t priority,
+          const int32_t key_value_count,
+          const std::vector<switcht_acl_ip_key_value_pair_t> & acl_kvp,
+          const switcht_acl_action_t action,
+          const switcht_acl_action_params_t& action_params,
+          const switcht_acl_opt_action_params_t& opt_action_params) {
+    printf("switcht_api_acl_mac_rule_create\n");
     switch_handle_t handle;
     switch_acl_action_params_t ap;
+    switch_acl_opt_action_params_t oap;
 
-    std::vector<switcht_acl_ip_key_value_pair_t>::const_iterator f=acl_kvp.begin();
+    std::vector<switcht_acl_mac_key_value_pair_t>::const_iterator f=acl_kvp.begin();
 
     void *fields = calloc(sizeof(switch_acl_ip_key_value_pair_t)*acl_kvp.size(), 1);
     for(uint32_t i=0;i<acl_kvp.size();i++,f++) {
-        unsigned long long v = (unsigned long long)((switch_acl_ip_field_t)f->value);
-        ((switch_acl_ip_key_value_pair_t *)fields+i)->field = (switch_acl_ip_field_t)f->field;
-        memcpy(&(((switch_acl_ip_key_value_pair_t *)fields+i)->value.ipv4_source), &v, sizeof(switch_acl_ip_value));
-        ((switch_acl_ip_key_value_pair_t *)fields+i)->mask.u.mask = (switch_acl_ip_field_t)f->mask;
+        ((switch_acl_mac_key_value_pair_t *)fields+i)->field = (switch_acl_mac_field_t)f->field;
+        switch ((switch_acl_mac_field_t) f->field) {
+            case SWITCH_ACL_MAC_FIELD_SOURCE_MAC:
+            case SWITCH_ACL_MAC_FIELD_DEST_MAC:
+            {
+                unsigned char *mac = (unsigned char *) (((switch_acl_mac_key_value_pair_t *) fields + i)->value.source_mac);
+                switch_string_to_mac(f->value.value_str, mac);
+                unsigned char *mac_mask = (unsigned char *) (((switch_acl_mac_key_value_pair_t *) fields + i)->mask.u.mac_mask);
+                switch_string_to_mac(f->mask.value_str, mac_mask);
+                break;
+            }
+            default:
+            {
+                unsigned long long v = (unsigned long long)((switch_acl_mac_field_t)f->value.value_num);
+                memcpy((((switch_acl_mac_key_value_pair_t *)fields+i)->value.source_mac), &v, sizeof(switch_acl_mac_value));
+                ((switch_acl_mac_key_value_pair_t *)fields+i)->mask.u.mask16 = (switch_acl_mac_field_t)f->mask.value_num;
+                break;
+            }
+        }
     }
     memset(&ap, 0, sizeof(switch_acl_action_params_t));
     switch((switch_acl_action_t)action) {
@@ -789,76 +809,308 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
         case SWITCH_ACL_ACTION_REDIRECT_TO_CPU:
             ap.cpu_redirect.reason_code = action_params.cpu_redirect.reason_code;
             break;
-        case SWITCH_ACL_ACTION_SET_MIRROR:
-            ap.mirror.mirror_handle = action_params.mirror.mirror_handle;
+        default:
+            break;
+    }
+
+    oap.mirror_handle = opt_action_params.mirror_handle;
+    oap.meter_handle = opt_action_params.meter_handle;
+    oap.counter_handle = opt_action_params.counter_handle;
+
+    /*status =*/ switch_api_acl_rule_create(device, acl_handle, priority, key_value_count, fields, (switch_acl_action_t)action, &ap, &oap, &handle);
+    free(fields);
+    return handle;
+  }
+
+  switcht_handle_t switcht_api_acl_ip_rule_create(
+          const switcht_device_t device,
+          const switcht_handle_t acl_handle,
+          const int32_t priority,
+          const int32_t key_value_count,
+          const std::vector<switcht_acl_ip_key_value_pair_t> & acl_kvp,
+          const switcht_acl_action_t action,
+          const switcht_acl_action_params_t& action_params,
+          const switcht_acl_opt_action_params_t& opt_action_params) {
+    printf("switcht_api_acl_ip_rule_create\n");
+    switch_handle_t handle;
+    switch_acl_action_params_t ap;
+    switch_acl_opt_action_params_t oap;
+
+    std::vector<switcht_acl_ip_key_value_pair_t>::const_iterator f=acl_kvp.begin();
+
+    void *fields = calloc(sizeof(switch_acl_ip_key_value_pair_t)*acl_kvp.size(), 1);
+    for(uint32_t i=0;i<acl_kvp.size();i++,f++) {
+        unsigned long long v = (unsigned long long)((switch_acl_ip_field_t)f->value.value_num);
+        ((switch_acl_ip_key_value_pair_t *)fields+i)->field = (switch_acl_ip_field_t)f->field;
+        memcpy(&(((switch_acl_ip_key_value_pair_t *)fields+i)->value.ipv4_source), &v, sizeof(switch_acl_ip_value));
+        ((switch_acl_ip_key_value_pair_t *)fields+i)->mask.u.mask = (switch_acl_ip_field_t)f->mask.value_num;
+    }
+    memset(&ap, 0, sizeof(switch_acl_action_params_t));
+    switch((switch_acl_action_t)action) {
+        case SWITCH_ACL_ACTION_REDIRECT:
+            ap.redirect.handle = action_params.redirect.handle;
+            break;
+        case SWITCH_ACL_ACTION_REDIRECT_TO_CPU:
+            ap.cpu_redirect.reason_code = action_params.cpu_redirect.reason_code;
             break;
         default:
             break;
     }
-    /*status =*/ switch_api_acl_rule_create(device, acl_handle, priority, key_value_count, fields, (switch_acl_action_t)action, &ap, &handle);
+
+    oap.mirror_handle = opt_action_params.mirror_handle;
+    oap.meter_handle = opt_action_params.meter_handle;
+    oap.counter_handle = opt_action_params.counter_handle;
+
+    /*status =*/ switch_api_acl_rule_create(device, acl_handle, priority, key_value_count, fields, (switch_acl_action_t)action, &ap, &oap, &handle);
     free(fields);
     return handle;
   }
 
- switcht_handle_t switcht_api_acl_mirror_rule_create(const switcht_device_t device, const switcht_handle_t acl_handle, const int32_t priority, const int32_t key_value_count, const std::vector<switcht_acl_mirror_key_value_pair_t> & acl_kvp, const switcht_acl_action_t action, const switcht_acl_action_params_t& action_params) {
+  switcht_handle_t switcht_api_acl_ipv6_rule_create(
+          const switcht_device_t device,
+          const switcht_handle_t acl_handle,
+          const int32_t priority,
+          const int32_t key_value_count,
+          const std::vector<switcht_acl_ipv6_key_value_pair_t> & acl_kvp,
+          const switcht_acl_action_t action,
+          const switcht_acl_action_params_t& action_params,
+          const switcht_acl_opt_action_params_t& opt_action_params) {
+    printf("switcht_api_acl_ipv6_rule_create\n");
+    switch_handle_t handle;
+    switch_acl_action_params_t ap;
+    switch_acl_opt_action_params_t oap;
+
+    std::vector<switcht_acl_ipv6_key_value_pair_t>::const_iterator f=acl_kvp.begin();
+
+    void *fields = calloc(sizeof(switch_acl_ipv6_key_value_pair_t)*acl_kvp.size(), 1);
+    for(uint32_t i=0;i<acl_kvp.size();i++,f++) {
+        ((switch_acl_ipv6_key_value_pair_t *)fields+i)->field = (switch_acl_ipv6_field_t)f->field;
+        switch ((switch_acl_ipv6_field_t) f->field) {
+            case SWITCH_ACL_IPV6_FIELD_IPV6_SRC:
+            case SWITCH_ACL_IPV6_FIELD_IPV6_DEST:
+            {
+                unsigned char *v6_ip = (unsigned char *) (&((switch_acl_ipv6_key_value_pair_t *) fields + i)->value.ipv6_source);
+                switch_string_to_v6_ip(f->value.value_str, v6_ip);
+                unsigned char *v6_mask = (unsigned char *) (&((switch_acl_ipv6_key_value_pair_t *) fields + i)->mask.u.mask);
+                switch_string_to_v6_ip(f->mask.value_str, v6_mask);
+                break;
+            }
+            default:
+                break;
+        }
+    }
+    memset(&ap, 0, sizeof(switch_acl_action_params_t));
+    switch((switch_acl_action_t)action) {
+        case SWITCH_ACL_ACTION_REDIRECT:
+            ap.redirect.handle = action_params.redirect.handle;
+            break;
+        case SWITCH_ACL_ACTION_REDIRECT_TO_CPU:
+            ap.cpu_redirect.reason_code = action_params.cpu_redirect.reason_code;
+            break;
+        default:
+            break;
+    }
+
+    oap.mirror_handle = opt_action_params.mirror_handle;
+    oap.meter_handle = opt_action_params.meter_handle;
+    oap.counter_handle = opt_action_params.counter_handle;
+
+    /*status =*/ switch_api_acl_rule_create(device, acl_handle, priority, key_value_count, fields, (switch_acl_action_t)action, &ap, &oap, &handle);
+    free(fields);
+    return handle;
+  }
+
+  switcht_handle_t switcht_api_acl_ipv6racl_rule_create(
+          const switcht_device_t device,
+          const switcht_handle_t acl_handle,
+          const int32_t priority,
+          const int32_t key_value_count,
+          const std::vector<switcht_acl_ipv6racl_key_value_pair_t> & acl_kvp,
+          const switcht_acl_action_t action,
+          const switcht_acl_action_params_t& action_params,
+          const switcht_acl_opt_action_params_t& opt_action_params) {
+    printf("switcht_api_acl_ipv6_rule_create\n");
+    switch_handle_t handle;
+    switch_acl_action_params_t ap;
+    switch_acl_opt_action_params_t oap;
+
+    std::vector<switcht_acl_ipv6racl_key_value_pair_t>::const_iterator f=acl_kvp.begin();
+
+    void *fields = calloc(sizeof(switch_acl_ipv6_racl_key_value_pair_t)*acl_kvp.size(), 1);
+    for(uint32_t i=0;i<acl_kvp.size();i++,f++) {
+        ((switch_acl_ipv6_racl_key_value_pair_t *)fields+i)->field = (switch_acl_ipv6_racl_field_t)f->field;
+        switch ((switch_acl_ipv6_racl_field_t) f->field) {
+            case SWITCH_ACL_IPV6_FIELD_IPV6_SRC:
+            case SWITCH_ACL_IPV6_FIELD_IPV6_DEST:
+            {
+                unsigned char *v6_ip = (unsigned char *) (&((switch_acl_ipv6_racl_key_value_pair_t *) fields + i)->value.ipv6_source);
+                switch_string_to_v6_ip(f->value.value_str, v6_ip);
+                unsigned char *v6_mask = (unsigned char *) (&((switch_acl_ipv6_racl_key_value_pair_t *) fields + i)->mask.u.mask);
+                switch_string_to_v6_ip(f->mask.value_str, v6_mask);
+                break;
+            }
+            default:
+                break;
+        }
+    }
+    memset(&ap, 0, sizeof(switch_acl_action_params_t));
+    switch((switch_acl_action_t)action) {
+        case SWITCH_ACL_ACTION_REDIRECT:
+            ap.redirect.handle = action_params.redirect.handle;
+            break;
+        case SWITCH_ACL_ACTION_REDIRECT_TO_CPU:
+            ap.cpu_redirect.reason_code = action_params.cpu_redirect.reason_code;
+            break;
+        default:
+            break;
+    }
+
+    oap.mirror_handle = opt_action_params.mirror_handle;
+    oap.meter_handle = opt_action_params.meter_handle;
+    oap.counter_handle = opt_action_params.counter_handle;
+
+    /*status =*/ switch_api_acl_rule_create(device, acl_handle, priority, key_value_count, fields, (switch_acl_action_t)action, &ap, &oap, &handle);
+    free(fields);
+    return handle;
+  }
+
+  switcht_handle_t switcht_api_acl_ipracl_rule_create(
+          const switcht_device_t device,
+          const switcht_handle_t acl_handle,
+          const int32_t priority,
+          const int32_t key_value_count,
+          const std::vector<switcht_acl_ipracl_key_value_pair_t> & acl_kvp,
+          const switcht_acl_action_t action,
+          const switcht_acl_action_params_t& action_params,
+          const switcht_acl_opt_action_params_t& opt_action_params) {
+    printf("switcht_api_acl_ip_rule_create\n");
+    switch_handle_t handle;
+    switch_acl_action_params_t ap;
+    switch_acl_opt_action_params_t oap;
+
+    std::vector<switcht_acl_ipracl_key_value_pair_t>::const_iterator f=acl_kvp.begin();
+
+    void *fields = calloc(sizeof(switch_acl_ip_racl_key_value_pair_t)*acl_kvp.size(), 1);
+    for(uint32_t i=0;i<acl_kvp.size();i++,f++) {
+        unsigned long long v = (unsigned long long)((switch_acl_ip_racl_field_t)f->value.value_num);
+        ((switch_acl_ip_racl_key_value_pair_t *)fields+i)->field = (switch_acl_ip_racl_field_t)f->field;
+        memcpy(&(((switch_acl_ip_racl_key_value_pair_t *)fields+i)->value.ipv4_source), &v, sizeof(switch_acl_ip_racl_value));
+        ((switch_acl_ip_racl_key_value_pair_t *)fields+i)->mask.u.mask = (switch_acl_ip_racl_field_t)f->mask.value_num;
+    }
+    memset(&ap, 0, sizeof(switch_acl_action_params_t));
+    switch((switch_acl_action_t)action) {
+        case SWITCH_ACL_ACTION_REDIRECT:
+            ap.redirect.handle = action_params.redirect.handle;
+            break;
+        case SWITCH_ACL_ACTION_REDIRECT_TO_CPU:
+            ap.cpu_redirect.reason_code = action_params.cpu_redirect.reason_code;
+            break;
+        default:
+            break;
+    }
+
+    oap.mirror_handle = opt_action_params.mirror_handle;
+    oap.meter_handle = opt_action_params.meter_handle;
+    oap.counter_handle = opt_action_params.counter_handle;
+
+    /*status =*/ switch_api_acl_rule_create(device, acl_handle, priority, key_value_count, fields, (switch_acl_action_t)action, &ap, &oap, &handle);
+    free(fields);
+    return handle;
+  }
+
+ switcht_handle_t switcht_api_acl_mirror_rule_create(
+          const switcht_device_t device,
+          const switcht_handle_t acl_handle,
+          const int32_t priority,
+          const int32_t key_value_count,
+          const std::vector<switcht_acl_mirror_key_value_pair_t> & acl_kvp,
+          const switcht_acl_action_t action,
+          const switcht_acl_action_params_t& action_params,
+          const switcht_acl_opt_action_params_t& opt_action_params) {
     printf("switcht_api_acl_mirror_rule_create\n");
-//    switch_status_t status=0;
     std::vector<switcht_acl_mirror_key_value_pair_t>::const_iterator f=acl_kvp.begin();
     switch_acl_action_params_t ap;
+    switch_acl_opt_action_params_t oap;
     switch_handle_t handle;
 
     void *fields = calloc(sizeof(switch_acl_mirror_key_value_pair_t)*acl_kvp.size(), 1);
     for(uint32_t i=0;i<acl_kvp.size();i++,f++) {
-        unsigned long long v = (unsigned long long)((switch_acl_mirror_field_t)f->value);
+        unsigned long long v = (unsigned long long)((switch_acl_mirror_field_t)f->value.value_num);
         ((switch_acl_mirror_key_value_pair_t *)fields+i)->field = (switch_acl_mirror_field_t)f->field;
         memcpy(&(((switch_acl_mirror_key_value_pair_t *)fields+i)->value.ipv4_source), &v, sizeof(switch_acl_mirror_value));
-        ((switch_acl_mirror_key_value_pair_t *)fields+i)->mask.u.mask = (switch_acl_mirror_field_t)f->mask;
+        ((switch_acl_mirror_key_value_pair_t *)fields+i)->mask.u.mask = (switch_acl_mirror_field_t)f->mask.value_num;
     }
-    memset(&ap, 0, sizeof(switch_acl_action_params_t));
-    ap.mirror.mirror_handle = action_params.mirror.mirror_handle;
-    /*status =*/ switch_api_acl_rule_create(device, acl_handle, priority, key_value_count, fields, (switch_acl_action_t)action, &ap, &handle);
+    oap.mirror_handle = opt_action_params.mirror_handle;
+    oap.meter_handle = opt_action_params.meter_handle;
+    oap.counter_handle = opt_action_params.counter_handle;
+    /*status =*/ switch_api_acl_rule_create(device, acl_handle, priority, key_value_count, fields, (switch_acl_action_t)action, &ap, &oap, &handle);
     free(fields);
     return handle;
   }
 
-  switcht_handle_t switcht_api_acl_system_rule_create(const switcht_device_t device, const switcht_handle_t acl_handle, const int32_t priority, const int32_t key_value_count, const std::vector<switcht_acl_system_key_value_pair_t> & acl_kvp, const switcht_acl_action_t action, const switcht_acl_action_params_t& action_params) {
+  switcht_handle_t switcht_api_acl_system_rule_create(
+          const switcht_device_t device,
+          const switcht_handle_t acl_handle,
+          const int32_t priority,
+          const int32_t key_value_count,
+          const std::vector<switcht_acl_system_key_value_pair_t> & acl_kvp,
+          const switcht_acl_action_t action,
+          const switcht_acl_action_params_t& action_params,
+          const switcht_acl_opt_action_params_t& opt_action_params) {
     printf("switcht_api_system_acl_rule_create\n");
-//    switch_status_t status=0;
     switch_handle_t handle;
     std::vector<switcht_acl_system_key_value_pair_t>::const_iterator f=acl_kvp.begin();
     switch_acl_action_params_t ap;
+    switch_acl_opt_action_params_t oap;
 
     void *fields = calloc(sizeof(switch_acl_system_key_value_pair_t)*acl_kvp.size(), 1);
     for(uint32_t i=0;i<acl_kvp.size();i++,f++) {
-        unsigned long long v = (unsigned long long)((switch_acl_mirror_field_t)f->value);
+        unsigned long long v = (unsigned long long)((switch_acl_mirror_field_t)f->value.value_num);
         ((switch_acl_system_key_value_pair_t *)fields+i)->field = (switch_acl_system_field_t)f->field;
-        memcpy(&(((switch_acl_system_key_value_pair_t *)fields+i)->value.ipv4_source), &v, sizeof(switch_acl_system_value));
-        ((switch_acl_system_key_value_pair_t *)fields+i)->mask.u.mask = (switch_acl_system_field_t)f->mask;
+        memcpy(&(((switch_acl_system_key_value_pair_t *)fields+i)->value.eth_type), &v, sizeof(switch_acl_system_value));
+        ((switch_acl_system_key_value_pair_t *)fields+i)->mask.u.mask = (switch_acl_system_field_t)f->mask.value_num;
     }
     memset(&ap, 0, sizeof(switch_acl_action_params_t));
     ap.cpu_redirect.reason_code = action_params.cpu_redirect.reason_code;
-    /*status =*/ switch_api_acl_rule_create(device, acl_handle, priority, key_value_count, fields, (switch_acl_action_t)action, &ap, &handle);
+
+    oap.mirror_handle = opt_action_params.mirror_handle;
+    oap.meter_handle = opt_action_params.meter_handle;
+    oap.counter_handle = opt_action_params.counter_handle;
+
+    /*status =*/ switch_api_acl_rule_create(device, acl_handle, priority, key_value_count, fields, (switch_acl_action_t)action, &ap, &oap, &handle);
     free(fields);
     return handle;
   }
 
-   switcht_handle_t switcht_api_acl_egr_rule_create(const switcht_device_t device, const switcht_handle_t acl_handle, const int32_t priority, const int32_t key_value_count, const std::vector<switcht_acl_egr_key_value_pair_t> & acl_kvp, const switcht_acl_action_t action, const switcht_acl_action_params_t& action_params) {
+   switcht_handle_t switcht_api_acl_egr_rule_create(
+         const switcht_device_t device,
+         const switcht_handle_t acl_handle,
+         const int32_t priority,
+         const int32_t key_value_count,
+         const std::vector<switcht_acl_egr_key_value_pair_t> & acl_kvp,
+         const switcht_acl_action_t action,
+         const switcht_acl_action_params_t& action_params,
+         const switcht_acl_opt_action_params_t& opt_action_params) {
     printf("switcht_api_acl_egr_rule_create\n");
     switch_handle_t handle;
     std::vector<switcht_acl_egr_key_value_pair_t>::const_iterator f = acl_kvp.begin();
     switch_acl_action_params_t ap;
+    switch_acl_opt_action_params_t oap;
 
     void *fields = calloc(sizeof(switch_acl_egr_key_value_pair_t)*acl_kvp.size(), 1);
     for (uint32_t i=0;i<acl_kvp.size();i++,f++) {
-        unsigned long long v = (unsigned long long)((switch_acl_mirror_field_t)f->value);
+        unsigned long long v = (unsigned long long)((switch_acl_mirror_field_t)f->value.value_num);
         ((switch_acl_egr_key_value_pair_t *)fields+i)->field =
             (switch_acl_egr_field_t)f->field;
         memcpy(&(((switch_acl_egr_key_value_pair_t *)fields+i)->value.egr_port), &v, sizeof(switch_acl_egr_value_t));
-        ((switch_acl_egr_key_value_pair_t *)fields+i)->mask.u.mask = (switch_acl_egr_field_t)f->mask;
+        ((switch_acl_egr_key_value_pair_t *)fields+i)->mask.u.mask = (switch_acl_egr_field_t)f->mask.value_num;
     }
-    memset(&ap, 0, sizeof(switch_acl_action_params_t));
-    ap.mirror.mirror_handle = action_params.mirror.mirror_handle;
-    switch_api_acl_rule_create(device, acl_handle, priority, key_value_count, fields, (switch_acl_action_t)action, &ap, &handle);
+
+    oap.mirror_handle = opt_action_params.mirror_handle;
+    oap.meter_handle = opt_action_params.meter_handle;
+    oap.counter_handle = opt_action_params.counter_handle;
+
+    switch_api_acl_rule_create(device, acl_handle, priority, key_value_count, fields, (switch_acl_action_t)action, &ap, &oap, &handle);
     free(fields);
     return handle;
     }
@@ -874,67 +1126,164 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   }
 
   switcht_status_t switcht_api_acl_remove(const switcht_device_t device, const switcht_handle_t acl_handle, const switcht_handle_t interface_handle) {
-    // Your implementation goes here
     printf("switcht_api_acl_remove\n");
     return switch_api_acl_remove(device, acl_handle, interface_handle);
   }
 
+  switcht_handle_t switcht_api_acl_counter_create(
+          const switcht_device_t device) {
+    printf("switcht_api_acl_counter_create\n");
+    return switch_api_acl_counter_create(device);
+  }
+
+  switcht_status_t switcht_api_acl_counter_delete(
+          const switcht_device_t device,
+          const switcht_handle_t counter_handle) {
+    printf("switcht_api_acl_counter_delete\n");
+    return switch_api_acl_counter_delete(device, counter_handle);
+  }
+
+  void switcht_api_acl_stats_get(
+          switcht_counter_t& _counter,
+          const switcht_device_t device,
+          const switcht_handle_t counter_handle) {
+    printf("switcht_api_acl_stats_get\n");
+    switch_counter_t counter;
+    memset(&counter, 0, sizeof(switch_counter_t));
+    switch_api_acl_stats_get(
+                   device,
+                   (switch_handle_t) counter_handle,
+                   &counter);
+
+    _counter.num_packets = counter.num_packets;
+    _counter.num_bytes = counter.num_bytes;
+    return;
+  }
+
   switcht_handle_t switcht_api_multicast_tree_create(const switcht_device_t device) {
-    // Your implementation goes here
     printf("switcht_api_multicast_tree_create\n");
     return switch_api_multicast_tree_create(device);
   }
 
   switcht_status_t switcht_api_multicast_tree_delete(const switcht_device_t device, const switcht_handle_t mgid_handle) {
-    // Your implementation goes here
     printf("switcht_api_multicast_tree_delete\n");
     return switch_api_multicast_tree_delete(device, mgid_handle);
   }
 
-  switcht_status_t switcht_api_multicast_member_add(const switcht_device_t device, const switcht_handle_t mgid_handle, const switcht_handle_t tenant_bd_handle, const int32_t intf_handle_count, const std::vector<switcht_handle_t> & interface_handle) {
-    // Your implementation goes here
+  switcht_status_t switcht_api_multicast_member_add(const switcht_device_t device, const switcht_handle_t mgid_handle, const std::vector<switcht_vlan_interface_t> & mbrs) {
     printf("switcht_api_multicast_member_add\n");
     switch_status_t status=0;
-    std::vector<switcht_handle_t>::const_iterator it = interface_handle.begin();
+    std::vector<switcht_vlan_interface_t>::const_iterator it = mbrs.begin();
 
-    switch_handle_t *interface_list = (switch_handle_t *) malloc(sizeof(switch_handle_t) * interface_handle.size());
-    for(uint32_t i = 0; i < interface_handle.size(); i++, it++) {
-        interface_list[i] = (switch_handle_t) *it;
+    switch_vlan_interface_t *mbr_list = (switch_vlan_interface_t *) malloc(sizeof(switch_vlan_interface_t) * mbrs.size());
+    for(uint32_t i = 0; i < mbrs.size(); i++, it++) {
+        mbr_list[i].vlan_handle =  ((switcht_vlan_interface_t)*it).vlan_handle;
+        mbr_list[i].intf_handle =  ((switcht_vlan_interface_t)*it).intf_handle;
     }
-    status = switch_api_multicast_member_add(device, mgid_handle, tenant_bd_handle,
-                                         intf_handle_count, interface_list);
-    free(interface_list);
+    status = switch_api_multicast_member_add(device, mgid_handle,
+                                             mbrs.size(), mbr_list);
+    free(mbr_list);
     return status;
   }
 
-  switcht_status_t switcht_api_multicast_member_delete(const switcht_device_t device, const switcht_handle_t mgid_handle, const switcht_handle_t tenant_bd_handle, const int32_t intf_handle_count, const std::vector<switcht_handle_t> & interface_handle) {
-    // Your implementation goes here
+  switcht_status_t switcht_api_multicast_member_delete(const switcht_device_t device, const switcht_handle_t mgid_handle, const std::vector<switcht_vlan_interface_t> & mbrs) {
     printf("switcht_api_multicast_member_delete\n");
     switch_status_t status=0;
-    std::vector<switcht_handle_t>::const_iterator it = interface_handle.begin();
+    std::vector<switcht_vlan_interface_t>::const_iterator it = mbrs.begin();
 
-    switch_handle_t *interface_list = (switch_handle_t *) malloc(sizeof(switch_handle_t) * interface_handle.size());
-    for(uint32_t i = 0; i < interface_handle.size(); i++, it++) {
-        interface_list[i] = (switch_handle_t) *it;
+    switch_vlan_interface_t *mbr_list = (switch_vlan_interface_t *) malloc(sizeof(switch_vlan_interface_t) * mbrs.size());
+    for(uint32_t i = 0; i < mbrs.size(); i++, it++) {
+        mbr_list[i].vlan_handle =  ((switcht_vlan_interface_t)*it).vlan_handle;
+        mbr_list[i].intf_handle =  ((switcht_vlan_interface_t)*it).intf_handle;
     }
-    status = switch_api_multicast_member_delete(device, mgid_handle, tenant_bd_handle,
-                                         intf_handle_count, interface_list);
-    free(interface_list);
+    status = switch_api_multicast_member_delete(device, mgid_handle,
+                                                mbrs.size(), mbr_list);
+    free(mbr_list);
     return status;
+  }
+
+  switcht_status_t switcht_api_multicast_mroute_add(const switcht_device_t device, const switcht_handle_t mgid_handle, const switcht_handle_t vrf_handle, const switcht_ip_addr_t& src_ip, const switcht_ip_addr_t& grp_ip, const switcht_mcast_mode_t mc_mode, const std::vector<switcht_handle_t> & rpf_bd_list, const int32_t rpf_bd_count) {
+    printf("switcht_api_multicast_mroute_add\n");
+    switch_status_t status=0;
+    std::vector<switcht_handle_t>::const_iterator it = rpf_bd_list.begin();
+
+    switch_ip_addr_t src_ip_addr;
+    switch_ip_addr_t grp_ip_addr;
+    switch_parse_ip_address(src_ip, &src_ip_addr);
+    switch_parse_ip_address(grp_ip, &grp_ip_addr);
+
+    switch_handle_t *rpf_list = (switch_handle_t *) malloc(sizeof(switch_handle_t) * rpf_bd_list.size());
+    for(uint32_t i = 0; i < rpf_bd_list.size(); i++, it++) {
+        rpf_list[i] = (switch_handle_t) *it;
+    }
+    status = switch_api_multicast_mroute_add(device, mgid_handle, vrf_handle,
+                                         &src_ip_addr, &grp_ip_addr,
+                                         (switch_mcast_mode_t) mc_mode,
+                                         rpf_list, rpf_bd_count);
+    free(rpf_list);
+    return status;
+  }
+
+  switcht_status_t switcht_api_multicast_mroute_delete(const switcht_device_t device, const switcht_handle_t vrf_handle, const switcht_ip_addr_t& src_ip, const switcht_ip_addr_t& grp_ip) {
+    printf("switcht_api_multicast_mroute_delete\n");
+    switch_status_t status=0;
+
+    switch_ip_addr_t src_ip_addr;
+    switch_ip_addr_t grp_ip_addr;
+    switch_parse_ip_address(src_ip, &src_ip_addr);
+    switch_parse_ip_address(grp_ip, &grp_ip_addr);
+
+    status = switch_api_multicast_mroute_delete(device, vrf_handle,
+                                         &src_ip_addr, &grp_ip_addr);
+    return status;
+  }
+
+  switcht_status_t switcht_api_multicast_l2route_add(const switcht_device_t device, const switcht_handle_t mgid_handle, const switcht_handle_t bd_handle, const switcht_ip_addr_t& src_ip, const switcht_ip_addr_t& grp_ip) {
+    printf("switcht_api_multicast_l2route_add\n");
+    switch_ip_addr_t src_ip_addr;
+    switch_ip_addr_t grp_ip_addr;
+    switch_parse_ip_address(src_ip, &src_ip_addr);
+    switch_parse_ip_address(grp_ip, &grp_ip_addr);
+    return switch_api_multicast_l2route_add(device, mgid_handle, bd_handle,
+                                            &src_ip_addr, &grp_ip_addr);
+  }
+
+  switcht_status_t switcht_api_multicast_l2route_delete(const switcht_device_t device, const switcht_handle_t bd_handle, const switcht_ip_addr_t& src_ip, const switcht_ip_addr_t& grp_ip) {
+    printf("switcht_api_multicast_l2route_delete\n");
+    switch_ip_addr_t src_ip_addr;
+    switch_ip_addr_t grp_ip_addr;
+    switch_parse_ip_address(src_ip, &src_ip_addr);
+    switch_parse_ip_address(grp_ip, &grp_ip_addr);
+    return switch_api_multicast_l2route_delete(device, bd_handle,
+                                               &src_ip_addr, &grp_ip_addr);
   }
 
   switcht_status_t switcht_api_vlan_learning_enabled_set(const switcht_handle_t vlan_handle, const int64_t value) {
-    printf("switcht_api_set_vlan_learning_enabled\n");
+    printf("switcht_api_vlan_learning_enabled_set\n");
     return (switch_api_vlan_learning_enabled_set(vlan_handle, value));
   }
 
+  switcht_status_t switcht_api_vlan_igmp_snooping_enabled_set(const switcht_handle_t vlan_handle, const int64_t value) {
+    printf("switcht_api_vlan_igmp_snooping_enabled_set\n");
+    return (switch_api_vlan_igmp_snooping_enabled_set(vlan_handle, value));
+  }
+
+  switcht_status_t switcht_api_vlan_mld_snooping_enabled_set(const switcht_handle_t vlan_handle, const int64_t value) {
+    printf("switcht_api_vlan_mld_snooping_enabled_set\n");
+    return (switch_api_vlan_mld_snooping_enabled_set(vlan_handle, value));
+  }
+
+  switcht_status_t switcht_api_vlan_mrpf_group_set(const switcht_handle_t vlan_handle, const int64_t value) {
+    printf("switcht_api_vlan_mrpf_group_set\n");
+    return (switch_api_vlan_mrpf_group_set(vlan_handle, value));
+  }
+
   switcht_status_t switcht_api_vlan_learning_enabled_get(const switcht_handle_t vlan_handle, const int64_t value) {
-    printf("switcht_api_get_vlan_learning_enabled\n");
+    printf("switcht_api_vlan_learning_enabled_get\n");
     return (switch_api_vlan_learning_enabled_get(vlan_handle, (uint64_t *)&value));
   }
 
  switcht_handle_t switcht_api_mirror_session_create(const switcht_device_t device, const switcht_mirror_info_t& api_mirror_info) {
-    // Your implementation goes here
     printf("switcht_api_mirror_session_create\n");
     switch_api_mirror_info_t lapi_mirror_info;
     memset(&lapi_mirror_info, 0, sizeof(switch_api_mirror_info_t));
@@ -946,11 +1295,12 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     lapi_mirror_info.direction = (switch_direction_t) api_mirror_info.direction;
     lapi_mirror_info.session_id = api_mirror_info.session_id;
     lapi_mirror_info.nhop_handle = api_mirror_info.nhop_handle;
+    lapi_mirror_info.extract_len = api_mirror_info.extract_len;
+    lapi_mirror_info.timeout_usec = api_mirror_info.timeout_usec;
     return switch_api_mirror_session_create(device, &lapi_mirror_info);
   }
 
  switcht_status_t switcht_api_mirror_session_update(const switcht_device_t device, const switcht_handle_t mirror_handle, const switcht_mirror_info_t& api_mirror_info) {
-    // Your implementation goes here
     printf("switcht_api_mirror_session_update\n");
     switch_api_mirror_info_t lapi_mirror_info;
     memset(&lapi_mirror_info, 0, sizeof(switch_api_mirror_info_t));
@@ -963,30 +1313,63 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     lapi_mirror_info.session_id = api_mirror_info.session_id;
     lapi_mirror_info.nhop_handle = api_mirror_info.nhop_handle;
     lapi_mirror_info.enable = api_mirror_info.enable;
+    lapi_mirror_info.extract_len = api_mirror_info.extract_len;
+    lapi_mirror_info.timeout_usec = api_mirror_info.timeout_usec;
     return switch_api_mirror_session_update(device, mirror_handle, &lapi_mirror_info);
   }
 
   switcht_status_t switcht_api_mirror_session_delete(const switcht_device_t device, const switcht_handle_t mirror_handle) {
-    // Your implementation goes here
     printf("switcht_mirror_session_delete\n");
     return switch_api_mirror_session_delete(device, mirror_handle);
   }
 
   switcht_status_t switcht_int_transit_enable(const switcht_device_t device, const int32_t switch_id, const int32_t enable) {
-    // Your implementation goes here
     printf("switcht_api_int_transit_enable/disable = %d\n", enable);
     return switch_int_transit_enable(device, switch_id, enable);
   }
 
+  switcht_status_t switcht_int_src_enable(const switcht_device_t device, const int32_t switch_id, const switcht_ip_addr_t& src_ip, const switcht_ip_addr_t& dst_ip, const int16_t max_hop, const int16_t ins_mask) {
+    printf("switcht_int_src_enable\n");
+    switch_ip_addr_t src;
+    switch_ip_addr_t dst;
+    switch_parse_ip_address(src_ip, &src);
+    switch_parse_ip_address(dst_ip, &dst);
+    return switch_int_src_enable(device, switch_id, &src, &dst, max_hop, ins_mask);
+  }
+
+  switcht_status_t switcht_int_src_disable(const switcht_device_t device, const switcht_ip_addr_t& src_ip, const switcht_ip_addr_t& dst_ip) {
+    printf("switcht_int_src_disable\n");
+    switch_ip_addr_t src;
+    switch_ip_addr_t dst;
+    switch_parse_ip_address(src_ip, &src);
+    switch_parse_ip_address(dst_ip, &dst);
+    return switch_int_src_disable(device, &src, &dst);
+  }
+
+  switcht_status_t switcht_int_sink_enable(const switcht_device_t device, const switcht_ip_addr_t& dst_ip, const int32_t mirror_id) {
+    printf("switcht_int_sink_enable\n");
+    switch_ip_addr_t dst;
+    switch_parse_ip_address(dst_ip, &dst);
+    return switch_int_sink_enable(device, &dst, mirror_id);
+  }
+
+  switcht_status_t switcht_int_sink_disable(const switcht_device_t device, const switcht_ip_addr_t& dst_ip) {
+    printf("switcht_int_sink_disable\n");
+    switch_ip_addr_t dst;
+    switch_parse_ip_address(dst_ip, &dst);
+    return switch_int_sink_disable(device, &dst);
+  }
+  switcht_status_t switcht_api_set_deflect_on_drop (const switcht_device_t device, const bool enable_dod) {
+    printf("switcht_set_dod\n");
+    return switch_api_set_deflect_on_drop(device, enable_dod);
+  }
 
   switcht_status_t switcht_api_mac_table_set_learning_timeout(const switcht_device_t device, const int32_t timeout) {
-    // Your implementation goes here
     printf("switcht_api_mac_table_set_learning_timeout\n");
     return (switch_api_mac_table_set_learning_timeout(device, timeout));
   }
 
   switcht_status_t switcht_api_mac_table_aging_time_set(const int64_t value) {
-    // Your implementation goes here
     printf("switcht_api_mac_table_aging_time_set\n");
     return switch_api_mac_table_aging_time_set(value);
   }
@@ -997,7 +1380,6 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   }
 
   switcht_status_t switcht_api_mpls_tunnel_transit_create(const switcht_device_t device, const switcht_mpls_encap_t& mpls_encap) {
-    // Your implementation goes here
     printf("switch_api_mpls_tunnel_transit_create\n");
     switch_mpls_encap_t lmpls_encap;
     memset(&lmpls_encap, 0, sizeof(switch_mpls_encap_t));
@@ -1037,7 +1419,6 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   }
 
   switcht_status_t switcht_api_mpls_tunnel_transit_delete(const switcht_device_t device, const switcht_mpls_encap_t& mpls_encap) {
-    // Your implementation goes here
     printf("switch_api_mpls_tunnel_transit_delete\n");
     switch_mpls_encap_t lmpls_encap;
     memset(&lmpls_encap, 0, sizeof(switch_mpls_encap_t));
@@ -1077,7 +1458,6 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   }
 
   switcht_handle_t switcht_api_hostif_group_create(const switcht_device_t device, const switcht_hostif_group_t& hostif_group) {
-    // Your implementation goes here
     printf("switcht_api_hostif_group_create\n");
     switch_hostif_group_t lhostif_group;
     lhostif_group.egress_queue = hostif_group.egress_queue;
@@ -1086,13 +1466,11 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   }
 
   switcht_status_t switcht_api_hostif_group_delete(const switcht_device_t device, const switcht_handle_t hostif_group_handle) {
-    // Your implementation goes here
     printf("switcht_api_hostif_group_delete\n");
     return switch_api_hostif_group_delete(device, hostif_group_handle);
   }
 
   switcht_status_t switcht_api_hostif_reason_code_create(const switcht_device_t device, const switcht_api_hostif_rcode_info_t& rcode_api_info) {
-    // Your implementation goes here
     printf("switcht_api_hostif_reason_code_create\n");
     switch_api_hostif_rcode_info_t lrcode_api_info;
     lrcode_api_info.reason_code = (switch_hostif_reason_code_t) rcode_api_info.reason_code;
@@ -1104,13 +1482,11 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   }
 
   switcht_status_t switcht_api_hostif_reason_code_delete(const switcht_device_t device, const switcht_hostif_reason_code_t reason_code) {
-    // Your implementation goes here
     printf("switcht_api_hostif_reason_code_delete\n");
     return switch_api_hostif_reason_code_delete(device, (switch_hostif_reason_code_t) reason_code);
   }
 
   switcht_handle_t switcht_api_hostif_create(const switcht_device_t device, const switcht_hostif_t& hostif) {
-    // Your implementation goes here
     printf("switcht_api_hostif_create\n");
     switch_hostif_t lhostif;
     lhostif.handle = hostif.handle;
@@ -1119,10 +1495,81 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   }
 
   switcht_status_t switcht_api_hostif_delete(const switcht_device_t device, const switcht_handle_t hostif_handle) {
-    // Your implementation goes here
     printf("switcht_api_hostif_delete\n");
     return switch_api_hostif_delete(device, hostif_handle);
   }
+
+  switcht_handle_t switcht_api_meter_create(
+          const switcht_device_t device,
+          const switcht_api_meter_info_t& api_meter_info) {
+    printf("switcht_api_meter_create\n");
+    switch_api_meter_t api_meter;
+    memset(&api_meter, 0, sizeof(switch_api_meter_t));
+    api_meter.meter_mode = (switch_meter_mode_t) api_meter_info.meter_mode;
+    api_meter.color_source = (switch_meter_color_source_t) api_meter_info.color_source;
+    api_meter.meter_type = (switch_meter_type_t) api_meter_info.meter_type;
+    api_meter.cbs = api_meter_info.cbs;
+    api_meter.pbs = api_meter_info.pbs;
+    api_meter.cir = api_meter_info.cir;
+    api_meter.pir = api_meter_info.pir;
+    api_meter.action[SWITCH_METER_COLOR_GREEN] = (switch_acl_action_t) api_meter_info.green_action;
+    api_meter.action[SWITCH_METER_COLOR_YELLOW] = (switch_acl_action_t) api_meter_info.yellow_action;
+    api_meter.action[SWITCH_METER_COLOR_RED] = (switch_acl_action_t) api_meter_info.red_action;
+    return switch_api_meter_create(device, &api_meter);
+  }
+
+  switcht_status_t switcht_api_meter_update(
+          const switcht_device_t device,
+          const switcht_handle_t meter_handle,
+          const switcht_api_meter_info_t& api_meter_info) {
+    printf("switcht_api_meter_update\n");
+    switch_api_meter_t api_meter;
+    memset(&api_meter, 0, sizeof(switch_api_meter_t));
+    api_meter.meter_mode = (switch_meter_mode_t) api_meter_info.meter_mode;
+    api_meter.color_source = (switch_meter_color_source_t) api_meter_info.color_source;
+    api_meter.meter_type = (switch_meter_type_t) api_meter_info.meter_type;
+    api_meter.cbs = api_meter_info.cbs;
+    api_meter.pbs = api_meter_info.pbs;
+    api_meter.cir = api_meter_info.cir;
+    api_meter.pir = api_meter_info.pir;
+    api_meter.action[SWITCH_METER_COLOR_GREEN] = (switch_acl_action_t) api_meter_info.green_action;
+    api_meter.action[SWITCH_METER_COLOR_YELLOW] = (switch_acl_action_t) api_meter_info.yellow_action;
+    api_meter.action[SWITCH_METER_COLOR_RED] = (switch_acl_action_t) api_meter_info.red_action;
+    return switch_api_meter_update(device, meter_handle, &api_meter);
+  }
+
+  switcht_status_t switcht_api_meter_delete(
+          const switcht_device_t device,
+          const switcht_handle_t meter_handle) {
+    printf("switcht_api_meter_delete\n");
+    return switch_api_meter_delete(device, meter_handle);
+  }
+
+  void switcht_api_meter_stats_get(
+          std::vector<switcht_counter_t> & _counters,
+          const switcht_device_t device,
+          const switcht_handle_t meter_handle,
+          const std::vector<int16_t> & counter_ids) {
+    printf("switcht_api_meter_stats_get\n");
+    std::vector<int16_t>::const_iterator it = counter_ids.begin();
+    switcht_counter_t _counter;
+    switch_meter_stats_t *counter_id_list = (switch_meter_stats_t *) malloc(sizeof(switch_meter_stats_t) * counter_ids.size());
+    switch_counter_t *counters = (switch_counter_t *) malloc(sizeof(switch_counter_t) * counter_ids.size());
+    for(uint32_t i = 0; i < counter_ids.size(); i++, it++) {
+        counter_id_list[i] = (switch_meter_stats_t) *it;
+    }
+    printf("\nnumber of counterids %d\n", (int)(counter_ids.size()));
+    switch_api_meter_stats_get(device, meter_handle, counter_ids.size(), counter_id_list, counters);
+    for (uint32_t i = 0; i < counter_ids.size(); i++) {
+        _counter.num_packets = counters[i].num_packets;
+        _counter.num_bytes = counters[i].num_bytes;
+        _counters.push_back(_counter);
+    }
+    free(counter_id_list);
+    free(counters);
+    return;
+  }
+
 };
 
 static void *api_rpc_server_thread(void *args) {
@@ -1149,6 +1596,10 @@ extern "C" {
                         SWITCH_API_RPC_SERVER_PORT << std::endl;
 
                 return pthread_create(&api_rpc_thread, NULL, api_rpc_server_thread, NULL);
+        }
+        int start_switch_api_rpc_server0(char *)
+        {
+            return start_switch_api_rpc_server();
         }
 }
 

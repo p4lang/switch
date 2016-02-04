@@ -1,0 +1,1095 @@
+{
+    "module_name"           :      "acl",
+    "attributes"            : [
+    {
+        "attributes_desc"          :      "table",
+        "attribute_list": [
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_STAGE",
+                "mandatory"     :     "true",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_PRIORITY",
+                "mandatory"     :     "true",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "range",
+                "range_min"     :     "SAI_SWITCH_ATTR_ACL_TABLE_MINIMUM_PRIORITY",
+                "range_max"     :     "SAI_SWITCH_ATTR_ACL_TABLE_MAXIMUM_PRIORITY"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_SIZE",
+                "mandatory"     :     "true",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u32",
+                "default"       :     "0"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_GROUP_ID",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid"
+            }
+        ]
+    },
+    {
+        "attributes_desc"           :      "table_fields",
+        "match_one"                 :      "true",
+        "attribute_list": [
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_SRC_IPv6",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_DST_IPv6",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_SRC_MAC",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_DST_MAC",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_SRC_IP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_DST_IP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_IN_PORTS",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_OUT_PORTS",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_IN_PORT",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_OUT_PORT",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_OUTER_VLAN_ID",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_OUTER_VLAN_PRI",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_OUTER_VLAN_CFI",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_INNER_VLAN_ID",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_INNER_VLAN_PRI",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_INNER_VLAN_CFI",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_L4_SRC_PORT",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_L4_DST_PORT",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_ETHER_TYPE",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_IP_PROTOCOL",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_DSCP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_ECN",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_TTL",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_TOS",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_IP_FLAGS",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_TCP_FLAGS",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_IP_TYPE",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_IP_FRAG",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_IPv6_FLOW_LABEL",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_TC",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_FDB_DST_USER_META",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_ROUTE_DST_USER_META",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_NEIGHBOR_DST_USER_META",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_PORT_USER_META",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_VLAN_USER_META",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_ACL_USER_META",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_FDB_DST_NPU_META_HIT",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_TABLE_ATTR_FIELD_NEIGHBOR_DST_NPU_META_HIT",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            }
+        ]
+    },
+    {
+        "attributes_desc"           :      "entry",
+        "attribute_list": [
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_TABLE_ID",
+                "mandatory"     :     "true",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "oid"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_PRIORITY",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "range",
+                "range_min"     :     "SAI_SWITCH_ATTR_ACL_ENTRY_MINIMUM_PRIORITY",
+                "range_max"     :     "SAI_SWITCH_ATTR_ACL_ENTRY_MAXIMUM_PRIORITY",
+                "default"       :     "SAI_SWITCH_ATTR_ACL_ENTRY_MINIMUM_PRIORITY"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_ADMIN_STATE",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool",
+                "default"       :     "true"
+            }
+        ]
+    },
+    {
+        "attributes_desc"           :      "entry_fields",
+        "match_one"                 :      "true",
+        "attribute_list": [
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_SRC_IPv6",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "ipv6_address"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_DST_IPv6",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "ipv6_address"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_SRC_MAC",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "mac"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_DST_MAC",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "mac"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_SRC_IP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "ipv4_address"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_DST_IP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "ipv4_address"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_IN_PORTS",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid_list"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_OUT_PORTS",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid_list"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_IN_PORT",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_OUT_PORT",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_OUTER_VLAN_ID",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u16"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_OUTER_VLAN_PRI",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_OUTER_VLAN_CFI",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_INNER_VLAN_ID",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u16"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_INNER_VLAN_PRI",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_INNER_VLAN_CFI",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_L4_SRC_PORT",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u16"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_L4_DST_PORT",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u16"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_ETHER_TYPE",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u16"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_IP_PROTOCOL",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_DSCP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_ECN",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_TTL",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_TOS",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_IP_FLAGS",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_TCP_FLAGS",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_IP_TYPE",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_IP_FRAG",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_IPv6_FLOW_LABEL",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u32"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_TC",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_FDB_DST_USER_META",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "range",
+                "range_query"   :     "SAI_ACL_ENTRY_ATTR_FIELD_FDB_DST_USER_META"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_ROUTE_DST_USER_META",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "range",
+                "range_query"   :     "SAI_ACL_ENTRY_ATTR_FIELD_ROUTE_DST_USER_META"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_NEIGHBOR_USER_META",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "range",
+                "range_query"   :     "SAI_ACL_ENTRY_ATTR_FIELD_NEIGHBOR_USER_META"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_PORT_USER_META",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "range",
+                "range_query"   :     "SAI_ACL_ENTRY_ATTR_FIELD_PORT_USER_META"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_VLAN_USER_META",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "range",
+                "range_query"   :     "SAI_ACL_ENTRY_ATTR_FIELD_VLAN_USER_META"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_ACL_USER_META",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "range",
+                "range_query"   :     "SAI_ACL_ENTRY_ATTR_FIELD_ACL_USER_META"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_FDB_NPU_META_DST_HIT",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_FIELD_NEIGHBOR_NPU_META_DST_HIT",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            }
+        ]
+    },
+    {
+        "attributes_desc"           :      "acl_action",
+        "attribute_list": [
+            {
+        
+                "name"          :     "SAI_ACL_ENTRY_ATTR_ACTION_REDIRECT",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_PACKET_ACTION",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_ACTION_FLOOD",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "none"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_ACTION_COUNTER",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_ACTION_MIRROR_INGRESS",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_ACTION_MIRROR_EGRESS",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_ACTION_SET_POLICER",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_ACTION_DECREMENT_TTL",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "none"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_ACTION_SET_TC",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_ACTION_SET_COLOR",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_ACTION_SET_INNER_VLAN_ID",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u16"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_ACTION_SET_INNER_VLAN_PRI",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u16"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_ACTION_SET_OUTER_VLAN_ID",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u16"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_ACTION_SET_OUTER_VLAN_PRI",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u16"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_ACTION_SET_SRC_MAC",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "mac"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_ACTION_SET_DST_MAC",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "mac"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_ACTION_SET_SRC_IP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "ipv4_address"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_ACTION_SET_DST_IP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "ipv4_address"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_ACTION_SET_SRC_IPv6",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "ipv6_address"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_ACTION_SET_DST_IPv6",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "ipv6_address"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_ACTION_SET_DSCP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_ACTION_SET_ECN",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_ACTION_SET_L4_SRC_PORT",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u16"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_ACTION_SET_L4_DST_PORT",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u16"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_ACTION_INGRESS_SAMPLEPACKET_ENABLE",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_ACTION_EGRESS_SAMPLEPACKET_ENABLE",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_ACTION_SET_CPU_QUEUE",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid"
+            },
+            {
+                "name"          :     "SAI_ACL_ENTRY_ATTR_ACTION_SET_ACL_META_DATA",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u32"
+            }
+        ]
+    },
+    {
+        "attributes_desc"           :      "counters",
+        "attribute_list": [
+            {
+                "name"          :     "SAI_ACL_COUNTER_ATTR_TABLE_ID",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "oid"
+            },
+            {
+                "name"          :     "SAI_ACL_COUNTER_ATTR_ENABLE_PACKET_COUNT",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_COUNTER_ATTR_ENABLE_BYTE_COUNT",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_ACL_COUNTER_ATTR_PACKETS",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u64"
+            },
+            {
+                "name"          :     "SAI_ACL_COUNTER_ATTR_BYTES",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u64"
+            }
+        ]
+    }
+    ]
+}

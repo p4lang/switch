@@ -136,7 +136,7 @@ sai_status_t sai_ipv6_prefix_length(
     return SAI_STATUS_SUCCESS;
 }
 
-sai_status_t sai_ip_prefix_to_switch_ip_prefix(
+sai_status_t sai_ip_prefix_to_switch_ip_addr(
         const _In_ sai_ip_prefix_t *sai_ip_addr,
         _Out_ switch_ip_addr_t *ip_addr) {
     if (sai_ip_addr->addr_family == SAI_IP_ADDR_FAMILY_IPV4) {
@@ -208,37 +208,73 @@ sai_status_t sai_ipaddress_to_string(
 sai_status_t sai_ipprefix_to_string(
         _In_ sai_ip_prefix_t ip_prefix,
         _In_ uint32_t max_length,
-        _Out_ char *entry_string)
+        _Out_ char *entry_string,
+        _Out_ int *entry_length)
 {
+    int len = 0;
     uint32_t pos = 0;
-    int entry_length = 0;
 
     if (ip_prefix.addr_family == SAI_IP_ADDR_FAMILY_IPV4) {
-        sai_ipv4_to_string(ip_prefix.addr.ip4, max_length, entry_string, &entry_length);
-        pos += entry_length;
+        sai_ipv4_to_string(ip_prefix.addr.ip4, max_length, entry_string, &len);
+        pos += len;
         if (pos > max_length) {
+            *entry_length = max_length;
             return SAI_STATUS_SUCCESS;
         }
         pos += snprintf(entry_string + pos, max_length - pos, "/");
         if (pos > max_length) {
+            *entry_length = max_length;
             return SAI_STATUS_SUCCESS;
         }
-        sai_ipv4_to_string(ip_prefix.mask.ip4, max_length - pos, entry_string + pos, &entry_length);
+        sai_ipv4_to_string(ip_prefix.mask.ip4, max_length - pos,
+                           entry_string + pos, &len);
+        pos += len;
+        if (pos > max_length) {
+            *entry_length = max_length;
+            return SAI_STATUS_SUCCESS;
+        }
     } else if (ip_prefix.addr_family == SAI_IP_ADDR_FAMILY_IPV6) {
-        sai_ipv6_to_string(ip_prefix.addr.ip6, max_length, entry_string, &entry_length);
-        pos += entry_length;
+        sai_ipv6_to_string(ip_prefix.addr.ip6, max_length, entry_string, &len);
+        pos += len;
         if (pos > max_length) {
+            *entry_length = max_length;
             return SAI_STATUS_SUCCESS;
         }
         pos += snprintf(entry_string + pos, max_length - pos, "/");
         if (pos > max_length) {
+            *entry_length = max_length;
             return SAI_STATUS_SUCCESS;
         }
-        sai_ipv6_to_string(ip_prefix.mask.ip6, max_length - pos, entry_string + pos, &entry_length);
+        sai_ipv6_to_string(ip_prefix.mask.ip6, max_length - pos,
+                           entry_string + pos, &len);
+        pos += len;
+        if (pos > max_length) {
+            *entry_length = max_length;
+            return SAI_STATUS_SUCCESS;
+        }
     } else {
-        snprintf(entry_string, max_length, "Invalid addr family %d", ip_prefix.addr_family);
+        snprintf(entry_string, max_length, "Invalid addr family %d",
+                 ip_prefix.addr_family);
         return SAI_STATUS_INVALID_PARAMETER;
     }
 
+    *entry_length = pos;
     return SAI_STATUS_SUCCESS;
+}
+
+switch_acl_action_t
+sai_packet_action_to_switch_packet_action(
+        _In_ sai_packet_action_t action)  {
+    switch (action) {
+        case SAI_PACKET_ACTION_DROP:
+            return SWITCH_ACL_ACTION_DROP;
+        case SAI_PACKET_ACTION_FORWARD:
+            return SWITCH_ACL_ACTION_PERMIT;
+        case SAI_PACKET_ACTION_TRAP:
+            return SWITCH_ACL_ACTION_REDIRECT_TO_CPU;
+        case SAI_PACKET_ACTION_LOG:
+            return SWITCH_ACL_ACTION_LOG;
+        default:
+            return SWITCH_ACL_ACTION_NOP;
+    }
 }

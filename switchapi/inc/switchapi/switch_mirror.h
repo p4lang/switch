@@ -78,6 +78,10 @@ typedef struct switch_api_mirror_info_ {
     uint32_t timeout_usec;
 } switch_api_mirror_info_t;
 
+/*
+ * MAX mirroring sessions supported
+ */
+#define SWITCH_MAX_MIRROR_SESSIONS 1024
 /**
 * ID for cpu mirror session
 */

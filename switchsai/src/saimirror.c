@@ -165,12 +165,14 @@ sai_status_t sai_create_mirror_session(
 sai_status_t sai_remove_mirror_session(
         _In_ sai_object_id_t session_id) {
     sai_status_t status = SAI_STATUS_SUCCESS;
+    switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
 
     SAI_LOG_ENTER();
 
     SAI_ASSERT(sai_object_type_query(session_id) == SAI_OBJECT_TYPE_MIRROR);
 
-    status = switch_api_mirror_session_delete(device, session_id);
+    switch_status = switch_api_mirror_session_delete(device, session_id);
+    status = sai_switch_status_to_sai_status(switch_status);
     if (status != SAI_STATUS_SUCCESS) {
         SAI_LOG_ERROR("failed to remove mirror session %lx: %s",
                       session_id,

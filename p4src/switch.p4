@@ -36,7 +36,6 @@ header_type ingress_metadata_t {
         drop_flag : 1;                         /* if set, drop the packet */
         drop_reason : 8;                       /* drop reason */
         control_frame: 1;                      /* control frame */
-        enable_dod : 1;                        /* enable deflect on drop */
     }
 }
 
@@ -55,13 +54,22 @@ header_type egress_metadata_t {
     }
 }
 
-#ifdef OPENFLOW_ENABLE
-  #include "openflow.p4"
-#endif /* OPENFLOW_ENABLE */
-
 metadata ingress_metadata_t ingress_metadata;
 metadata egress_metadata_t egress_metadata;
 
+/* Global config information */
+header_type global_config_metadata_t {
+    fields {
+        enable_dod : 1;                        /* Enable Deflection-on-Drop */
+        /* Add more global parameters such as switch_id.. */
+    }
+}
+metadata global_config_metadata_t global_config_metadata;
+
+#include "switch_config.p4"
+#ifdef OPENFLOW_ENABLE
+#include "openflow.p4"
+#endif /* OPENFLOW_ENABLE */
 #include "port.p4"
 #include "l2.p4"
 #include "l3.p4"
@@ -78,6 +86,7 @@ metadata egress_metadata_t egress_metadata;
 #include "mirror.p4"
 #include "int_transit.p4"
 #include "hashes.p4"
+#include "meter.p4"
 
 action nop() {
 }
@@ -86,17 +95,16 @@ action on_miss() {
 }
 
 control ingress {
-
     /* input mapping - derive an ifindex */
     process_ingress_port_mapping();
 
     /* process outer packet headers */
     process_validate_outer_header();
 
-    if (ingress_metadata.port_type == PORT_TYPE_NORMAL) {
+    /* read and apply system confuration parametes */
+    process_global_params();
 
-        /* storm control */
-        process_storm_control();
+    if (ingress_metadata.port_type == PORT_TYPE_NORMAL) {
 
         /* derive bd */
         process_port_vlan_mapping();
@@ -112,6 +120,9 @@ control ingress {
 
         /* tunnel termination processing */
         process_tunnel();
+
+        /* storm control */
+        process_storm_control();
 
 #ifndef TUNNEL_DISABLE
         if ((not valid(mpls[0])) or
@@ -134,7 +145,10 @@ control ingress {
             process_qos();
 
             apply(rmac) {
-                rmac_hit {
+                rmac_miss {
+                    process_multicast();
+                }
+                default {
                     if ((l3_metadata.lkp_ip_type == IPTYPE_IPV4) and
                         (ipv4_metadata.ipv4_unicast_enabled == TRUE)) {
                         /* router ACL/PBR */
@@ -160,6 +174,7 @@ control ingress {
         }
 #endif /* TUNNEL_DISABLE */
     } else {
+
 #ifdef OPENFLOW_ENABLE
         apply(packet_out) {
             nop {
@@ -172,13 +187,18 @@ control ingress {
 #endif /* OPENFLOW_ENABLE */
     }
 
+    process_meter_index();
+
     /* compute hashes based on packet type */
     process_hashes();
 
+    process_meter_action();
+
     if (ingress_metadata.port_type == PORT_TYPE_NORMAL) {
-		/* update statistics */
+        /* update statistics */
         process_ingress_bd_stats();
         process_ingress_acl_stats();
+        process_storm_control_stats();
 
         /* decide final forwarding choice */
         process_fwd_results();
@@ -225,7 +245,6 @@ control egress {
 
             /* check if pkt is mirrored */
             if (pkt_is_mirrored) {
-
                 /* set the nexthop for the mirror id */
                 apply(mirror);
             } else {
@@ -245,24 +264,30 @@ control egress {
                     /* perform tunnel decap */
                     process_tunnel_decap();
 
-                    /* egress bd properties */
-                    process_egress_bd();
 
                     /* apply nexthop_index based packet rewrites */
                     process_rewrite();
 
-                    /* INT processing */
-                    process_int_insertion();
+                    /* egress bd properties */
+                    process_egress_bd();
 
                     /* rewrite source/destination mac if needed */
                     process_mac_rewrite();
+
+                    /* egress mtu checks */
+                    process_mtu();
+
+                    /* INT processing */
+                    process_int_insertion();
+
+                    process_egress_bd_stats();
                 }
             }
     
             /* perform tunnel encap */
             process_tunnel_encap();
 
-            /* update underlay headers based on INT information inserted */
+            /* update underlay header based on INT information inserted */
             process_int_outer_encap();
 
             if (egress_metadata.port_type == PORT_TYPE_NORMAL) {

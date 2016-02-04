@@ -79,7 +79,7 @@ interface_create(switchlink_db_interface_info_t *intf)
         }
 
         status = switchlink_interface_create(intf, &(intf->intf_h));
-        if (status != SWITCHLINK_DB_STATUS_SUCCESS) {
+        if (status != 0) {
             NL_LOG_ERROR(("newlink: switchlink_interface_create failed\n"));
             return;
         }
@@ -164,6 +164,10 @@ interface_change_type(uint32_t ifindex, switchlink_intf_type_t type) {
         return;
     }
 
+    if (type == ifinfo.intf_type) {
+        return;
+    }
+
     interface_delete(&ifinfo);
     if (type == SWITCHLINK_INTF_TYPE_L3) {
         memset(&intf, 0, sizeof(switchlink_db_interface_info_t));
@@ -171,10 +175,51 @@ interface_change_type(uint32_t ifindex, switchlink_intf_type_t type) {
         intf.ifindex = ifinfo.ifindex;
         intf.intf_type = SWITCHLINK_INTF_TYPE_L3;
         intf.vrf_h = ifinfo.vrf_h;
+        intf.flags.ipv4_unicast_enabled = true;
+        intf.flags.ipv6_unicast_enabled = true;
+        intf.flags.ipv4_multicast_enabled = false;
+        intf.flags.ipv6_multicast_enabled = false;
+        intf.flags.ipv4_urpf_mode = SWITCHLINK_URPF_MODE_NONE;
+        intf.flags.ipv6_urpf_mode = SWITCHLINK_URPF_MODE_NONE;
         memcpy(&(intf.mac_addr), &ifinfo.mac_addr,
                sizeof(switchlink_mac_addr_t));
         interface_create(&intf);
     }
+}
+
+void
+interface_create_l3vi(uint32_t ifindex) {
+    switchlink_db_bridge_info_t bridge_db_info;
+    switchlink_db_interface_info_t intf_info;
+    switchlink_db_status_t status;
+
+    status = switchlink_db_bridge_get_info(ifindex, &bridge_db_info);
+    assert(status == SWITCHLINK_DB_STATUS_SUCCESS);
+
+    memset(&intf_info, 0, sizeof(intf_info));
+    intf_info.ifindex = ifindex;
+    intf_info.stp_h = bridge_db_info.stp_h;
+    intf_info.stp_state = SWITCHLINK_STP_STATE_NONE;
+    intf_info.bridge_h = bridge_db_info.bridge_h;
+    intf_info.vrf_h = g_default_vrf_h;
+    intf_info.intf_type = SWITCHLINK_INTF_TYPE_L3VI;
+    intf_info.link_type = SWITCHLINK_LINK_TYPE_BRIDGE;
+    intf_info.flags.ipv4_unicast_enabled = true;
+    intf_info.flags.ipv6_unicast_enabled = true;
+    intf_info.flags.ipv4_multicast_enabled = false;
+    intf_info.flags.ipv6_multicast_enabled = false;
+    intf_info.flags.ipv4_urpf_mode = SWITCHLINK_URPF_MODE_NONE;
+    intf_info.flags.ipv6_urpf_mode = SWITCHLINK_URPF_MODE_NONE;
+    memcpy(&(intf_info.mac_addr), &(bridge_db_info.mac_addr),
+           sizeof(switchlink_mac_addr_t));
+
+    status = switchlink_interface_create(&intf_info, &(intf_info.intf_h));
+    if (status != 0) {
+        NL_LOG_ERROR(("newlink: switchlink_interface_create failed\n"));
+        return;
+    }
+    // add the mapping to the db
+    switchlink_db_interface_add(intf_info.ifindex, &intf_info);
 }
 
 static switchlink_handle_t
@@ -185,6 +230,7 @@ bridge_create(uint32_t ifindex, switchlink_mac_addr_t *mac_addr) {
     status = switchlink_db_bridge_get_info(ifindex, &bridge_db_info);
     if (status == SWITCHLINK_DB_STATUS_ITEM_NOT_FOUND) {
         memset(&bridge_db_info, 0, sizeof(switchlink_db_bridge_info_t));
+        bridge_db_info.vrf_h = g_default_vrf_h;
         switchlink_bridge_create(&bridge_db_info);
         switchlink_db_bridge_add(ifindex, &bridge_db_info);
     } else {
@@ -327,7 +373,8 @@ process_link_msg(struct nlmsghdr *nlmsg, int type) {
                 nla_for_each_nested(nest_attr, attr, attrlen) {
                     switch(nla_type(nest_attr)) {
                         case IFLA_BRPORT_STATE:
-                            stp_state = convert_stp_state(nla_get_u8(nest_attr));
+                            stp_state =
+                                convert_stp_state(nla_get_u8(nest_attr));
                             break;
                         default:
                             break;
@@ -346,8 +393,8 @@ process_link_msg(struct nlmsghdr *nlmsg, int type) {
     if (type == RTM_NEWLINK) {
         switch (link_type) {
             case SWITCHLINK_LINK_TYPE_BRIDGE:
-                bridge_create(ifmsg->ifi_index, (mac_addr_valid ?
-                                                 &(intf_info.mac_addr) : NULL));
+                bridge_create(ifmsg->ifi_index,
+                              (mac_addr_valid ?  &(intf_info.mac_addr) : NULL));
                 break;
             case SWITCHLINK_LINK_TYPE_ETH:
             case SWITCHLINK_LINK_TYPE_BOND:
@@ -421,6 +468,7 @@ switchlink_link_init() {
     // create default bridge
     switchlink_db_bridge_info_t bridge_db_info;
     memset(&bridge_db_info, 0, sizeof(switchlink_db_bridge_info_t));
+    bridge_db_info.vrf_h = g_default_vrf_h;
     switchlink_bridge_create(&bridge_db_info);
     g_default_bridge_h = bridge_db_info.bridge_h;
     g_default_stp_h = bridge_db_info.stp_h;

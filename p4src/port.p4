@@ -18,7 +18,6 @@ limitations under the License.
  * Input processing - port and packet related
  */
 
-
 /*****************************************************************************/
 /* Validate outer packet header                                              */
 /*****************************************************************************/
@@ -211,26 +210,41 @@ control process_ingress_port_mapping {
 /*****************************************************************************/
 /* Ingress port-vlan mapping lookup                                          */
 /*****************************************************************************/
-action set_bd(bd, vrf, rmac_group,
-        ipv4_unicast_enabled, ipv6_unicast_enabled,
-        ipv4_urpf_mode, ipv6_urpf_mode,
-        igmp_snooping_enabled, mld_snooping_enabled,
-        bd_label, stp_group, stats_idx, learning_enabled) {
+action set_bd_properties(bd, vrf, stp_group, learning_enabled,
+                         bd_label, stats_idx, rmac_group,
+                         ipv4_unicast_enabled, ipv6_unicast_enabled,
+                         ipv4_urpf_mode, ipv6_urpf_mode,
+                         igmp_snooping_enabled, mld_snooping_enabled,
+                         ipv4_multicast_enabled, ipv6_multicast_enabled,
+                         mrpf_group,
+                         ipv4_mcast_key, ipv4_mcast_key_type,
+                         ipv6_mcast_key, ipv6_mcast_key_type) {
+    modify_field(ingress_metadata.bd, bd);
+    modify_field(ingress_metadata.outer_bd, bd);
+    modify_field(acl_metadata.bd_label, bd_label);
+    modify_field(l2_metadata.stp_group, stp_group);
+    modify_field(l2_metadata.bd_stats_idx, stats_idx);
+    modify_field(l2_metadata.learning_enabled, learning_enabled);
+
     modify_field(l3_metadata.vrf, vrf);
     modify_field(ipv4_metadata.ipv4_unicast_enabled, ipv4_unicast_enabled);
     modify_field(ipv6_metadata.ipv6_unicast_enabled, ipv6_unicast_enabled);
     modify_field(ipv4_metadata.ipv4_urpf_mode, ipv4_urpf_mode);
     modify_field(ipv6_metadata.ipv6_urpf_mode, ipv6_urpf_mode);
     modify_field(l3_metadata.rmac_group, rmac_group);
-    modify_field(acl_metadata.bd_label, bd_label);
-    modify_field(ingress_metadata.bd, bd);
-    modify_field(ingress_metadata.outer_bd, bd);
-    modify_field(l2_metadata.stp_group, stp_group);
-    modify_field(l2_metadata.bd_stats_idx, stats_idx);
-    modify_field(l2_metadata.learning_enabled, learning_enabled);
 
-    modify_field(multicast_metadata.igmp_snooping_enabled, igmp_snooping_enabled);
+    modify_field(multicast_metadata.igmp_snooping_enabled,
+                 igmp_snooping_enabled);
     modify_field(multicast_metadata.mld_snooping_enabled, mld_snooping_enabled);
+    modify_field(multicast_metadata.ipv4_multicast_enabled,
+                 ipv4_multicast_enabled);
+    modify_field(multicast_metadata.ipv6_multicast_enabled,
+                 ipv6_multicast_enabled);
+    modify_field(multicast_metadata.bd_mrpf_group, mrpf_group);
+    modify_field(multicast_metadata.ipv4_mcast_key_type, ipv4_mcast_key_type);
+    modify_field(multicast_metadata.ipv4_mcast_key, ipv4_mcast_key);
+    modify_field(multicast_metadata.ipv6_mcast_key_type, ipv6_mcast_key_type);
+    modify_field(multicast_metadata.ipv6_mcast_key, ipv6_mcast_key);
 }
 
 action port_vlan_mapping_miss() {
@@ -239,7 +253,7 @@ action port_vlan_mapping_miss() {
 
 action_profile bd_action_profile {
     actions {
-        set_bd;
+        set_bd_properties;
         port_vlan_mapping_miss;
     }
     size : BD_TABLE_SIZE;

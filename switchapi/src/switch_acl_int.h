@@ -40,6 +40,7 @@ typedef struct switch_acl_rule_ {
     switch_acl_action_t action;
     unsigned int action_param_size;
     switch_acl_action_params_t action_params;
+    switch_acl_opt_action_params_t opt_action_params;
 } switch_acl_rule_t;
 
 switch_status_t switch_acl_init(switch_device_t device);

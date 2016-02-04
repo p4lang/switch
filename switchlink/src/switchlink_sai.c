@@ -26,6 +26,7 @@ limitations under the License.
 #include "switchlink_neigh.h"
 #include "switchlink_packet.h"
 #include "switchlink_db.h"
+#include <linux/if_ether.h>
 
 extern void sai_initialize();
 extern sai_status_t sai_create_hostif_trap(sai_hostif_trap_id_t hostif_trapid,
@@ -42,7 +43,10 @@ static sai_neighbor_api_t               *neigh_api = NULL;
 static sai_next_hop_api_t               *nhop_api = NULL;
 static sai_next_hop_group_api_t         *nhop_group_api = NULL;
 static sai_route_api_t                  *route_api = NULL;
+static sai_ipmc_api_t                   *ipmc_api = NULL;
+static sai_l2mc_api_t                   *l2mc_api = NULL;
 static sai_hostif_api_t                 *host_intf_api = NULL;
+static sai_acl_api_t                    *acl_api = NULL;
 static sai_object_id_t                  *s_port_list = NULL;
 static sai_object_id_t                   s_cpu_port;
 static uint16_t                          s_max_ports = 0;
@@ -69,6 +73,22 @@ ipv6_prefix_len_to_mask(uint32_t prefix_len) {
         prefix_len -= 32;
     }
     return mask;
+}
+
+static sai_urpf_mode_t
+switchlink_to_sai_urpf_mode(switchlink_urpf_mode_t switchlink_urpf_mode) {
+    switch (switchlink_urpf_mode) {
+        case SWITCHLINK_URPF_MODE_NONE:
+            return SAI_URPF_MODE_NONE;
+            break;
+        case SWITCHLINK_URPF_MODE_STRICT:
+            return SAI_URPF_MODE_STRICT;
+            break;
+        case SWITCHLINK_URPF_MODE_LOOSE:
+            return SAI_URPF_MODE_LOOSE;
+            break;
+    }
+    return SWITCHLINK_URPF_MODE_NONE;
 }
 
 static void
@@ -119,6 +139,33 @@ port_handle_to_port_id(switchlink_handle_t port_h, uint16_t *port_id) {
 }
 
 static void
+on_fdb_event(uint32_t count, sai_fdb_event_notification_data_t *data) {
+    switchlink_mac_addr_t mac_addr;
+    switchlink_handle_t bridge_h;
+    switchlink_handle_t intf_h;
+    bool create = false;
+
+    memcpy(mac_addr, data->fdb_entry.mac_address, ETH_ALEN);
+    bridge_h = data->fdb_entry.vlan_id;
+    intf_h = 0;
+
+    if (data->event_type == SAI_FDB_EVENT_LEARNED) {
+        for(int i = 0; i < data->attr_count; i++) {
+            if (data->attr[i].id == SAI_FDB_ENTRY_ATTR_PORT_ID) {
+                intf_h = data->attr[i].value.oid;
+                break;
+            }
+        }
+        assert(intf_h != 0);
+        create = true;
+    } else if ((data->event_type == SAI_FDB_EVENT_AGED) ||
+               (data->event_type == SAI_FDB_EVENT_FLUSHED)) {
+        create = false;
+    }
+    switchlink_linux_mac_update(mac_addr, bridge_h, intf_h, create);
+}
+
+static void
 on_packet_event(const void *buf, sai_size_t buf_size, uint32_t attr_count,
                 const sai_attribute_t *attr_list) {
     int ret;
@@ -147,16 +194,22 @@ on_packet_event(const void *buf, sai_size_t buf_size, uint32_t attr_count,
 }
 
 static void
-init_packet_handler() {
+register_sai_notifications() {
     sai_switch_notification_t switch_notifications;
     sai_status_t status = SAI_STATUS_SUCCESS;
-    sai_attribute_t attr_list[3];
 
     memset(&switch_notifications, 0, sizeof(switch_notifications));
+    switch_notifications.on_fdb_event = on_fdb_event;
     switch_notifications.on_packet_event = on_packet_event;
     status = switch_api->initialize_switch(0, NULL, NULL,
                                            &switch_notifications);
     assert(status == SAI_STATUS_SUCCESS);
+}
+
+static void
+register_sai_traps() {
+    sai_attribute_t attr_list[3];
+    sai_status_t status = SAI_STATUS_SUCCESS;
 
     // STP, redirect to CPU
     memset(attr_list, 0, sizeof(attr_list));
@@ -178,6 +231,76 @@ init_packet_handler() {
     attr_list[2].id = SAI_HOSTIF_TRAP_ATTR_TRAP_CHANNEL;
     attr_list[2].value.u32 = SAI_HOSTIF_TRAP_CHANNEL_CB;
     status = sai_create_hostif_trap(SAI_HOSTIF_TRAP_ID_OSPF, 3, attr_list);
+    assert(status == SAI_STATUS_SUCCESS);
+
+    // IPv6 ND, copy to CPU
+    memset(attr_list, 0, sizeof(attr_list));
+    attr_list[0].id = SAI_HOSTIF_TRAP_ATTR_PACKET_ACTION;
+    attr_list[0].value.u32 = SAI_PACKET_ACTION_LOG;
+    attr_list[1].id = SAI_HOSTIF_TRAP_ATTR_TRAP_PRIORITY;
+    attr_list[1].value.u32 = 102;
+    attr_list[2].id = SAI_HOSTIF_TRAP_ATTR_TRAP_CHANNEL;
+    attr_list[2].value.u32 = SAI_HOSTIF_TRAP_CHANNEL_CB;
+    status = sai_create_hostif_trap(SAI_HOSTIF_TRAP_ID_IPV6_NEIGHBOR_DISCOVERY,
+                                    3, attr_list);
+    assert(status == SAI_STATUS_SUCCESS);
+
+    // OSPFv3, copy to CPU
+    memset(attr_list, 0, sizeof(attr_list));
+    attr_list[0].id = SAI_HOSTIF_TRAP_ATTR_PACKET_ACTION;
+    attr_list[0].value.u32 = SAI_PACKET_ACTION_LOG;
+    attr_list[1].id = SAI_HOSTIF_TRAP_ATTR_TRAP_PRIORITY;
+    attr_list[1].value.u32 = 103;
+    attr_list[2].id = SAI_HOSTIF_TRAP_ATTR_TRAP_CHANNEL;
+    attr_list[2].value.u32 = SAI_HOSTIF_TRAP_CHANNEL_CB;
+    status = sai_create_hostif_trap(SAI_HOSTIF_TRAP_ID_OSPFV6, 3, attr_list);
+    assert(status == SAI_STATUS_SUCCESS);
+
+    // ARP request, copy to CPU
+    memset(attr_list, 0, sizeof(attr_list));
+    attr_list[0].id = SAI_HOSTIF_TRAP_ATTR_PACKET_ACTION;
+    attr_list[0].value.u32 = SAI_PACKET_ACTION_LOG;
+    attr_list[1].id = SAI_HOSTIF_TRAP_ATTR_TRAP_PRIORITY;
+    attr_list[1].value.u32 = 104;
+    attr_list[2].id = SAI_HOSTIF_TRAP_ATTR_TRAP_CHANNEL;
+    attr_list[2].value.u32 = SAI_HOSTIF_TRAP_CHANNEL_CB;
+    status = sai_create_hostif_trap(SAI_HOSTIF_TRAP_ID_ARP_REQUEST, 3,
+                                    attr_list);
+    assert(status == SAI_STATUS_SUCCESS);
+
+    // ARP response, redirect to CPU
+    memset(attr_list, 0, sizeof(attr_list));
+    attr_list[0].id = SAI_HOSTIF_TRAP_ATTR_PACKET_ACTION;
+    attr_list[0].value.u32 = SAI_PACKET_ACTION_TRAP;
+    attr_list[1].id = SAI_HOSTIF_TRAP_ATTR_TRAP_PRIORITY;
+    attr_list[1].value.u32 = 105;
+    attr_list[2].id = SAI_HOSTIF_TRAP_ATTR_TRAP_CHANNEL;
+    attr_list[2].value.u32 = SAI_HOSTIF_TRAP_CHANNEL_CB;
+    status = sai_create_hostif_trap(SAI_HOSTIF_TRAP_ID_ARP_RESPONSE, 3,
+                                    attr_list);
+    assert(status == SAI_STATUS_SUCCESS);
+
+    // PIM, copy to CPU
+    memset(attr_list, 0, sizeof(attr_list));
+    attr_list[0].id = SAI_HOSTIF_TRAP_ATTR_PACKET_ACTION;
+    attr_list[0].value.u32 = SAI_PACKET_ACTION_LOG;
+    attr_list[1].id = SAI_HOSTIF_TRAP_ATTR_TRAP_PRIORITY;
+    attr_list[1].value.u32 = 106;
+    attr_list[2].id = SAI_HOSTIF_TRAP_ATTR_TRAP_CHANNEL;
+    attr_list[2].value.u32 = SAI_HOSTIF_TRAP_CHANNEL_CB;
+    status = sai_create_hostif_trap(SAI_HOSTIF_TRAP_ID_PIM, 3, attr_list);
+    assert(status == SAI_STATUS_SUCCESS);
+
+    // IGMPv2 report, copy to CPU
+    memset(attr_list, 0, sizeof(attr_list));
+    attr_list[0].id = SAI_HOSTIF_TRAP_ATTR_PACKET_ACTION;
+    attr_list[0].value.u32 = SAI_PACKET_ACTION_LOG;
+    attr_list[1].id = SAI_HOSTIF_TRAP_ATTR_TRAP_PRIORITY;
+    attr_list[1].value.u32 = 106;
+    attr_list[2].id = SAI_HOSTIF_TRAP_ATTR_TRAP_CHANNEL;
+    attr_list[2].value.u32 = SAI_HOSTIF_TRAP_CHANNEL_CB;
+    status = sai_create_hostif_trap(SAI_HOSTIF_TRAP_ID_IGMP_TYPE_V2_REPORT, 3,
+                                    attr_list);
     assert(status == SAI_STATUS_SUCCESS);
 }
 
@@ -204,22 +327,134 @@ switchlink_interface_create(switchlink_db_interface_info_t *intf,
     if (intf->intf_type == SWITCHLINK_INTF_TYPE_L2_ACCESS) {
         *intf_h = get_port_object(intf->port_id);
     } else if (intf->intf_type == SWITCHLINK_INTF_TYPE_L3) {
-        sai_attribute_t attr_list[6];
+        sai_attribute_t attr_list[10];
+        int ac = 0;
         memset(attr_list, 0, sizeof(attr_list));
-        attr_list[0].id = SAI_ROUTER_INTERFACE_ATTR_VIRTUAL_ROUTER_ID;
-        attr_list[0].value.oid = intf->vrf_h;
-        attr_list[1].id = SAI_ROUTER_INTERFACE_ATTR_TYPE;
-        attr_list[1].value.u8 = SAI_ROUTER_INTERFACE_TYPE_PORT;
-        attr_list[2].id = SAI_ROUTER_INTERFACE_ATTR_PORT_ID;
-        attr_list[2].value.oid = get_port_object(intf->port_id);
-        attr_list[3].id = SAI_ROUTER_INTERFACE_ATTR_ADMIN_V4_STATE;
-        attr_list[3].value.booldata = true;
-        attr_list[4].id = SAI_ROUTER_INTERFACE_ATTR_ADMIN_V6_STATE;
-        attr_list[4].value.booldata = true;
-        attr_list[5].id = SAI_ROUTER_INTERFACE_ATTR_SRC_MAC_ADDRESS;
-        memcpy(attr_list[5].value.mac, intf->mac_addr, sizeof(sai_mac_t));
-        status = rintf_api->create_router_interface(intf_h, 6, attr_list);
+        attr_list[ac].id = SAI_ROUTER_INTERFACE_ATTR_VIRTUAL_ROUTER_ID;
+        attr_list[ac].value.oid = intf->vrf_h;
+        ac++;
+        attr_list[ac].id = SAI_ROUTER_INTERFACE_ATTR_TYPE;
+        attr_list[ac].value.u8 = SAI_ROUTER_INTERFACE_TYPE_PORT;
+        ac++;
+        attr_list[ac].id = SAI_ROUTER_INTERFACE_ATTR_PORT_ID;
+        attr_list[ac].value.oid = get_port_object(intf->port_id);
+        ac++;
+        attr_list[ac].id = SAI_ROUTER_INTERFACE_ATTR_ADMIN_V4_STATE;
+        attr_list[ac].value.booldata = intf->flags.ipv4_unicast_enabled;
+        ac++;
+        attr_list[ac].id = SAI_ROUTER_INTERFACE_ATTR_ADMIN_V6_STATE;
+        attr_list[ac].value.booldata = intf->flags.ipv6_unicast_enabled;
+        ac++;
+        attr_list[ac].id = SAI_ROUTER_INTERFACE_ATTR_SRC_MAC_ADDRESS;
+        memcpy(attr_list[ac].value.mac, intf->mac_addr, sizeof(sai_mac_t));
+        ac++;
+        attr_list[ac].id = SAI_ROUTER_INTERFACE_ATTR_ADMIN_V4_MULTICAST_STATE;
+        attr_list[ac].value.booldata = intf->flags.ipv4_multicast_enabled;
+        ac++;
+        attr_list[ac].id = SAI_ROUTER_INTERFACE_ATTR_ADMIN_V6_MULTICAST_STATE;
+        attr_list[ac].value.booldata = intf->flags.ipv6_multicast_enabled;
+        ac++;
+        attr_list[ac].id = SAI_ROUTER_INTERFACE_ATTR_V4_URPF_MODE;
+        attr_list[ac].value.u8 =
+            switchlink_to_sai_urpf_mode(intf->flags.ipv4_urpf_mode);
+        ac++;
+        attr_list[ac].id = SAI_ROUTER_INTERFACE_ATTR_V6_URPF_MODE;
+        attr_list[ac].value.u8 =
+            switchlink_to_sai_urpf_mode(intf->flags.ipv6_urpf_mode);
+        ac++;
+
+        status = rintf_api->create_router_interface(intf_h, ac++, attr_list);
+    } else if (intf->intf_type == SWITCHLINK_INTF_TYPE_L3VI) {
+        sai_attribute_t attr_list[10];
+        int ac = 0;
+        memset(attr_list, 0, sizeof(attr_list));
+        attr_list[ac].id = SAI_ROUTER_INTERFACE_ATTR_VIRTUAL_ROUTER_ID;
+        attr_list[ac].value.oid = intf->vrf_h;
+        ac++;
+        attr_list[ac].id = SAI_ROUTER_INTERFACE_ATTR_TYPE;
+        attr_list[ac].value.u8 = SAI_ROUTER_INTERFACE_TYPE_VLAN;
+        ac++;
+        attr_list[ac].id = SAI_ROUTER_INTERFACE_ATTR_VLAN_ID;
+        attr_list[ac].value.oid = intf->bridge_h;
+        ac++;
+        attr_list[ac].id = SAI_ROUTER_INTERFACE_ATTR_ADMIN_V4_STATE;
+        attr_list[ac].value.booldata = intf->flags.ipv4_unicast_enabled;
+        ac++;
+        attr_list[ac].id = SAI_ROUTER_INTERFACE_ATTR_ADMIN_V6_STATE;
+        attr_list[ac].value.booldata = intf->flags.ipv6_unicast_enabled;
+        ac++;
+        attr_list[ac].id = SAI_ROUTER_INTERFACE_ATTR_SRC_MAC_ADDRESS;
+        memcpy(attr_list[ac].value.mac, intf->mac_addr, sizeof(sai_mac_t));
+        ac++;
+        attr_list[ac].id = SAI_ROUTER_INTERFACE_ATTR_ADMIN_V4_MULTICAST_STATE;
+        attr_list[ac].value.booldata = intf->flags.ipv4_multicast_enabled;
+        ac++;
+        attr_list[ac].id = SAI_ROUTER_INTERFACE_ATTR_ADMIN_V6_MULTICAST_STATE;
+        attr_list[ac].value.booldata = intf->flags.ipv6_multicast_enabled;
+        ac++;
+        attr_list[ac].id = SAI_ROUTER_INTERFACE_ATTR_V4_URPF_MODE;
+        attr_list[ac].value.u8 =
+            switchlink_to_sai_urpf_mode(intf->flags.ipv4_urpf_mode);
+        ac++;
+        attr_list[ac].id = SAI_ROUTER_INTERFACE_ATTR_V6_URPF_MODE;
+        attr_list[ac].value.u8 =
+            switchlink_to_sai_urpf_mode(intf->flags.ipv6_urpf_mode);
+        ac++;
+
+        status = rintf_api->create_router_interface(intf_h, ac++, attr_list);
     }
+    return ((status == SAI_STATUS_SUCCESS) ? 0 : -1);
+}
+
+int
+switchlink_interface_forwarding_update(switchlink_handle_t intf_h, int af,
+                                       bool value) {
+    sai_status_t status = SAI_STATUS_SUCCESS;
+    sai_attribute_t attr;
+
+    memset(&attr, 0, sizeof(attr));
+    if (af == AF_INET) {
+        attr.id = SAI_ROUTER_INTERFACE_ATTR_ADMIN_V4_STATE;
+    } else {
+        attr.id = SAI_ROUTER_INTERFACE_ATTR_ADMIN_V6_STATE;
+    }
+    attr.value.booldata = value;
+    status = rintf_api->set_router_interface_attribute(intf_h, &attr);
+
+    return ((status == SAI_STATUS_SUCCESS) ? 0 : -1);
+}
+
+int
+switchlink_interface_mc_forwarding_update(switchlink_handle_t intf_h, int af,
+                                          bool value) {
+    sai_status_t status = SAI_STATUS_SUCCESS;
+
+    sai_attribute_t attr;
+    memset(&attr, 0, sizeof(attr));
+    if (af == AF_INET) {
+        attr.id = SAI_ROUTER_INTERFACE_ATTR_ADMIN_V4_MULTICAST_STATE;
+    } else {
+        attr.id = SAI_ROUTER_INTERFACE_ATTR_ADMIN_V6_MULTICAST_STATE;
+    }
+    attr.value.booldata = value;
+    status = rintf_api->set_router_interface_attribute(intf_h, &attr);
+    return ((status == SAI_STATUS_SUCCESS) ? 0 : -1);
+}
+
+int
+switchlink_interface_urpf_mode_update(switchlink_handle_t intf_h, int af,
+                                      uint8_t value) {
+    sai_status_t status = SAI_STATUS_SUCCESS;
+
+    sai_attribute_t attr;
+    memset(&attr, 0, sizeof(attr));
+    if (af == AF_INET) {
+        attr.id = SAI_ROUTER_INTERFACE_ATTR_V4_URPF_MODE;
+    } else {
+        attr.id = SAI_ROUTER_INTERFACE_ATTR_V6_URPF_MODE;
+    }
+    attr.value.u8 = value;
+    status = rintf_api->set_router_interface_attribute(intf_h, &attr);
     return ((status == SAI_STATUS_SUCCESS) ? 0 : -1);
 }
 
@@ -359,6 +594,25 @@ switchlink_mac_create(switchlink_mac_addr_t mac_addr,
     attr_list[2].value.u8 = SAI_PACKET_ACTION_FORWARD;
 
     status = fdb_api->create_fdb_entry(&fdb_entry, 3, attr_list);
+    return ((status == SAI_STATUS_SUCCESS) ? 0 : -1);
+}
+
+int
+switchlink_mac_update(switchlink_mac_addr_t mac_addr,
+                      switchlink_handle_t bridge_h,
+                      switchlink_handle_t intf_h) {
+    sai_status_t status = SAI_STATUS_SUCCESS;
+    sai_fdb_entry_t fdb_entry;
+    memset(&fdb_entry, 0, sizeof(fdb_entry));
+    memcpy(fdb_entry.mac_address, mac_addr, sizeof(sai_mac_t));
+    fdb_entry.vlan_id = bridge_h;
+
+    sai_attribute_t attr_list[1];
+    memset(&attr_list, 0, sizeof(attr_list));
+    attr_list[0].id = SAI_FDB_ENTRY_ATTR_PORT_ID;
+    attr_list[0].value.oid = intf_h;
+
+    status = fdb_api->set_fdb_entry_attribute(&fdb_entry, attr_list);
     return ((status == SAI_STATUS_SUCCESS) ? 0 : -1);
 }
 
@@ -525,9 +779,142 @@ switchlink_route_delete(switchlink_db_route_info_t *route_info) {
             htonl(ipv4_prefix_len_to_mask(route_info->ip_addr.prefix_len));
     } else {
         assert(route_info->ip_addr.family == AF_INET6);
+        route_entry.destination.addr_family = SAI_IP_ADDR_FAMILY_IPV6;
+        memcpy(route_entry.destination.addr.ip6,
+               &(route_info->ip_addr.ip.v6addr), sizeof(sai_ip6_t));
+        struct in6_addr mask =
+            ipv6_prefix_len_to_mask(route_info->ip_addr.prefix_len);
+        memcpy(route_entry.destination.mask.ip6, &mask, sizeof(sai_ip6_t));
     }
 
     status = route_api->remove_route(&route_entry);
+    return ((status == SAI_STATUS_SUCCESS) ? 0 : -1);
+}
+
+int
+switchlink_mroute_create(switchlink_db_mroute_info_t *mroute_info) {
+    sai_status_t status = SAI_STATUS_SUCCESS;
+
+    sai_ipmc_entry_t ipmc_entry;
+    memset(&ipmc_entry, 0, sizeof(ipmc_entry));
+    ipmc_entry.vr_id = mroute_info->vrf_h;
+    if (mroute_info->src_ip.family == AF_INET) {
+        ipmc_entry.source.addr_family = SAI_IP_ADDR_FAMILY_IPV4;
+        ipmc_entry.source.addr.ip4 =
+            htonl(mroute_info->src_ip.ip.v4addr.s_addr);
+        ipmc_entry.group.addr_family = SAI_IP_ADDR_FAMILY_IPV4;
+        ipmc_entry.group.addr.ip4 =
+            htonl(mroute_info->dst_ip.ip.v4addr.s_addr);
+        ipmc_entry.group.mask.ip4 =
+            htonl(ipv4_prefix_len_to_mask(mroute_info->dst_ip.prefix_len));
+    } else {
+        ipmc_entry.source.addr_family = SAI_IP_ADDR_FAMILY_IPV6;
+        memcpy(ipmc_entry.source.addr.ip6,
+               &(mroute_info->src_ip.ip.v6addr), sizeof(sai_ip6_t));
+        ipmc_entry.group.addr_family = SAI_IP_ADDR_FAMILY_IPV6;
+        memcpy(ipmc_entry.group.addr.ip6,
+               &(mroute_info->dst_ip.ip.v6addr), sizeof(sai_ip6_t));
+        struct in6_addr mask =
+            ipv6_prefix_len_to_mask(mroute_info->dst_ip.prefix_len);
+        memcpy(ipmc_entry.group.mask.ip6, &mask, sizeof(sai_ip6_t));
+    }
+
+    switchlink_db_status_t db_status;
+    switchlink_db_oifl_info_t oifl_info;
+    db_status = switchlink_db_oifl_handle_get_info(mroute_info->oifl_h,
+                                                   &oifl_info);
+    assert(db_status == SWITCHLINK_DB_STATUS_SUCCESS);
+
+    sai_attribute_t attr_list[2];
+    memset(attr_list, 0, sizeof(attr_list));
+    attr_list[0].id = SAI_IPMC_ATTR_OUTPUT_ROUTER_INTERFACE_LIST;
+    attr_list[0].value.objlist.count = oifl_info.num_intfs;
+    attr_list[0].value.objlist.list = oifl_info.intfs;
+    attr_list[1].id = SAI_IPMC_ATTR_RPF_ROUTER_INTERFACE_LIST;
+    attr_list[1].value.objlist.count = 1;
+    attr_list[1].value.objlist.list = (sai_object_id_t *)&(mroute_info->iif_h);
+
+    status = ipmc_api->create_ipmc_entry(&ipmc_entry, 2, attr_list);
+    return ((status == SAI_STATUS_SUCCESS) ? 0 : -1);
+}
+
+int
+switchlink_mroute_delete(switchlink_db_mroute_info_t *mroute_info) {
+    sai_status_t status = SAI_STATUS_SUCCESS;
+
+    sai_ipmc_entry_t ipmc_entry;
+    memset(&ipmc_entry, 0, sizeof(ipmc_entry));
+    ipmc_entry.vr_id = mroute_info->vrf_h;
+    if (mroute_info->src_ip.family == AF_INET) {
+        ipmc_entry.source.addr_family = SAI_IP_ADDR_FAMILY_IPV4;
+        ipmc_entry.source.addr.ip4 =
+            htonl(mroute_info->src_ip.ip.v4addr.s_addr);
+        ipmc_entry.group.addr_family = SAI_IP_ADDR_FAMILY_IPV4;
+        ipmc_entry.group.addr.ip4 =
+            htonl(mroute_info->dst_ip.ip.v4addr.s_addr);
+        ipmc_entry.group.mask.ip4 =
+            htonl(ipv4_prefix_len_to_mask(mroute_info->dst_ip.prefix_len));
+    } else {
+        ipmc_entry.source.addr_family = SAI_IP_ADDR_FAMILY_IPV6;
+        memcpy(ipmc_entry.source.addr.ip6,
+               &(mroute_info->src_ip.ip.v6addr), sizeof(sai_ip6_t));
+        ipmc_entry.group.addr_family = SAI_IP_ADDR_FAMILY_IPV6;
+        memcpy(ipmc_entry.group.addr.ip6,
+               &(mroute_info->dst_ip.ip.v6addr), sizeof(sai_ip6_t));
+        struct in6_addr mask =
+            ipv6_prefix_len_to_mask(mroute_info->dst_ip.prefix_len);
+        memcpy(ipmc_entry.group.mask.ip6, &mask, sizeof(sai_ip6_t));
+    }
+
+    status = ipmc_api->remove_ipmc_entry(&ipmc_entry);
+    return ((status == SAI_STATUS_SUCCESS) ? 0 : -1);
+}
+
+int
+switchlink_mdb_create(switchlink_db_mdb_info_t *mdb_info) {
+    sai_status_t status = SAI_STATUS_SUCCESS;
+
+    sai_l2mc_entry_t l2mc_entry;
+    memset(&l2mc_entry, 0, sizeof(l2mc_entry));
+    l2mc_entry.vlan_id = mdb_info->bridge_h;
+    if (mdb_info->grp_ip.family == AF_INET) {
+        l2mc_entry.group.addr_family = SAI_IP_ADDR_FAMILY_IPV4;
+        l2mc_entry.group.addr.ip4 =
+            htonl(mdb_info->grp_ip.ip.v4addr.s_addr);
+    } else {
+        l2mc_entry.group.addr_family = SAI_IP_ADDR_FAMILY_IPV6;
+        memcpy(l2mc_entry.group.addr.ip6,
+               &(mdb_info->grp_ip.ip.v6addr), sizeof(sai_ip6_t));
+    }
+
+    sai_attribute_t attr_list[1];
+    memset(attr_list, 0, sizeof(attr_list));
+    attr_list[0].id = SAI_L2MC_ATTR_PORT_LIST;
+    attr_list[0].value.objlist.count = mdb_info->num_intfs;
+    attr_list[0].value.objlist.list = (sai_object_id_t *)(mdb_info->intfs);
+
+    status = l2mc_api->create_l2mc_entry(&l2mc_entry, 1, attr_list);
+    return ((status == SAI_STATUS_SUCCESS) ? 0 : -1);
+}
+
+int
+switchlink_mdb_delete(switchlink_db_mdb_info_t *mdb_info) {
+    sai_status_t status = SAI_STATUS_SUCCESS;
+
+    sai_l2mc_entry_t l2mc_entry;
+    memset(&l2mc_entry, 0, sizeof(l2mc_entry));
+    l2mc_entry.vlan_id = mdb_info->bridge_h;
+    if (mdb_info->grp_ip.family == AF_INET) {
+        l2mc_entry.group.addr_family = SAI_IP_ADDR_FAMILY_IPV4;
+        l2mc_entry.group.addr.ip4 =
+            htonl(mdb_info->grp_ip.ip.v4addr.s_addr);
+    } else {
+        l2mc_entry.group.addr_family = SAI_IP_ADDR_FAMILY_IPV6;
+        memcpy(l2mc_entry.group.addr.ip6,
+               &(mdb_info->grp_ip.ip.v6addr), sizeof(sai_ip6_t));
+    }
+
+    status = l2mc_api->remove_l2mc_entry(&l2mc_entry);
     return ((status == SAI_STATUS_SUCCESS) ? 0 : -1);
 }
 
@@ -544,6 +931,17 @@ switchlink_send_packet(char *buf, uint32_t buf_size, uint16_t port_id) {
 
     status = host_intf_api->send_packet(0, buf, buf_size, 2, attr_list);
     return ((status == SAI_STATUS_SUCCESS) ? 0 : -1);
+}
+
+static sai_status_t
+create_ip_acl(sai_object_id_t *table_id) {
+    sai_status_t status = SAI_STATUS_SUCCESS;
+    sai_attribute_t attr_list[2];
+    memset(attr_list, 0, sizeof(attr_list));
+    attr_list[0].id = SAI_ACL_ENTRY_ATTR_FIELD_SRC_IP;
+    attr_list[1].id = SAI_ACL_ENTRY_ATTR_FIELD_DST_IP;
+    status = acl_api->create_acl_table(table_id, 2, attr_list);
+    return status;
 }
 
 void
@@ -572,9 +970,17 @@ switchlink_api_init() {
     assert(status == SAI_STATUS_SUCCESS);
     status = sai_api_query(SAI_API_ROUTE, (void **)&route_api);
     assert(status == SAI_STATUS_SUCCESS);
+    status = sai_api_query(SAI_API_IPMC, (void **)&ipmc_api);
+    assert(status == SAI_STATUS_SUCCESS);
+    status = sai_api_query(SAI_API_L2MC, (void **)&l2mc_api);
+    assert(status == SAI_STATUS_SUCCESS);
     status = sai_api_query(SAI_API_HOST_INTERFACE, (void **)&host_intf_api);
     assert(status == SAI_STATUS_SUCCESS);
+    status = sai_api_query(SAI_API_ACL, (void **)&acl_api);
+    assert(status == SAI_STATUS_SUCCESS);
 
-    init_packet_handler();
+    register_sai_notifications();
+    register_sai_traps();
+
     get_port_list();
 }

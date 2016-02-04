@@ -87,8 +87,8 @@ typedef struct switch_api_interface_info_ {
     // L3
     bool ipv4_unicast_enabled;                        /**< IPv4 unicast enabled */
     bool ipv6_unicast_enabled;                        /**< IPv6 unicast enabled */
-    uint8_t ipv4_mcast_mode;                          /**< IPv4 multicast mode */
-    uint8_t ipv6_mcast_mode;                          /**< IPV6 multicast mode */
+    bool ipv4_multicast_enabled;                      /**< IPv4 multicast enabled */
+    bool ipv6_multicast_enabled;                      /**< IPV6 multicast menabled */
     switch_urpf_mode_t ipv4_urpf_mode;                /**< IPv4 urpf mode */
     switch_urpf_mode_t ipv6_urpf_mode;                /**< IPv6 urpf mode */
     unsigned char nat_mode;                           /**< nat mode */
@@ -113,7 +113,7 @@ switch_handle_t switch_api_interface_create(switch_device_t device,
  */
 switch_status_t switch_api_interface_delete(switch_device_t device,
                                             switch_handle_t interface_handle);
- 
+
 /**
  Set interface attributes
  @param intf_handle - Handle that uniquely identifies interface
@@ -143,7 +143,7 @@ switch_status_t switch_api_interface_ipv4_unicast_enabled_set(switch_handle_t in
 /**
  Get IPv4 enable interface attribute
  @param intf_handle - Handle that uniquely identifies interface
- @param value - Get V4 routing  on interface
+ @param value - Get V4 routing on interface
 */
 switch_status_t switch_api_interface_ipv4_unicast_enabled_get(switch_handle_t intf_handle, uint64_t *value);
 
@@ -157,9 +157,65 @@ switch_status_t switch_api_interface_ipv6_unicast_enabled_set(switch_handle_t in
 /**
  Get IPv6 enable interface attribute
  @param intf_handle - Handle that uniquely identifies interface
- @param value - Get V4 routing  on interface
+ @param value - Get V4 routing on interface
 */
 switch_status_t switch_api_interface_ipv6_unicast_enabled_get(switch_handle_t intf_handle, uint64_t *value);
+
+/**
+ Set IPv4 multicast enable interface attribute
+ @param intf_handle - Handle that uniquely identifies interface
+ @param value - Enable/Disable V4 multicast routing on interface
+*/
+switch_status_t switch_api_interface_ipv4_multicast_enabled_set(switch_handle_t intf_handle, uint64_t value);
+
+/**
+ Get IPv4 multicast enable interface attribute
+ @param intf_handle - Handle that uniquely identifies interface
+ @param value - Get V4 multicast routing on interface
+*/
+switch_status_t switch_api_interface_ipv4_multicast_enabled_get(switch_handle_t intf_handle, uint64_t *value);
+
+/**
+ Set IPv6 multicast enable interface attribute
+ @param intf_handle - Handle that uniquely identifies interface
+ @param value - Enable/Disable V4 multicast routing on interface
+*/
+switch_status_t switch_api_interface_ipv6_multicast_enabled_set(switch_handle_t intf_handle, uint64_t value);
+
+/**
+ Get IPv6 multicast enable interface attribute
+ @param intf_handle - Handle that uniquely identifies interface
+ @param value - Get V4 multicast routing on interface
+*/
+switch_status_t switch_api_interface_ipv6_multicast_enabled_get(switch_handle_t intf_handle, uint64_t *value);
+
+/**
+ Set IPv4 unicast rpf mode interface attribute
+ @param intf_handle - Handle that uniquely identifies interface
+ @param value - Unicast RPF mode
+*/
+switch_status_t switch_api_interface_ipv4_urpf_mode_set(switch_handle_t intf_handle, uint64_t value);
+
+/**
+ Get IPv4 unicast rpf mode interface attribute
+ @param intf_handle - Handle that uniquely identifies interface
+ @param value - Unicast RPF mode
+*/
+switch_status_t switch_api_interface_ipv4_urpf_mode_get(switch_handle_t intf_handle, uint64_t *value);
+
+/**
+ Set IPv6 unicast rpf mode interface attribute
+ @param intf_handle - Handle that uniquely identifies interface
+ @param value - Unicast RPF mode
+*/
+switch_status_t switch_api_interface_ipv6_urpf_mode_set(switch_handle_t intf_handle, uint64_t value);
+
+/**
+ Get IPv6 unicast rpf mode interface attribute
+ @param intf_handle - Handle that uniquely identifies interface
+ @param value - Unicast RPF mode
+*/
+switch_status_t switch_api_interface_ipv6_urpf_mode_get(switch_handle_t intf_handle, uint64_t *value);
 
 /**
  Set native vlan on interface
@@ -186,6 +242,33 @@ typedef switch_status_t (*switch_l3_interfaces_iterator_fn)(switch_api_interface
  @param iterator_fn Iterator function to be called for every l3 interface
  */
 switch_status_t switch_api_interface_l3_ifs_get(switch_l3_interfaces_iterator_fn iterator_fn);
+
+/**
+ Given an interface handle, get the associated port handle
+ @param intf_handle - Handle that uniquely identifies interface
+ @param port_handle - Port handle associated with the interface
+ */
+switch_status_t
+switch_api_interface_get_port_handle(switch_handle_t intf_handle,
+                                     switch_handle_t *port_handle);
+
+/**
+ Given an L3 interface handle, get the associated vlan handle
+ @param intf_handle - Handle that uniquely identifies interface
+ @param vlan_handle - Vlan handle associated with the interface
+ */
+switch_status_t
+switch_api_interface_get_vlan_handle(switch_handle_t intf_handle,
+                                     switch_handle_t *vlan_handle);
+
+/**
+ Given an interface handle, get its type
+ @param intf_handle - Handle that uniquely identifies interface
+ @param type - Interface type
+ */
+switch_status_t
+switch_api_interface_get_type(switch_handle_t intf_handle,
+                              switch_interface_type_t *type);
 
 /**
  Dump interface table

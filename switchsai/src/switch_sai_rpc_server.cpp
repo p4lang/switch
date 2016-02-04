@@ -137,6 +137,13 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       }
   }
 
+  void sai_thrift_parse_attribute_ids(const std::vector<int32_t> &thrift_attr_id_list, sai_attribute_t *attr_list) {
+      std::vector<int32_t>::const_iterator it = thrift_attr_id_list.begin();
+      for(uint32_t i = 0; i < thrift_attr_id_list.size(); i++, it++) {
+          attr_list[i].id = (int32_t) *it;
+      }
+  }
+
   void sai_thrift_parse_fdb_entry(const sai_thrift_fdb_entry_t &thrift_fdb_entry, sai_fdb_entry_t *fdb_entry) {
       fdb_entry->vlan_id = (sai_vlan_id_t) thrift_fdb_entry.vlan_id;
       sai_thrift_string_to_mac(thrift_fdb_entry.mac_address, fdb_entry->mac_address);
@@ -319,6 +326,27 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
                   }
                   attr_list[i].value.objlist.count = attribute.value.objlist.count;
                   attr_list[i].value.objlist.list = *port_list;
+                  break;
+          }
+      }
+  }
+
+  void sai_thrift_parse_lag_member_attributes(const std::vector<sai_thrift_attribute_t> &thrift_attr_list, sai_attribute_t *attr_list) {
+      std::vector<sai_thrift_attribute_t>::const_iterator it1 = thrift_attr_list.begin();
+      sai_thrift_attribute_t attribute;
+      for(uint32_t i = 0; i < thrift_attr_list.size(); i++, it1++) {
+          attribute = (sai_thrift_attribute_t)*it1;
+          attr_list[i].id = attribute.id;
+          switch (attribute.id) {
+              case SAI_LAG_MEMBER_ATTR_LAG_ID:
+                  attr_list[i].value.oid = attribute.value.oid;
+                  break;
+              case SAI_LAG_MEMBER_ATTR_PORT_ID:
+                  attr_list[i].value.oid = attribute.value.oid;
+                  break;
+              case SAI_LAG_MEMBER_ATTR_EGRESS_DISABLE:
+                  break;
+              case SAI_LAG_MEMBER_ATTR_INGRESS_DISABLE:
                   break;
           }
       }
@@ -545,6 +573,39 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       return status;
   }
 
+  void sai_thrift_get_vlan_stats(
+          std::vector<int64_t> & thrift_counters,
+          const sai_thrift_vlan_id_t vlan_id,
+          const std::vector<sai_thrift_vlan_stat_counter_t> & thrift_counter_ids,
+          const int32_t number_of_counters) {
+      printf("sai_thrift_get_vlan_stats\n");
+      sai_status_t status = SAI_STATUS_SUCCESS;
+      sai_vlan_api_t *vlan_api;
+      status = sai_api_query(SAI_API_VLAN, (void **) &vlan_api);
+      if (status != SAI_STATUS_SUCCESS) {
+          return;
+      }
+      sai_vlan_stat_counter_t *counter_ids = (sai_vlan_stat_counter_t *) malloc(sizeof(sai_vlan_stat_counter_t) * thrift_counter_ids.size());
+      std::vector<int32_t>::const_iterator it = thrift_counter_ids.begin();
+      uint64_t *counters = (uint64_t *) malloc(sizeof(uint64_t) * thrift_counter_ids.size());
+      for(uint32_t i = 0; i < thrift_counter_ids.size(); i++, it++) {
+          counter_ids[i] = (sai_vlan_stat_counter_t) *it;
+      }
+
+      status = vlan_api->get_vlan_stats(
+                             (sai_vlan_id_t) vlan_id,
+                             counter_ids,
+                             number_of_counters,
+                             counters);
+
+      for (uint32_t i = 0; i < thrift_counter_ids.size(); i++) {
+          thrift_counters.push_back(counters[i]);
+      }
+      free(counter_ids);
+      free(counters);
+      return;
+  }
+
   sai_thrift_object_id_t sai_thrift_create_virtual_router(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
     printf("sai_thrift_create_virtual_router\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
@@ -726,24 +787,18 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       return status;
   }
 
-  sai_thrift_object_id_t sai_thrift_create_lag(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
+  sai_thrift_object_id_t sai_thrift_create_lag() {
       printf("sai_thrift_create_lag\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_lag_api_t *lag_api;
-      sai_object_id_t *port_list;
       sai_object_id_t lag_id = 0;
+      sai_attribute_t *attr_list = NULL;
+      uint32_t attr_count = 0;
       status = sai_api_query(SAI_API_LAG, (void **) &lag_api);
       if (status != SAI_STATUS_SUCCESS) {
           return status;
       }
-      sai_attribute_t *attr_list = (sai_attribute_t *) malloc(sizeof(sai_attribute_t) * thrift_attr_list.size());
-      sai_thrift_parse_lag_attributes(thrift_attr_list, attr_list, &port_list);
-      uint32_t attr_count = thrift_attr_list.size();
       status = lag_api->create_lag(&lag_id, attr_count, attr_list);
-      if (port_list) {
-          free(port_list);
-      }
-      free(attr_list);
       return lag_id;
   }
 
@@ -759,37 +814,31 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       return status;
   }
 
-  sai_thrift_status_t sai_thrift_add_ports_to_lag(const sai_thrift_object_id_t lag_id, const std::vector<sai_thrift_object_id_t> & thrift_port_list) {
-      printf("sai_thrift_add_ports_to_lag\n");
+  sai_thrift_object_id_t sai_thrift_create_lag_member(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
+      printf("sai_thrift_create_lag_member\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_lag_api_t *lag_api;
-      sai_object_list_t port_list;
+      sai_object_id_t lag_member_id;
       status = sai_api_query(SAI_API_LAG, (void **) &lag_api);
       if (status != SAI_STATUS_SUCCESS) {
           return status;
       }
-      port_list.list = (sai_object_id_t *) malloc(sizeof(sai_object_id_t) * thrift_port_list.size());
-      sai_thrift_parse_object_id_list(thrift_port_list, port_list.list);
-      port_list.count = thrift_port_list.size();
-      status = lag_api->add_ports_to_lag(lag_id, &port_list);
-      free(port_list.list);
-      return status;
+      sai_attribute_t *attr_list = (sai_attribute_t *) malloc(sizeof(sai_attribute_t) * thrift_attr_list.size());
+      sai_thrift_parse_lag_member_attributes(thrift_attr_list, attr_list);
+      uint32_t attr_count = thrift_attr_list.size();
+      status = lag_api->create_lag_member(&lag_member_id, attr_count, attr_list);
+      return lag_member_id;
   }
 
-  sai_thrift_status_t sai_thrift_remove_ports_from_lag(const sai_thrift_object_id_t lag_id, const std::vector<sai_thrift_object_id_t> & thrift_port_list) {
-      printf("sai_thrift_remove_ports_from_lag\n");
+  sai_thrift_status_t sai_thrift_remove_lag_member(const sai_thrift_object_id_t lag_member_id) {
+      printf("sai_thrift_remove_lag_member\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_lag_api_t *lag_api;
-      sai_object_list_t port_list;
       status = sai_api_query(SAI_API_LAG, (void **) &lag_api);
       if (status != SAI_STATUS_SUCCESS) {
           return status;
       }
-      port_list.list = (sai_object_id_t *) malloc(sizeof(sai_object_id_t) * thrift_port_list.size());
-      sai_thrift_parse_object_id_list(thrift_port_list, port_list.list);
-      port_list.count = thrift_port_list.size();
-      status = lag_api->remove_ports_from_lag(lag_id, &port_list);
-      free(port_list.list);
+      status = lag_api->remove_lag_member(lag_member_id);
       return status;
   }
 
@@ -1102,15 +1151,14 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
                 break;
             case SAI_ACL_ENTRY_ATTR_FIELD_IN_PORTS:
                 {
-                    unsigned int count = attribute.value.aclfield.data.objlist.object_id_list.size();
-                    sai_object_id_t *oid=NULL;
+                    int count = attribute.value.aclfield.data.objlist.object_id_list.size();
+                    sai_object_id_t *oid_list = NULL;
                     std::vector<sai_thrift_object_id_t>::const_iterator it = attribute.value.aclfield.data.objlist.object_id_list.begin();
-                    oid = (sai_object_id_t *)malloc(sizeof(sai_object_id_t)*count);
-                    for(unsigned int j=0;j<count;j++, it++)
-                        *(oid+j) = (sai_object_id_t) *it;
-                    attr_list[i].value.aclfield.data.objlist.list =  oid;
+                    oid_list = (sai_object_id_t *) malloc(sizeof(sai_object_id_t) * count);
+                    for(int j = 0; j < count; j++, it++)
+                        *(oid_list + j) = (sai_object_id_t) *it;
+                    attr_list[i].value.aclfield.data.objlist.list =  oid_list;
                     attr_list[i].value.aclfield.data.objlist.count =  count;
-
                 }
                 break;
             case SAI_ACL_ENTRY_ATTR_FIELD_OUT_PORT:
@@ -1155,9 +1203,75 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
             case SAI_ACL_ENTRY_ATTR_ACTION_MIRROR_EGRESS:
                 attr_list[i].value.aclfield.data.oid = attribute.value.aclfield.data.oid;
                 break;
+            case SAI_ACL_ENTRY_ATTR_ACTION_SET_POLICER:
+                attr_list[i].value.aclfield.data.oid = attribute.value.aclfield.data.oid;
+                break;
+            case SAI_ACL_ENTRY_ATTR_ACTION_COUNTER:
+                attr_list[i].value.aclfield.data.oid = attribute.value.aclfield.data.oid;
+                break;
+            case SAI_ACL_ENTRY_ATTR_PACKET_ACTION:
+                attr_list[i].value.aclfield.data.u8 = attribute.value.aclfield.data.u8;
+                break;
               default:
                 break;
           }
+      }
+  }
+
+  void sai_thrift_convert_to_acl_counter_attributes(
+          const std::vector<sai_thrift_attribute_t> &thrift_attr_list,
+          sai_attribute_t *attr_list) {
+      std::vector<sai_thrift_attribute_t>::const_iterator it = thrift_attr_list.begin();
+      sai_thrift_attribute_t attribute;
+      for(uint32_t i = 0; i < thrift_attr_list.size(); i++, it++) {
+          attribute = (sai_thrift_attribute_t)*it;
+          attr_list[i].id = attribute.id;
+          switch (attribute.id) {
+              case SAI_ACL_COUNTER_ATTR_TABLE_ID:
+                  attr_list[i].value.oid = attribute.value.oid;
+                  break;
+              case SAI_ACL_COUNTER_ATTR_ENABLE_PACKET_COUNT:
+                  attr_list[i].value.booldata = attribute.value.booldata;
+                  break;
+              case SAI_ACL_COUNTER_ATTR_ENABLE_BYTE_COUNT:
+                  attr_list[i].value.booldata = attribute.value.booldata;
+                  break;
+              case SAI_ACL_COUNTER_ATTR_PACKETS:
+                  attr_list[i].value.u64= attribute.value.u64;
+                  break;
+              case SAI_ACL_COUNTER_ATTR_BYTES:
+                  attr_list[i].value.u64= attribute.value.u64;
+                  break;
+          }
+      }
+  }
+
+  void sai_thrift_convert_to_acl_thrift_counter_attributes(
+          sai_attribute_t *attr_list,
+          uint32_t attr_count,
+          std::vector<sai_thrift_attribute_value_t> &thrift_attr_value_list) {
+      sai_attribute_t attribute;
+      sai_thrift_attribute_value_t thrift_attribute_value;
+      for(uint32_t i = 0; i < attr_count; i++) {
+          attribute = attr_list[i];
+          switch (attribute.id) {
+              case SAI_ACL_COUNTER_ATTR_TABLE_ID:
+                  thrift_attribute_value.oid = attribute.value.oid;
+                  break;
+              case SAI_ACL_COUNTER_ATTR_ENABLE_PACKET_COUNT:
+                  thrift_attribute_value.booldata = attribute.value.booldata;
+                  break;
+              case SAI_ACL_COUNTER_ATTR_ENABLE_BYTE_COUNT:
+                  thrift_attribute_value.booldata = attribute.value.booldata;
+                  break;
+              case SAI_ACL_COUNTER_ATTR_PACKETS:
+                  thrift_attribute_value.u64= attribute.value.u64;
+                  break;
+              case SAI_ACL_COUNTER_ATTR_BYTES:
+                  thrift_attribute_value.u64= attribute.value.u64;
+                  break;
+          }
+          thrift_attr_value_list.push_back(thrift_attribute_value);
       }
   }
 
@@ -1215,6 +1329,65 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       }
       status = acl_api->delete_acl_entry(acl_entry);
       return status;
+  }
+
+  sai_thrift_object_id_t sai_thrift_create_acl_counter(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
+      sai_object_id_t acl_counter_id = 0ULL;
+      sai_acl_api_t *acl_api;
+      sai_status_t status = SAI_STATUS_SUCCESS;
+      status = sai_api_query(SAI_API_ACL, (void **) &acl_api);
+      if (status != SAI_STATUS_SUCCESS) {
+          return status;
+      }
+      sai_attribute_t *attr_list = (sai_attribute_t *) malloc(sizeof(sai_attribute_t) * thrift_attr_list.size());
+      sai_thrift_convert_to_acl_counter_attributes(thrift_attr_list, attr_list);
+      uint32_t attr_count = thrift_attr_list.size();
+      status = acl_api->create_acl_counter(&acl_counter_id, attr_count, attr_list);
+      free(attr_list);
+      return acl_counter_id;
+  }
+
+  sai_thrift_status_t sai_thrift_delete_acl_counter(const sai_thrift_object_id_t acl_counter_id) {
+      sai_object_id_t acl_entry = 0ULL;
+      sai_acl_api_t *acl_api;
+      sai_status_t status = SAI_STATUS_SUCCESS;
+      status = sai_api_query(SAI_API_ACL, (void **) &acl_api);
+      if (status != SAI_STATUS_SUCCESS) {
+          return status;
+      }
+      status = acl_api->delete_acl_counter(acl_counter_id);
+      return status;
+  }
+
+  void sai_thrift_get_acl_counter_attribute(
+          std::vector<sai_thrift_attribute_value_t> & thrift_attr_values,
+          const sai_thrift_object_id_t acl_counter_id,
+          const std::vector<int32_t> & thrift_attr_ids) {
+      sai_object_id_t acl_entry = 0ULL;
+      sai_acl_api_t *acl_api;
+      sai_status_t status = SAI_STATUS_SUCCESS;
+      status = sai_api_query(SAI_API_ACL, (void **) &acl_api);
+      if (status != SAI_STATUS_SUCCESS) {
+          return;
+      }
+
+      uint32_t attr_count = thrift_attr_ids.size();
+      sai_attribute_t *attr_list = (sai_attribute_t *) malloc(sizeof(sai_attribute_t) * thrift_attr_ids.size());
+      memset(attr_list, 0x0, sizeof(sizeof(sai_attribute_t) * thrift_attr_ids.size()));
+      sai_thrift_parse_attribute_ids(thrift_attr_ids, attr_list);
+      status = acl_api->get_acl_counter_attribute(
+                             acl_counter_id,
+                             attr_count,
+                             attr_list);
+      if (status != SAI_STATUS_SUCCESS) {
+          return;
+      }
+
+      sai_thrift_convert_to_acl_thrift_counter_attributes(
+                             attr_list,
+                             attr_count,
+                             thrift_attr_values);
+      return;
   }
 
   void sai_thrift_parse_mirror_session_attributes(const std::vector<sai_thrift_attribute_t> &thrift_attr_list, sai_attribute_t *attr_list) {
@@ -1302,6 +1475,109 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       status = mirror_api->remove_mirror_session((sai_object_id_t) session_id);
       return status;
   }
+
+  void sai_thrift_parse_policer_attributes(const std::vector<sai_thrift_attribute_t> &thrift_attr_list, sai_attribute_t *attr_list) {
+      std::vector<sai_thrift_attribute_t>::const_iterator it = thrift_attr_list.begin();
+      sai_thrift_attribute_t attribute;
+      for(uint32_t i = 0; i < thrift_attr_list.size(); i++, it++) {
+          attribute = (sai_thrift_attribute_t)*it;
+          attr_list[i].id = attribute.id;
+          switch (attribute.id) {
+              case SAI_POLICER_ATTR_METER_TYPE:
+                  attr_list[i].value.u8 = attribute.value.u8;
+                  break;
+              case SAI_POLICER_ATTR_MODE:
+                  attr_list[i].value.u8 = attribute.value.u8;
+                  break;
+              case SAI_POLICER_ATTR_COLOR_SOURCE:
+                  attr_list[i].value.u8 = attribute.value.u8;
+                  break;
+              case SAI_POLICER_ATTR_CBS:
+                  attr_list[i].value.u64 = attribute.value.u64;
+                  break;
+              case SAI_POLICER_ATTR_CIR:
+                  attr_list[i].value.u64 = attribute.value.u64;
+                  break;
+              case SAI_POLICER_ATTR_PBS:
+                  attr_list[i].value.u64 = attribute.value.u64;
+                  break;
+              case SAI_POLICER_ATTR_PIR:
+                  attr_list[i].value.u64 = attribute.value.u64;
+                  break;
+              case SAI_POLICER_ATTR_GREEN_PACKET_ACTION:
+                  attr_list[i].value.u8 = attribute.value.u8;
+                  break;
+              case SAI_POLICER_ATTR_YELLOW_PACKET_ACTION:
+                  attr_list[i].value.u8 = attribute.value.u8;
+                  break;
+              case SAI_POLICER_ATTR_RED_PACKET_ACTION:
+                  attr_list[i].value.u8 = attribute.value.u8;
+                  break;
+          }
+      }
+  }
+
+  sai_thrift_object_id_t sai_thrift_create_policer(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
+      printf("sai_thrift_create_policer\n");
+      sai_status_t status = SAI_STATUS_SUCCESS;
+      sai_policer_api_t *policer_api;
+      sai_object_id_t policer_id = 0;
+      status = sai_api_query(SAI_API_POLICER, (void **) &policer_api);
+      if (status != SAI_STATUS_SUCCESS) {
+          return status;
+      }
+      sai_attribute_t *attr_list = (sai_attribute_t *) malloc(sizeof(sai_attribute_t) * thrift_attr_list.size());
+      sai_thrift_parse_policer_attributes(thrift_attr_list, attr_list);
+      uint32_t attr_count = thrift_attr_list.size();
+      policer_api->create_policer(&policer_id, attr_count, attr_list);
+      return policer_id;
+  }
+
+  sai_thrift_status_t sai_thrift_remove_policer(const sai_thrift_object_id_t policer_id) {
+      printf("sai_thrift_remove_policer\n");
+      sai_status_t status = SAI_STATUS_SUCCESS;
+      sai_policer_api_t *policer_api;
+      status = sai_api_query(SAI_API_POLICER, (void **) &policer_api);
+      if (status != SAI_STATUS_SUCCESS) {
+          return status;
+      }
+      status = policer_api->remove_policer((sai_object_id_t) policer_id);
+      return status;
+  }
+
+  void sai_thrift_get_policer_stats(
+          std::vector<int64_t> & thrift_counters,
+          const sai_thrift_object_id_t policer_id,
+          const std::vector<sai_thrift_policer_stat_counter_t> & thrift_counter_ids) {
+      printf("sai_thrift_get_policer_stats\n");
+      sai_status_t status = SAI_STATUS_SUCCESS;
+      sai_policer_api_t *policer_api;
+      status = sai_api_query(SAI_API_POLICER, (void **) &policer_api);
+      if (status != SAI_STATUS_SUCCESS) {
+          return;
+      }
+      sai_policer_stat_counter_t *counter_ids = (sai_policer_stat_counter_t *) malloc(sizeof(sai_policer_stat_counter_t) * thrift_counter_ids.size());
+      std::vector<int32_t>::const_iterator it = thrift_counter_ids.begin();
+      uint64_t *counters = (uint64_t *) malloc(sizeof(uint64_t) * thrift_counter_ids.size());
+      for(uint32_t i = 0; i < thrift_counter_ids.size(); i++, it++) {
+          counter_ids[i] = (sai_policer_stat_counter_t) *it;
+      }
+
+      int32_t number_of_counters = thrift_counter_ids.size();
+      status = policer_api->get_policer_statistics(
+                             (sai_object_id_t) policer_id,
+                             counter_ids,
+                             number_of_counters,
+                             counters);
+
+      for (uint32_t i = 0; i < thrift_counter_ids.size(); i++) {
+          thrift_counters.push_back(counters[i]);
+      }
+      free(counter_ids);
+      free(counters);
+      return;
+  }
+
 };
 
 static void * switch_sai_thrift_rpc_server_thread(void *arg) {
@@ -1322,12 +1598,12 @@ static pthread_t switch_sai_thrift_rpc_thread;
 extern "C" {
 extern void sai_initialize(void);
 
-int start_p4_sai_thrift_rpc_server(int port)
+int start_p4_sai_thrift_rpc_server(char *port)
 {
     std::cerr << "Starting SAI RPC server on port " << port << std::endl;
 
     int *port_arg = (int *) malloc(sizeof(int));
-    *port_arg = port;
+    *port_arg = atoi(port);
 
     sai_initialize();
 

@@ -18,7 +18,7 @@ AS_IF([test "x$enable_coverage" = "xyes"], [
 CFLAGS="-g -Wall -Wextra -Wno-unused-parameter"
 AC_PROG_CC_STDC
 AC_PROG_CXX
-AC_PROG_RANLIB
+LT_INIT
 
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -55,5 +55,5 @@ AC_TYPE_UINT64_T
 #[AC_CONFIG_FILES([doc/Doxyfile])])
 
 # Generate makefiles
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile third-party/tommyds/Makefile])
 AC_OUTPUT

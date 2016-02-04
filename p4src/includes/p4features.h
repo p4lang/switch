@@ -1,5 +1,5 @@
 /*
-Copyright 2013-present Barefoot Networks, Inc. 
+Copyright 2013-present Barefoot Networks, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,7 +16,10 @@ limitations under the License.
 
 #define FABRIC_ENABLE
 #define EGRESS_FILTER
+#define INT_EP_ENABLE
 #define INT_TRANSIT_ENABLE
+#define OUTER_PIM_BIDIR_OPTIMIZATION
+#define PIM_BIDIR_OPTIMIZATION
 
 // Defines for switchapi library
 #ifdef URPF_DISABLE
@@ -79,8 +82,18 @@ limitations under the License.
 #define P4_EGRESS_FILTER
 #endif
 
+#ifdef INT_EP_ENABLE
+#define INT_ENABLE
+#define P4_INT_ENABLE
+#define P4_INT_EP_ENABLE
+#endif
+
 #ifdef INT_TRANSIT_ENABLE
 #define P4_INT_TRANSIT_ENABLE
 #define INT_ENABLE
 #define P4_INT_ENABLE
+#endif
+
+#ifdef METER_DISABLE
+#define P4_METER_DISABLE
 #endif

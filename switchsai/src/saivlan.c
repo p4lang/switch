@@ -48,6 +48,15 @@ sai_status_t sai_create_vlan_entry(
     if (status != SAI_STATUS_SUCCESS) {
         SAI_LOG_ERROR("failed to create vlan %d: %s",
                       vlan_id, sai_status_to_string(status));
+    } else {
+        /* enable IGMP and MLD snooping by default */
+        switch_status_t switch_status;
+        switch_status = switch_api_vlan_igmp_snooping_enabled_set(
+            vlan_handle, true);
+        assert(switch_status == SWITCH_STATUS_SUCCESS);
+        switch_status = switch_api_vlan_mld_snooping_enabled_set(
+            vlan_handle, true);
+        assert(switch_status == SWITCH_STATUS_SUCCESS);
     }
 
     SAI_LOG_EXIT();
@@ -324,6 +333,60 @@ sai_status_t sai_remove_ports_from_vlan(
     return (sai_status_t) status;
 }
 
+static sai_status_t
+switch_vlan_counters_to_sai_vlan_counters(
+        _In_ uint32_t number_of_counters,
+        _In_ const sai_vlan_stat_counter_t *counter_ids,
+        _In_ switch_counter_t *switch_counters,
+        _Out_ uint64_t *counters) {
+    uint32_t index = 0;
+    for (index = 0; index < number_of_counters; index++) {
+        switch (counter_ids[index]) {
+            case SAI_VLAN_STAT_IN_OCTETS:
+                counters[index] =
+                    switch_counters[SWITCH_VLAN_STATS_IN_UCAST].num_bytes +
+                    switch_counters[SWITCH_VLAN_STATS_IN_MCAST].num_bytes +
+                    switch_counters[SWITCH_VLAN_STATS_IN_BCAST].num_bytes;
+                break;
+            case SAI_VLAN_STAT_IN_UCAST_PKTS:
+                counters[index] =
+                    switch_counters[SWITCH_VLAN_STATS_IN_UCAST].num_packets;
+                break;
+            case SAI_VLAN_STAT_IN_NON_UCAST_PKTS:
+                counters[index] =
+                    switch_counters[SWITCH_VLAN_STATS_IN_MCAST].num_packets +
+                    switch_counters[SWITCH_VLAN_STATS_IN_BCAST].num_packets;
+                break;
+            case SAI_VLAN_STAT_IN_DISCARDS:
+            case SAI_VLAN_STAT_IN_ERRORS:
+            case SAI_VLAN_STAT_IN_UNKNOWN_PROTOS:
+                counters[index] = 0;
+                break;
+            case SAI_VLAN_STAT_OUT_OCTETS:
+                counters[index] =
+                    switch_counters[SWITCH_VLAN_STATS_OUT_UCAST].num_bytes +
+                    switch_counters[SWITCH_VLAN_STATS_OUT_MCAST].num_bytes +
+                    switch_counters[SWITCH_VLAN_STATS_OUT_BCAST].num_bytes;
+                break;
+            case SAI_VLAN_STAT_OUT_UCAST_PKTS:
+                counters[index] =
+                    switch_counters[SWITCH_VLAN_STATS_OUT_UCAST].num_packets;
+                break;
+            case SAI_VLAN_STAT_OUT_NON_UCAST_PKTS:
+                counters[index] =
+                    switch_counters[SWITCH_VLAN_STATS_OUT_MCAST].num_packets +
+                    switch_counters[SWITCH_VLAN_STATS_OUT_BCAST].num_packets;
+                break;
+            case SAI_VLAN_STAT_OUT_DISCARDS:
+            case SAI_VLAN_STAT_OUT_ERRORS:
+            case SAI_VLAN_STAT_OUT_QLEN:
+                counters[index] = 0;
+                break;
+        }
+    }
+    return SAI_STATUS_SUCCESS;
+}
+
 /*
 * Routine Description:
 *   Get vlan statistics counters.
@@ -347,6 +410,66 @@ sai_status_t sai_get_vlan_stats(
     SAI_LOG_ENTER();
 
     sai_status_t status = SAI_STATUS_SUCCESS;
+    switch_counter_t *switch_counters = NULL;
+    switch_vlan_stats_t *vlan_stat_ids = NULL;
+    switch_handle_t vlan_handle = 0;
+    switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
+    uint32_t index = 0;
+
+    switch_status = switch_api_vlan_id_to_handle_get((switch_vlan_t) vlan_id, &vlan_handle);
+    status = sai_switch_status_to_sai_status(switch_status);
+    if (status != SAI_STATUS_SUCCESS) {
+        SAI_LOG_ERROR("failed to rremove ports from vlan %d: %s",
+                      vlan_id, sai_status_to_string(status));
+        return status;
+    }
+
+    switch_counters = SAI_MALLOC(sizeof(switch_counter_t) * SWITCH_VLAN_STATS_MAX);
+    if (!switch_counters) {
+        status = SAI_STATUS_NO_MEMORY;
+        SAI_LOG_ERROR("failed to get vlan stats %d: %s",
+                      vlan_id, sai_status_to_string(status));
+        return status;
+    }
+
+    vlan_stat_ids = SAI_MALLOC(sizeof(switch_vlan_stats_t) * SWITCH_VLAN_STATS_MAX);
+    if (!vlan_stat_ids) {
+        status = SAI_STATUS_NO_MEMORY;
+        SAI_LOG_ERROR("failed to get vlan stats %d: %s",
+                      vlan_id, sai_status_to_string(status));
+        SAI_FREE(switch_counters);
+        return status;
+    }
+
+    for (index = 0; index < SWITCH_VLAN_STATS_MAX; index++) {
+        vlan_stat_ids[index] = index;
+    }
+
+    switch_status = switch_api_vlan_stats_get(
+                             device,
+                             vlan_handle,
+                             SWITCH_VLAN_STATS_MAX,
+                             vlan_stat_ids,
+                             switch_counters);
+    status = sai_switch_status_to_sai_status(switch_status);
+
+    if (status != SWITCH_STATUS_SUCCESS) {
+        status = SAI_STATUS_NO_MEMORY;
+        SAI_LOG_ERROR("failed to get vlan stats %d: %s",
+                      vlan_id, sai_status_to_string(status));
+        SAI_FREE(vlan_stat_ids);
+        SAI_FREE(switch_counters);
+        return status;
+    }
+
+    switch_vlan_counters_to_sai_vlan_counters(
+                             number_of_counters,
+                             counter_ids,
+                             switch_counters,
+                             counters);
+
+    SAI_FREE(vlan_stat_ids);
+    SAI_FREE(switch_counters);
 
     SAI_LOG_EXIT();
 

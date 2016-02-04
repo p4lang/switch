@@ -1,0 +1,58 @@
+{
+    "module_name"          :      "route",
+    "attributes"           : [
+    {
+        "attribute_desc"          :      "route attributes",
+        "attribute_list"          : [
+            {
+                "name"          :     "SAI_ROUTE_ATTR_PACKET_ACTION",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8",
+                "default"       :     "SAI_PACKET_ACTION_FORWARD"
+            },
+            {
+                "name"          :     "SAI_ROUTE_ATTR_TRAP_PRIORITY",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8",
+                "default"       :     "0"
+            },
+            {
+                "name"          :     "SAI_ROUTE_ATTR_NEXT_HOP_ID",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid"
+            },
+            {
+                "name"          :     "SAI_ROUTE_ATTR_DIRECTLY_REACHABLE_ROUTE",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool",
+                "default"       :     "false"
+            },
+            {
+                "name"          :     "SAI_ROUTE_ATTR_META_DATA",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u32"
+            }
+        ]
+    }
+    ]
+}

@@ -60,10 +60,13 @@ control process_egress_filter {
 #ifdef EGRESS_FILTER
     apply(egress_lag);
     if (multicast_metadata.inner_replica == TRUE) {
-        if (((tunnel_metadata.egress_tunnel_type != EGRESS_TUNNEL_TYPE_NONE) and
-             (egress_filter_metadata.inner_bd == 0)) or
-            ((egress_filter_metadata.ifindex == 0) and
-             (egress_filter_metadata.bd == 0))) {
+        if (((tunnel_metadata.ingress_tunnel_type == INGRESS_TUNNEL_TYPE_NONE) and
+             (tunnel_metadata.egress_tunnel_type == EGRESS_TUNNEL_TYPE_NONE) and
+             (egress_filter_metadata.bd == 0) and
+             (egress_filter_metadata.ifindex == 0)) or
+            ((tunnel_metadata.ingress_tunnel_type != INGRESS_TUNNEL_TYPE_NONE) and
+             (tunnel_metadata.egress_tunnel_type != EGRESS_TUNNEL_TYPE_NONE)) and
+             (egress_filter_metadata.inner_bd == 0)) {
             apply(egress_filter);
         }
     }

@@ -113,12 +113,16 @@ switch_api_router_mac_add(switch_device_t device, switch_handle_t rmac_handle, s
     }
     memcpy(&rmac_entry->mac, mac, sizeof(switch_mac_addr_t));
     tommy_list_insert_head(&(rmac_info->rmac_list), &(rmac_entry->node), rmac_entry);
-    switch_smac_rewrite_add_entry(mac);
+    status = switch_smac_rewrite_add_entry(mac);
+    if (status != SWITCH_STATUS_SUCCESS) {
+        printf("MAC rewrite table add failed with error code %d\n", status);
+        return status;
+    }
 #ifdef SWITCH_PD
     
     status = switch_pd_inner_rmac_table_add_entry(device,
                                               handle_to_id(rmac_handle), mac,
-                                              &rmac_info->inner_rmac_entry);
+                                              &rmac_entry->inner_rmac_entry);
     if(status != SWITCH_STATUS_SUCCESS) {
         printf("Inner RMAC table add failed with error code %d\n", status);
         return status;
@@ -126,7 +130,7 @@ switch_api_router_mac_add(switch_device_t device, switch_handle_t rmac_handle, s
 
     status = switch_pd_outer_rmac_table_add_entry(device,
                                               handle_to_id(rmac_handle), mac,
-                                              &rmac_info->outer_rmac_entry);
+                                              &rmac_entry->outer_rmac_entry);
     if(status != SWITCH_STATUS_SUCCESS) {
         printf("Outer RMAC table add failed with error code %d\n", status);
     }
@@ -174,11 +178,11 @@ switch_api_router_mac_delete(switch_device_t device, switch_handle_t rmac_handle
     switch_smac_rewrite_delete_entry(mac);
     rmac_entry = tommy_list_remove_existing(&(rmac_info->rmac_list), node);
 #ifdef SWITCH_PD
-    status = switch_pd_outer_rmac_table_delete_entry(device, rmac_info->outer_rmac_entry);
+    status = switch_pd_outer_rmac_table_delete_entry(device, rmac_entry->outer_rmac_entry);
     if (status != SWITCH_STATUS_SUCCESS) {
         return status;
     }
-    status = switch_pd_inner_rmac_table_delete_entry(device, rmac_info->inner_rmac_entry);
+    status = switch_pd_inner_rmac_table_delete_entry(device, rmac_entry->inner_rmac_entry);
     if (status != SWITCH_STATUS_SUCCESS) {
         return status;
     }
@@ -405,21 +409,22 @@ switch_smac_rewrite_index_from_rmac(switch_handle_t rmac_handle)
     return smac_index;
 }
 
-uint16_t
+switch_status_t
 switch_smac_rewrite_add_entry(switch_mac_addr_t *mac)
 {
     switch_smac_entry_t               *smac_entry = NULL;
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
     uint16_t                           smac_index = 0;
     switch_device_t                    device = SWITCH_DEV_ID;
 
     smac_entry = switch_smac_rewrite_search_entry(mac);
     if (smac_entry) {
         smac_entry->ref_count++;
-        return smac_entry->smac_index;
+        return SWITCH_STATUS_SUCCESS;
     }
     smac_entry = switch_malloc(sizeof(switch_smac_entry_t), 1);
     if (!smac_entry) {
-        return smac_index;
+        return SWITCH_STATUS_NO_MEMORY;
     }
     memset(smac_entry, 0, sizeof(switch_smac_entry_t));
     smac_index = switch_api_id_allocator_allocate(smac_rewrite_index_allocator);
@@ -427,8 +432,8 @@ switch_smac_rewrite_add_entry(switch_mac_addr_t *mac)
     smac_entry->smac_index = smac_index;
     smac_entry->ref_count = 1;
     switch_smac_rewrite_hash_insert(smac_entry);
-    switch_pd_mac_rewrite_table_add_entry(device, smac_entry);
-    return smac_index;
+    status = switch_pd_smac_rewrite_table_add_entry(device, smac_entry);
+    return status;
 }
 
 switch_status_t
@@ -446,12 +451,12 @@ switch_smac_rewrite_delete_entry(switch_mac_addr_t *mac)
 
     smac_entry->ref_count--;
     if (smac_entry->ref_count == 0) {
-        switch_pd_mac_rewrite_table_delete_entry(device, smac_entry);
+        switch_pd_smac_rewrite_table_delete_entry(device, smac_entry);
         switch_smac_rewrite_hash_delete(smac_entry);
         switch_api_id_allocator_release(smac_rewrite_index_allocator, smac_entry->smac_index);
         free(smac_entry);
     }
-    return status; 
+    return status;
 }
 
 #ifdef __cplusplus

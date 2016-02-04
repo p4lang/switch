@@ -28,8 +28,6 @@ extern "C" {
 #define SWITCH_PACKET_HEADER_OFFSET 12
 #define SWITCH_FABRIC_HEADER_ETHTYPE 0x9000
 
-#define SWITCH_CPU_MIRROR_SESSION_ID 250
-
 typedef struct switch_hostif_rcode_info_ {
     switch_handle_t acl_handle;
     switch_api_hostif_rcode_info_t rcode_api_info;

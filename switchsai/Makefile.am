@@ -1,6 +1,7 @@
 ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS} -I m4
 
-libswitchsai_la_CFLAGS = -I$(srcdir)/submodules/ocpsai/sai/inc -I$(srcdir)/../../modules/BMI/module/inc
+libswitchsai_la_CFLAGS  = -I$(srcdir)/submodules/SAI/inc
+libswitchsai_la_CFLAGS += -I$(srcdir)/../../modules/BMI/module/inc
 libswitchsai_la_CFLAGS += -I$(builddir)/src/gen-cpp
 libswitchsai_la_CFLAGS += -I$(top_srcdir)/switchapi/third-party/tommyds/include
 libswitchsai_la_CFLAGS += -I$(top_srcdir)/p4src/includes
@@ -37,11 +38,14 @@ src/sai_bmlib.c \
 src/saifdb.c \
 src/saihostintf.c \
 src/saiinternal.h \
+src/saiipmc.c \
+src/sail2mc.c \
 src/sailag.c \
 src/saimirror.c \
 src/saineighbor.c \
 src/sainexthop.c \
 src/sainexthopgroup.c \
+src/saipolicer.c \
 src/saiport.c \
 src/sairoute.c \
 src/sairouter.c \

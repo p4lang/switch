@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#include <assert.h>
 #include "switchapi/switch_vlan.h"
 #include "switchapi/switch_l2.h"
 #include "switchapi/switch_l3.h"
@@ -450,8 +451,6 @@ switch_mac_update_nhop(switch_device_t device,
     switch_neighbor_dmac_t            *neighbor_dmac = NULL;
     switch_neighbor_info_t            *neighbor_info = NULL;
     switch_handle_t                    nhop_handle = 0;
-    switch_nhop_info_t                *nhop_info = NULL;
-    switch_spath_info_t               *spath_info = NULL;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
 
     if (!SWITCH_INTERFACE_HANDLE_VALID(intf_handle)) {
@@ -475,12 +474,6 @@ switch_mac_update_nhop(switch_device_t device,
 
     nhop_handle = neighbor_info->neighbor.nhop_handle;
     if (SWITCH_NHOP_HANDLE_VALID(nhop_handle)) {
-        nhop_info = switch_nhop_get(nhop_handle);
-        if (!nhop_info) {
-            return SWITCH_STATUS_INVALID_HANDLE;
-        }
-        spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
-        spath_info->nhop_key.intf_handle = intf_handle;
         status = switch_api_nhop_update(device, nhop_handle);
     }
     return status;
@@ -493,10 +486,7 @@ switch_mac_update_nhop(switch_device_t device,
  * For tunnel ports, nhop is used.
  *
  @param device - device id
- @param vlan_handle - Vlan ID
- @param mac - Mac Address
- @param flags - 
- @param interface_handle - Interface (Access/Lag/Trunk)
+ @param mac_entry - Mac Entry
  */
 switch_status_t
 switch_api_mac_table_entry_add(switch_device_t device,
@@ -517,7 +507,7 @@ switch_api_mac_table_entry_add(switch_device_t device,
     switch_handle_t                    intf_handle = 0;
     char                               buffer[200];
 
-    if ((!SWITCH_PORT_HANDLE_VALID(mac_entry->handle)) && 
+    if ((!SWITCH_PORT_HANDLE_VALID(mac_entry->handle)) &&
         (!SWITCH_LAG_HANDLE_VALID(mac_entry->handle)) &&
         (!SWITCH_INTERFACE_HANDLE_VALID(mac_entry->handle)) &&
         (!SWITCH_MGID_HANDLE_VALID(mac_entry->handle)) &&
@@ -684,13 +674,15 @@ switch_api_mac_table_entry_update(switch_device_t device,
     uint16_t                           mgid_index = 0;
     switch_handle_t                    intf_handle = 0;
     char                               buffer[200];
+    switch_handle_t                    mac_entry_handle;
 
+    mac_entry_handle = mac_entry->handle;
     mac_info = switch_mac_table_entry_find(mac_entry);
     if (!mac_info) {
         return SWITCH_STATUS_ITEM_NOT_FOUND;
     }
 
-    if (!SWITCH_PORT_HANDLE_VALID(mac_entry->handle) && 
+    if (!SWITCH_PORT_HANDLE_VALID(mac_entry->handle) &&
         !SWITCH_LAG_HANDLE_VALID(mac_entry->handle) &&
         !SWITCH_INTERFACE_HANDLE_VALID(mac_entry->handle) &&
         !SWITCH_MGID_HANDLE_VALID(mac_entry->handle) &&
@@ -707,12 +699,14 @@ switch_api_mac_table_entry_update(switch_device_t device,
             if (status != SWITCH_STATUS_SUCCESS) {
                 goto cleanup;
             }
-            intf_info = switch_api_interface_get(mac_entry->handle);
+            intf_info = switch_api_interface_get(intf_handle);
             if (!intf_info) {
                 status = SWITCH_STATUS_INVALID_INTERFACE;
                 goto cleanup;
             }
+            mac_entry_handle = intf_handle;
             break;
+
         case SWITCH_HANDLE_TYPE_INTERFACE:
             intf_handle = mac_entry->handle;
             intf_info = switch_api_interface_get(intf_handle);
@@ -727,7 +721,7 @@ switch_api_mac_table_entry_update(switch_device_t device,
                 }
                 nhop_index = handle_to_id(intf_info->nhop_handle);
             }
-        break;
+            break;
 
         case SWITCH_HANDLE_TYPE_NHOP:
             nhop_info = switch_nhop_get(mac_entry->handle);
@@ -742,11 +736,12 @@ switch_api_mac_table_entry_update(switch_device_t device,
                 goto cleanup;
             }
             nhop_index = handle_to_id(mac_entry->handle);
-        break;
+            break;
 
         case SWITCH_HANDLE_TYPE_MGID:
             mgid_index = handle_to_id(mac_entry->handle);
-        break;
+            break;
+
         default:
             return SWITCH_STATUS_INVALID_HANDLE;
     }
@@ -757,10 +752,15 @@ switch_api_mac_table_entry_update(switch_device_t device,
         goto cleanup;
     }
 
-    switch_mac_update_nhop(device, intf_handle, mac_entry);
+    status = switch_mac_remove_from_interface_list(mac_info);
+    assert(status == SWITCH_STATUS_SUCCESS);
+    mac_info->mac_entry.handle = mac_entry_handle;
+    status = switch_mac_insert_into_interface_list(mac_info);
+    assert(status == SWITCH_STATUS_SUCCESS);
+    switch_mac_update_nhop(device, intf_handle, &(mac_info->mac_entry));
 
 #ifdef SWITCH_PD
-    status = switch_pd_dmac_table_update_entry(device, mac_entry,
+    status = switch_pd_dmac_table_update_entry(device, &(mac_info->mac_entry),
                                         nhop_index, mgid_index,
                                         intf_info,
                                         mac_info->dmac_entry);
@@ -769,21 +769,22 @@ switch_api_mac_table_entry_update(switch_device_t device,
     }
     // Do not learn multicast macs on smac table
     if (!mgid_index && SWITCH_LN_LEARN_ENABLED(bd_info)) {
-        status = switch_pd_smac_table_update_entry(device, mac_entry,
-                                              intf_info,
-                                              mac_info->smac_entry);
+        status = switch_pd_smac_table_update_entry(device,
+                                        &(mac_info->mac_entry), intf_info,
+                                        mac_info->smac_entry);
     }
     if (status != SWITCH_STATUS_SUCCESS) {
         goto cleanup;
     }
 #endif
-    switch_print_mac_table_entry(mac_entry, buffer, 200);
+    switch_print_mac_table_entry(&(mac_info->mac_entry), buffer, 200);
     SWITCH_API_TRACE("%s:%d Updating entry %s\n",
                      __FUNCTION__, __LINE__,
                      buffer);
     return status;
+
 cleanup:
-    switch_print_mac_table_entry(mac_entry, buffer, 200);
+    switch_print_mac_table_entry(&(mac_info->mac_entry), buffer, 200);
     SWITCH_API_ERROR("%s:%d: unable to update mac entry %s. %s\n",
                      __FUNCTION__, __LINE__,
                      buffer,
@@ -822,7 +823,7 @@ switch_api_mac_table_entry_delete(switch_device_t device,
     switch_handle_t                    handle = 0;
     switch_handle_type_t               handle_type = 0;
     char                               buffer[200];
- 
+
     mac_info = switch_mac_table_entry_find(mac_entry);
     if (!mac_info) {
         status = SWITCH_STATUS_ITEM_NOT_FOUND;
@@ -856,7 +857,7 @@ switch_api_mac_table_entry_delete(switch_device_t device,
         default:
             intf_handle = 0;
     }
-    switch_mac_update_nhop(device, intf_handle, mac_entry);
+
 #ifdef SWITCH_PD
     if (mac_info->smac_entry != SWITCH_HW_INVALID_HANDLE) {
         status = switch_pd_smac_table_delete_entry(device, mac_info->smac_entry);
@@ -873,12 +874,14 @@ switch_api_mac_table_entry_delete(switch_device_t device,
         }
     }
 #endif
+
     JLD(status, dmac_entry_hdl_array, mac_info->dmac_entry);
     switch_print_mac_table_entry(&mac_info->mac_entry, buffer, 200);
     SWITCH_API_TRACE("%s:%d Deleting entry %s\n",
                      __FUNCTION__, __LINE__,
                      buffer);
     status = switch_mac_table_entry_delete(&mac_info->mac_entry);
+    switch_mac_update_nhop(device, intf_handle, mac_entry);
     return status;
 
 cleanup:

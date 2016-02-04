@@ -309,7 +309,7 @@ class L2StaticMacMoveTest(api_base_tests.ThriftInterfaceDataPlane):
             print "Sending packet port %d" % swports[1], "-> port %d" % swports[3], " (00:22:22:22:22:22 -> 00:11:11:11:11:11)"
 
             self.client.switcht_api_mac_table_entry_update(device, vlan, '00:11:11:11:11:11', 2, if3)
-            send_packet(self, 1, str(pkt))
+            send_packet(self, swports[1], str(pkt))
             verify_packets(self, exp_pkt, [swports[3]])
         finally:
             self.client.switcht_api_mac_table_entry_delete(device, vlan, '00:11:11:11:11:11')
@@ -636,7 +636,7 @@ class L2LagTest(api_base_tests.ThriftInterfaceDataPlane):
         try:
             count = [0, 0, 0, 0]
             dst_ip = int(socket.inet_aton('10.10.10.1').encode('hex'),16)
-            max_itrs = 100
+            max_itrs = 200
             for i in range(0, max_itrs):
                 dst_ip_addr = socket.inet_ntoa(hex(dst_ip)[2:].zfill(8).decode('hex'))
                 pkt = simple_tcp_packet(eth_dst='00:11:11:11:11:11',
@@ -3697,6 +3697,8 @@ class L2VxlanToGeneveUnicastBasicTest(api_base_tests.ThriftInterfaceDataPlane):
             send_packet(self, swports[2], str(vxlan_pkt))
             verify_packets(self, geneve_pkt, [swports[1]])
         finally:
+            self.client.switcht_api_mac_table_entries_delete_all(device)
+
             self.client.switcht_api_neighbor_entry_remove(device, neighbor3)
             self.client.switcht_api_nhop_delete(device, nhop3)
 
@@ -4896,7 +4898,7 @@ class L2DynamicMacLearnTest(api_base_tests.ThriftInterfaceDataPlane):
                                         ip_dst='10.10.10.1',
                                         ip_src='20.20.20.1',
                                         ip_id=108,
-                                        ip_ttl=64)
+                                        ip_ttl=0)
                 send_packet(self, port, str(pkt))
 
         time.sleep(3)
@@ -6576,7 +6578,7 @@ class L2VlanStatsTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_mac_table_entry_create(device, vlan, '00:11:11:11:11:11', 2, if1)
         self.client.switcht_api_mac_table_entry_create(device, vlan, '00:22:22:22:22:22', 2, if2)
 
-        counter0 = self.client.switcht_api_vlan_stats_get(vlan, [0, 1, 2])
+        counter0 = self.client.switcht_api_vlan_stats_get(device, vlan, [0, 1, 2, 4, 5, 6])
 
         try:
             num_bytes = 0
@@ -6605,10 +6607,12 @@ class L2VlanStatsTest(api_base_tests.ThriftInterfaceDataPlane):
                 verify_each_packet_on_each_port(self, [exp_pkt], [swports[2]])
                 num_bytes += pktlen
 
-            counter = self.client.switcht_api_vlan_stats_get(vlan, [0, 1, 2])
-            for i in range(0,3):
+            counter = self.client.switcht_api_vlan_stats_get(device, vlan, [0, 1, 2, 4, 5, 6])
+
+            for i in range(0, 6):
                 counter[i].num_packets = counter[i].num_packets - counter0[i].num_packets
                 counter[i].num_bytes = counter[i].num_bytes - counter0[i].num_bytes
+
             print "Stats results: ", counter
             self.assertEqual(counter[0].num_packets, num_packets)
             self.assertEqual(counter[0].num_bytes, num_bytes)
@@ -6616,6 +6620,12 @@ class L2VlanStatsTest(api_base_tests.ThriftInterfaceDataPlane):
             self.assertEqual(counter[1].num_bytes, 0)
             self.assertEqual(counter[2].num_packets, 0)
             self.assertEqual(counter[2].num_bytes, 0)
+            self.assertEqual(counter[3].num_packets, num_packets)
+            #self.assertEqual(counter[3].num_bytes, num_bytes)
+            self.assertEqual(counter[4].num_packets, 0)
+            self.assertEqual(counter[4].num_bytes, 0)
+            self.assertEqual(counter[5].num_packets, 0)
+            self.assertEqual(counter[5].num_bytes, 0)
         finally:
             self.client.switcht_api_mac_table_entry_delete(device, vlan, '00:11:11:11:11:11')
             self.client.switcht_api_mac_table_entry_delete(device, vlan, '00:22:22:22:22:22')
@@ -6660,9 +6670,9 @@ class L2TunnelFloodEnhancedTest(api_base_tests.ThriftInterfaceDataPlane):
         lognet_info = switcht_logical_network_t(type=5, age_interval=1800, vrf=vrf)
         ln1 = self.client.switcht_api_logical_network_create(device, lognet_info)
 
-        # Create a geneve tunnel interface
         flags = switcht_interface_flags(flood_enabled=1)
 
+        # Create a geneve tunnel interface
         udp11 = switcht_udp_t(src_port=1234, dst_port=6081)
         src_ip11 = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.1', prefix_length=32)
         dst_ip11 = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.3', prefix_length=32)
@@ -6699,12 +6709,12 @@ class L2TunnelFloodEnhancedTest(api_base_tests.ThriftInterfaceDataPlane):
         iu31 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap31, encap_info=encap_info31, out_if=if3, flags=flags)
         if31 = self.client.switcht_api_tunnel_interface_create(device, 0, iu31)
 
-        pv4 = switcht_port_vlan_t(port_lag_handle=4, vlan_id=10)
+        pv4 = switcht_port_vlan_t(port_lag_handle=swports[4], vlan_id=10)
         iu4 = interface_union(port_vlan = pv4)
         i_info4 = switcht_interface_info_t(device=0, type=9, u=iu4, mac='00:77:66:55:44:33', label=0)
         if4 = self.client.switcht_api_interface_create(device, i_info4)
 
-        pv5 = switcht_port_vlan_t(port_lag_handle=5, vlan_id=20)
+        pv5 = switcht_port_vlan_t(port_lag_handle=swports[5], vlan_id=20)
         iu5 = interface_union(port_vlan = pv5)
         i_info5 = switcht_interface_info_t(device=0, type=9, u=iu5, mac='00:77:66:55:44:33', label=0)
         if5 = self.client.switcht_api_interface_create(device, i_info5)
@@ -6855,6 +6865,7 @@ class L2TunnelFloodEnhancedTest(api_base_tests.ThriftInterfaceDataPlane):
             self.client.switcht_api_interface_delete(device, if6)
 
             self.client.switcht_api_router_mac_delete(device, rmac, '00:77:66:55:44:33')
+            self.client.switcht_api_vrf_delete(device, vrf)
 
 
 ###############################################################################

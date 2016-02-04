@@ -9,7 +9,6 @@ import os
 import logging
 import unittest
 
-
 import ptf
 from ptf.base_tests import BaseTest
 from ptf import config
@@ -25,7 +24,6 @@ import switch_sai_thrift.switch_sai_rpc as switch_sai_rpc
 from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
-
 
 class ThriftInterface(BaseTest):
 

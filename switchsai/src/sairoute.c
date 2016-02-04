@@ -25,13 +25,14 @@ static void sai_route_entry_to_string(
         _In_ const sai_unicast_route_entry_t* unicast_route_entry,
         _Out_ char *entry_string) {
     int count = 0;
+    int len = 0;
     count = snprintf(entry_string,
                      SAI_MAX_ENTRY_STRING_LEN,
                      "route: vrf %lx",
                      unicast_route_entry->vr_id);
     sai_ipprefix_to_string(unicast_route_entry->destination,
                            SAI_MAX_ENTRY_STRING_LEN - count,
-                           entry_string + count);
+                           entry_string + count, &len);
     return;
 }
 
@@ -39,15 +40,15 @@ static void sai_route_entry_parse(
         _In_ const sai_unicast_route_entry_t* unicast_route_entry,
         _Out_ switch_handle_t *vrf_handle,
         _Out_ switch_ip_addr_t *ip_addr) {
-    const sai_ip_prefix_t *sai_ip_addr;
+    const sai_ip_prefix_t *sai_ip_prefix;
 
     SAI_ASSERT(sai_object_type_query(unicast_route_entry->vr_id) ==
                SAI_OBJECT_TYPE_VIRTUAL_ROUTER);
     *vrf_handle = (switch_handle_t) unicast_route_entry->vr_id;
 
     memset(ip_addr, 0, sizeof(switch_ip_addr_t));
-    sai_ip_addr = &unicast_route_entry->destination;
-    sai_ip_prefix_to_switch_ip_prefix(sai_ip_addr, ip_addr);
+    sai_ip_prefix = &unicast_route_entry->destination;
+    sai_ip_prefix_to_switch_ip_addr(sai_ip_prefix, ip_addr);
 }
 
 static void sai_route_entry_attribute_parse(

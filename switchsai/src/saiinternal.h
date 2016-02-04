@@ -19,6 +19,8 @@ limitations under the License.
 
 #include <switchapi/switch_base_types.h>
 #include <switchapi/switch_status.h>
+#include <switchapi/switch_handle.h>
+#include <switchapi/switch_acl.h>
 
 #include <assert.h>
 #include <stdio.h>
@@ -34,8 +36,6 @@ limitations under the License.
 #define SAI_MAX_ENTRY_STRING_LEN 200
 
 #define SAI_LOG_BUFFER_SIZE 1000
-
-#define SAI_API_MAX (SAI_API_SCHEDULER_GROUP + 1)
 
 #define SAI_ASSERT(x) assert(x)
 
@@ -93,6 +93,9 @@ typedef struct _sai_api_service_t {
     sai_hostif_api_t                hostif_api;
     sai_mirror_api_t                mirror_api;
     sai_samplepacket_api_t          samplepacket_api;
+    sai_policer_api_t               policer_api;
+    sai_ipmc_api_t                  ipmc_api;
+    sai_l2mc_api_t                  l2mc_api;
 } sai_api_service_t;
 
 extern switch_device_t device;
@@ -114,6 +117,9 @@ sai_status_t sai_neighbor_initialize(sai_api_service_t *sai_api_service);
 sai_status_t sai_hostif_initialize(sai_api_service_t *sai_api_service);
 sai_status_t sai_acl_initialize(sai_api_service_t *sai_api_service);
 sai_status_t sai_mirror_initialize(sai_api_service_t *sai_api_service);
+sai_status_t sai_policer_initialize(sai_api_service_t *sai_api_service);
+sai_status_t sai_ipmc_initialize(sai_api_service_t *sai_api_service);
+sai_status_t sai_l2mc_initialize(sai_api_service_t *sai_api_service);
 
 char *sai_status_to_string(
         _In_ const sai_status_t status);
@@ -153,14 +159,19 @@ sai_status_t sai_ipaddress_to_string(
 sai_status_t sai_ipprefix_to_string(
         _In_ sai_ip_prefix_t ip_prefix,
         _In_ uint32_t max_length,
-        _Out_ char *entry_string);
+        _Out_ char *entry_string,
+        _Out_ int *entry_length);
 
-sai_status_t sai_ip_prefix_to_switch_ip_prefix(
-        const _In_ sai_ip_prefix_t *sai_ip_addr,
+sai_status_t sai_ip_prefix_to_switch_ip_addr(
+        const _In_ sai_ip_prefix_t *sai_ip_prefix,
         _Out_ switch_ip_addr_t *ip_addr);
 
 sai_status_t sai_ip_addr_to_switch_ip_addr(
         const _In_ sai_ip_address_t *sai_ip_addr,
         _Out_ switch_ip_addr_t *ip_addr);
+
+switch_acl_action_t
+sai_packet_action_to_switch_packet_action(
+        _In_ sai_packet_action_t action);
 
 #endif  // __SAIINTERNAL_H_

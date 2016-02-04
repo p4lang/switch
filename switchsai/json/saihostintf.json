@@ -1,0 +1,177 @@
+{
+    "module_name"          :      "hostinterface",
+    "attributes"           : [
+    {
+        "attribute_desc"          :      "hostif trap attributes",
+        "attribute_list"          : [
+            {
+                "name"          :     "SAI_HOSTIF_TRAP_ATTR_PACKET_ACTION",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_HOSTIF_TRAP_ATTR_TRAP_PRIORITY",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u32",
+                "default"       :     "SAI_SWITCH_ATTR_ACL_ENTRY_MINIMUM_PRIORITY",
+                "dependency"    : {
+                    "attr1"           :    "SAI_HOSTIF_TRAP_ATTR_PACKET_ACTION",
+                    "value1"          :    "SAI_PACKET_ACTION_TRAP",
+                    "value2"          :    "SAI_PACKET_ACTION_LOG"
+                }
+            },
+            {
+                "name"          :     "SAI_HOSTIF_TRAP_ATTR_TRAP_CHANNEL",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8",
+                "default"       :      "SAI_HOSTIF_TRAP_CHANNEL_CB"
+            },
+            {
+                "name"          :     "SAI_HOSTIF_TRAP_ATTR_FD",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID",
+                "dependency"    : {
+                    "attr1"           :        "SAI_HOSTIF_TRAP_ATTR_TRAP_CHANNEL",
+                    "value1"          :        "SAI_HOSTIF_TRAP_CHANNEL_FD"
+                }
+            },
+            {
+                "name"          :     "SAI_HOSTIF_TRAP_ATTR_PORT_LIST",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid_list"
+            },
+            {
+                "name"          :     "SAI_HOSTIF_TRAP_ATTR_TRAP_GROUP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid_list",
+                "default"       :     "SAI_SWITCH_ATTR_DEFAULT_TRAP_GROUP"
+            }
+        ]
+    },
+    {
+        "attribute_desc"          :      "hostif attributes",
+        "attribute_list"          : [
+            {
+                "name"          :     "SAI_HOSTIF_ATTR_TYPE",
+                "mandatory"     :     "true",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_HOSTIF_ATTR_RIF_OR_PORT_ID",
+                "mandatory"     :     "true",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "dependency"    : {
+                    "attr1"           :        "SAI_HOSTIF_ATTR_TYPE",
+                    "value1"          :        "SAI_HOSTIF_TYPE_NETDEV"
+                }
+            },
+            {
+                "name"          :     "SAI_HOSTIF_ATTR_NAME",
+                "mandatory"     :     "true",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "string",
+                "string_size"   :     "HOSTIF_NAME_SIZE",
+                "dependency"    : { 
+                    "attr1"           :        "SAI_HOSTIF_ATTR_TYPE",
+                    "value1"          :        "SAI_HOSTIF_TYPE_NETDEV"
+                }
+            }
+        ]
+    },
+    {
+        "attribute_desc"          :      "hostif packet attributes",
+        "attribute_list"          : [
+            {
+                "name"          :     "SAI_HOSTIF_PACKET_TRAP_ID",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "direction"     :     "rx",
+                "data_type"     :     "u16"
+            },
+            {
+                "name"          :     "SAI_HOSTIF_PACKET_INGRESS_PORT",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "direction"     :     "rx",
+                "data_type"     :     "oid"
+            },
+            {
+                "name"          :     "SAI_HOSTIF_PACKET_INGRESS_LAG",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "direction"     :     "rx",
+                "data_type"     :     "oid"
+            },
+            {
+                "name"          :     "SAI_HOSTIF_PACKET_TX_TYPE",
+                "mandatory"     :     "true",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "direction"     :     "tx",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_HOSTIF_PACKET_EGRESS_PORT_OR_LAG",
+                "mandatory"     :     "true",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "direction"     :     "tx",
+                "data_type"     :     "oid",
+                "dependency"    : {
+                    "attr1"           :        "SAI_HOSTIF_PACKET_TX_TYPE",
+                    "value1"          :        "SAI_HOSTIF_TX_TYPE_PIPELINE_BYPASS"
+                }
+            }
+        ]
+    }
+    ]
+}

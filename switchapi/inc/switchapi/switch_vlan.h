@@ -87,28 +87,29 @@ typedef enum switch_ln_attr_
     SWITCH_LN_ATTR_MAC_LEARNING
 } switch_ln_attr_t;
 
-typedef enum _switch_vlan_stat_counter_t
+typedef enum _switch_vlan_stats_t
 {
-    SWITCH_VLAN_STAT_IN_OCTETS,
-    SWITCH_VLAN_STAT_IN_UCAST_PKTS,
-    SWITCH_VLAN_STAT_IF_IN_NON_UCAST_PKTS,
-    SWITCH_VLAN_STAT_IF_IN_DISCARDS,
-    SWITCH_VLAN_STAT_IF_IN_ERRORS,
-    SWITCH_VLAN_STAT_IF_IN_UNKNOWN_PROTOS,
-    SWITCH_VLAN_STAT_IF_OUT_OCTETS,
-    SWITCH_VLAN_STAT_IF_OUT_UCAST_PKTS,
-    SWITCH_VLAN_STAT_IF_OUT_NON_UCAST_PKTS,
-    SWITCH_VLAN_STAT_IF_OUT_DISCARDS,
-    SWITCH_VLAN_STAT_IF_OUT_ERRORS,
-    SWITCH_VLAN_STAT_IF_OUT_QLEN,
-    SWITCH_VLAN_STAT_MAX,
-} switch_vlan_stat_counter_t;
+    SWITCH_VLAN_STATS_IN_UCAST,
+    SWITCH_VLAN_STATS_IN_MCAST,
+    SWITCH_VLAN_STATS_IN_BCAST,
+    SWITCH_VLAN_STATS_IN_DROP,
+    SWITCH_VLAN_STATS_OUT_UCAST,
+    SWITCH_VLAN_STATS_OUT_MCAST,
+    SWITCH_VLAN_STATS_OUT_BCAST,
+    SWITCH_VLAN_STATS_OUT_DROP,
+    SWITCH_VLAN_STATS_MAX,
+} switch_vlan_stats_t;
 
 /** vlan port info */
 typedef struct switch_vlan_port_ {
     switch_handle_t handle;                    /**< port or interface handle */
     switch_vlan_tagging_mode_t tagging_mode;   /**< tagging mode */
 } switch_vlan_port_t;
+
+typedef struct switch_vlan_interface_ {
+    switch_handle_t vlan_handle;
+    switch_handle_t intf_handle;
+} switch_vlan_interface_t;
 
 /** Logical Network information */
 typedef struct switch_logical_network_ {
@@ -120,6 +121,8 @@ typedef struct switch_logical_network_ {
     struct {
         uint8_t ipv4_unicast_enabled:1;       /**< v4 unicast enabled */
         uint8_t ipv6_unicast_enabled:1;       /**< v6 unicast enabled */
+        uint8_t ipv4_multicast_enabled:1;     /**< v4 multicast enabled */
+        uint8_t ipv6_multicast_enabled:1;     /**< v6 multicast enabled */
         uint8_t igmp_snooping_enabled:1;      /**< igmp snooping enabled */
         uint8_t mld_snooping_enabled:1;       /**< mld snooping enabled */
         uint8_t flood_enabled:1;              /**< default flood */
@@ -133,6 +136,7 @@ typedef struct switch_logical_network_ {
     unsigned int member_count;                /**< Count of members */
 
     uint16_t bd_label;                        /**< acl label for vlan */
+    uint8_t mrpf_group;                       /**< multicast rpf group */
 } switch_logical_network_t;
 
 /** @defgroup VLAN VLAN configuration API
@@ -256,6 +260,34 @@ switch_status_t switch_api_ln_ipv6_unicast_enabled_set(switch_handle_t ln_handle
 switch_status_t switch_api_ln_ipv6_unicast_enabled_get(switch_handle_t ln_handle, uint64_t *value);
 
 /**
+  Set IPv4 multicast routing enabled for vlan
+  @param ln_handle - Vlan handle that identifies vlan uniquely
+  @param value - Value of IPv4 multicast routing enabled
+*/
+switch_status_t switch_api_ln_ipv4_multicast_enabled_set(switch_handle_t ln_handle, uint64_t value);
+
+/**
+  Get IPv4 multicast routing enabled for vlan
+  @param ln_handle - Vlan handle that identifies vlan uniquely
+  @param value - Value of IPv4 multicast routing enabled
+*/
+switch_status_t switch_api_ln_ipv4_multicast_enabled_get(switch_handle_t ln_handle, uint64_t *value);
+
+/**
+  Set IPv6 multicast routing enabled for vlan
+  @param ln_handle - Vlan handle that identifies vlan uniquely
+  @param value - Value of IPv6 multicast routing enabled
+*/
+switch_status_t switch_api_ln_ipv6_multicast_enabled_set(switch_handle_t ln_handle, uint64_t value);
+
+/**
+  Get IPv6 multicast routing enabled for vlan
+  @param ln_handle - Vlan handle that identifies vlan uniquely
+  @param value - Value of IPv6 multicast routing enabled
+*/
+switch_status_t switch_api_ln_ipv6_multicast_enabled_get(switch_handle_t ln_handle, uint64_t *value);
+
+/**
   Set mac learning enabled for vlan
   @param vlan_handle - Vlan handle that identifies vlan uniquely
   @param value - Value of mac learning enabled
@@ -284,6 +316,41 @@ switch_status_t switch_api_vlan_aging_interval_set(switch_handle_t vlan_handle, 
 switch_status_t switch_api_vlan_aging_interval_get(switch_handle_t vlan_handle, uint64_t *value);
 
 /**
+  Set igmp snooping enable flag for vlan
+  @param vlan_handle - Vlan handle that identifies vlan uniquely
+  @param value - Value of igmp snooping enabled flag
+*/
+switch_status_t switch_api_vlan_igmp_snooping_enabled_set(switch_handle_t vlan_handle, uint64_t value);
+
+/**
+  Get igmp snooping enable flag for vlan
+  @param vlan_handle - Vlan handle that identifies vlan uniquely
+  @param value - Value of igmp snooping enabled flag
+*/
+switch_status_t switch_api_vlan_igmp_snooping_enabled_get(switch_handle_t vlan_handle, uint64_t *value);
+
+/**
+  Set mld snooping enable flag for vlan
+  @param vlan_handle - Vlan handle that identifies vlan uniquely
+  @param value - Value of mld snooping enabled flag
+*/
+switch_status_t switch_api_vlan_mld_snooping_enabled_set(switch_handle_t vlan_handle, uint64_t value);
+
+/**
+  Get mld snooping enable flag for vlan
+  @param vlan_handle - Vlan handle that identifies vlan uniquely
+  @param value - Value of mld snooping enabled flag
+*/
+switch_status_t switch_api_vlan_mld_snooping_enabled_get(switch_handle_t vlan_handle, uint64_t *value);
+
+/**
+  Set mrpf group for vlan
+  @param vlan_handle - Vlan handle that identifies vlan uniquely
+  @param value - Value of mrpf group
+*/
+switch_status_t switch_api_vlan_mrpf_group_set(switch_handle_t vlan_handle, uint64_t value);
+
+/**
   Add ports to vlan. By default, ports will be added to the flood list
   based on the flood type.
   @param device device
@@ -306,11 +373,33 @@ switch_status_t switch_api_vlan_ports_remove(switch_device_t device, switch_hand
                                              uint16_t port_count, switch_vlan_port_t  *vlan_port);
 
 /**
+  Get the list of interfaces that belong to a vlan.
+  @param device device
+  @param vlan_handle - Vlan handle that identifies vlan uniquely
+  @param mbr_count - Number of interfaces
+  @param mbrs - List of interfaces
+*/
+switch_status_t switch_api_vlan_interfaces_get(switch_device_t device,
+                                          switch_handle_t vlan_handle,
+                                          uint16_t *mbr_count,
+                                          switch_vlan_interface_t **mbrs);
+
+/**
  Create a Logical network
  @param device -  device to be programmed
  @param ln_info - Logical network information
 */
 switch_handle_t switch_api_logical_network_create(switch_device_t device,
+                                          switch_logical_network_t *ln_info);
+
+/**
+ Update a Logical network
+ @param device -  device to be programmed
+ @param network_handle handle of logical network
+ @param ln_info - Logical network information
+*/
+switch_status_t switch_api_logical_network_update(switch_device_t device,
+                                          switch_handle_t network_handle,
                                           switch_logical_network_t *ln_info);
 
 /**
@@ -337,6 +426,13 @@ switch_status_t switch_api_vlan_id_to_handle_get(switch_vlan_t vlan_id,
                                                  switch_handle_t *vlan_handle);
 
 /**
+ Get vlan handle to vlan id mapping
+ @param vlan_handle vlan handle
+ @param vlan_id vlan id
+*/
+switch_status_t switch_api_vlan_handle_to_id_get(switch_handle_t vlan_handle,
+                                                 switch_vlan_t *vlan_id);
+/**
  Dump vlan table
  */
 switch_status_t switch_api_vlan_print_all(void);
@@ -356,16 +452,18 @@ switch_status_t switch_api_vlan_stats_enable(switch_device_t device, switch_hand
 switch_status_t switch_api_vlan_stats_disable(switch_device_t device, switch_handle_t vlan_handle);
 
 /**
- Enable vlan statistics
+ Get vlan statistics
  @param vlan_handle Vlan handle that identifies vlan uniquely
  @param count number of counter ids
  @param counter_ids list of counter ids
  @param counters counter values to be returned
  */
-switch_status_t switch_api_vlan_stats_get(switch_handle_t vlan_handle,
-                                uint8_t count,
-                                switch_vlan_stat_counter_t *counter_ids,
-                                switch_counter_t *counters);
+switch_status_t switch_api_vlan_stats_get(
+        switch_device_t device,
+        switch_handle_t vlan_handle,
+        uint8_t count,
+        switch_vlan_stats_t *counter_ids,
+        switch_counter_t *counters);
 
 /** @} */ // end of VLAN
 

@@ -564,6 +564,7 @@ switch_api_logical_network_member_add_basic(switch_device_t device,
             return SWITCH_STATUS_NO_MEMORY;
         }
         ln_member->member = intf_handle;
+        ln_member->rid = switch_mcast_rid_allocate();
         tommy_list_insert_head(&(bd_info->members), &(ln_member->node), ln_member);
     }
 
@@ -574,7 +575,9 @@ switch_api_logical_network_member_add_basic(switch_device_t device,
         tunnel_type = switch_tunnel_get_egress_tunnel_type(encap_type, ip_encap);
 #ifdef SWITCH_PD
         status = switch_pd_tunnel_table_add_entry(device, encap_type,
-                                           tunnel_vni, bd_info,
+                                           tunnel_vni,
+                                           ln_member->rid,
+                                           bd_info,
                                            ip_encap,
                                            handle_to_id(bd_handle),
                                            ln_member->tunnel_hw_entry);
@@ -619,8 +622,13 @@ switch_api_logical_network_member_add_basic(switch_device_t device,
     }
 
     if (SWITCH_INTF_FLOOD_ENABLED(intf_info)) {
-        status = switch_api_multicast_member_add(device, bd_info->uuc_mc_index,
-                                             bd_handle, 1, &intf_handle);
+        switch_vlan_interface_t vlan_intf;
+        memset(&vlan_intf, 0, sizeof(vlan_intf));
+        vlan_intf.vlan_handle = bd_handle;
+        vlan_intf.intf_handle = intf_handle;
+        status = switch_api_multicast_member_add(device,
+                                                 bd_info->uuc_mc_index,
+                                                 1, &vlan_intf);
     }
     if (status != SWITCH_STATUS_SUCCESS) {
         SWITCH_API_ERROR("%s:%d: Unable to add interface %lx to flood list of ln %lx",
@@ -671,6 +679,7 @@ switch_api_logical_network_member_add_enhanced(switch_device_t device,
             return SWITCH_STATUS_NO_MEMORY;
         }
         ln_member->member = intf_handle;
+        ln_member->rid = switch_mcast_rid_allocate();
         tommy_list_insert_head(&(bd_info->members), &(ln_member->node), ln_member);
     }
 
@@ -686,7 +695,9 @@ switch_api_logical_network_member_add_enhanced(switch_device_t device,
 #ifdef SWITCH_PD
             ip_encap = &(SWITCH_INTF_TUNNEL_IP_ENCAP(intf_info));
             status = switch_pd_tunnel_table_add_entry(device, encap_type,
-                                               tunnel_vni, bd_info,
+                                               tunnel_vni,
+                                               ln_member->rid,
+                                               bd_info,
                                                ip_encap,
                                                handle_to_id(bd_handle),
                                                ln_member->tunnel_hw_entry);
@@ -742,11 +753,16 @@ switch_api_logical_network_member_add_enhanced(switch_device_t device,
 #endif
     }
     if (SWITCH_INTF_FLOOD_ENABLED(intf_info)) {
-        status = switch_api_multicast_member_add(device, bd_info->uuc_mc_index,
-                                             bd_handle, 1, &intf_handle);
+        switch_vlan_interface_t vlan_intf;
+        memset(&vlan_intf, 0, sizeof(vlan_intf));
+        vlan_intf.vlan_handle = bd_handle;
+        vlan_intf.intf_handle = intf_handle;
+        status = switch_api_multicast_member_add(device,
+                                                 bd_info->uuc_mc_index,
+                                                 1, &vlan_intf);
         if (status != SWITCH_STATUS_SUCCESS) {
             SWITCH_API_ERROR("%s:%d: Unable to add interface %lx to flood list of ln %lx",
-                         __FUNCTION__, __LINE__, intf_handle, bd_handle);
+                             __FUNCTION__, __LINE__, intf_handle, bd_handle);
         }
     }
 cleanup:
@@ -822,13 +838,19 @@ switch_api_logical_network_member_remove_basic(switch_device_t device,
         status = switch_api_vlan_xlate_remove(device, bd_handle, intf_handle, vlan_id);
     }
     if (SWITCH_INTF_FLOOD_ENABLED(intf_info)) {
-        status = switch_api_multicast_member_delete(device, bd_info->uuc_mc_index,
-                                                bd_handle, 1, &intf_handle);
+        switch_vlan_interface_t vlan_intf;
+        memset(&vlan_intf, 0, sizeof(vlan_intf));
+        vlan_intf.vlan_handle = bd_handle;
+        vlan_intf.intf_handle = intf_handle;
+        status = switch_api_multicast_member_delete(device,
+                                                    bd_info->uuc_mc_index,
+                                                    1, &vlan_intf);
     }
     if (status != SWITCH_STATUS_SUCCESS) {
         SWITCH_API_ERROR("%s:%d: Unable to add interface %lx to flood list of ln %lx",
                      __FUNCTION__, __LINE__, intf_handle, bd_handle);
     }
+    switch_mcast_rid_free(ln_member->rid);
     tommy_list_remove_existing(&(bd_info->members), &(ln_member->node));
     switch_free(ln_member);
 cleanup:
@@ -912,13 +934,19 @@ switch_api_logical_network_member_remove_enhanced(switch_device_t device,
         status = switch_api_vlan_xlate_remove(device, bd_handle, intf_handle, vlan_id);
     }
     if (SWITCH_INTF_FLOOD_ENABLED(intf_info)) {
-        status = switch_api_multicast_member_delete(device, bd_info->uuc_mc_index,
-                                                bd_handle, 1, &intf_handle);
+        switch_vlan_interface_t vlan_intf;
+        memset(&vlan_intf, 0, sizeof(vlan_intf));
+        vlan_intf.vlan_handle = bd_handle;
+        vlan_intf.intf_handle = intf_handle;
+        status = switch_api_multicast_member_delete(device,
+                                                    bd_info->uuc_mc_index,
+                                                    1, &vlan_intf);
         if (status != SWITCH_STATUS_SUCCESS) {
             SWITCH_API_ERROR("%s:%d: Unable to remove interface %lx from flood list of ln %lx",
                          __FUNCTION__, __LINE__, intf_handle, bd_handle);
         }
     }
+    switch_mcast_rid_free(ln_member->rid);
     tommy_list_remove_existing(&(bd_info->members), &(ln_member->node));
     switch_free(ln_member);
 cleanup:

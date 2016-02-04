@@ -22,6 +22,7 @@ limitations under the License.
 #define PORTMAP_TABLE_SIZE                     288
 #define STORM_CONTROL_TABLE_SIZE               MIN_TCAM_TABLE_SIZE
 #define STORM_CONTROL_METER_TABLE_SIZE         MIN_SRAM_TABLE_SIZE
+#define STORM_CONTROL_STATS_TABLE_SIZE         MIN_SRAM_TABLE_SIZE
 #define PORT_VLAN_TABLE_SIZE                   4096
 #define OUTER_ROUTER_MAC_TABLE_SIZE            MIN_SRAM_TABLE_SIZE
 #define DEST_TUNNEL_TABLE_SIZE                 MIN_SRAM_TABLE_SIZE
@@ -70,10 +71,11 @@ limitations under the License.
 #define MAC_REWRITE_TABLE_SIZE                 MIN_TCAM_TABLE_SIZE
 #define EGRESS_VNID_MAPPING_TABLE_SIZE         MIN_SRAM_TABLE_SIZE
 #define EGRESS_BD_MAPPING_TABLE_SIZE           MIN_SRAM_TABLE_SIZE
+#define EGRESS_BD_STATS_TABLE_SIZE             MIN_SRAM_TABLE_SIZE
 #define REPLICA_TYPE_TABLE_SIZE                MIN_TCAM_TABLE_SIZE
 #define RID_TABLE_SIZE                         MIN_SRAM_TABLE_SIZE
 #define TUNNEL_DECAP_TABLE_SIZE                MIN_SRAM_TABLE_SIZE
-#define IP_MTU_TABLE_SIZE                      MIN_SRAM_TABLE_SIZE
+#define L3_MTU_TABLE_SIZE                      MIN_SRAM_TABLE_SIZE
 #define EGRESS_VLAN_XLATE_TABLE_SIZE           MIN_SRAM_TABLE_SIZE
 #define SPANNING_TREE_TABLE_SIZE               MIN_SRAM_TABLE_SIZE
 #define FABRIC_REWRITE_TABLE_SIZE              MIN_TCAM_TABLE_SIZE
@@ -87,4 +89,9 @@ limitations under the License.
 #define MIRROR_COALESCING_SESSIONS_TABLE_SIZE  MIN_SRAM_TABLE_SIZE
 #define DROP_STATS_TABLE_SIZE                  MIN_SRAM_TABLE_SIZE
 #define ACL_STATS_TABLE_SIZE                   MIN_SRAM_TABLE_SIZE
+#define METER_INDEX_TABLE_SIZE                 MIN_SRAM_TABLE_SIZE
+#define METER_ACTION_TABLE_SIZE                MIN_SRAM_TABLE_SIZE
+
+#define INT_TERMINATE_TABLE_SIZE               256
+#define INT_SOURCE_TABLE_SIZE                  256
 #define INT_UNDERLAY_ENCAP_TABLE_SIZE          8

@@ -77,13 +77,13 @@ typedef struct switch_api_mac_entry_ {
  learn notification callback function pointer
  @param mac_entries - set of mac entries
 */
-typedef switch_status_t (*switch_mac_learn_entry_notify_cb)(switch_api_mac_entry_t *mac_entry);
+typedef void (*switch_mac_learn_entry_notify_cb)(switch_api_mac_entry_t *mac_entry);
 
 /**
  learn notification callback function pointer
  @param mac_entries - set of mac entries
 */
-typedef switch_status_t (*switch_mac_aging_entry_notify_cb)(switch_api_mac_entry_t *mac_entry);
+typedef void (*switch_mac_aging_entry_notify_cb)(switch_api_mac_entry_t *mac_entry);
 
 /** Learn and aging call back functions */
 typedef struct switch_mac_cb_fn_ {
@@ -100,7 +100,7 @@ switch_status_t switch_api_mac_table_entry_add(switch_device_t device,
                                        switch_api_mac_entry_t *mac_entry);
 
 /**
- Add a set of Destination MAC table entries. 
+ Add a set of Destination MAC table entries.
  @param device- device
  @param mac_entry_count - Number of mac entries to be added
  @param mac_entries - list of entries contains the vlan and mac that has
