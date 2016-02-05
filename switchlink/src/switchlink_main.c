@@ -29,36 +29,96 @@ static struct nl_sock *g_nlsk = NULL;
 static pthread_t switchlink_thread;
 uint8_t g_log_level = SWITCHLINK_LOG_ERR;
 
+static enum {
+    SWITCHLINK_MSG_LINK,
+    SWITCHLINK_MSG_ADDR,
+    SWITCHLINK_MSG_NETCONF,
+    SWITCHLINK_MSG_NETCONF6,
+    SWITCHLINK_MSG_NEIGH_MAC,
+    SWITCHLINK_MSG_NEIGH_IP,
+    SWITCHLINK_MSG_NEIGH_IP6,
+    SWITCHLINK_MSG_MDB,
+    SWITCHLINK_MSG_UNICAST_ROUTE,
+    SWITCHLINK_MSG_UNICAST_ROUTE6,
+    SWITCHLINK_MSG_MULTICAST_ROUTE,
+    SWITCHLINK_MSG_MULTICAST_ROUTE6,
+    SWITCHLINK_MSG_MAX,
+} switchlink_msg_t;
+
 static void
 nl_sync_state() {
-    int msg_array[] = {
-        RTM_GETLINK,
-        RTM_GETADDR,
-        RTM_GETNEIGH,
-        RTM_GETNEIGHTBL,
-        RTM_GETROUTE
+    static uint8_t msg_idx = SWITCHLINK_MSG_LINK;
+    if (msg_idx == SWITCHLINK_MSG_MAX) {
+        return;
+    }
+
+    struct rtgenmsg rt_hdr = {
+        .rtgen_family = AF_UNSPEC,
     };
 
-    static uint16_t msg_idx = 0;
-    if (msg_idx < sizeof(msg_array)/sizeof(int)) {
-        struct rtgenmsg rt_hdr = {
-            .rtgen_family = AF_UNSPEC,
-        };
+    int msg_type;
+    switch (msg_idx) {
+        case SWITCHLINK_MSG_LINK:
+            msg_type = RTM_GETLINK;
+            break;
 
-        // fixups a.k.a hacks
-        // using GETNEIGH to denote bridge macs and GETNEIGHTBL to denote
-        // regular neighbor entries (arp, nd)
-        int msg_type = msg_array[msg_idx];
-        if (msg_type == RTM_GETNEIGH) {
-            rt_hdr.rtgen_family = AF_BRIDGE;
-        }
-        if (msg_type == RTM_GETNEIGHTBL) {
+        case SWITCHLINK_MSG_ADDR:
+            msg_type = RTM_GETADDR;
+            break;
+
+        case SWITCHLINK_MSG_NETCONF:
+            msg_type = RTM_GETNETCONF;
+            rt_hdr.rtgen_family = AF_INET;
+            break;
+
+        case SWITCHLINK_MSG_NETCONF6:
+            msg_type = RTM_GETNETCONF;
+            rt_hdr.rtgen_family = AF_INET6;
+            break;
+
+        case SWITCHLINK_MSG_NEIGH_MAC:
             msg_type = RTM_GETNEIGH;
-        }
+            rt_hdr.rtgen_family = AF_BRIDGE;
+            break;
 
-        nl_send_simple(g_nlsk, msg_type, NLM_F_DUMP, &rt_hdr, sizeof(rt_hdr));
-        msg_idx++;
+        case SWITCHLINK_MSG_NEIGH_IP:
+            msg_type = RTM_GETNEIGH;
+            rt_hdr.rtgen_family = AF_INET;
+            break;
+
+        case SWITCHLINK_MSG_NEIGH_IP6:
+            msg_type = RTM_GETNEIGH;
+            rt_hdr.rtgen_family = AF_INET6;
+            break;
+
+        case SWITCHLINK_MSG_MDB:
+            msg_type = RTM_GETMDB;
+            rt_hdr.rtgen_family = AF_BRIDGE;
+            break;
+
+        case SWITCHLINK_MSG_UNICAST_ROUTE:
+            msg_type = RTM_GETROUTE;
+            rt_hdr.rtgen_family = AF_INET;
+            break;
+
+        case SWITCHLINK_MSG_UNICAST_ROUTE6:
+            msg_type = RTM_GETROUTE;
+            rt_hdr.rtgen_family = AF_INET6;
+            break;
+
+        case SWITCHLINK_MSG_MULTICAST_ROUTE:
+            msg_type = RTM_GETROUTE;
+            rt_hdr.rtgen_family = RTNL_FAMILY_IPMR;
+            break;
+
+        case SWITCHLINK_MSG_MULTICAST_ROUTE6:
+            msg_type = RTM_GETROUTE;
+            rt_hdr.rtgen_family = RTNL_FAMILY_IP6MR;
+            break;
     }
+
+    nl_send_simple(g_nlsk, msg_type, NLM_F_DUMP, &rt_hdr, sizeof(rt_hdr));
+    msg_idx++;
 }
 
 static void
@@ -79,6 +139,14 @@ process_nl_message(struct nlmsghdr *nlmsg) {
         case RTM_NEWNEIGH:
         case RTM_DELNEIGH:
             process_neigh_msg(nlmsg, nlmsg->nlmsg_type);
+            break;
+        case RTM_NEWNETCONF:
+            process_netconf_msg(nlmsg, nlmsg->nlmsg_type);
+            break;
+        case RTM_GETMDB:
+        case RTM_NEWMDB:
+        case RTM_DELMDB:
+            process_mdb_msg(nlmsg, nlmsg->nlmsg_type);
             break;
         case NLMSG_DONE:
             nl_sync_state();
@@ -110,7 +178,7 @@ cleanup_nl_sock() {
 }
 
 static void
-init_nl_sock_intf() {
+switchlink_nl_sock_intf_init() {
     int nlsk_fd, sock_flags;
 
     // allocate a new socket
@@ -146,10 +214,13 @@ init_nl_sock_intf() {
     nl_socket_add_memberships(g_nlsk, RTNLGRP_IPV4_MROUTE, 0);
     nl_socket_add_memberships(g_nlsk, RTNLGRP_IPV4_ROUTE, 0);
     nl_socket_add_memberships(g_nlsk, RTNLGRP_IPV4_RULE, 0);
+    nl_socket_add_memberships(g_nlsk, RTNLGRP_IPV4_NETCONF, 0);
     nl_socket_add_memberships(g_nlsk, RTNLGRP_IPV6_IFADDR, 0);
     nl_socket_add_memberships(g_nlsk, RTNLGRP_IPV6_MROUTE, 0);
     nl_socket_add_memberships(g_nlsk, RTNLGRP_IPV6_ROUTE, 0);
     nl_socket_add_memberships(g_nlsk, RTNLGRP_IPV6_RULE, 0);
+    nl_socket_add_memberships(g_nlsk, RTNLGRP_IPV6_NETCONF, 0);
+    nl_socket_add_memberships(g_nlsk, RTNLGRP_MDB, 0);
 
     // set socket to be non-blocking
     nlsk_fd = nl_socket_get_fd(g_nlsk);
@@ -195,21 +266,24 @@ process_nl_event_loop() {
     }
 }
 
+
+struct nl_sock *
+switchlink_get_nl_sock() {
+    return g_nlsk;
+}
+
 static void *
 switchlink_main(void *args) {
-    init_nl_sock_intf();
-
-    if (!g_nlsk) {
-        return NULL;
-    }
-
     switchlink_db_init();
     switchlink_api_init();
     switchlink_link_init();
     switchlink_packet_driver_init();
+    switchlink_nl_sock_intf_init();
 
-    process_nl_event_loop();
-    cleanup_nl_sock();
+    if (g_nlsk) {
+        process_nl_event_loop();
+        cleanup_nl_sock();
+    }
 
     return NULL;
 }

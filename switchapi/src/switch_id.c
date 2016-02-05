@@ -73,7 +73,8 @@ switch_api_id_allocator_allocate_contiguous (switch_api_id_allocator *allocator,
             if ((pos=_fit_width(allocator->data[i], count)) > 0) {
                 // set the bitmap to 1s
                 allocator->data[i] |= (0xFFFFFFFF << (pos - count)) & 0xFFFFFFFF;
-                return 32 * i + (32 - pos) + 1;
+                return 32 * i + (32 - pos) + 
+                       (allocator->zero_based ? 0 : 1);
             }
         }
     }
@@ -82,7 +83,7 @@ switch_api_id_allocator_allocate_contiguous (switch_api_id_allocator *allocator,
     memset (&allocator->data[n_words], 0x0, n_words * sizeof (uint32_t));
     allocator->n_words = n_words * 2;
     allocator->data[n_words] |= (0xFFFFFFFF << (32 - count)) & 0xFFFFFFFF;
-    return 32 * n_words + 1;
+    return 32 * n_words + (allocator->zero_based ? 0 : 1);
 }
     
 unsigned int

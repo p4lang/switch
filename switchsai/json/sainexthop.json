@@ -1,0 +1,37 @@
+{
+    "module_name"          :      "nexthop",
+    "attributes"           : [
+    {
+        "attribute_desc"          :      "nexthop",
+        "attribute_list"          : [
+            {
+                "name"          :     "SAI_NEXT_HOP_ATTR_TYPE",
+                "mandatory"     :     "true",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_NEXT_HOP_ATTR_IP",
+                "mandatory"     :     "true",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "ip_address"
+            },
+            {
+                "name"          :     "SAI_NEXT_HOP_ATTR_ROUTER_INTERFACE_ID",
+                "mandatory"     :     "true",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid"
+            }
+        ]
+    }
+    ]
+}

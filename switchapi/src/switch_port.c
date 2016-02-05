@@ -139,3 +139,91 @@ switch_api_port_print_all(void)
     }
     return SWITCH_STATUS_SUCCESS;
 }
+
+switch_status_t
+switch_api_port_storm_control_set(
+        switch_device_t device,
+        switch_port_t port,
+        switch_packet_type_t pkt_type,
+        switch_handle_t meter_handle)
+{
+    switch_port_info_t *port_info = NULL;
+    switch_status_t status = SWITCH_STATUS_SUCCESS;
+
+    port = handle_to_id(port);
+    if (port > SWITCH_API_MAX_PORTS) {
+        return SWITCH_STATUS_INVALID_PARAMETER;
+    }
+
+    port_info = &switch_port_info[port];
+    port_info->meter_handle[pkt_type] = meter_handle;
+    if (meter_handle) {
+        status = switch_pd_storm_control_table_add_entry(
+                             device,
+                             port,
+                             1000,
+                             pkt_type,
+                             handle_to_id(meter_handle),
+                             &port_info->meter_pd_hdl[pkt_type]);
+    } else {
+        if (port_info->meter_pd_hdl) {
+            status = switch_pd_storm_control_table_delete_entry(
+                             device,
+                             port_info->meter_pd_hdl[pkt_type]);
+        }
+    }
+    return status;
+}
+
+switch_status_t
+switch_api_port_storm_control_get(
+        switch_device_t device,
+        switch_port_t port,
+        switch_packet_type_t pkt_type,
+        switch_handle_t *meter_handle)
+{
+    switch_port_info_t *port_info = NULL;
+
+    port = handle_to_id(port);
+    if (port > SWITCH_API_MAX_PORTS) {
+        return SWITCH_STATUS_INVALID_PARAMETER;
+    }
+
+    port_info = &switch_port_info[port];
+    *meter_handle = port_info->meter_handle[pkt_type];
+    return SWITCH_STATUS_SUCCESS;
+}
+
+switch_status_t
+switch_api_storm_control_stats_get(switch_device_t device,
+                          switch_handle_t meter_handle,
+                          uint8_t count,
+                          switch_meter_stats_t *counter_ids,
+                          switch_counter_t *counters)
+{
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+    switch_meter_info_t               *meter_info = NULL;
+    switch_meter_stats_info_t         *stats_info = NULL;
+    int                                index = 0;
+    switch_vlan_stats_t                counter_id = 0;
+
+    meter_info = switch_meter_info_get(meter_handle);
+    if (!meter_info) {
+        return SWITCH_STATUS_ITEM_NOT_FOUND;
+    }
+
+    stats_info = meter_info->stats_info;
+    status = switch_pd_storm_control_stats_get(device, meter_info);
+    for (index = 0; index < count; index++) {
+        counter_id = counter_ids[index];
+        counters[index] = stats_info->counters[counter_id];
+    }
+    return status;
+}
+
+bool
+switch_port_is_cpu_port(switch_handle_t port_hdl)
+{
+    uint32_t port_id = handle_to_id(port_hdl);
+    return port_id == CPU_PORT_ID;
+}

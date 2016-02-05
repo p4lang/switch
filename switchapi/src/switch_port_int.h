@@ -43,6 +43,7 @@ typedef struct switch_port_info_ {
     switch_handle_t port_handle;
     switch_handle_t hostif_handle;
     switch_port_type_t port_type;
+    switch_handle_t meter_handle[SWITCH_PACKET_TYPE_MAX];
 #ifdef SWITCH_PD
     p4_pd_entry_hdl_t hw_entry;             /* port mapping entry */
     p4_pd_entry_hdl_t lg_entry;             /* Lag group entry */
@@ -51,6 +52,7 @@ typedef struct switch_port_info_ {
     p4_pd_entry_hdl_t eg_lag_entry;         /* egress lag entry */
     p4_pd_entry_hdl_t rw_entry;             /* fabric rewrite entry */
     p4_pd_entry_hdl_t tunnel_rw_entry;      /* tunnel rewrite entry */
+    p4_pd_entry_hdl_t meter_pd_hdl[SWITCH_PACKET_TYPE_MAX];         /* meter pd hdl */
 #endif
 } switch_port_info_t;
 
@@ -63,6 +65,7 @@ typedef struct switch_port_info_ {
 switch_status_t switch_port_init(switch_device_t device);
 switch_port_info_t *switch_api_port_get_internal(switch_port_t port);
 
+bool switch_port_is_cpu_port(switch_handle_t port_hdl);
 #ifdef __cplusplus
 }
 #endif

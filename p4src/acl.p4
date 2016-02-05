@@ -25,6 +25,7 @@ limitations under the License.
 header_type acl_metadata_t {
     fields {
         acl_deny : 1;                          /* ifacl/vacl deny action */
+        acl_copy : 1;                          /* generate copy to cpu */
         racl_deny : 1;                         /* racl deny action */
         acl_nexthop : 16;                      /* next hop from ifacl/vacl */
         racl_nexthop : 16;                     /* next hop from racl */
@@ -35,7 +36,7 @@ header_type acl_metadata_t {
         if_label : 15;                         /* if label for acls */
         bd_label : 16;                         /* bd label for acls */
         mirror_session_id : 10;                /* mirror session id */
-        acl_stats_index : 32;                  /* acl stats index */
+        acl_stats_index : 14;                  /* acl stats index */
     }
 }
 header_type qos_metadata_t {
@@ -49,7 +50,7 @@ header_type qos_metadata_t {
 
 header_type i2e_metadata_t {
     fields {
-        ingress_tstamp : 32;
+        ingress_tstamp    : 32;
         mirror_session_id : 16;
     }
 }
@@ -62,20 +63,19 @@ metadata i2e_metadata_t i2e_metadata;
 /*****************************************************************************/
 /* ACL Actions                                                               */
 /*****************************************************************************/
-action acl_log(acl_stats_index) {
-    modify_field(ingress_metadata.enable_dod, 0);
-    modify_field(acl_metadata.acl_stats_index, acl_stats_index);
-}
-
-action acl_deny(acl_stats_index) {
+action acl_deny(acl_stats_index, acl_meter_index, acl_copy, acl_copy_reason) {
     modify_field(acl_metadata.acl_deny, TRUE);
-    modify_field(ingress_metadata.enable_dod, 0);
     modify_field(acl_metadata.acl_stats_index, acl_stats_index);
+    modify_field(meter_metadata.meter_index, acl_meter_index);
+    modify_field(acl_metadata.acl_copy, acl_copy);
+    modify_field(fabric_metadata.reason_code, acl_copy_reason);
 }
 
-action acl_permit(acl_stats_index) {
-    modify_field(ingress_metadata.enable_dod, 0);
+action acl_permit(acl_stats_index, acl_meter_index, acl_copy, acl_copy_reason) {
     modify_field(acl_metadata.acl_stats_index, acl_stats_index);
+    modify_field(meter_metadata.meter_index, acl_meter_index);
+    modify_field(acl_metadata.acl_copy, acl_copy);
+    modify_field(fabric_metadata.reason_code, acl_copy_reason);
 }
 
 field_list i2e_mirror_info {
@@ -94,34 +94,37 @@ field_list e2e_mirror_info {
 #endif
 }
 
-action acl_mirror(session_id, acl_stats_index) {
+action acl_mirror(session_id, acl_stats_index, acl_meter_index) {
     modify_field(i2e_metadata.mirror_session_id, session_id);
     modify_field(i2e_metadata.ingress_tstamp, _ingress_global_tstamp_);
-    modify_field(ingress_metadata.enable_dod, 0);
     clone_ingress_pkt_to_egress(session_id, i2e_mirror_info);
     modify_field(acl_metadata.acl_stats_index, acl_stats_index);
+    modify_field(meter_metadata.meter_index, acl_meter_index);
 }
 
-action acl_redirect_nexthop(nexthop_index, acl_stats_index) {
+action acl_redirect_nexthop(nexthop_index, acl_stats_index, acl_meter_index,
+                            acl_copy, acl_copy_reason) {
     modify_field(acl_metadata.acl_redirect, TRUE);
     modify_field(acl_metadata.acl_nexthop, nexthop_index);
     modify_field(acl_metadata.acl_nexthop_type, NEXTHOP_TYPE_SIMPLE);
-    modify_field(ingress_metadata.enable_dod, 0);
     modify_field(acl_metadata.acl_stats_index, acl_stats_index);
+    modify_field(meter_metadata.meter_index, acl_meter_index);
+    modify_field(acl_metadata.acl_copy, acl_copy);
+    modify_field(fabric_metadata.reason_code, acl_copy_reason);
 }
 
-action acl_redirect_ecmp(ecmp_index, acl_stats_index) {
+action acl_redirect_ecmp(ecmp_index, acl_stats_index, acl_meter_index,
+                         acl_copy, acl_copy_reason) {
     modify_field(acl_metadata.acl_redirect, TRUE);
     modify_field(acl_metadata.acl_nexthop, ecmp_index);
     modify_field(acl_metadata.acl_nexthop_type, NEXTHOP_TYPE_ECMP);
-    modify_field(ingress_metadata.enable_dod, 0);
     modify_field(acl_metadata.acl_stats_index, acl_stats_index);
-}
-
-action acl_dod_en() {
-    modify_field(ingress_metadata.enable_dod, 1);
+    modify_field(meter_metadata.meter_index, acl_meter_index);
+    modify_field(acl_metadata.acl_copy, acl_copy);
+    modify_field(fabric_metadata.reason_code, acl_copy_reason);
 }
 #endif /* ACL_DISABLE */
+
 
 
 /*****************************************************************************/
@@ -139,10 +142,11 @@ table mac_acl {
     }
     actions {
         nop;
-        acl_log;
         acl_deny;
         acl_permit;
         acl_mirror;
+        acl_redirect_nexthop;
+        acl_redirect_ecmp;
     }
     size : INGRESS_MAC_ACL_TABLE_SIZE;
 }
@@ -174,11 +178,9 @@ table ip_acl {
     }
     actions {
         nop;
-        acl_log;
         acl_deny;
         acl_permit;
         acl_mirror;
-        acl_dod_en;
         acl_redirect_nexthop;
         acl_redirect_ecmp;
     }
@@ -207,7 +209,6 @@ table ipv6_acl {
     }
     actions {
         nop;
-        acl_log;
         acl_deny;
         acl_permit;
         acl_mirror;
@@ -237,7 +238,6 @@ control process_ip_acl {
     }
 #endif /* ACL_DISABLE */
 }
-
 
 /*****************************************************************************/
 /* Qos Processing                                                            */
@@ -292,31 +292,38 @@ control process_qos {
 /* RACL actions                                                              */
 /*****************************************************************************/
 #ifndef ACL_DISABLE
-action racl_log(acl_stats_index) {
-    modify_field(acl_metadata.acl_stats_index, acl_stats_index);
-}
-
-action racl_deny(acl_stats_index) {
+action racl_deny(acl_stats_index, acl_copy, acl_copy_reason) {
     modify_field(acl_metadata.racl_deny, TRUE);
     modify_field(acl_metadata.acl_stats_index, acl_stats_index);
+    modify_field(acl_metadata.acl_copy, acl_copy);
+    modify_field(fabric_metadata.reason_code, acl_copy_reason);
 }
 
-action racl_permit(acl_stats_index) {
+action racl_permit(acl_stats_index,
+                   acl_copy, acl_copy_reason) {
     modify_field(acl_metadata.acl_stats_index, acl_stats_index);
+    modify_field(acl_metadata.acl_copy, acl_copy);
+    modify_field(fabric_metadata.reason_code, acl_copy_reason);
 }
 
-action racl_redirect_nexthop(nexthop_index, acl_stats_index) {
+action racl_redirect_nexthop(nexthop_index, acl_stats_index,
+                             acl_copy, acl_copy_reason) {
     modify_field(acl_metadata.racl_redirect, TRUE);
     modify_field(acl_metadata.racl_nexthop, nexthop_index);
     modify_field(acl_metadata.racl_nexthop_type, NEXTHOP_TYPE_SIMPLE);
     modify_field(acl_metadata.acl_stats_index, acl_stats_index);
+    modify_field(acl_metadata.acl_copy, acl_copy);
+    modify_field(fabric_metadata.reason_code, acl_copy_reason);
 }
 
-action racl_redirect_ecmp(ecmp_index, acl_stats_index) {
+action racl_redirect_ecmp(ecmp_index, acl_stats_index,
+                          acl_copy, acl_copy_reason) {
     modify_field(acl_metadata.racl_redirect, TRUE);
     modify_field(acl_metadata.racl_nexthop, ecmp_index);
     modify_field(acl_metadata.racl_nexthop_type, NEXTHOP_TYPE_ECMP);
     modify_field(acl_metadata.acl_stats_index, acl_stats_index);
+    modify_field(acl_metadata.acl_copy, acl_copy);
+    modify_field(fabric_metadata.reason_code, acl_copy_reason);
 }
 #endif /* ACL_DISABLE */
 
@@ -337,7 +344,6 @@ table ipv4_racl {
     }
     actions {
         nop;
-        racl_log;
         racl_deny;
         racl_permit;
         racl_redirect_nexthop;
@@ -370,13 +376,12 @@ table ipv6_racl {
     }
     actions {
         nop;
-        racl_log;
         racl_deny;
         racl_permit;
         racl_redirect_nexthop;
         racl_redirect_ecmp;
     }
-    size : INGRESS_IP_RACL_TABLE_SIZE;
+    size : INGRESS_IPV6_RACL_TABLE_SIZE;
 }
 #endif /* !ACL_DISABLE && !IPV6_DISABLE */
 
@@ -386,13 +391,13 @@ control process_ipv6_racl {
 #endif /* !ACL_DISABLE && !IPV6_DISABLE */
 }
 
-
 /*****************************************************************************/
 /* ACL stats                                                                 */
 /*****************************************************************************/
 counter acl_stats {
     type : packets_and_bytes;
     instance_count : ACL_STATS_TABLE_SIZE;
+    min_width : 16;
 }
 
 action acl_stats_update() {
@@ -400,9 +405,6 @@ action acl_stats_update() {
 }
 
 table acl_stats {
-    reads {
-        acl_metadata.acl_stats_index : exact;
-    }
     actions {
         acl_stats_update;
     }
@@ -441,7 +443,7 @@ action negative_mirror(session_id) {
 }
 
 action redirect_to_cpu(reason_code) {
-    copy_to_cpu(reason_code);
+    copy_to_cpu_with_reason(reason_code);
     drop();
 #ifdef FABRIC_ENABLE
     modify_field(fabric_metadata.dst_device, 0);
@@ -458,8 +460,12 @@ field_list cpu_info {
 #endif
 }
 
-action copy_to_cpu(reason_code) {
+action copy_to_cpu_with_reason(reason_code) {
     modify_field(fabric_metadata.reason_code, reason_code);
+    clone_ingress_pkt_to_egress(CPU_MIRROR_SESSION_ID, cpu_info);
+}
+
+action copy_to_cpu() {
     clone_ingress_pkt_to_egress(CPU_MIRROR_SESSION_ID, cpu_info);
 }
 
@@ -472,19 +478,10 @@ action drop_packet_with_reason(drop_reason) {
     drop();
 }
 
-action congestion_mirror_set() {
-    deflect_on_drop();
-}
-
 table system_acl {
     reads {
         acl_metadata.if_label : ternary;
         acl_metadata.bd_label : ternary;
-
-        /* ip acl */
-        ipv4_metadata.lkp_ipv4_sa : ternary;
-        ipv4_metadata.lkp_ipv4_da : ternary;
-        l3_metadata.lkp_ip_proto : ternary;
 
         /* mac acl */
         l2_metadata.lkp_mac_sa : ternary;
@@ -496,10 +493,15 @@ table system_acl {
         /* drop reasons */
         l2_metadata.port_vlan_mapping_miss : ternary;
         security_metadata.ipsg_check_fail : ternary;
+        security_metadata.storm_control_color : ternary;
         acl_metadata.acl_deny : ternary;
         acl_metadata.racl_deny: ternary;
         l3_metadata.urpf_check_fail : ternary;
         ingress_metadata.drop_flag : ternary;
+
+        /* copy reason */
+        acl_metadata.acl_copy : ternary;
+        l3_metadata.l3_copy : ternary;
 
         l3_metadata.rmac_hit : ternary;
 
@@ -516,21 +518,20 @@ table system_acl {
         l2_metadata.stp_state : ternary;
         ingress_metadata.control_frame: ternary;
         ipv4_metadata.ipv4_unicast_enabled : ternary;
+        ipv6_metadata.ipv6_unicast_enabled : ternary;
 
         /* egress information */
         ingress_metadata.egress_ifindex : ternary;
 
-        /* deflect on drop (-ve mirror) */
-        ingress_metadata.enable_dod: ternary;
     }
     actions {
         nop;
         redirect_to_cpu;
+        copy_to_cpu_with_reason;
         copy_to_cpu;
         drop_packet;
         drop_packet_with_reason;
         negative_mirror;
-        congestion_mirror_set;
     }
     size : SYSTEM_ACL_SIZE;
 }
@@ -552,7 +553,6 @@ control process_system_acl {
         apply(drop_stats);
     }
 }
-
 
 /*****************************************************************************/
 /* Egress ACL                                                                */
@@ -596,6 +596,8 @@ table egress_acl {
 
 control process_egress_acl {
 #ifndef ACL_DISABLE
-    apply(egress_acl);
+    if (egress_metadata.bypass == FALSE) {
+        apply(egress_acl);
+    }
 #endif /* ACL_DISABLE */
 }

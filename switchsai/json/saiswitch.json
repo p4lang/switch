@@ -1,0 +1,583 @@
+{
+    "module_name"          :      "switch",
+    "attributes"           : [
+    {
+        "attribute_desc"          :      "switch attributes",
+        "attribute_list"          : [
+            {
+                "name"          :     "SAI_SWITCH_ATTR_PORT_NUMBER",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u32"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_PORT_LIST",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "oid_list"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_PORT_MAX_MTU",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u32"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_CPU_PORT",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "oid"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_MAX_VIRTUAL_ROUTERS",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u32"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_FDB_TABLE_SIZE",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u32"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_ON_LINK_ROUTE_SUPPORTED",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_OPER_STATUS",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_MAX_TEMP",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "s32"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_ACL_TABLE_MINIMUM_PRIORITY",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u32"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_ACL_TABLE_MAXIMUM_PRIORITY",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u32"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_ACL_ENTRY_MINIMUM_PRIORITY",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u32"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_ACL_ENTRY_MAXIMUM_PRIORITY",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u32"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_FDB_DST_USER_META_DATA_RANGE",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u32_range"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_ROUTE_DST_USER_META_DATA_RANGE",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u32_range"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_NEIGHBOR_DST_USER_META_DATA_RANGE",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u32_range"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_PORT_USER_META_DATA_RANGE",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u32_range"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_VLAN_USER_META_DATA_RANGE",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u32_range"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_ACL_USER_META_DATA_RANGE",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u32_range"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_DEFAULT_STP_INST_ID",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "oid"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_QOS_MAX_NUMBER_OF_TRAFFIC_CLASSES",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u32"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_QOS_MAX_NUMBER_OF_SCHEDULER_GROUP_HIERARCHY_LEVELS",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u32"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_QOS_MAX_NUMBER_OF_SCHEDULER_GROUPS_PER_HIERARCHY_LEVEL",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u32_list"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_MAX_LAG_MEMBERS",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u32"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_MAX_LAG_NUMBER",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u32"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_TOTAL_BUFFER_SIZE",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u32"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_INGRESS_BUFFER_POOL_NUM",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u32"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_EGRESS_BUFFER_POOL_NUM",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u32"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_SWITCHING_MODE",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8",
+		"default"       :     "SAI_SWITCHING_MODE_STORE_AND_FORWARD"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_BCAST_CPU_FLOOD_ENABLE",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_MCAST_CPU_FLOOD_ENABLE",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_SRC_MAC_ADDRESS",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "mac"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_MAX_LEARNED_ADDRESSES",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u32",
+                "default"       :     "0"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_FDB_AGING_TIME",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u32",
+                "default"       :     "0"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_FDB_UNICAST_MISS_ACTION",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8",
+                "default"       :     "SAI_PACKET_ACTION_FORWARD"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_FDB_BROADCAST_MISS_ACTION",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8",
+                "default"       :     "SAI_PACKET_ACTION_FORWARD"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_FDB_MULTICAST_MISS_ACTION",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8",
+                "default"       :     "SAI_PACKET_ACTION_FORWARD"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_LAG_HASH_ALGO",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8",
+                "default"       :     "SAI_HASH_CRC"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_LAG_HASH_SEED",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_LAG_HASH_FIELDS",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "s32_list"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_ECMP_HASH_ALGO",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8",
+                "default"       :     "SAI_HASH_CRC"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_ECMP_HASH_SEED",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_ECMP_HASH_FIELDS",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "s32_list"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_ECMP_MAX_PATHS",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u32",
+                "default"       :     "64"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_COUNTER_REFRESH_INTERVAL",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u32",
+                "default"       :     "1"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_DEFAULT_TRAP_CHANNEL",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8",
+                "default"       :     "SAI_HOSTIF_TRAP_CHANNEL_CB"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_DEFAULT_TRAP_CHANNEL_FD",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_DEFAULT_TRAP_GROUP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_QOS_DEFAULT_TC",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u32",
+                "default"       :     "0"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_QOS_DOT1P_TO_TC_MAP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_QOS_DOT1P_TO_COLOR_MAP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_QOS_DOT1P_TO_TC_AND_COLOR_MAP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_QOS_DSCP_TO_TC_MAP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_QOS_DSCP_TO_COLOR_MAP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_QOS_DSCP_TO_TC_AND_COLOR_MAP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_QOS_TC_TO_QUEUE_MAP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_QOS_TC_TO_DOT1P_MAP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_QOS_TC_AND_COLOR_TO_DOT1P_MAP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_QOS_TC_TO_DSCP_MAP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_QOS_TC_AND_COLOR_TO_DSCP_MAP",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid",
+                "default"       :     "SAI_NULL_OBJECT_ID"
+            },
+            {
+                "name"          :     "SAI_SWITCH_ATTR_PORT_BREAKOUT",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "WRITE_ONLY",
+                "data_type"     :     "port_breakout"
+            }
+        ]
+    }
+    ]
+}

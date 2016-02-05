@@ -51,7 +51,12 @@ static const char *module[] = {
     "QOS_MAPS",
     "QUEUE",
     "SCHEDULER",
-    "SCHEDULER_GROUP"
+    "SCHEDULER_GROUP",
+    "BUFFERS",
+    "HASH",
+    "UDF",
+    "IPMC",
+    "L2MC",
 };
 
 sai_status_t sai_api_query(
@@ -138,6 +143,18 @@ sai_status_t sai_api_query(
             *api_method_table = &sai_api_service.samplepacket_api;
             break;
 
+        case SAI_API_IPMC:
+            *api_method_table = &sai_api_service.ipmc_api;
+            break;
+
+        case SAI_API_L2MC:
+            *api_method_table = &sai_api_service.l2mc_api;
+            break;
+
+        case SAI_API_POLICER:
+            *api_method_table = &sai_api_service.policer_api;
+            break;
+
         default:
             *api_method_table = NULL;
             status = SAI_STATUS_INVALID_PARAMETER;
@@ -165,7 +182,7 @@ sai_status_t sai_api_query(
 *    Return SAI_OBJECT_TYPE_NULL when sai_object_id is not valid.
 *    Otherwise, return a valid sai object type SAI_OBJECT_TYPE_XXX
 */
-sai_object_type_t 
+sai_object_type_t
 sai_object_type_query(
     _In_ sai_object_id_t sai_object_id) {
 
@@ -182,6 +199,9 @@ sai_object_type_query(
             break;
         case SWITCH_HANDLE_TYPE_LAG:
             object_type = SAI_OBJECT_TYPE_LAG;
+            break;
+        case SWITCH_HANDLE_TYPE_LAG_MEMBER:
+            object_type = SAI_OBJECT_TYPE_LAG_MEMBER;
             break;
         case SWITCH_HANDLE_TYPE_INTERFACE:
             object_type = SAI_OBJECT_TYPE_ROUTER_INTERFACE;
@@ -216,6 +236,15 @@ sai_object_type_query(
             break;
         case SWITCH_HANDLE_TYPE_MIRROR:
             object_type = SAI_OBJECT_TYPE_MIRROR;
+            break;
+        case SWITCH_HANDLE_TYPE_MGID:
+            object_type = SAI_OBJECT_TYPE_NEXT_HOP_GROUP;
+            break;
+        case SWITCH_HANDLE_TYPE_ACL_COUNTER:
+            object_type = SAI_OBJECT_TYPE_ACL_COUNTER;
+            break;
+        case SWITCH_HANDLE_TYPE_METER:
+            object_type = SAI_OBJECT_TYPE_POLICER;
             break;
         default:
             object_type = SAI_OBJECT_TYPE_NULL;
@@ -256,6 +285,10 @@ sai_status_t sai_initialize() {
     sai_hostif_initialize(&sai_api_service);
     sai_acl_initialize(&sai_api_service);
     sai_mirror_initialize(&sai_api_service);
+    sai_policer_initialize(&sai_api_service);
+    sai_ipmc_initialize(&sai_api_service);
+    sai_l2mc_initialize(&sai_api_service);
+
     SAI_LOG_EXIT();
 
     return SAI_STATUS_SUCCESS;

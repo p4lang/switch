@@ -49,11 +49,24 @@ process_address_msg(struct nlmsghdr *nlmsg, int type) {
     }
 
     switchlink_db_status_t status;
+    switchlink_intf_type_t intf_type = SWITCHLINK_INTF_TYPE_NONE;
+    switchlink_handle_t intf_h = 0;
+    bool create_l3vi = false;
+
     switchlink_db_interface_info_t ifinfo;
     status = switchlink_db_interface_get_info(addrmsg->ifa_index, &ifinfo);
-    if (status != SWITCHLINK_DB_STATUS_SUCCESS) {
-        // an interface that we are not interested in, skip
-        return;
+    if (status == SWITCHLINK_DB_STATUS_SUCCESS) {
+        intf_type = ifinfo.intf_type;
+        intf_h = ifinfo.intf_h;
+    } else {
+        switchlink_db_bridge_info_t brinfo;
+        status = switchlink_db_bridge_get_info(addrmsg->ifa_index, &brinfo);
+        if (status == SWITCHLINK_DB_STATUS_SUCCESS) {
+            create_l3vi = true;
+        } else {
+            // an interface that we are not interested in, skip
+            return;
+        }
     }
     if (strcmp(ifinfo.ifname, SWITCHLINK_CPU_INTERFACE_NAME) == 0) {
         // address on CPU interface, skip
@@ -84,12 +97,19 @@ process_address_msg(struct nlmsghdr *nlmsg, int type) {
     }
 
     if (type == RTM_NEWADDR) {
-        if (ifinfo.intf_type != SWITCHLINK_INTF_TYPE_L3) {
-            if ((addrmsg->ifa_family == AF_INET) ||
-                ((addrmsg->ifa_family == AF_INET6) &&
-                !IN6_IS_ADDR_LINKLOCAL(&(addr.ip.v6addr)))) {
-                interface_change_type(addrmsg->ifa_index,
-                                      SWITCHLINK_INTF_TYPE_L3);
+        if ((addrmsg->ifa_family == AF_INET) ||
+            ((addrmsg->ifa_family == AF_INET6) &&
+             !IN6_IS_ADDR_LINKLOCAL(&(addr.ip.v6addr)))) {
+            if (create_l3vi) {
+                interface_create_l3vi(addrmsg->ifa_index);
+                status = switchlink_db_interface_get_info(addrmsg->ifa_index, &ifinfo);
+                assert(status == SWITCHLINK_DB_STATUS_SUCCESS);
+                intf_h = ifinfo.intf_h;
+            } else {
+                if (intf_type == SWITCHLINK_INTF_TYPE_L2_ACCESS) {
+                    interface_change_type(addrmsg->ifa_index,
+                                          SWITCHLINK_INTF_TYPE_L3);
+                }
             }
         }
         if (addr_valid) {
@@ -98,8 +118,7 @@ process_address_msg(struct nlmsghdr *nlmsg, int type) {
             null_gateway.family = addr.family;
 
             // add the subnet route
-            route_create(g_default_vrf_h, &addr, &null_gateway,
-                         0, ifinfo.intf_h);
+            route_create(g_default_vrf_h, &addr, &null_gateway, 0, intf_h);
 
             // add the interface route
             if (addrmsg->ifa_family == AF_INET) {
@@ -107,8 +126,7 @@ process_address_msg(struct nlmsghdr *nlmsg, int type) {
             } else {
                 addr.prefix_len = 128;
             }
-            route_create(g_default_vrf_h, &addr, &null_gateway,
-                         0, ifinfo.intf_h);
+            route_create(g_default_vrf_h, &addr, &null_gateway, 0, intf_h);
         }
     } else {
         if (addr_valid) {

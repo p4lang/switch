@@ -46,6 +46,10 @@ typedef enum {
     SWITCH_HANDLE_TYPE_HOSTIF,
     SWITCH_HANDLE_TYPE_ACE,
     SWITCH_HANDLE_TYPE_MIRROR,
+    SWITCH_HANDLE_TYPE_METER,
+    SWITCH_HANDLE_TYPE_SFLOW,
+    SWITCH_HANDLE_TYPE_LAG_MEMBER,
+    SWITCH_HANDLE_TYPE_ACL_COUNTER,
 
     SWITCH_HANDLE_TYPE_MAX=32
 } switch_handle_type_t;
@@ -62,10 +66,16 @@ typedef struct {
     switch_api_id_allocator *allocator;    /**< allocator associated with handle */
     unsigned int num_in_use;               /**< number of handle in use */
     unsigned int initial_size;             /**< current size of allocator */
+    unsigned int num_handles;              /**< number of handles to allocate */
+    bool grow_on_demand;                   /**< allocate new handles as needed */
+    bool zero_based;                       /**< 0 is a valid id */
 } switch_handle_info_t;
     
 // Protoypes
 int switch_handle_type_init(switch_handle_type_t type, unsigned int size);
+int switch_handle_type_allocator_init(switch_handle_type_t type, 
+                                      unsigned int num_handles, 
+                                      bool grow_on_demand, bool zero_based);
 void switch_handle_type_free(switch_handle_type_t type);
 switch_handle_t switch_handle_allocate(switch_handle_type_t type);
 switch_handle_t switch_handle_set_and_allocate(switch_handle_t type,

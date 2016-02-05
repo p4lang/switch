@@ -153,13 +153,15 @@ sai_status_t sai_get_switch_attribute(
                     objlist->list[index2] = api_switch_info.port_list[index2];
                 }
                 break;
-            case SAI_SWITCH_ATTR_LAG_HASH_ALGO:
-            case SAI_SWITCH_ATTR_LAG_HASH_SEED:
-            case SAI_SWITCH_ATTR_LAG_HASH_FIELDS:
+            case SAI_SWITCH_ATTR_LAG_DEFAULT_HASH_ALGORITHM:
+            case SAI_SWITCH_ATTR_LAG_DEFAULT_HASH_SEED:
+            case SAI_SWITCH_ATTR_LAG_HASH_IPV4:
+            case SAI_SWITCH_ATTR_LAG_HASH_IPV4_IN_IPV4:
                 break;
-            case SAI_SWITCH_ATTR_ECMP_HASH_ALGO:
-            case SAI_SWITCH_ATTR_ECMP_HASH_SEED:
-            case SAI_SWITCH_ATTR_ECMP_HASH_FIELDS:
+            case SAI_SWITCH_ATTR_ECMP_DEFAULT_HASH_ALGORITHM:
+            case SAI_SWITCH_ATTR_ECMP_DEFAULT_HASH_SEED:
+            case SAI_SWITCH_ATTR_ECMP_HASH_IPV4:
+            case SAI_SWITCH_ATTR_ECMP_HASH_IPV4_IN_IPV4:
                 break;
             case SAI_SWITCH_ATTR_MAX_VIRTUAL_ROUTERS:
                 break;

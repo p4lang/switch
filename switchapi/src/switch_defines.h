@@ -18,6 +18,8 @@ limitations under the License.
 extern "C" {
 #endif /* __cplusplus */
 
+typedef uint16_t switch_stats_idx_t;
+
 #define SWITCH_DEV_ID          0x0
 #define SWITCH_DEV_PIPE_ID     0xFFFF
 

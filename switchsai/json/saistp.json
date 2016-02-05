@@ -1,0 +1,19 @@
+{
+    "module_name"          :      "stp",
+    "attributes"           : [
+    {
+        "attribute_desc"          :      "stp attributes",
+        "attribute_list"          : [
+            {
+                "name"          :     "SAI_STP_ATTR_VLAN_LIST",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "vlan_list"
+            }
+        ]
+    }
+    ]
+}

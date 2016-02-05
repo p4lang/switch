@@ -47,6 +47,7 @@ sai_status_t sai_create_next_hop_entry(
     uint32_t index = 0;
     const sai_ip_address_t *sai_ip_addr;
     switch_nhop_key_t nhop_key;
+    sai_next_hop_type_t nhtype = SAI_NEXT_HOP_IP;
 
     if (!attr_list) {
         status = SAI_STATUS_INVALID_PARAMETER;
@@ -60,14 +61,16 @@ sai_status_t sai_create_next_hop_entry(
         attribute = &attr_list[index];
         switch (attribute->id) {
             case SAI_NEXT_HOP_ATTR_TYPE:
+                nhtype = attribute->value.u8;
                 break;
             case SAI_NEXT_HOP_ATTR_IP:
+                assert(nhtype == SAI_NEXT_HOP_IP);
                 sai_ip_addr = &attribute->value.ipaddr;
                 sai_ip_addr_to_switch_ip_addr(sai_ip_addr, &nhop_key.ip_addr);
                 nhop_key.ip_addr_valid = 1;
                 break;
             case SAI_NEXT_HOP_ATTR_ROUTER_INTERFACE_ID:
-                 SAI_ASSERT(sai_object_type_query(attribute->value.oid) == 
+                 SAI_ASSERT(sai_object_type_query(attribute->value.oid) ==
                             SAI_OBJECT_TYPE_ROUTER_INTERFACE);
                 nhop_key.intf_handle = (switch_handle_t) attribute->value.oid;
                 break;

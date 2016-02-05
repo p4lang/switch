@@ -1,0 +1,61 @@
+{
+    "module_name"          :      "router",
+    "attributes"           : [
+    {
+        "attribute_desc"          :      "router attributes",
+        "attribute_list"          : [
+            {
+                "name"          :     "SAI_VIRTUAL_ROUTER_ATTR_ADMIN_V4_STATE",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool",
+                "default"       :     "true"
+            },
+            {
+                "name"          :     "SAI_VIRTUAL_ROUTER_ATTR_ADMIN_V6_STATE",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool",
+                "default"       :     "true"
+            },
+            {
+                "name"          :     "SAI_VIRTUAL_ROUTER_ATTR_SRC_MAC_ADDRESS",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "mac",
+                "default"       :     "SAI_SWITCH_ATTR_SRC_MAC_ADDRESS",
+                "default_query" :     "switch"
+            },
+            {
+                "name"          :     "SAI_VIRTUAL_ROUTER_ATTR_VIOLATION_TTL1_ACTION",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8",
+                "default"       :     "SAI_PACKET_ACTION_TRAP"
+            },
+            {
+                "name"          :     "SAI_VIRTUAL_ROUTER_ATTR_VIOLATION_IP_OPTIONS",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8",
+                "default"       :     "SAI_PACKET_ACTION_TRAP"
+            }
+        ]
+    }
+    ]
+}

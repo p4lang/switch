@@ -1,0 +1,63 @@
+{
+    "module_name"          :      "fdb",
+    "attributes"           : [
+    {
+        "attribute_desc"          :      "fdb_attributes",
+        "attribute_list"          : [
+            {
+                "name"          :     "SAI_FDB_ENTRY_ATTR_TYPE",
+                "mandataory"    :     "true",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_FDB_ENTRY_ATTR_PORT_ID",
+                "mandataory"    :     "true",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "oid"
+            },
+            {
+                "name"          :     "SAI_FDB_ENTRY_ATTR_PACKET_ACTION",
+                "mandataory"    :     "true",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_FDB_ENTRY_ATTR_META_DATA",
+                "mandataory"    :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u32"
+            }
+        ]
+    },
+    {
+        "attribute_desc"          :      "flush_attributes",
+        "attribute_list"          : [
+            {
+                "name"          :     "SAI_FDB_FLUSH_ATTR_PORT_ID",
+                "data_type"     :     "oid"
+            },
+            {
+                "name"          :     "SAI_FDB_FLUSH_ATTR_VLAN_ID",
+                "data_type"     :     "u16"
+            },
+            {
+                "name"          :     "SAI_FDB_FLUSH_ATTR_ENTRY_TYPE",
+                "data_type"     :     "u8"
+            }
+        ]
+    }
+    ]
+}

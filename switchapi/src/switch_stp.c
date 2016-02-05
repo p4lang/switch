@@ -486,6 +486,7 @@ switch_stp_update_flood_list(switch_device_t device, switch_handle_t stg_handle,
     tommy_node                        *node = NULL;
     switch_handle_t                    bd_handle = 0;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+    switch_vlan_interface_t            vlan_intf;
 
     if (!SWITCH_STP_HANDLE_VALID(stg_handle)) {
         return SWITCH_STATUS_INVALID_HANDLE;
@@ -505,15 +506,18 @@ switch_stp_update_flood_list(switch_device_t device, switch_handle_t stg_handle,
             return SWITCH_STATUS_INVALID_VLAN_ID;
         }
 
+        memset(&vlan_intf, 0, sizeof(vlan_intf));
+        vlan_intf.vlan_handle = bd_handle;
+        vlan_intf.intf_handle = intf_handle;
         switch (state) {
             case SWITCH_PORT_STP_STATE_FORWARDING:
-                status = switch_api_multicast_member_add(device, bd_info->uuc_mc_index,
-                                                     bd_handle, 1, &intf_handle);
+                status = switch_api_multicast_member_add(
+                    device, bd_info->uuc_mc_index, 1, &vlan_intf);
                 break;
             case SWITCH_PORT_STP_STATE_BLOCKING:
             case SWITCH_PORT_STP_STATE_NONE:
-                status = switch_api_multicast_member_delete(device, bd_info->uuc_mc_index,
-                                                     bd_handle, 1, &intf_handle);
+                status = switch_api_multicast_member_delete(
+                    device, bd_info->uuc_mc_index, 1, &vlan_intf);
                 break;
 
             default:

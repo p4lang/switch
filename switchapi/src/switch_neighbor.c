@@ -288,7 +288,7 @@ switch_api_neighbor_entry_add_rewrite(switch_device_t device,
         status = switch_pd_rewrite_table_mpls_rewrite_add_entry(
             device, bd,
             nhop_index, tunnel_index,
-            neighbor->neigh_type, 1, neighbor->mac_addr,
+            neighbor->neigh_type, neighbor->mac_addr,
             neighbor->mpls_label, neighbor->header_count,
             &neighbor_info->rewrite_entry);
     } else if (SWITCH_INTF_TYPE(intf_info) == SWITCH_API_INTERFACE_TUNNEL) {
@@ -298,7 +298,7 @@ switch_api_neighbor_entry_add_rewrite(switch_device_t device,
             encap_type = SWITCH_INTF_TUNNEL_ENCAP_TYPE(intf_info);
             status = switch_pd_rewrite_table_tunnel_rewrite_add_entry(
                 device, bd,
-                nhop_index, 1,
+                nhop_index,
                 neighbor->mac_addr,
                 neighbor->neigh_type, neighbor->rw_type,
                 tunnel_index, encap_type,
@@ -306,7 +306,7 @@ switch_api_neighbor_entry_add_rewrite(switch_device_t device,
         }
     } else {
         status = switch_pd_rewrite_table_unicast_rewrite_add_entry(
-            device, bd, nhop_index, intf_info->smac_idx, neighbor->mac_addr,
+            device, bd, nhop_index, neighbor->mac_addr,
             neighbor->rw_type, &neighbor_info->rewrite_entry);
     }
     switch_neighbor_dmac_insert_hash(device, intf_info->bd_handle,
@@ -362,9 +362,9 @@ switch_api_neighbor_entry_add_tunnel_rewrite(switch_device_t device,
                                                      &neighbor_info->rewrite_entry);
     } else if (tunnel_info->encap_mode == SWITCH_API_TUNNEL_ENCAP_MODE_MPLS) {
         mpls_encap = &(SWITCH_INTF_TUNNEL_MPLS_ENCAP(intf_info));
-        status = switch_pd_tunnel_rewrite_table_mpls_add_entry(device, handle_to_id(neighbor->interface),
-                                                     smac_index, dmac_index, mpls_encap,
-                                                     &neighbor_info->rewrite_entry);
+        status = switch_pd_tunnel_rewrite_table_mpls_add_entry(device,
+           handle_to_id(neighbor->interface), smac_index, dmac_index,
+           mpls_encap, &neighbor_info->rewrite_entry);
     }
 
     if (status != SWITCH_STATUS_SUCCESS) {

@@ -1,0 +1,197 @@
+{
+    "module_name"          :      "mirror",
+    "attributes"           : [
+    {
+        "attribute_desc"          :      "mirror attributes",
+        "attribute_list"          : [
+            {
+                "name"          :    "SAI_MIRROR_SESSION_ATTR_TYPE",
+                "mandatory"     :    "true",
+                "create"        :    "true",
+                "set"           :    "false",
+                "get"           :    "true",
+                "rw_type"       :    "READ_WRITE",
+                "data_type"     :    "u8"
+            },
+            {
+                "name"          :    "SAI_MIRROR_SESSION_ATTR_MONITOR_PORT",
+                "mandatory"     :    "true",
+                "create"        :    "true",
+                "set"           :    "false",
+                "get"           :    "true",
+                "rw_type"       :    "READ_WRITE",
+                "data_type"     :    "oid"
+            },
+            {
+                "name"          :    "SAI_MIRROR_SESSION_ATTR_TC",
+                "mandatory"     :    "false",
+                "create"        :    "true",
+                "set"           :    "true",
+                "get"           :    "true",
+                "rw_type"       :    "READ_WRITE",
+                "data_type"     :    "u8"
+            },
+            {
+                "name"          :    "SAI_MIRROR_SESSION_ATTR_VLAN_TPID",
+                "mandatory"     :    "true",
+                "create"        :    "true",
+                "set"           :    "true",
+                "get"           :    "true",
+                "rw_type"       :    "READ_WRITE",
+                "data_type"     :    "u16",
+                "dependency"    : {
+                    "attr1"           :        "SAI_MIRROR_SESSION_ATTR_TYPE",
+                    "value1"          :        "SAI_MIRROR_TYPE_REMOTE",
+                    "value2"          :        "SAI_MIRROR_TYPE_ERSPAN"
+                }
+            },
+            {
+                "name"          :    "SAI_MIRROR_SESSION_ATTR_VLAN_ID",
+                "mandatory"     :    "true",
+                "create"        :    "true",
+                "set"           :    "true",
+                "get"           :    "true",
+                "rw_type"       :    "READ_WRITE",
+                "data_type"     :    "u16",
+                "dependency"    : {
+                    "attr1"           :        "SAI_MIRROR_SESSION_ATTR_TYPE",
+                    "value1"          :        "SAI_MIRROR_TYPE_REMOTE",
+                    "value2"          :        "SAI_MIRROR_TYPE_ERSPAN"
+                }
+            },
+            {
+                "name"          :    "SAI_MIRROR_SESSION_ATTR_VLAN_PRI",
+                "mandatory"     :    "true",
+                "create"        :    "true",
+                "set"           :    "true",
+                "get"           :    "true",
+                "rw_type"       :    "READ_WRITE",
+                "data_type"     :    "u8",
+                "dependency"    : {
+                    "attr1"           :        "SAI_MIRROR_SESSION_ATTR_TYPE",
+                    "value1"          :        "SAI_MIRROR_TYPE_REMOTE",
+                    "value2"          :        "SAI_MIRROR_TYPE_ERSPAN"
+                }
+            },
+            {
+                "name"          :    "SAI_MIRROR_SESSION_ATTR_ENCAP_TYPE",
+                "mandatory"     :    "true",
+                "create"        :    "true",
+                "set"           :    "true",
+                "get"           :    "true",
+                "rw_type"       :    "READ_WRITE",
+                "data_type"     :    "u8",
+                "dependency"    : {
+                    "attr1"           :        "SAI_MIRROR_SESSION_ATTR_TYPE",
+                    "value1"          :        "SAI_MIRROR_TYPE_ERSPAN"
+                }
+            },
+            {
+                "name"          :    "SAI_MIRROR_SESSION_ATTR_IPHDR_VERSION",
+                "mandatory"     :    "true",
+                "create"        :    "true",
+                "set"           :    "true",
+                "get"           :    "true",
+                "rw_type"       :    "READ_WRITE",
+                "data_type"     :    "u8",
+                "dependency"    : {
+                    "attr1"       :    "SAI_MIRROR_SESSION_ATTR_TYPE",
+                    "value1"      :    "SAI_MIRROR_TYPE_ERSPAN"
+                }
+            },
+            {
+                "name"          :    "SAI_MIRROR_SESSION_ATTR_TOS",
+                "mandatory"     :    "true",
+                "create"        :    "true",
+                "set"           :    "true",
+                "get"           :    "true",
+                "rw_type"       :    "READ_WRITE",
+                "data_type"     :    "u8",
+                "dependency"    : {
+                    "attr1"       :    "SAI_MIRROR_SESSION_ATTR_TYPE",
+                    "value1"      :    "SAI_MIRROR_TYPE_ERSPAN"
+                }
+            },
+            {
+                "name"          :    "SAI_MIRROR_SESSION_ATTR_TTL",
+                "mandatory"     :    "false",
+                "create"        :    "true",
+                "set"           :    "true",
+                "get"           :    "true",
+                "rw_type"       :    "READ_WRITE",
+                "data_type"     :    "u8",
+                "dependency"    : {
+                    "attr1"       :    "SAI_MIRROR_SESSION_ATTR_TYPE",
+                    "value1"      :    "SAI_MIRROR_TYPE_ERSPAN"
+                },
+                "default"        :    "255"
+            },
+            {
+                "name"          :    "SAI_MIRROR_SESSION_ATTR_SRC_IP_ADDRESS",
+                "mandatory"     :    "true",
+                "create"        :    "true",
+                "set"           :    "true",
+                "get"           :    "true",
+                "rw_type"       :    "READ_WRITE",
+                "data_type"     :    "ip_address",
+                "dependency"    : {
+                    "attr1"       :    "SAI_MIRROR_SESSION_ATTR_TYPE",
+                    "value1"      :    "SAI_MIRROR_TYPE_ERSPAN"
+                }
+            },
+            {
+                "name"          :    "SAI_MIRROR_SESSION_ATTR_DST_IP_ADDRESS",
+                "mandatory"     :    "true",
+                "create"        :    "true",
+                "set"           :    "true",
+                "get"           :    "true",
+                "rw_type"       :    "READ_WRITE",
+                "data_type"     :    "ip_address",
+                "dependency"    : {
+                    "attr1"       :    "SAI_MIRROR_SESSION_ATTR_TYPE",
+                    "value1"      :    "SAI_MIRROR_TYPE_ERSPAN"
+                }
+            },
+            {
+                "name"          :    "SAI_MIRROR_SESSION_ATTR_SRC_MAC_ADDRESS",
+                "mandatory"     :    "true",
+                "create"        :    "true",
+                "set"           :    "true",
+                "get"           :    "true",
+                "rw_type"       :    "READ_WRITE",
+                "data_type"     :    "mac",
+                "dependency"    : {
+                    "attr1"       :    "SAI_MIRROR_SESSION_ATTR_TYPE",
+                    "value1"      :    "SAI_MIRROR_TYPE_ERSPAN"
+                }
+            },
+            {
+                "name"          :    "SAI_MIRROR_SESSION_ATTR_DST_MAC_ADDRESS",
+                "mandatory"     :    "true",
+                "create"        :    "true",
+                "set"           :    "true",
+                "get"           :    "true",
+                "rw_type"       :    "READ_WRITE",
+                "data_type"     :    "mac",
+                "dependency"    : {
+                    "attr1"       :    "SAI_MIRROR_SESSION_ATTR_TYPE",
+                    "value1"      :    "SAI_MIRROR_TYPE_ERSPAN"
+                }
+            },
+            {
+                "name"          :    "SAI_MIRROR_SESSION_ATTR_GRE_PROTOCOL_TYPE",
+                "mandatory"     :    "true",
+                "create"        :    "true",
+                "set"           :    "true",
+                "get"           :    "true",
+                "rw_type"       :    "READ_WRITE",
+                "data_type"     :    "u16",
+                "dependency"    : {
+                    "attr1"       :    "SAI_MIRROR_SESSION_ATTR_TYPE",
+                    "value1"      :    "SAI_MIRROR_TYPE_ERSPAN"
+                }
+            }
+        ]
+    }
+    ]
+}

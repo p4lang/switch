@@ -26,15 +26,24 @@ limitations under the License.
 static void *switch_mirror_array = NULL;
 static switch_api_id_allocator *session_id_allocator;
 
+switch_handle_t switch_mirror_set_and_create(unsigned int id);
+
 switch_status_t
 switch_mirror_init(switch_device_t device)
 {
     switch_mirror_array = NULL;
-    switch_handle_type_init(SWITCH_HANDLE_TYPE_MIRROR, (1024));
-    session_id_allocator = switch_api_id_allocator_new(1024/32, FALSE);
+    switch_handle_type_init(SWITCH_HANDLE_TYPE_MIRROR, 
+                                        SWITCH_MAX_MIRROR_SESSIONS);
+    session_id_allocator = switch_api_id_allocator_new(
+                                        SWITCH_MAX_MIRROR_SESSIONS/32,
+                                        FALSE);
 
     // negative mirroring action
     switch_pd_neg_mirror_add_entry(device);
+    // keep this id allocated so it is not given to anyone else
+    switch_mirror_set_and_create(SWITCH_NEGATIVE_MIRROR_SESSION_ID);
+    switch_api_id_allocator_set(session_id_allocator,
+                                SWITCH_NEGATIVE_MIRROR_SESSION_ID);
     return SWITCH_STATUS_SUCCESS;
 }
 
@@ -232,6 +241,9 @@ switch_api_mirror_session_create(switch_device_t device,
     }
 
     if (status != SWITCH_STATUS_SUCCESS) {
+        switch_api_id_allocator_release(session_id_allocator,
+                                        api_mirror_info->session_id);
+        switch_mirror_delete(mirror_handle);
         return SWITCH_API_INVALID_HANDLE;
     }
     return mirror_handle;

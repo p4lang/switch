@@ -26,5 +26,7 @@ extern void process_link_msg(struct nlmsghdr *nlmsg, int type);
 extern void process_neigh_msg(struct nlmsghdr *nlmsg, int type);
 extern void process_address_msg(struct nlmsghdr *nlmsg, int type);
 extern void process_route_msg(struct nlmsghdr *nlmsg, int type);
+extern void process_netconf_msg(struct nlmsghdr *nlmsg, int type);
+extern void process_mdb_msg(struct nlmsghdr *nlmsg, int type);
 
 #endif /* __SWITCHLINK_INT_H__ */

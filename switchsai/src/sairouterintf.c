@@ -16,13 +16,31 @@ limitations under the License.
 
 #include <sairouterintf.h>
 #include "saiinternal.h"
+#include <switchapi/switch_l3.h>
 #include <switchapi/switch_interface.h>
 
 static sai_api_t api_id = SAI_API_ROUTER_INTERFACE;
 
+static switch_urpf_mode_t
+sai_to_switch_urpf_mode(uint8_t sai_urpf_mode) {
+    switch_urpf_mode_t switch_urpf_mode = SWITCH_API_RPF_CHECK_DEFAULT;
+    switch (sai_urpf_mode) {
+        case SAI_URPF_MODE_NONE:
+            switch_urpf_mode = SWITCH_API_RPF_CHECK_DEFAULT;
+            break;
+        case SAI_URPF_MODE_STRICT:
+            switch_urpf_mode = SWITCH_API_RPF_CHECK_STRICT;
+            break;
+        case SAI_URPF_MODE_LOOSE:
+            switch_urpf_mode = SWITCH_API_RPF_CHECK_LOOSE;
+            break;
+    }
+    return switch_urpf_mode;
+}
+
 /*
 * Routine Description:
-*    Create router interface. 
+*    Create router interface.
 *
 * Arguments:
 *    [out] rif_id - router interface id
@@ -54,7 +72,12 @@ sai_status_t sai_create_router_interface(
     }
 
     memset(&intf_info, 0, sizeof(switch_api_interface_info_t));
-    intf_info.ipv4_unicast_enabled = 1;
+    intf_info.ipv4_unicast_enabled = true;
+    intf_info.ipv6_unicast_enabled = true;
+    intf_info.ipv4_multicast_enabled = false;
+    intf_info.ipv6_multicast_enabled = false;
+    intf_info.ipv4_urpf_mode = SWITCH_API_RPF_CHECK_DEFAULT;
+    intf_info.ipv6_urpf_mode = SWITCH_API_RPF_CHECK_DEFAULT;
     for (index = 0; index < attr_count; index++) {
         attribute = &attr_list[index];
         switch (attribute->id) {
@@ -86,8 +109,22 @@ sai_status_t sai_create_router_interface(
             case SAI_ROUTER_INTERFACE_ATTR_ADMIN_V6_STATE:
                 intf_info.ipv6_unicast_enabled = attribute->value.booldata;
                 break;
+            case SAI_ROUTER_INTERFACE_ATTR_ADMIN_V4_MULTICAST_STATE:
+                intf_info.ipv4_multicast_enabled = attribute->value.booldata;
+                break;
+            case SAI_ROUTER_INTERFACE_ATTR_ADMIN_V6_MULTICAST_STATE:
+                intf_info.ipv6_multicast_enabled = attribute->value.booldata;
+                break;
+            case SAI_ROUTER_INTERFACE_ATTR_V4_URPF_MODE:
+                intf_info.ipv4_urpf_mode =
+                    sai_to_switch_urpf_mode(attribute->value.u8);
+                break;
+            case SAI_ROUTER_INTERFACE_ATTR_V6_URPF_MODE:
+                intf_info.ipv6_urpf_mode =
+                    sai_to_switch_urpf_mode(attribute->value.u8);
+                break;
             default:
-                return SAI_STATUS_INVALID_PARAMETER; 
+                return SAI_STATUS_INVALID_PARAMETER;
         }
     }
 
@@ -99,7 +136,7 @@ sai_status_t sai_create_router_interface(
     if (status != SAI_STATUS_SUCCESS) {
         SAI_LOG_ERROR("failed to create router interface: %s",
                       sai_status_to_string(status));
-    }                 
+    }
 
     SAI_LOG_EXIT();
 
@@ -159,6 +196,7 @@ sai_status_t sai_set_router_interface_attribute(
     SAI_LOG_ENTER();
 
     sai_status_t status = SAI_STATUS_SUCCESS;
+    switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
 
     if (!attr) {
         status = SAI_STATUS_INVALID_PARAMETER;
@@ -169,9 +207,39 @@ sai_status_t sai_set_router_interface_attribute(
 
     SAI_ASSERT(sai_object_type_query(rif_id) == SAI_OBJECT_TYPE_ROUTER_INTERFACE);
 
+    switch (attr->id) {
+        case SAI_ROUTER_INTERFACE_ATTR_ADMIN_V4_STATE:
+            switch_status = switch_api_interface_ipv4_unicast_enabled_set(
+                rif_id, attr->value.booldata);
+            break;
+        case SAI_ROUTER_INTERFACE_ATTR_ADMIN_V6_STATE:
+            switch_status = switch_api_interface_ipv6_unicast_enabled_set(
+                rif_id, attr->value.booldata);
+            break;
+        case SAI_ROUTER_INTERFACE_ATTR_ADMIN_V4_MULTICAST_STATE:
+            switch_status = switch_api_interface_ipv4_multicast_enabled_set(
+                rif_id, attr->value.booldata);
+            break;
+        case SAI_ROUTER_INTERFACE_ATTR_ADMIN_V6_MULTICAST_STATE:
+            switch_status = switch_api_interface_ipv6_multicast_enabled_set(
+                rif_id, attr->value.booldata);
+            break;
+        case SAI_ROUTER_INTERFACE_ATTR_V4_URPF_MODE:
+            switch_status = switch_api_interface_ipv4_urpf_mode_set(
+                rif_id, sai_to_switch_urpf_mode(attr->value.u8));
+            break;
+        case SAI_ROUTER_INTERFACE_ATTR_V6_URPF_MODE:
+            switch_status = switch_api_interface_ipv6_urpf_mode_set(
+                rif_id, sai_to_switch_urpf_mode(attr->value.u8));
+            break;
+        default:
+            return SAI_STATUS_INVALID_PARAMETER;
+    }
+
     SAI_LOG_EXIT();
 
-    return (sai_status_t) status;
+    status = sai_switch_status_to_sai_status(switch_status);
+    return status;
 }
 
 /*

@@ -49,8 +49,6 @@ typedef struct switch_interface_info_ {
     switch_handle_t ln_bd_handle;                    /**< Logical network BD Handle */
     switch_handle_t nhop_handle;
     switch_handle_t hostif_handle;
-    uint32_t rid;
-    uint16_t smac_idx;
 #ifdef SWITCH_PD
     p4_pd_entry_hdl_t nhop_type_entry;
     p4_pd_entry_hdl_t lag_group_entry;
