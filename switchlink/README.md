@@ -93,14 +93,15 @@ Sample L3 configuration:
 Supported Features
 ------------------
 
-1. Basic L2 switching
-2. Basic L3 Routing: IPv4
-3. L2 protocol integration (mstpd)
-4. L3 protocol integration (Quagga)
-5. ECMP
+1. Basic L2 switching, learning, aging
+2. L2 Multicast: IGMP and MLD snooping
+3. Basic L3 Routing: IPv4, IPv6
+4. L3 Multicast (pimd, smcroute)
+5. L2 protocol integration (mstpd)
+6. L3 protocol integration (quagga)
+7. ECMP
+8. Unicast RPF check
 
 Upcoming Features
 -----------------
-1. L2: Learning and aging
-2. IPv6
-3. LAG
+1. LAG

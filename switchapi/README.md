@@ -24,21 +24,26 @@ Supported Features
 ------------------
 
 1. Basic L2 switching: Flooding, learning and STP
-2. Basic L3 Routing: IPv4, IPv6 and VRF
-3. LAG
-4. ECMP
-5. Tunneling: VXLAN and NVGRE (including L2/L3 Gateway), Geneve, and GRE
-6. Basic ACL: MAC and IP ACLs
-7. Unicast RPF check
-8. MPLS: LER, LSR, IPVPN
-9. Host interface
-10. Mirroring: Ingress and egress mirroring with ERSPAN
-11. Counters/Statistics
+2. L2 Multicast (IGMP/MLD snooping)
+3. Basic L3 Routing: IPv4, IPv6 and VRF
+4. L3 Multicast (Sparse mode, SSM and Bidir)
+5. LAG
+6. ECMP
+7. Tunneling: VXLAN and NVGRE (including L2/L3 Gateway), Geneve, and GRE
+8. Basic ACL: MAC and IP ACLs
+9. Unicast RPF check
+10. MPLS: LER, LSR, IPVPN
+11. Host interface
+12. Mirroring: Ingress and egress mirroring with ERSPAN
+13. Counters/Statistics
+14. Ingress Policers
 
 Upcoming Features
 -----------------
 
-1. VPLS
+1. NAT
+2. QoS
+3. VPLS
 
 Documentation
 -------------
