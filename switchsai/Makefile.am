@@ -1,6 +1,7 @@
 ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS} -I m4
 
-libswitchsai_la_CFLAGS = -I$(srcdir)/submodules/ocpsai/sai/inc -I$(srcdir)/../../modules/BMI/module/inc
+#libswitchsai_la_CFLAGS = -I$(srcdir)/submodules/ocpsai/sai/inc -I$(srcdir)/../../modules/BMI/module/inc
+libswitchsai_la_CFLAGS = -I$(srcdir)/submodules/ocpsai/inc -I$(srcdir)/../../modules/BMI/module/inc
 libswitchsai_la_CFLAGS += -I$(builddir)/src/gen-cpp
 libswitchsai_la_CFLAGS += -I$(top_srcdir)/switchapi/third-party/tommyds/include
 libswitchsai_la_CFLAGS += -I$(top_srcdir)/p4src/includes
@@ -31,10 +32,12 @@ $(lib_LTLIBRARIES) : $(thrift_py_sources)
 libswitchsai_la_SOURCES = \
 $(thrift_cpp_sources) \
 src/saiacl.c \
+src/saibuffer.c \
 src/saiapi.h \
 src/sai.c \
 src/sai_bmlib.c \
 src/saifdb.c \
+src/saihash.c \
 src/saihostintf.c \
 src/saiinternal.h \
 src/sailag.c \
@@ -42,12 +45,14 @@ src/saimirror.c \
 src/saineighbor.c \
 src/sainexthop.c \
 src/sainexthopgroup.c \
+src/saiobject.c \
 src/saiport.c \
 src/sairoute.c \
 src/sairouter.c \
 src/sairouterintf.c \
 src/saistp.c \
 src/saiswitch.c \
+src/saiudf.c \
 src/saiutils.c \
 src/saivlan.c \
 src/switch_sai_rpc_server.cpp

@@ -287,8 +287,8 @@ sai_lag_api_t lag_api = {
     .remove_lag                        =             sai_remove_lag_entry,
     .set_lag_attribute                 =             sai_set_lag_entry_attribute,
     .get_lag_attribute                 =             sai_get_lag_entry_attribute,
-    .add_ports_to_lag                  =             sai_add_ports_to_lag,
-    .remove_ports_from_lag             =             sai_remove_ports_from_lag,
+//    .add_ports_to_lag                  =             sai_add_ports_to_lag,
+//    .remove_ports_from_lag             =             sai_remove_ports_from_lag,
 };
 
 sai_status_t sai_lag_initialize(sai_api_service_t *sai_api_service) {

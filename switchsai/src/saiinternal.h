@@ -94,6 +94,9 @@ typedef struct _sai_api_service_t {
     sai_hostif_api_t                hostif_api;
     sai_mirror_api_t                mirror_api;
     sai_samplepacket_api_t          samplepacket_api;
+    sai_buffer_api_t                buffer_api;
+    sai_udf_api_t                   udf_api;
+    sai_hash_api_t                  hash_api;
 } sai_api_service_t;
 
 extern switch_device_t device;
