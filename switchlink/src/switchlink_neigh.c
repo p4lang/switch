@@ -220,14 +220,7 @@ switchlink_linux_mac_update(switchlink_mac_addr_t mac_addr,
                             switchlink_handle_t bridge_h,
                             switchlink_handle_t intf_h, bool create) {
     switchlink_db_status_t status;
-    uint32_t vlan_ifindex;
     uint32_t ifindex;
-
-    status = switchlink_db_bridge_get_ifindex(bridge_h, &vlan_ifindex);
-    if (status != SWITCHLINK_DB_STATUS_SUCCESS) {
-        assert(false);
-        return;
-    }
 
     if (!create) {
         status = switchlink_db_mac_get_intf(mac_addr, bridge_h, &intf_h);

@@ -39,6 +39,18 @@ static switchlink_db_port_obj_t switchlink_db_port_map[] = {
     {"swp2",                          1},
     {"swp3",                          2},
     {"swp4",                          3},
+    {"swp5",                          4},
+    {"swp6",                          5},
+    {"swp7",                          6},
+    {"swp8",                          7},
+    {"swp9",                          8},
+    {"swp10",                         9},
+    {"swp11",                        10},
+    {"swp12",                        11},
+    {"swp13",                        12},
+    {"swp14",                        13},
+    {"swp15",                        14},
+    {"swp16",                        15},
     {SWITCHLINK_CPU_INTERFACE_NAME,  64},
 };
 
