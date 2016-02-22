@@ -3,4 +3,5 @@
 	url = https://github.com/p4lang/SAI.git
 [submodule "switchsai/submodules/ocpsai"]
 	path = switchsai/submodules/ocpsai
-	url = https://github.com/pierce-m/ocpsai.git
+	url = https://github.com/pierce-m/ocpsai
+	branch = warmboot
