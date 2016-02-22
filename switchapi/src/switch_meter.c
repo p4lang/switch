@@ -89,7 +89,7 @@ switch_api_meter_create(
     if (api_meter_info->meter_mode == SWITCH_METER_MODE_STORM_CONTROL) {
         meter_info->api_meter_info.pbs = meter_info->api_meter_info.cbs;
         meter_info->api_meter_info.pir = meter_info->api_meter_info.cir;
-        meter_info->api_meter_info.action[SWITCH_METER_COLOR_YELLOW] = 
+        meter_info->api_meter_info.action[SWITCH_METER_COLOR_YELLOW] =
             meter_info->api_meter_info.action[SWITCH_METER_COLOR_GREEN];
         status = switch_pd_storm_control_meter_add_entry(
                              device,
@@ -122,7 +122,7 @@ switch_api_meter_create(
 
 switch_status_t
 switch_api_meter_update(
-        switch_device_t device, 
+        switch_device_t device,
         switch_handle_t meter_handle,
         switch_api_meter_t *api_meter_info)
 {
@@ -138,7 +138,7 @@ switch_api_meter_update(
     if (api_meter_info->meter_mode == SWITCH_METER_MODE_STORM_CONTROL) {
         meter_info->api_meter_info.pbs = meter_info->api_meter_info.cbs;
         meter_info->api_meter_info.pir = meter_info->api_meter_info.cir;
-        meter_info->api_meter_info.action[SWITCH_METER_COLOR_YELLOW] = 
+        meter_info->api_meter_info.action[SWITCH_METER_COLOR_YELLOW] =
             meter_info->api_meter_info.action[SWITCH_METER_COLOR_GREEN];
         status = switch_pd_storm_control_meter_add_entry(
                              device,

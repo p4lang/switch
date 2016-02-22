@@ -27,7 +27,7 @@ AS_IF([test "x$enable_coverage" = "xyes"], [
     COVERAGE_FLAGS="--coverage"
 ])
 
-AC_PROG_CC_STDC
+#AC_PROG_CC_STDC
 AC_PROG_CXX
 LT_INIT
 
@@ -39,9 +39,6 @@ AC_CONFIG_MACRO_DIR([m4])
 # Checks for header files.
 AC_LANG_PUSH(C)
 AC_LANG_PUSH(C++)
-
-AC_CHECK_HEADERS([assert.h stdio.h string.h sys/stat.h sys/types.h unistd.h], \
-[], [AC_MSG_ERROR([Missing header file])])
 
 AC_CHECK_HEADER([thrift/Thrift.h], [], \
   [AC_MSG_ERROR([Thrift headers not found])])
@@ -61,12 +58,6 @@ AC_CHECK_FUNCS([memset])
 AC_CHECK_FUNCS([select])
 AC_CHECK_FUNCS([socket])
 AC_CHECK_HEADER_STDBOOL
-AC_CHECK_HEADERS([arpa/inet.h])
-AC_CHECK_HEADERS([fcntl.h])
-AC_CHECK_HEADERS([stddef.h])
-AC_CHECK_HEADERS([sys/ioctl.h])
-AC_CHECK_HEADERS([sys/socket.h])
-AC_CHECK_TYPES([ptrdiff_t])
 AC_C_INLINE
 AC_FUNC_MALLOC
 AC_PROG_RANLIB
@@ -80,15 +71,19 @@ AC_TYPE_UINT32_T
 AC_TYPE_UINT64_T
 AC_TYPE_UINT8_T
 
-AC_SUBST([AM_CXXFLAGS], ["$TOFINO_FLAGS"])
-AC_SUBST([AM_CPPFLAGS], ["-I$(if test x$prefix != xNONE; then \
-                                echo $prefix; \
-                              else \
-                                echo $ac_default_prefix; \
-                              fi \
-                             )/include"])
+p4target=unknown
+
+AC_ARG_ENABLE([bmv2], \
+	[ --enable-bmv2 	Enable bmv2 as p4target],
+	[case "${enableval}" in
+		yes) p4target=bmv2 ;;
+		*) ;;
+	esac], [])
+
+AM_CONDITIONAL(TARGET_BMV2, [test "x$p4target" =  "xbmv2"])
+
 # Generate makefiles
 AC_CONFIG_FILES([switchapi/third-party/tommyds/Makefile switchapi/Makefile
          switchsai/Makefile 
-         switchlink/third-party/xxhash/Makefile switchlink/Makefile Makefile])
+         switchlink/third-party/xxhash/Makefile switchlink/Makefile p4src/Makefile Makefile])
 AC_OUTPUT

@@ -735,7 +735,7 @@ service switch_api_rpc {
     switcht_status_t switcht_api_meter_delete(
                              1: switcht_device_t device,
                              2: switcht_handle_t meter_handle);
-    
+
     list<switcht_counter_t> switcht_api_meter_stats_get(
                              1: switcht_device_t device,
                              2: switcht_handle_t meter_handle,

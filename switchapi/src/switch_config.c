@@ -54,7 +54,7 @@ switch_config_param_set_dod(switch_device_t device, bool dod)
 
 
 void
-switch_config_action_populate(switch_device_t device, 
+switch_config_action_populate(switch_device_t device,
                     p4_pd_dc_set_config_parameters_action_spec_t *action_sw_cfg)
 {
     action_sw_cfg->action_enable_dod = switch_config_params_get(device)->enable_dod;

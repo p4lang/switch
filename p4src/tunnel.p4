@@ -1042,7 +1042,12 @@ action f_insert_nvgre_header() {
     modify_field(gre.S, 0);
     modify_field(gre.s, 0);
     modify_field(nvgre.tni, tunnel_metadata.vnid);
+#ifndef __TARGET_BMV2__
     modify_field(nvgre.flow_id, hash_metadata.entropy_hash, 0xFF);
+#else
+    modify_field(nvgre.flow_id, hash_metadata.entropy_hash & 0xFF);
+#endif
+
 }
 
 action ipv4_nvgre_rewrite() {

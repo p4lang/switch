@@ -2,10 +2,19 @@ ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS} -I m4
 
 SUBDIRS = third-party/tommyds
 
+PFX ?=
+
+if TARGET_BMV2
+TARGET_CFLAGS = -D BMV2
+TARGET_CFLAGS += -I $(PFX)/$(includedir)/pdfixed
+TARGET_CFLAGS += -I $(srcdir)/../p4src/bmv2_p4_pd
+endif
+
 libswitchapi_la_CFLAGS = -I$(srcdir)/inc
 libswitchapi_la_CFLAGS += -I$(srcdir)/src/gen-cpp
 libswitchapi_la_CFLAGS += -I$(srcdir)/third-party/tommyds/include
-libswitchapi_la_CFLAGS += -I$(srcdir)/../p4src/include
+libswitchapi_la_CFLAGS += -I$(srcdir)/../p4src/includes
+libswitchapi_la_CFLAGS += $(TARGET_CFLAGS)
 libswitchapi_la_CXXFLAGS = $(libswitchapi_la_CFLAGS)
 libswitchapi_a_CFLAGS = $(libswitchapi_la_CFLAGS)
 libswitchapi_a_CXXFLAGS = $(libswitchapi_a_CFLAGS)
@@ -21,8 +30,8 @@ src/gen-cpp/switch_api_types.h
 $(BUILT_SOURCES): src/switch_api.thrift
 	$(THRIFT) -o $(srcdir)/src/ --gen cpp -r $(srcdir)/src/switch_api.thrift
 
-lib_LIBRARIES = libswitchapi.a
-lib_LTLIBRARIES = libswitchapi.la
+#lib_LIBRARIES = libswitchapi.a
+noinst_LTLIBRARIES = libswitchapi.la
 
 libswitchapi_la_SOURCES = \
 $(BUILT_SOURCES) \
@@ -107,5 +116,5 @@ inc/switch_vlan.h \
 inc/switch_INT.h \
 inc/switch_vrf.h
 
-libswitchapi_a_SOURCES = $(libswitchapi_la_SOURCES)
+#libswitchapi_a_SOURCES = $(libswitchapi_la_SOURCES)
 libswitchapi_la_LIBADD = third-party/tommyds/libtommyds.la

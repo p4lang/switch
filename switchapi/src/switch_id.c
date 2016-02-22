@@ -22,7 +22,7 @@ limitations under the License.
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-    
+
 switch_api_id_allocator *
 switch_api_id_allocator_new(unsigned int initial_size, bool zero_based)
 {
@@ -35,21 +35,21 @@ switch_api_id_allocator_new(unsigned int initial_size, bool zero_based)
     }
     return allocator;
 }
-    
+
 void
 switch_api_id_allocator_destroy(switch_api_id_allocator *allocator)
 {
     switch_free(allocator->data);
     switch_free(allocator);
 }
-    
+
 static inline int
 _fit_width( uint32_t val, unsigned width)
 {
     unsigned                            offset = 32;
     uint32_t                            mask = 0;
     uint32_t                            b = 0;
-        
+
     while(offset >= width)
     {
         mask = (((uint32_t)1 << width) - 1) << (offset - width);
@@ -73,7 +73,7 @@ switch_api_id_allocator_allocate_contiguous (switch_api_id_allocator *allocator,
             if ((pos=_fit_width(allocator->data[i], count)) > 0) {
                 // set the bitmap to 1s
                 allocator->data[i] |= (0xFFFFFFFF << (pos - count)) & 0xFFFFFFFF;
-                return 32 * i + (32 - pos) + 
+                return 32 * i + (32 - pos) +
                        (allocator->zero_based ? 0 : 1);
             }
         }
@@ -85,13 +85,13 @@ switch_api_id_allocator_allocate_contiguous (switch_api_id_allocator *allocator,
     allocator->data[n_words] |= (0xFFFFFFFF << (32 - count)) & 0xFFFFFFFF;
     return 32 * n_words + (allocator->zero_based ? 0 : 1);
 }
-    
+
 unsigned int
 switch_api_id_allocator_allocate(switch_api_id_allocator *allocator)
 {
     return switch_api_id_allocator_allocate_contiguous(allocator, 1);
 }
-    
+
 void
 switch_api_id_allocator_release(switch_api_id_allocator *allocator, unsigned int id)
 {
@@ -134,9 +134,9 @@ switch_api_id_allocator_is_set(switch_api_id_allocator *allocator, unsigned int 
     }
     //assert((id>>5) < allocator->n_words);
     return((allocator->data[id>>5] & (1 << (31 -id))) ? 1:0);
-} 
+}
 
-    
+
 #ifdef SWITCH_ID_ALLOCATOR_TEST
 #include <stdio.h>
 #include <stdlib.h>
@@ -146,40 +146,40 @@ switch_api_id_allocator_is_set(switch_api_id_allocator *allocator, unsigned int 
 
 #define MAX_ID_TEST (16*1024)
 #define INITIAL_WORDS 4
-    
+
 int id_main (int argc, char **argv)
 {
     unsigned int i;
     unsigned int iter;
     switch_api_id_allocator *allocator = switch_api_id_allocator_new (INITIAL_WORDS, FALSE);
-        
+
     for(i=0;i<40;i++)
         switch_api_id_allocator_allocate(allocator);
-        
+
     printf("words are 0x%x, 0x%x\n", (uint32_t)allocator->data[0], (uint32_t)allocator->data[1]);
-        
+
     for(i=0;i<40;i++)
         switch_api_id_allocator_release(allocator, i+1);
-        
-        
+
+
     for (i = 0; i < MAX_ID_TEST; i++)
     {
         unsigned int id = switch_api_id_allocator_allocate (allocator);
         assert (id == i+1);
     }
-        
+
     for (i = 0; i < MAX_ID_TEST; i++)
         switch_api_id_allocator_release (allocator, i);
-        
+
     for (iter = 0; iter < MAX_ID_TEST; iter++)
     {
         for (i = 0; i < 1000; i++)
             switch_api_id_allocator_allocate (allocator);
-            
+
         for (i = 0; i < 1000; i++)
             switch_api_id_allocator_release (allocator, i);
     }
-        
+
 #define NUM_BLOCKS 20
 #define BLOCK_SIZE 8
     for(i=0;i<NUM_BLOCKS;i++) {

@@ -1,5 +1,5 @@
 /*
-Copyright 2015 Barefoot Networks, Inc. 
+Copyright 2015 Barefoot Networks, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,14 +18,14 @@ limitations under the License.
  * INT transit device implementation
  * This example implements INT transit functionality using VxLAN-GPE as
  * underlay protocol. The udp port# for vxlan-gpe is assume to be 4790
- * Only IPv4 is supported as underlay protocol in this example. 
+ * Only IPv4 is supported as underlay protocol in this example.
  */
 #ifdef INT_ENABLE
 header_type int_metadata_t {
     fields {
         switch_id           : 32;
         insert_cnt          : 8;
-        insert_byte_cnt     : 16; 
+        insert_byte_cnt     : 16;
         gpe_int_hdr_len     : 16;
         gpe_int_hdr_len8    : 8;
         instruction_cnt     : 16;
@@ -50,7 +50,7 @@ action int_set_header_0() { //switch_id
 action int_set_header_1() { //ingress_port_id
     add_header(int_ingress_port_id_header);
     modify_field(int_ingress_port_id_header.ingress_port_id_1, 0);
-    modify_field(int_ingress_port_id_header.ingress_port_id_0, 
+    modify_field(int_ingress_port_id_header.ingress_port_id_0,
                     ingress_metadata.ifindex);
 }
 /* Instr Bit 2 */
@@ -64,12 +64,12 @@ action int_set_header_3() { //q_occupancy
     add_header(int_q_occupancy_header);
     modify_field(int_q_occupancy_header.q_occupancy1, 0);
     modify_field(int_q_occupancy_header.q_occupancy0,
-                    intrinsic_metadata.enq_qdepth); 
+                    intrinsic_metadata.enq_qdepth);
 }
 /* Instr Bit 4 */
 action int_set_header_4() { //ingress_tstamp
     add_header(int_ingress_tstamp_header);
-    modify_field(int_ingress_tstamp_header.ingress_tstamp, 
+    modify_field(int_ingress_tstamp_header.ingress_tstamp,
                                             i2e_metadata.ingress_tstamp);
 }
 /* Instr Bit 5 */
@@ -355,7 +355,7 @@ action int_update_total_hop_cnt() {
 }
 
 table int_meta_header_update {
-    // This table is applied only if int_insert table is a hit, which 
+    // This table is applied only if int_insert table is a hit, which
     // computes insert_cnt
     // E bit is set if insert_cnt == 0
     // Else total_hop_cnt is incremented by one
@@ -383,11 +383,11 @@ table int_source {
     // Decide to initiate INT based on client IP address pair
     // lkp_src, lkp_dst addresses are either outer or inner based
     // on if this switch is VTEP src or not respectively.
-    // 
+    //
     // {int_header, lkp_src, lkp_dst}
     //      0, src, dst => int_src=1
     //      1, x, x => mis-config, transient error, int_src=0
-    //      miss => int_src=0 
+    //      miss => int_src=0
     reads {
         int_header                  : valid;
         // use outer ipv4/6 header when VTEP src
@@ -462,7 +462,7 @@ action int_no_sink() {
 
 table int_terminate {
     /* REMOVE after discussion
-     * It would be nice to keep this encap un-aware. But this is used 
+     * It would be nice to keep this encap un-aware. But this is used
      * to compute byte count of INT info from shim headers from outer
      * protocols (vxlan_gpe_shim, geneve_tlv etc)
      * That make vxlan_gpe_int_header.valid as part of the key
@@ -639,7 +639,7 @@ action int_add_update_vxlan_gpe_ipv4() {
     add_header(vxlan_gpe_int_header);
     modify_field(vxlan_gpe_int_header.int_type, 0x01);
     modify_field(vxlan_gpe_int_header.next_proto, 3); // Ethernet
-    modify_field(vxlan_gpe.next_proto, 5); // Set proto = INT 
+    modify_field(vxlan_gpe.next_proto, 5); // Set proto = INT
     modify_field(vxlan_gpe_int_header.len, int_metadata.gpe_int_hdr_len8);
     add_to_field(ipv4.totalLen, int_metadata.insert_byte_cnt);
     add_to_field(udp.length_, int_metadata.insert_byte_cnt);
@@ -654,7 +654,7 @@ table int_outer_encap {
     // as part of transit or source functionality
     // based on outer(underlay) encap, vxlan-GPE, Geneve, .. update
     // outer headers, options, IP total len etc.
-    // {int_src, vxlan_gpe, egr_tunnel_type} : 
+    // {int_src, vxlan_gpe, egr_tunnel_type} :
     //      0, 0, X : nop (error)
     //      0, 1, X : update_vxlan_gpe_int (transit case)
     //      1, 0, tunnel_gpe : add_update_vxlan_gpe_int

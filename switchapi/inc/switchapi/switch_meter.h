@@ -36,7 +36,7 @@ extern "C" {
 /** Meter mode */
 typedef enum switch_meter_mode_ {
     SWITCH_METER_MODE_NONE,                          /**< none */
-    SWITCH_METER_MODE_TWO_RATE_THREE_COLOR,          /**< two rate, three color */   
+    SWITCH_METER_MODE_TWO_RATE_THREE_COLOR,          /**< two rate, three color */
     SWITCH_METER_MODE_STORM_CONTROL                  /**< storm control */
 } switch_meter_mode_t;
 
@@ -135,7 +135,7 @@ switch_api_meter_stats_get(switch_device_t device,
                           switch_counter_t *counters);
 
 /** @} */ // end of meter
-    
+
 #ifdef __cplusplus
 }
 #endif

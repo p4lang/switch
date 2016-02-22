@@ -474,7 +474,9 @@ action drop_packet() {
 }
 
 action drop_packet_with_reason(drop_reason) {
+#ifndef STATS_DISABLE
     count(drop_stats, drop_reason);
+#endif
     drop();
 }
 

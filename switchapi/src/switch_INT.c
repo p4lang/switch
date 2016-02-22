@@ -76,7 +76,7 @@ switch_int_transit_enable(switch_device_t device, int32_t switch_id, int32_t ena
 }
 
 switch_status_t
-switch_int_src_enable(switch_device_t device, int32_t switch_id, 
+switch_int_src_enable(switch_device_t device, int32_t switch_id,
             switch_ip_addr_t *src,
             switch_ip_addr_t *dst,
             uint8_t max_hop, uint16_t ins_mask
@@ -85,14 +85,14 @@ switch_int_src_enable(switch_device_t device, int32_t switch_id,
     switch_status_t  status = SWITCH_STATUS_SUCCESS;
 #ifdef P4_INT_EP_ENABLE
     p4_pd_entry_hdl_t entry_hdl;
-    status = switch_pd_int_src_enable(device, switch_id, 
+    status = switch_pd_int_src_enable(device, switch_id,
                                         src, dst,
                                         max_hop, ins_mask,
                                         0, &entry_hdl, false/*vtep_src*/);
     // INT and VTEP src together is not supported yet
 #else
     (void)device, (void)switch_id,
-    (void) src, (void) dst, 
+    (void) src, (void) dst,
     (void) max_hop, (void) ins_mask;
 #endif
     return status;

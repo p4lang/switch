@@ -796,7 +796,7 @@ switch_api_interface_native_vlan_set(switch_handle_t intf_handle, uint64_t value
         return SWITCH_STATUS_INVALID_INTERFACE;
     }
 
-    if (!SWITCH_INTF_IS_PORT_L3(intf_info)) {
+    if (SWITCH_INTF_IS_PORT_L3(intf_info)) {
         return SWITCH_STATUS_INVALID_INTERFACE;
     }
 

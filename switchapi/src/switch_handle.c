@@ -20,9 +20,9 @@ limitations under the License.
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-    
+
 static void *switch_handle_array;
-    
+
 int
 switch_handle_type_init(switch_handle_type_t type, unsigned int size)
 {
@@ -31,8 +31,8 @@ switch_handle_type_init(switch_handle_type_t type, unsigned int size)
 }
 
 int
-switch_handle_type_allocator_init(switch_handle_type_t type, 
-                                  unsigned int num_handles, 
+switch_handle_type_allocator_init(switch_handle_type_t type,
+                                  unsigned int num_handles,
                                   bool grow_on_demand, bool zero_based)
 {
     switch_handle_info_t            *handle_info = NULL;
@@ -80,7 +80,7 @@ switch_handle_type_free(switch_handle_type_t type)
         switch_free(handle_info);
     }
 }
-    
+
 switch_handle_t
 switch_handle_allocate(switch_handle_type_t type)
 {
@@ -113,7 +113,7 @@ switch_handle_set_and_allocate(switch_handle_t type, unsigned int id)
     }
     return SWITCH_API_INVALID_HANDLE;
 }
-    
+
 void
 switch_handle_free(switch_handle_t handle)
 {
@@ -128,14 +128,14 @@ switch_handle_free(switch_handle_t handle)
         handle_info->num_in_use--;
     }
 }
-    
+
 switch_handle_type_t
 switch_handle_get_type(switch_handle_t handle)
 {
     switch_handle_type_t type = (handle & 0xF8000000) >> HANDLE_TYPE_SHIFT;
     return type;
 }
-    
+
 #ifdef SWITCH_HANDLE_TEST
 #include <stdio.h>
 #include <stdlib.h>
@@ -152,7 +152,7 @@ int _handle_main (int argc, char **argv)
     return 0;
 }
 #endif
-    
+
 #ifdef __cplusplus
 }
 #endif

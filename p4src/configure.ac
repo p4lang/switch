@@ -2,34 +2,20 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([switchapi], [0.1], [])
+AC_INIT([switch], [0.1], [])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 AM_SILENT_RULES([yes])
 AC_CONFIG_HEADERS([config.h])
 
-AC_ARG_ENABLE([coverage],
-    AS_HELP_STRING([--enable-coverage], [Enable gcov flags]))
-AS_IF([test "x$enable_coverage" = "xyes"], [
-    AC_DEFINE([COVERAGE], [], ["Link with gcov."])
-    COVERAGE_FLAGS="--coverage"
-])
+AM_PATH_PYTHON([2.7],,)
 
-p4target=unknown
-AC_ARG_ENABLE([bmv2], \
-	[ --enable-bmv2 	Enable bmv2 as p4target],
-	[case "${enableval}" in
-		yes) p4target=bmv2 ;;
-		*) ;;
-	esac], [])
-
-AM_CONDITIONAL(TARGET_BMV2, [test "x$p4target" =  "xbmv2"])
-AM_CONDITIONAL(TARGET_TOFINO, [test "x$p4target" =  "xtofino"])
-
-# Checks for programs.
+# This prevents autotools from automatically adding -O2 flag.
+: ${CXXFLAGS=""}
+# XXX find a way to identify all available P4 compilers (hlir and backends)??
 CFLAGS="-g -Wall -Wextra -Wno-unused-parameter"
-AC_PROG_CC_STDC
+#AC_PROG_CC_STDC
 AC_PROG_CXX
-LT_INIT
+AC_PROG_RANLIB
 
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -54,14 +40,18 @@ AC_CHECK_HEADER_STDBOOL
 AC_TYPE_SIZE_T
 AC_TYPE_UINT64_T
 
-# Doxygen support.
-#AC_CHECK_PROGS([DOXYGEN], [doxygen])
-#if test -z "$DOXYGEN";
-#   then AC_MSG_WARN([Doxygen not found - continuing without Doxygen support])
-#fi
-#AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])AM_COND_IF([HAVE_DOXYGEN],
-#[AC_CONFIG_FILES([doc/Doxyfile])])
+p4target=unknown
+
+AC_ARG_ENABLE([bmv2], \
+	[ --enable-bmv2 	Enable bmv2 as p4target],
+	[case "${enableval}" in
+		yes) p4target=bmv2 ;;
+		*) ;;
+	esac], [])
+
+AM_CONDITIONAL(TARGET_BMV2, [test "x$p4target" =  "xbmv2"])
+
 
 # Generate makefiles
-AC_CONFIG_FILES([Makefile third-party/tommyds/Makefile])
+AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

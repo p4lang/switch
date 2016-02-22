@@ -1,5 +1,5 @@
 /*
-Copyright 2013-present Barefoot Networks, Inc. 
+Copyright 2013-present Barefoot Networks, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -476,7 +476,7 @@ parser parse_int_header {
     extract(int_header);
     set_metadata(int_metadata.instruction_cnt, latest.ins_cnt);
     return select (latest.rsvd1, latest.total_hop_cnt) {
-        // reserved bits = 0 and total_hop_cnt == 0 
+        // reserved bits = 0 and total_hop_cnt == 0
         // no int_values are added by upstream
         0x000: ingress;
 #ifdef INT_EP_ENABLE
@@ -504,8 +504,8 @@ parser parse_int_val {
 #endif // INT_EP_ENABLE
 
 parser parse_all_int_meta_value_heders {
-    // bogus state.. just extract all possible int headers in the 
-    // correct order to build 
+    // bogus state.. just extract all possible int headers in the
+    // correct order to build
     // the correct parse graph for deparser (while adding headers)
     extract(int_switch_id_header);
     extract(int_ingress_port_id_header);

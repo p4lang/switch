@@ -44,12 +44,13 @@ switch_port_init(switch_device_t device)
                                      SWITCH_PORT_ID(port_info),
                                      &(port_info->mbr_hdl),
                                      &(port_info->lg_entry));
+        port_info->hw_entry = SWITCH_HW_INVALID_HANDLE;
         switch_pd_port_mapping_table_add_entry(device,
                                      SWITCH_PORT_ID(port_info),
                                      port_info->ifindex,
                                      port_info->port_type,
                                      &(port_info->hw_entry));
-        port_info->eg_lag_entry = 0;
+        port_info->eg_lag_entry = SWITCH_HW_INVALID_HANDLE;
         switch_pd_egress_lag_table_add_entry(device,
                                      SWITCH_PORT_ID(port_info),
                                      port_info->ifindex,
