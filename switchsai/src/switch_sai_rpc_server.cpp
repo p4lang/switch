@@ -771,7 +771,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       port_list.list = (sai_object_id_t *) malloc(sizeof(sai_object_id_t) * thrift_port_list.size());
       sai_thrift_parse_object_id_list(thrift_port_list, port_list.list);
       port_list.count = thrift_port_list.size();
-      status = lag_api->add_ports_to_lag(lag_id, &port_list);
+//      status = lag_api->add_ports_to_lag(lag_id, &port_list);
       free(port_list.list);
       return status;
   }
@@ -788,7 +788,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       port_list.list = (sai_object_id_t *) malloc(sizeof(sai_object_id_t) * thrift_port_list.size());
       sai_thrift_parse_object_id_list(thrift_port_list, port_list.list);
       port_list.count = thrift_port_list.size();
-      status = lag_api->remove_ports_from_lag(lag_id, &port_list);
+//      status = lag_api->remove_ports_from_lag(lag_id, &port_list);
       free(port_list.list);
       return status;
   }
