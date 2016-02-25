@@ -34,6 +34,7 @@ extern "C" {
 }
 #endif
 
+#include <saiport.h>
 #include <saifdb.h>
 #include <saivlan.h>
 #include <sairouter.h>
@@ -141,6 +142,25 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       std::vector<int32_t>::const_iterator it = thrift_attr_id_list.begin();
       for(uint32_t i = 0; i < thrift_attr_id_list.size(); i++, it++) {
           attr_list[i].id = (int32_t) *it;
+      }
+  }
+
+  void sai_thrift_parse_port_attributes(const std::vector<sai_thrift_attribute_t> &thrift_attr_list, sai_attribute_t *attr_list) {
+      std::vector<sai_thrift_attribute_t>::const_iterator it = thrift_attr_list.begin();
+      sai_thrift_attribute_t attribute;
+      for(uint32_t i = 0; i < thrift_attr_list.size(); i++, it++) {
+          attribute = (sai_thrift_attribute_t)*it;
+          attr_list[i].id = attribute.id;
+          switch (attribute.id) {
+              case SAI_PORT_ATTR_ADMIN_STATE:
+                  attr_list[i].value.booldata = attribute.value.booldata;
+                  break;
+              case SAI_PORT_ATTR_PORT_VLAN_ID:
+                  attr_list[i].value.u16 = attribute.value.u16;
+                  break;
+              default:
+                  break;
+          }
       }
   }
 
@@ -468,6 +488,22 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       }
   }
 
+
+  int32_t sai_thrift_set_port_attribute(const sai_thrift_object_id_t port_id, const sai_thrift_attribute_t &thrift_attr) {
+      printf("sai_thrift_set_port\n");
+      sai_status_t status = SAI_STATUS_SUCCESS;
+      sai_port_api_t *port_api;
+      status = sai_api_query(SAI_API_PORT, (void **) &port_api);
+      if (status != SAI_STATUS_SUCCESS) {
+          return status;
+      }
+      std::vector<sai_thrift_attribute_t> thrift_attr_list;
+      thrift_attr_list.push_back(thrift_attr);
+      sai_attribute_t attr;
+      sai_thrift_parse_port_attributes(thrift_attr_list, &attr);
+      status = port_api->set_port_attribute((sai_object_id_t)port_id, &attr);
+      return status;
+  }
 
   int32_t sai_thrift_create_fdb_entry(const sai_thrift_fdb_entry_t& thrift_fdb_entry, const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
       printf("sai_thrift_create_fdb_entry\n");
