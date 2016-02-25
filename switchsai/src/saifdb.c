@@ -57,7 +57,7 @@ static void sai_fdb_entry_attribute_parse(
         attribute = &attr_list[i];
         switch (attribute->id) {
             case SAI_FDB_ENTRY_ATTR_TYPE:
-                switch (attribute->value.u8) {
+                switch (attribute->value.s32) {
                     case SAI_FDB_ENTRY_DYNAMIC:
                         mac_entry->entry_type = SWITCH_MAC_ENTRY_DYNAMIC;
                         break;
@@ -73,7 +73,7 @@ static void sai_fdb_entry_attribute_parse(
                 break;
 
             case SAI_FDB_ENTRY_ATTR_PACKET_ACTION:
-                action = (switch_mac_action_t) attribute->value.u8;
+                action = (switch_mac_action_t) attribute->value.s32;
                 switch (action) {
                     case SAI_PACKET_ACTION_DROP:
                         mac_entry->mac_action = SWITCH_MAC_ACTION_DROP;

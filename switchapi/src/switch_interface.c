@@ -408,6 +408,9 @@ switch_api_interface_delete_l3_interface(switch_device_t device,
     switch_bd_info_t                  *bd_info = NULL;
     switch_api_interface_info_t       *api_intf_info = NULL;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+    switch_handle_t                    port_handle = 0;
+    switch_port_info_t                *port_info = NULL;
+    switch_lag_info_t                 *lag_info = NULL;
 
     intf_info = switch_api_interface_get(intf_handle);
     if (!intf_info) {
@@ -429,6 +432,22 @@ switch_api_interface_delete_l3_interface(switch_device_t device,
         status = switch_api_router_mac_group_delete(device,
                                                     api_intf_info->rmac_handle);
     }
+
+    port_handle = SWITCH_INTF_PORT_HANDLE(intf_info);
+    if (SWITCH_HANDLE_IS_LAG(port_handle)) {
+        lag_info = switch_api_lag_get_internal(port_handle);
+        if (!lag_info) {
+            return SWITCH_STATUS_INVALID_HANDLE;
+        }
+        lag_info->intf_handle = 0;
+    } else {
+        port_info = switch_api_port_get_internal(SWITCH_INTF_PORT_HANDLE(intf_info));
+        if (!port_info) {
+            return SWITCH_STATUS_INVALID_PORT_NUMBER;
+        }
+        port_info->intf_handle = 0;
+    }
+
     return status;
 }
 

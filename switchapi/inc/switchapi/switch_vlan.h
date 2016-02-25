@@ -465,6 +465,12 @@ switch_status_t switch_api_vlan_stats_get(
         switch_vlan_stats_t *counter_ids,
         switch_counter_t *counters);
 
+switch_status_t
+switch_api_default_vlan_set(
+        switch_device_t device,
+        switch_handle_t handle,
+        switch_handle_t vlan_handle);
+
 /** @} */ // end of VLAN
 
 #ifdef __cplusplus

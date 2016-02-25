@@ -246,10 +246,12 @@ switch_api_lag_member_add(switch_device_t device, switch_handle_t lag_handle,
             status = switch_pd_port_mapping_table_add_entry(device, port,
                     lag_info->ifindex,
                     port_info->port_type,
+                    handle_to_id(port_info->default_bd),
                     &port_info->hw_entry);
             if (status != SWITCH_STATUS_SUCCESS) {
                 return status;
             }
+            port_info->lag_handle = lag_handle;
             status = switch_pd_egress_lag_table_add_entry(device,
                                      SWITCH_PORT_ID(port_info),
                                      lag_info->ifindex,
@@ -337,10 +339,12 @@ switch_api_lag_member_delete(switch_device_t device, switch_handle_t lag_handle,
             status = switch_pd_port_mapping_table_add_entry(device, port,
                                      port_info->ifindex,
                                      port_info->port_type,
+                                     handle_to_id(port_info->default_bd),
                                      &port_info->hw_entry);
             if (status != SWITCH_STATUS_SUCCESS) {
                 return status;
             }
+            port_info->lag_handle = 0;
             status = switch_pd_egress_lag_table_add_entry(device,
                                      SWITCH_PORT_ID(port_info),
                                      port_info->ifindex,
@@ -393,6 +397,7 @@ switch_api_lag_member_create(
         node = tommy_list_head(&(lag_info->ingress));
     } else {
         node = tommy_list_head(&(lag_info->egress));
+        tommy_list_init(&lag_member->xlate_entries);
     }
 
     while (node) {

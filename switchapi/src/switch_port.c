@@ -28,6 +28,7 @@ switch_port_init(switch_device_t device)
 {
     switch_port_info_t                *port_info = NULL;
     int                                index = 0;
+    switch_handle_t                    default_bd = 0;
 
     memset(switch_port_info, 0, sizeof(switch_port_info_t) * SWITCH_API_MAX_PORTS);
 
@@ -39,17 +40,24 @@ switch_port_init(switch_device_t device)
         if (index == CPU_PORT_ID) {
             port_info->port_type = SWITCH_PORT_TYPE_CPU;
         }
+        switch_api_vlan_id_to_handle_get(
+                             SWITCH_API_DEFAULT_VLAN,
+                             &port_info->default_bd);
+        port_info->lag_handle = 0;
+
 #ifdef SWITCH_PD
         switch_pd_lag_group_table_add_entry(device, port_info->ifindex,
                                      SWITCH_PORT_ID(port_info),
                                      &(port_info->mbr_hdl),
                                      &(port_info->lg_entry));
+        port_info->hw_entry = SWITCH_HW_INVALID_HANDLE;
         switch_pd_port_mapping_table_add_entry(device,
                                      SWITCH_PORT_ID(port_info),
                                      port_info->ifindex,
                                      port_info->port_type,
+                                     handle_to_id(port_info->default_bd),
                                      &(port_info->hw_entry));
-        port_info->eg_lag_entry = 0;
+        port_info->eg_lag_entry = SWITCH_HW_INVALID_HANDLE;
         switch_pd_egress_lag_table_add_entry(device,
                                      SWITCH_PORT_ID(port_info),
                                      port_info->ifindex,

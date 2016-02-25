@@ -30,6 +30,12 @@ extern "C" {
 
 #define SWITCH_API_MAX_LAG 256
 
+typedef struct switch_lag_xlate_entry_ {
+    tommy_node node;
+    switch_vlan_t vlan_id;
+    p4_pd_entry_hdl_t entry_hdl;
+} switch_lag_xlate_entry_t;
+
 /** Lag member is one of the ports that can be a member of LAG */
 typedef struct switch_lag_member_ {
     tommy_node ingress_node;               /**< linked list node */
@@ -39,9 +45,9 @@ typedef struct switch_lag_member_ {
     switch_handle_t lag_member_handle;     /**< lag member handle */
     switch_handle_t lag_handle;            /**< lag member handle */
     switch_direction_t direction;          /**< direction */
+    tommy_list xlate_entries;
 #ifdef SWITCH_PD
     p4_pd_mbr_hdl_t mbr_hdl;         /**< Member handle */
-    p4_pd_entry_hdl_t xlate_entry;
 #endif
 } switch_lag_member_t;
     

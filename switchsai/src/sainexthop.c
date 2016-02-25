@@ -113,7 +113,10 @@ sai_status_t sai_remove_next_hop_entry(
     sai_status_t status = SAI_STATUS_SUCCESS;
     switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
 
-    SAI_ASSERT(sai_object_type_query(next_hop_id) == SAI_OBJECT_TYPE_NEXT_HOP);
+    if (sai_object_type_query(next_hop_id) != SAI_OBJECT_TYPE_NEXT_HOP) {
+        SAI_LOG_ERROR("nexthop remove failed: invalid nexthop handle %lx\n", next_hop_id);
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
 
     switch_status = switch_api_nhop_delete(device, (switch_handle_t) next_hop_id);
     status = sai_switch_status_to_sai_status(switch_status);

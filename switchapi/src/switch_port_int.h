@@ -44,6 +44,8 @@ typedef struct switch_port_info_ {
     switch_handle_t hostif_handle;
     switch_port_type_t port_type;
     switch_handle_t meter_handle[SWITCH_PACKET_TYPE_MAX];
+    switch_handle_t lag_handle;
+    switch_handle_t default_bd;
 #ifdef SWITCH_PD
     p4_pd_entry_hdl_t hw_entry;             /* port mapping entry */
     p4_pd_entry_hdl_t lg_entry;             /* Lag group entry */

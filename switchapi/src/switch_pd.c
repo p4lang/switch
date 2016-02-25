@@ -2736,6 +2736,7 @@ switch_pd_port_mapping_table_add_entry(switch_device_t device,
                                        switch_port_t port_id,
                                        switch_ifindex_t ifindex,
                                        switch_port_type_t port_type,
+                                       uint16_t bd,
                                        p4_pd_entry_hdl_t *entry_hdl)
 {
     p4_pd_dc_ingress_port_mapping_match_spec_t  match_spec;
@@ -2752,10 +2753,11 @@ switch_pd_port_mapping_table_add_entry(switch_device_t device,
 
     match_spec.standard_metadata_ingress_port = port_id;
     action_spec.action_ifindex = ifindex;
-    action_spec.action_if_label = port_id;
+    action_spec.action_bd = bd;
     action_spec.action_port_type = port_type;
 
-    modify = (*entry_hdl != 0) ? TRUE : FALSE;
+    modify = (*entry_hdl != SWITCH_HW_INVALID_HANDLE) ? TRUE : FALSE;
+
     if (modify) {
         status = p4_pd_dc_ingress_port_mapping_table_modify_with_set_ifindex(
             g_sess_hdl, 0,
@@ -3228,7 +3230,7 @@ switch_pd_egress_lag_table_add_entry(switch_device_t device,
     memset(&action_spec, 0, sizeof(p4_pd_dc_set_egress_ifindex_action_spec_t));
     match_spec.standard_metadata_egress_port = port_id;
     action_spec.action_egress_ifindex = ifindex;
-    if (*entry_hdl) {
+    if (*entry_hdl != SWITCH_HW_INVALID_HANDLE) {
         status = p4_pd_dc_egress_lag_table_modify_with_set_egress_ifindex(
                                                        g_sess_hdl,
                                                        device,

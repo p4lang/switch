@@ -187,13 +187,13 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
           attr_list[i].id = attribute.id;
           switch (attribute.id) {
               case SAI_FDB_ENTRY_ATTR_TYPE:
-                  attr_list[i].value.u8 = attribute.value.u8;
+                  attr_list[i].value.s32 = attribute.value.s32;
                   break;
               case SAI_FDB_ENTRY_ATTR_PORT_ID:
                   attr_list[i].value.oid = attribute.value.oid;
                   break;
               case SAI_FDB_ENTRY_ATTR_PACKET_ACTION:
-                  attr_list[i].value.u8 = attribute.value.u8;
+                  attr_list[i].value.s32 = attribute.value.s32;
                   break;
               default:
                   break;
@@ -267,7 +267,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
                   attr_list[i].value.oid = attribute.value.oid;
                   break;
               case SAI_ROUTER_INTERFACE_ATTR_TYPE:
-                  attr_list[i].value.u8 = attribute.value.u8;
+                  attr_list[i].value.s32 = attribute.value.s32;
                   break;
               case SAI_ROUTER_INTERFACE_ATTR_VLAN_ID:
                   attr_list[i].value.u16 = attribute.value.u16;
@@ -823,7 +823,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       return status;
   }
 
-  sai_thrift_object_id_t sai_thrift_create_lag() {
+  sai_thrift_object_id_t sai_thrift_create_lag(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
       printf("sai_thrift_create_lag\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_lag_api_t *lag_api;

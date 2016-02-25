@@ -14,23 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#ifdef SAI_BMLIB
-
 #include "saiinternal.h"
-#include <p4_sim/rmt.h>
-#include <BMI/bmi_port.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 static unsigned int initialized = 0;
-static int log_level = P4_LOG_LEVEL_NONE;
-static bmi_port_mgr_t *port_mgr;
 static sai_api_t api_id = SAI_API_UNSPECIFIED;
-
-extern int start_switch_api_packet_driver(void);
-
 const char *
 sai_profile_get_value(_In_ sai_switch_profile_id_t profile_id,
                       _In_ const char* variable)
@@ -56,6 +43,20 @@ const service_method_table_t sai_services = {
     .profile_get_value = sai_profile_get_value,
     .profile_get_next_value = sai_profile_get_next_value
 };
+
+#ifdef SAI_BMLIB
+
+#include <p4_sim/rmt.h>
+#include <BMI/bmi_port.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+static int log_level = P4_LOG_LEVEL_NONE;
+static bmi_port_mgr_t *port_mgr;
+
+extern int start_switch_api_packet_driver(void);
 
 static void sai_log_packet(
         _In_ int port_num,
@@ -167,7 +168,6 @@ sai_api_initialize(_In_ uint64_t flags,
         }
         rmt_log_level_set(log_level);
         rmt_transmit_register(sai_transmit_packet);
-        switch_api_init(0, num_ports);
         start_switch_api_packet_driver();
         initialized = 1;
         sai_initialize();
@@ -187,5 +187,25 @@ sai_api_uninitialize(void) {
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
+
+#else
+extern int bmv2_model_init();
+
+sai_status_t
+sai_api_initialize(uint64_t flags,
+                   const service_method_table_t* services) {
+    sai_status_t status =  SAI_STATUS_SUCCESS;
+    unsigned int num_ports = 32;
+    UNUSED(services);
+    if(!initialized) {
+        SAI_LOG_WARN("Initializing device");
+        initialized = 1;
+        bmv2_model_init();
+        sai_initialize();
+    }
+
+    services = &sai_services;
+    return status;
+}
 
 #endif /* SAI_BMLIB */

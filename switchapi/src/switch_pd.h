@@ -339,6 +339,7 @@ switch_pd_port_mapping_table_add_entry(switch_device_t device,
                                    switch_port_t port_id,
                                    switch_ifindex_t ifindex,
                                    switch_port_type_t port_type,
+                                   uint16_t default_bd,
                                    p4_pd_entry_hdl_t *entry_hdl);
 
 p4_pd_status_t

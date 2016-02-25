@@ -202,7 +202,7 @@ service switch_sai_rpc {
     sai_thrift_status_t sai_thrift_remove_next_hop_from_group(1: sai_thrift_object_id_t next_hop_group_id, 2: list<sai_thrift_object_id_t> thrift_nexthops);
 
     //lag API
-    sai_thrift_object_id_t sai_thrift_create_lag();
+    sai_thrift_object_id_t sai_thrift_create_lag(1: list<sai_thrift_attribute_t> thrift_attr_list);
     sai_thrift_status_t sai_thrift_remove_lag(1: sai_thrift_object_id_t lag_id);
     sai_thrift_object_id_t sai_thrift_create_lag_member(1: list<sai_thrift_attribute_t> thrift_attr_list);
     sai_thrift_status_t sai_thrift_remove_lag_member(1: sai_thrift_object_id_t lag_member_id);

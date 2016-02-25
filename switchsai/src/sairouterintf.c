@@ -87,7 +87,7 @@ sai_status_t sai_create_router_interface(
                 intf_info.vrf_handle = (switch_handle_t) attribute->value.oid;
                 break;
             case SAI_ROUTER_INTERFACE_ATTR_TYPE:
-                sai_intf_type = attribute->value.u8;
+                sai_intf_type = attribute->value.s32;
                 break;
             case SAI_ROUTER_INTERFACE_ATTR_PORT_ID:
                 SAI_ASSERT(sai_intf_type == SAI_ROUTER_INTERFACE_TYPE_PORT);
