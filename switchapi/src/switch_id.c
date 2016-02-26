@@ -95,7 +95,10 @@ switch_api_id_allocator_allocate(switch_api_id_allocator *allocator)
 void
 switch_api_id_allocator_release(switch_api_id_allocator *allocator, unsigned int id)
 {
-    id = id > 0 ? id - 1 : 0;
+    if (allocator->zero_based != true) {
+        id = id > 0 ? id - 1 : 0;
+    }
+
     allocator->data[id >> 5] &= ~(1 << (31 - id));
 }
 
