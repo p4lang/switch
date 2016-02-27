@@ -138,6 +138,10 @@ sai_status_t sai_api_query(
             *api_method_table = &sai_api_service.samplepacket_api;
             break;
 
+        case SAI_API_HASH:
+            *api_method_table = &sai_api_service.hash_api;
+            break;
+
         default:
             *api_method_table = NULL;
             status = SAI_STATUS_INVALID_PARAMETER;

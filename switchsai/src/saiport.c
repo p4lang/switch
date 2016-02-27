@@ -176,6 +176,10 @@ sai_status_t sai_get_port_attribute(
                     return status;
                 }
                 break;
+            case SAI_PORT_ATTR_SUPPORTED_SPEED:
+            // TODO: implement this, should return list of supported port speeds
+                attribute->value.u32list.count = 0;
+                break;
             default:
                 return SAI_STATUS_NOT_SUPPORTED;
         }

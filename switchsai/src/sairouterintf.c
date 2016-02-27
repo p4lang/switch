@@ -267,6 +267,10 @@ sai_status_t sai_get_router_interface_attribute(
                     SWITCH_INTF_ATTR_V6_UNICAST,
                     (uint64_t*)&attribute->value.booldata);
                 break;
+            case SAI_ROUTER_INTERFACE_ATTR_MTU:
+                // return the default for now
+                attribute->value.u32 = 1514;
+                break;
             default:
                 return SAI_STATUS_INVALID_PARAMETER; 
         }
