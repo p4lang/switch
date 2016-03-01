@@ -186,9 +186,10 @@ control process_validate_outer_header {
 /*****************************************************************************/
 /* Ingress port lookup                                                       */
 /*****************************************************************************/
-action set_ifindex(ifindex, bd, port_type) {
+action set_ifindex(ifindex, if_label, bd, port_type) {
     modify_field(ingress_metadata.ifindex, ifindex);
     modify_field(ingress_metadata.bd, bd);
+    modify_field(acl_metadata.if_label, if_label);
     modify_field(ingress_metadata.port_type, port_type);
 }
 
