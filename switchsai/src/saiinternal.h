@@ -118,6 +118,8 @@ sai_status_t sai_neighbor_initialize(sai_api_service_t *sai_api_service);
 sai_status_t sai_hostif_initialize(sai_api_service_t *sai_api_service);
 sai_status_t sai_acl_initialize(sai_api_service_t *sai_api_service);
 sai_status_t sai_mirror_initialize(sai_api_service_t *sai_api_service);
+sai_status_t sai_hash_initialize(sai_api_service_t *sai_api_service);
+sai_status_t sai_udf_initialize(sai_api_service_t *sai_api_service);
 
 // maps SAI types to switchapi types
 char *sai_status_to_string(

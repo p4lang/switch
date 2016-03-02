@@ -260,6 +260,8 @@ sai_status_t sai_initialize() {
     sai_hostif_initialize(&sai_api_service);
     sai_acl_initialize(&sai_api_service);
     sai_mirror_initialize(&sai_api_service);
+    sai_hash_initialize(&sai_api_service);
+    sai_udf_initialize(&sai_api_service);
     SAI_LOG_EXIT();
 
     return SAI_STATUS_SUCCESS;
