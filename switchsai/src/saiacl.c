@@ -551,7 +551,11 @@ sai_status_t sai_create_acl_entry(
                 }
                 break;
             case SAI_ACL_ENTRY_ATTR_PACKET_ACTION:
-                acl_action = SWITCH_ACL_ACTION_DROP;
+                if (attr_list[index1].value.u8 == SAI_PACKET_ACTION_DROP) {
+                    acl_action = SWITCH_ACL_ACTION_DROP;
+                } else if (attr_list[index1].value.u8 == SAI_PACKET_ACTION_FORWARD) {
+                    acl_action = SWITCH_ACL_ACTION_PERMIT;
+                }
                 break;
             case SAI_ACL_ENTRY_ATTR_ACTION_FLOOD:
                 acl_action = SWITCH_ACL_ACTION_FLOOD_TO_VLAN;
