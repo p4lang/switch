@@ -86,6 +86,9 @@ sai_status_t sai_create_router_interface(
             case SAI_ROUTER_INTERFACE_ATTR_ADMIN_V6_STATE:
                 intf_info.ipv6_unicast_enabled = attribute->value.booldata;
                 break;
+            case SAI_ROUTER_INTERFACE_ATTR_MTU:
+                // TODO:
+                break;
             default:
                 return SAI_STATUS_INVALID_PARAMETER; 
         }
