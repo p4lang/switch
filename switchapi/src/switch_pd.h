@@ -327,7 +327,7 @@ switch_pd_port_vlan_mapping_table_delete_entry(switch_device_t device,
                                            p4_pd_entry_hdl_t entry_hdl);
 
 p4_pd_status_t
-switch_pd_egress_vlan_xlate_table_add_entry(switch_device_t device, switch_port_t port,
+switch_pd_egress_vlan_xlate_table_add_entry(switch_device_t device, switch_ifindex_t ifindex,
                                        uint16_t egress_bd, switch_vlan_t vlan_id,
                                        p4_pd_entry_hdl_t *entry_hdl);
 
@@ -335,16 +335,26 @@ p4_pd_status_t
 switch_pd_egress_vlan_xlate_table_delete_entry(switch_device_t device, p4_pd_entry_hdl_t entry_hdl);
 
 p4_pd_status_t
-switch_pd_port_mapping_table_add_entry(switch_device_t device,
+switch_pd_ingress_port_mapping_table_add_entry(switch_device_t device,
                                    switch_port_t port_id,
                                    switch_ifindex_t ifindex,
                                    switch_port_type_t port_type,
                                    p4_pd_entry_hdl_t *entry_hdl);
 
 p4_pd_status_t
-switch_pd_port_mapping_table_delete_entry(switch_device_t device,
+switch_pd_ingress_port_mapping_table_delete_entry(switch_device_t device,
                                       p4_pd_entry_hdl_t entry_hdl);
 
+p4_pd_status_t
+switch_pd_egress_port_mapping_table_add_entry(switch_device_t device,
+                                   switch_port_t port_id,
+                                   switch_ifindex_t ifindex,
+                                   switch_port_type_t port_type,
+                                   p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t
+switch_pd_egress_port_mapping_table_delete_entry(switch_device_t device,
+                                       p4_pd_entry_hdl_t entry_hdl);
 /*
  * Rewrite table
  */
@@ -701,15 +711,6 @@ switch_pd_drop_stats_get(switch_device_t device, int num_counters,
                          uint64_t *counters);
 
 p4_pd_status_t
-switch_pd_egress_lag_table_add_entry(switch_device_t device,
-                                     switch_port_t port_id,
-                                     switch_ifindex_t ifindex,
-                                     p4_pd_entry_hdl_t *entry_hdl);
-p4_pd_status_t
-switch_pd_egress_lag_table_delete_entry(switch_device_t device,
-                                        p4_pd_entry_hdl_t entry_hdl);
-
-p4_pd_status_t
 switch_pd_ingress_fabric_table_add_entry(switch_device_t device);
 //TODO: Add delete entry for outer_mac table
 
@@ -847,7 +848,7 @@ p4_pd_status_t
 switch_pd_validate_mpls_packet_table_init_entry(switch_device_t device);
 
 switch_status_t
-switch_pd_egress_lag_table_add_default_entry(switch_device_t device);
+switch_pd_egress_filter_table_add_default_entry(switch_device_t device);
 
 p4_pd_status_t
 switch_pd_fabric_header_table_init_entry(switch_device_t device);

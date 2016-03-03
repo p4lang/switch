@@ -2688,9 +2688,12 @@ switch_pd_port_vlan_mapping_table_delete_entry(switch_device_t device,
 }
 
 p4_pd_status_t
-switch_pd_egress_vlan_xlate_table_add_entry(switch_device_t device, switch_port_t port,
-                                            uint16_t egress_bd, switch_vlan_t vlan_id,
-                                            p4_pd_entry_hdl_t *entry_hdl)
+switch_pd_egress_vlan_xlate_table_add_entry(
+        switch_device_t device,
+        switch_ifindex_t ifindex,
+        uint16_t egress_bd,
+        switch_vlan_t vlan_id,
+        p4_pd_entry_hdl_t *entry_hdl)
 {
     p4_pd_status_t status = 0;
     p4_pd_dc_egress_vlan_xlate_match_spec_t match_spec;
@@ -2703,7 +2706,7 @@ switch_pd_egress_vlan_xlate_table_add_entry(switch_device_t device, switch_port_
     memset(&match_spec, 0, sizeof(p4_pd_dc_egress_vlan_xlate_match_spec_t));
     memset(&action_spec, 0, sizeof(p4_pd_dc_set_egress_packet_vlan_tagged_action_spec_t));
 
-    match_spec.standard_metadata_egress_port = port;
+    match_spec.egress_metadata_ifindex = ifindex;
     match_spec.egress_metadata_bd = egress_bd;
     if (vlan_id != 0) {
         action_spec.action_vlan_id = vlan_id;
@@ -2732,7 +2735,7 @@ switch_pd_egress_vlan_xlate_table_delete_entry(switch_device_t device, p4_pd_ent
 }
 
 p4_pd_status_t
-switch_pd_port_mapping_table_add_entry(switch_device_t device,
+switch_pd_ingress_port_mapping_table_add_entry(switch_device_t device,
                                        switch_port_t port_id,
                                        switch_ifindex_t ifindex,
                                        switch_port_type_t port_type,
@@ -2770,30 +2773,102 @@ switch_pd_port_mapping_table_add_entry(switch_device_t device,
             entry_hdl);
     }
 
+    p4_pd_complete_operations(g_sess_hdl);
+    return status;
+}
+
+p4_pd_status_t
+switch_pd_ingress_port_mapping_table_delete_entry(switch_device_t device,
+                                          p4_pd_entry_hdl_t entry_hdl)
+{
+    p4_pd_status_t status = 0;
+
+    status = p4_pd_dc_ingress_port_mapping_table_delete(g_sess_hdl,
+                                                        device,
+                                                        entry_hdl);
+    p4_pd_complete_operations(g_sess_hdl);
+    return status;
+}
+
+p4_pd_status_t
+switch_pd_egress_port_mapping_table_add_entry(switch_device_t device,
+                                       switch_port_t port_id,
+                                       switch_ifindex_t ifindex,
+                                       switch_port_type_t port_type,
+                                       p4_pd_entry_hdl_t *entry_hdl)
+{
+    p4_pd_dc_egress_port_mapping_match_spec_t   match_spec;
+    p4_pd_status_t                              status = 0;
+    bool                                        modify = FALSE;
+    p4_pd_dev_target_t                          p4_pd_device;
+
+    p4_pd_device.device_id = device;
+    p4_pd_device.dev_pipe_id = SWITCH_DEV_PIPE_ID;
+
+    memset(&match_spec, 0, sizeof(p4_pd_dc_ingress_port_mapping_match_spec_t));
+    match_spec.standard_metadata_egress_port = port_id;
+
+    modify = (*entry_hdl != SWITCH_HW_INVALID_HANDLE) ? TRUE : FALSE;
     if (!modify) {
-        p4_pd_dc_egress_port_mapping_match_spec_t   egress_match_spec;
-        p4_pd_entry_hdl_t                           egress_entry_hdl;
-        memset(&egress_match_spec, 0,
-               sizeof(p4_pd_dc_egress_port_mapping_match_spec_t));
-        egress_match_spec.standard_metadata_egress_port = port_id;
         if (port_type == SWITCH_PORT_TYPE_NORMAL) {
+            p4_pd_dc_egress_port_type_normal_action_spec_t action_spec;
+            memset(&action_spec, 0, sizeof(action_spec));
+            action_spec.action_ifindex = ifindex;
             p4_pd_dc_egress_port_mapping_table_add_with_egress_port_type_normal(
                 g_sess_hdl,
                 p4_pd_device,
-                &egress_match_spec,
-                &egress_entry_hdl);
+                &match_spec,
+                &action_spec,
+                entry_hdl);
         } else if (port_type == SWITCH_PORT_TYPE_FABRIC) {
+            p4_pd_dc_egress_port_type_fabric_action_spec_t action_spec;
+            memset(&action_spec, 0, sizeof(action_spec));
+            action_spec.action_ifindex = ifindex;
             p4_pd_dc_egress_port_mapping_table_add_with_egress_port_type_fabric(
                 g_sess_hdl,
                 p4_pd_device,
-                &egress_match_spec,
-                &egress_entry_hdl);
+                &match_spec,
+                &action_spec,
+                entry_hdl);
         } else if (port_type == SWITCH_PORT_TYPE_CPU) {
+            p4_pd_dc_egress_port_type_cpu_action_spec_t action_spec;
+            memset(&action_spec, 0, sizeof(action_spec));
+            action_spec.action_ifindex = ifindex;
             p4_pd_dc_egress_port_mapping_table_add_with_egress_port_type_cpu(
                 g_sess_hdl,
                 p4_pd_device,
-                &egress_match_spec,
-                &egress_entry_hdl);
+                &match_spec,
+                &action_spec,
+                entry_hdl);
+        }
+    } else {
+        if (port_type == SWITCH_PORT_TYPE_NORMAL) {
+            p4_pd_dc_egress_port_type_normal_action_spec_t action_spec;
+            memset(&action_spec, 0, sizeof(action_spec));
+            action_spec.action_ifindex = ifindex;
+            status = p4_pd_dc_egress_port_mapping_table_modify_with_egress_port_type_normal(
+                g_sess_hdl,
+                device,
+                *entry_hdl,
+                &action_spec);
+        } else if (port_type == SWITCH_PORT_TYPE_FABRIC) {
+            p4_pd_dc_egress_port_type_fabric_action_spec_t action_spec;
+            memset(&action_spec, 0, sizeof(action_spec));
+            action_spec.action_ifindex = ifindex;
+            status = p4_pd_dc_egress_port_mapping_table_modify_with_egress_port_type_fabric(
+                g_sess_hdl,
+                device,
+                *entry_hdl,
+                &action_spec);
+        } else if (port_type == SWITCH_PORT_TYPE_CPU) {
+            p4_pd_dc_egress_port_type_cpu_action_spec_t action_spec;
+            memset(&action_spec, 0, sizeof(action_spec));
+            action_spec.action_ifindex = ifindex;
+            status = p4_pd_dc_egress_port_mapping_table_modify_with_egress_port_type_cpu(
+                g_sess_hdl,
+                device,
+                *entry_hdl,
+                &action_spec);
         }
     }
 
@@ -2802,12 +2877,12 @@ switch_pd_port_mapping_table_add_entry(switch_device_t device,
 }
 
 p4_pd_status_t
-switch_pd_port_mapping_table_delete_entry(switch_device_t device,
+switch_pd_egress_port_mapping_table_delete_entry(switch_device_t device,
                                           p4_pd_entry_hdl_t entry_hdl)
 {
     p4_pd_status_t status = 0;
 
-    status = p4_pd_dc_ingress_port_mapping_table_delete(g_sess_hdl,
+    status = p4_pd_dc_egress_port_mapping_table_delete(g_sess_hdl,
                                                         device,
                                                         entry_hdl);
     p4_pd_complete_operations(g_sess_hdl);
@@ -3205,59 +3280,6 @@ switch_pd_lag_group_table_delete_entry(switch_device_t device,
     status = p4_pd_dc_lag_group_table_delete(g_sess_hdl,
                                              device,
                                              entry_hdl);
-    p4_pd_complete_operations(g_sess_hdl);
-    return status;
-}
-
-p4_pd_status_t
-switch_pd_egress_lag_table_add_entry(switch_device_t device,
-                                     switch_port_t port_id,
-                                     switch_ifindex_t ifindex,
-                                     p4_pd_entry_hdl_t *entry_hdl)
-{
-    p4_pd_status_t                                      status = 0;
-#ifdef EGRESS_FILTER
-    p4_pd_dc_egress_lag_match_spec_t                    match_spec;
-    p4_pd_dc_set_egress_ifindex_action_spec_t           action_spec;
-    p4_pd_dev_target_t                                  p4_pd_device;
-
-    p4_pd_device.device_id = device;
-    p4_pd_device.dev_pipe_id = SWITCH_DEV_PIPE_ID;
-
-    memset(&match_spec, 0, sizeof(p4_pd_dc_egress_lag_match_spec_t));
-    memset(&action_spec, 0, sizeof(p4_pd_dc_set_egress_ifindex_action_spec_t));
-    match_spec.standard_metadata_egress_port = port_id;
-    action_spec.action_egress_ifindex = ifindex;
-    if (*entry_hdl != SWITCH_HW_INVALID_HANDLE) {
-        status = p4_pd_dc_egress_lag_table_modify_with_set_egress_ifindex(
-                                                       g_sess_hdl,
-                                                       device,
-                                                       *entry_hdl,
-                                                       &action_spec);
-    } else {
-        status = p4_pd_dc_egress_lag_table_add_with_set_egress_ifindex(
-                                                        g_sess_hdl,
-                                                        p4_pd_device,
-                                                        &match_spec,
-                                                        &action_spec,
-                                                        entry_hdl);
-    }
-#endif /* EGRESS_FILTER */
-
-    p4_pd_complete_operations(g_sess_hdl);
-    return status;
-}
-
-p4_pd_status_t
-switch_pd_egress_lag_table_delete_entry(switch_device_t device,
-                                        p4_pd_entry_hdl_t entry_hdl)
-{
-    p4_pd_status_t status = 0;
-#ifdef EGRESS_FILTER
-    status = p4_pd_dc_egress_lag_table_delete(g_sess_hdl,
-                                              device,
-                                              entry_hdl);
-#endif /* EGRESS_FILTER */
     p4_pd_complete_operations(g_sess_hdl);
     return status;
 }
@@ -6198,7 +6220,7 @@ switch_pd_lag_table_add_default_entry(switch_device_t device)
 }
 
 switch_status_t
-switch_pd_egress_lag_table_add_default_entry(switch_device_t device)
+switch_pd_egress_filter_table_add_default_entry(switch_device_t device)
 {
     p4_pd_status_t status = 0;
 #ifdef EGRESS_FILTER
@@ -6208,7 +6230,11 @@ switch_pd_egress_lag_table_add_default_entry(switch_device_t device)
     p4_pd_device.device_id = device;
     p4_pd_device.dev_pipe_id = SWITCH_DEV_PIPE_ID;
 
-    status = p4_pd_dc_egress_filter_table_add_with_set_egress_filter_drop(
+    status = p4_pd_dc_egress_filter_set_default_action_egress_filter_check(
+                                                        g_sess_hdl,
+                                                        p4_pd_device,
+                                                        &entry_hdl);
+    status = p4_pd_dc_egress_filter_drop_set_default_action_egress_filter_drop(
                                                         g_sess_hdl,
                                                         p4_pd_device,
                                                         &entry_hdl);
@@ -7264,10 +7290,14 @@ switch_pd_egress_port_mapping_table_init_entry(switch_device_t device)
     p4_pd_device.device_id = device;
     p4_pd_device.dev_pipe_id = SWITCH_DEV_PIPE_ID;
 
+    p4_pd_dc_egress_port_type_normal_action_spec_t action_spec;
+    memset(&action_spec, 0, sizeof(action_spec));
+
     status =
         p4_pd_dc_egress_port_mapping_set_default_action_egress_port_type_normal(
             g_sess_hdl,
             p4_pd_device,
+            &action_spec,
             &entry_hdl);
 
     p4_pd_complete_operations(g_sess_hdl);

@@ -51,6 +51,7 @@ header_type egress_metadata_t {
         routed : 1;                            /* is this replica routed */
         same_bd_check : BD_BIT_WIDTH;          /* ingress bd xor egress bd */
         drop_reason : 8;                       /* drop reason */
+        ifindex : IFINDEX_BIT_WIDTH;           /* egress interface index */
     }
 }
 

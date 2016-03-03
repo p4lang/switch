@@ -368,18 +368,21 @@ control process_lag {
 /*****************************************************************************/
 /* Egress port lookup                                                        */
 /*****************************************************************************/
-action egress_port_type_normal() {
+action egress_port_type_normal(ifindex) {
     modify_field(egress_metadata.port_type, PORT_TYPE_NORMAL);
+    modify_field(egress_metadata.ifindex, ifindex);
 }
 
-action egress_port_type_fabric() {
+action egress_port_type_fabric(ifindex) {
     modify_field(egress_metadata.port_type, PORT_TYPE_FABRIC);
     modify_field(tunnel_metadata.egress_tunnel_type, EGRESS_TUNNEL_TYPE_FABRIC);
+    modify_field(egress_metadata.ifindex, ifindex);
 }
 
-action egress_port_type_cpu() {
+action egress_port_type_cpu(ifindex) {
     modify_field(egress_metadata.port_type, PORT_TYPE_CPU);
     modify_field(tunnel_metadata.egress_tunnel_type, EGRESS_TUNNEL_TYPE_CPU);
+    modify_field(egress_metadata.ifindex, ifindex);
 }
 
 table egress_port_mapping {
@@ -420,7 +423,7 @@ action set_egress_packet_vlan_untagged() {
 
 table egress_vlan_xlate {
     reads {
-        standard_metadata.egress_port : exact;
+        egress_metadata.ifindex: exact;
         egress_metadata.bd : exact;
     }
     actions {

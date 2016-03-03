@@ -1327,12 +1327,8 @@ switch_api_vlan_xlate_add(switch_device_t device, switch_handle_t bd_handle,
                           switch_handle_t intf_handle, switch_vlan_t vlan_id)
 {
     switch_interface_info_t           *intf_info = NULL;
-    tommy_node                        *node = NULL;
-    switch_lag_info_t                 *lag_info = NULL;
-    switch_lag_member_t               *lag_member = NULL;
     switch_ln_member_t                *bd_member = NULL;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
-    switch_handle_t                    port_handle = 0;
 
     if (!SWITCH_INTERFACE_HANDLE_VALID(intf_handle)) {
         return SWITCH_STATUS_INVALID_HANDLE;
@@ -1344,45 +1340,21 @@ switch_api_vlan_xlate_add(switch_device_t device, switch_handle_t bd_handle,
         return SWITCH_STATUS_INVALID_INTERFACE;
     }
 
-    if (SWITCH_INTF_TYPE(intf_info) == SWITCH_API_INTERFACE_L2_PORT_VLAN) {
-        port_handle = SWITCH_INTF_PV_PORT_HANDLE(intf_info);
-    } else {
-        port_handle = SWITCH_INTF_PORT_HANDLE(intf_info);
+    bd_member = switch_api_logical_network_search_member(bd_handle, intf_handle);
+    if (!bd_member) {
+        SWITCH_API_ERROR("%s:%d interface is not port of vlan!", __FUNCTION__, __LINE__);
+        return SWITCH_STATUS_INVALID_INTERFACE;
     }
-    if (SWITCH_HANDLE_IS_LAG(port_handle)) {
-        lag_info = switch_api_lag_get_internal(port_handle);
-        if (!lag_info) {
-            SWITCH_API_ERROR("%s:%d: Invalid lag handle!", __FUNCTION__, __LINE__);
-            return SWITCH_STATUS_INVALID_HANDLE;
-        }
-        node = tommy_list_head(&(lag_info->egress));
-        while(node) {
-            lag_member = node->data;
-            status = switch_pd_egress_vlan_xlate_table_add_entry(device, lag_member->port,
-                                                     handle_to_id(bd_handle),
-                                                     vlan_id, &lag_member->xlate_entry);
-            if (status != SWITCH_STATUS_SUCCESS) {
-                SWITCH_API_ERROR("%s:%d unable to add xlate entry for vlan %d", 
-                             __FUNCTION__, __LINE__, vlan_id);
-                return SWITCH_STATUS_PD_FAILURE;
-            }
-
-            node = node->next;
-        }
-    } else {
-        bd_member = switch_api_logical_network_search_member(bd_handle, intf_handle);
-        if (!bd_member) {
-            SWITCH_API_ERROR("%s:%d interface is not port of vlan!", __FUNCTION__, __LINE__);
-            return SWITCH_STATUS_INVALID_INTERFACE;
-        }
-        status = switch_pd_egress_vlan_xlate_table_add_entry(device, port_handle,
-                                                 handle_to_id(bd_handle),
-                                                 vlan_id, &bd_member->xlate_entry);
-        if (status != SWITCH_STATUS_SUCCESS) {
-            SWITCH_API_ERROR("%s:%d unable to add xlate entry for vlan %d", 
+    status = switch_pd_egress_vlan_xlate_table_add_entry(
+                             device,
+                             intf_info->ifindex,
+                             handle_to_id(bd_handle),
+                             vlan_id,
+                             &bd_member->xlate_entry);
+    if (status != SWITCH_STATUS_SUCCESS) {
+        SWITCH_API_ERROR("%s:%d unable to add xlate entry for vlan %d", 
                          __FUNCTION__, __LINE__, vlan_id);
-            return SWITCH_STATUS_PD_FAILURE;
-        }
+        return SWITCH_STATUS_PD_FAILURE;
     }
     return status;
 }
@@ -1392,11 +1364,7 @@ switch_api_vlan_xlate_remove(switch_device_t device, switch_handle_t bd_handle,
                              switch_handle_t intf_handle, switch_vlan_t vlan_id)
 {
     switch_interface_info_t           *intf_info = NULL;
-    tommy_node                        *node = NULL;
-    switch_lag_info_t                 *lag_info = NULL;
-    switch_lag_member_t               *lag_member = NULL;
     switch_ln_member_t                *bd_member = NULL;
-    switch_handle_t                    port_handle = 0;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
 
     if (!SWITCH_INTERFACE_HANDLE_VALID(intf_handle)) {
@@ -1409,38 +1377,15 @@ switch_api_vlan_xlate_remove(switch_device_t device, switch_handle_t bd_handle,
         return SWITCH_STATUS_INVALID_INTERFACE;
     }
 
-    if (SWITCH_INTF_TYPE(intf_info) == SWITCH_API_INTERFACE_L2_PORT_VLAN) {
-        port_handle = SWITCH_INTF_PV_PORT_HANDLE(intf_info);
-    } else {
-        port_handle = SWITCH_INTF_PORT_HANDLE(intf_info);
+    bd_member = switch_api_logical_network_search_member(bd_handle, intf_handle);
+    if (!bd_member) {
+        SWITCH_API_ERROR("%s:%d interface is not port of vlan!", __FUNCTION__, __LINE__);
+        return SWITCH_STATUS_INVALID_INTERFACE;
     }
-    if (SWITCH_HANDLE_IS_LAG(port_handle)) {
-        lag_info = switch_api_lag_get_internal(port_handle);
-        if (!lag_info) {
-            SWITCH_API_ERROR("%s:%d: Invalid lag handle!", __FUNCTION__, __LINE__);
-            return SWITCH_STATUS_INVALID_HANDLE;
-        }
-        node = tommy_list_head(&(lag_info->egress));
-        while(node) {
-            lag_member = node->data;
-            status = switch_pd_egress_vlan_xlate_table_delete_entry(device, lag_member->xlate_entry);
-            if (status != SWITCH_STATUS_SUCCESS) {
-                SWITCH_API_ERROR("%s:%d: unable to remove vlan xlate entry",__FUNCTION__, __LINE__);
-                return SWITCH_STATUS_PD_FAILURE;
-            }
-            node = node->next;
-        }
-    } else {
-        bd_member = switch_api_logical_network_search_member(bd_handle, intf_handle);
-        if (!bd_member) {
-            SWITCH_API_ERROR("%s:%d interface is not port of vlan!", __FUNCTION__, __LINE__);
-            return SWITCH_STATUS_INVALID_INTERFACE;
-        }
-        status = switch_pd_egress_vlan_xlate_table_delete_entry(device, bd_member->xlate_entry);
-        if (status != SWITCH_STATUS_SUCCESS) {
-            SWITCH_API_ERROR("%s:%d unable to remove xlate entry", __FUNCTION__, __LINE__);
-            return SWITCH_STATUS_PD_FAILURE;
-        }
+    status = switch_pd_egress_vlan_xlate_table_delete_entry(device, bd_member->xlate_entry);
+    if (status != SWITCH_STATUS_SUCCESS) {
+        SWITCH_API_ERROR("%s:%d unable to remove xlate entry", __FUNCTION__, __LINE__);
+        return SWITCH_STATUS_PD_FAILURE;
     }
     return SWITCH_STATUS_SUCCESS;
 }

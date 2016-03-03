@@ -94,7 +94,7 @@ switch_api_init_default_entries(switch_device_t device)
     switch_pd_fwd_result_table_add_default_entry(device);
     switch_pd_nexthop_table_add_default_entry(device);
     switch_pd_lag_table_add_default_entry(device);
-    switch_pd_egress_lag_table_add_default_entry(device);
+    switch_pd_egress_filter_table_add_default_entry(device);
     switch_pd_rid_table_add_default_entry(device);
     switch_pd_replica_type_table_add_default_entry(device);
     switch_pd_mac_table_add_default_entry(device);

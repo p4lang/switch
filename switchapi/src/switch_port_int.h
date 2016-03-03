@@ -49,7 +49,7 @@ typedef struct switch_port_info_ {
     p4_pd_entry_hdl_t lg_entry;             /* Lag group entry */
     p4_pd_entry_hdl_t ls_entry;             /* Lag select entry */
     p4_pd_mbr_hdl_t mbr_hdl;                /* Lag action profile entry */
-    p4_pd_entry_hdl_t eg_lag_entry;         /* egress lag entry */
+    p4_pd_entry_hdl_t eg_port_entry;         /* egress lag entry */
     p4_pd_entry_hdl_t rw_entry;             /* fabric rewrite entry */
     p4_pd_entry_hdl_t tunnel_rw_entry;      /* tunnel rewrite entry */
     p4_pd_entry_hdl_t meter_pd_hdl[SWITCH_PACKET_TYPE_MAX];         /* meter pd hdl */

@@ -20,54 +20,51 @@ limitations under the License.
 #ifdef EGRESS_FILTER
 header_type egress_filter_metadata_t {
     fields {
-        ifindex : IFINDEX_BIT_WIDTH;           /* src port filter */
+        ifindex_check : IFINDEX_BIT_WIDTH;     /* src port filter */
         bd : BD_BIT_WIDTH;                     /* bd for src port filter */
         inner_bd : BD_BIT_WIDTH;               /* split horizon filter */
     }
 }
 metadata egress_filter_metadata_t egress_filter_metadata;
 
-action set_egress_ifindex(egress_ifindex) {
-    bit_xor(egress_filter_metadata.ifindex, ingress_metadata.ifindex,
-            egress_ifindex);
+action egress_filter_check() {
+    bit_xor(egress_filter_metadata.ifindex_check, ingress_metadata.ifindex,
+            egress_metadata.ifindex);
     bit_xor(egress_filter_metadata.bd, ingress_metadata.outer_bd,
             egress_metadata.outer_bd);
     bit_xor(egress_filter_metadata.inner_bd, ingress_metadata.bd,
             egress_metadata.bd);
 }
 
-table egress_lag {
-    reads {
-        standard_metadata.egress_port : exact;
-    }
-    actions {
-        set_egress_ifindex;
-    }
+action egress_filter_drop() {
+    drop();
 }
 
-action set_egress_filter_drop() {
-    drop();
+table egress_filter_drop {
+    actions {
+        egress_filter_drop;
+    }
 }
 
 table egress_filter {
     actions {
-        set_egress_filter_drop;
+        egress_filter_check;
     }
 }
 #endif /* EGRESS_FILTER */
 
 control process_egress_filter {
 #ifdef EGRESS_FILTER
-    apply(egress_lag);
+    apply(egress_filter);
     if (multicast_metadata.inner_replica == TRUE) {
         if (((tunnel_metadata.ingress_tunnel_type == INGRESS_TUNNEL_TYPE_NONE) and
              (tunnel_metadata.egress_tunnel_type == EGRESS_TUNNEL_TYPE_NONE) and
              (egress_filter_metadata.bd == 0) and
-             (egress_filter_metadata.ifindex == 0)) or
+             (egress_filter_metadata.ifindex_check == 0)) or
             ((tunnel_metadata.ingress_tunnel_type != INGRESS_TUNNEL_TYPE_NONE) and
              (tunnel_metadata.egress_tunnel_type != EGRESS_TUNNEL_TYPE_NONE)) and
              (egress_filter_metadata.inner_bd == 0)) {
-            apply(egress_filter);
+            apply(egress_filter_drop);
         }
     }
 #endif /* EGRESS_FILTER */
