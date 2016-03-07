@@ -852,6 +852,107 @@ class L3IPv4HostTest(api_base_tests.ThriftInterfaceDataPlane):
             self.client.switcht_api_router_mac_group_delete(device, rmac)
             self.client.switcht_api_vrf_delete(device, vrf)
 
+###############################################################################
+@group('l3')
+@group('ipv4')
+@group('maxsizes')
+class L3IPv4SubIntfHostTest(api_base_tests.ThriftInterfaceDataPlane):
+    def runTest(self):
+        print
+        print "Sending packet port %d" % swports[1], " -> port %d" % swports[2], " (192.168.0.1 -> 10.10.10.1 [id = 105])"
+        self.client.switcht_api_init(device)
+        vrf = self.client.switcht_api_vrf_create(device, swports[1])
+
+        rmac = self.client.switcht_api_router_mac_group_create(device)
+        self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
+
+        iu1 = interface_union(port_lag_handle = swports[1])
+        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        if1 = self.client.switcht_api_interface_create(device, i_info1)
+        i_ip1 = switcht_ip_addr_t(addr_type=0, ipaddr='192.168.0.2', prefix_length=16)
+        self.client.switcht_api_l3_interface_address_add(device, if1, vrf, i_ip1)
+
+        pv = switcht_port_vlan_t(port_lag_handle = swports[2], vlan_id=10)
+        iu2 = interface_union(port_vlan=pv)
+        i_info2 = switcht_interface_info_t(device=0, type=6, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        if2 = self.client.switcht_api_interface_create(device, i_info2)
+        i_ip2 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.0.2', prefix_length=16)
+        self.client.switcht_api_l3_interface_address_add(device, if2, vrf, i_ip2)
+
+        # Add a static route
+        i_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='10.10.10.1', prefix_length=32)
+        nhop_key = switcht_nhop_key_t(intf_handle=if2, ip_addr_valid=0)
+        nhop1 = self.client.switcht_api_nhop_create(device, nhop_key)
+        neighbor_entry = switcht_neighbor_info_t(nhop_handle=nhop1, interface_handle=if2, mac_addr='00:11:22:33:44:55', ip_addr=i_ip3, rw_type=1)
+        neighbor1 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry)
+        self.client.switcht_api_l3_route_add(device, vrf, i_ip3, nhop1)
+
+        i_ip4 = switcht_ip_addr_t(addr_type=0, ipaddr='20.20.20.1', prefix_length=32)
+        nhop_key = switcht_nhop_key_t(intf_handle=if1, ip_addr_valid=0)
+        nhop2 = self.client.switcht_api_nhop_create(device, nhop_key)
+        neighbor_entry = switcht_neighbor_info_t(nhop_handle=nhop2, interface_handle=if1, mac_addr='00:11:22:33:44:56', ip_addr=i_ip4, rw_type=1)
+        neighbor2 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry)
+        self.client.switcht_api_l3_route_add(device, vrf, i_ip4, nhop2)
+
+        # send the test packet(s)
+        try:
+            pkt = simple_tcp_packet(eth_dst='00:77:66:55:44:33',
+                                    eth_src='00:22:22:22:22:22',
+                                    ip_dst='10.10.10.1',
+                                    ip_src='192.168.0.1',
+                                    ip_id=105,
+                                    ip_ttl=64)
+            exp_pkt = simple_tcp_packet(
+                                    eth_dst='00:11:22:33:44:55',
+                                    eth_src='00:77:66:55:44:33',
+                                    ip_dst='10.10.10.1',
+                                    ip_src='192.168.0.1',
+                                    ip_id=105,
+                                    dl_vlan_enable=True,
+                                    vlan_vid=10,
+                                    pktlen=104,
+                                    ip_ttl=63)
+            send_packet(self, swports[1], str(pkt))
+            verify_packets(self, exp_pkt, [swports[2]])
+
+            pkt = simple_tcp_packet(eth_dst='00:77:66:55:44:33',
+                                    eth_src='00:11:11:11:11:11',
+                                    ip_dst='20.20.20.1',
+                                    ip_src='10.0.0.1',
+                                    dl_vlan_enable=True,
+                                    vlan_vid=10,
+                                    pktlen=104,
+                                    ip_id=105,
+                                    ip_ttl=64)
+            exp_pkt = simple_tcp_packet(
+                                    eth_dst='00:11:22:33:44:56',
+                                    eth_src='00:77:66:55:44:33',
+                                    ip_dst='20.20.20.1',
+                                    ip_src='10.0.0.1',
+                                    ip_id=105,
+                                    ip_ttl=63)
+            send_packet(self, swports[2], str(pkt))
+            verify_packets(self, exp_pkt, [swports[1]])
+
+        finally:
+            self.client.switcht_api_neighbor_entry_remove(device, neighbor1)
+            self.client.switcht_api_l3_route_delete(device, vrf, i_ip3, nhop1)
+            self.client.switcht_api_nhop_delete(device, nhop1)
+
+            self.client.switcht_api_neighbor_entry_remove(device, neighbor2)
+            self.client.switcht_api_l3_route_delete(device, vrf, i_ip4, nhop2)
+            self.client.switcht_api_nhop_delete(device, nhop2)
+
+            self.client.switcht_api_l3_interface_address_delete(device, if1, vrf, i_ip1)
+            self.client.switcht_api_l3_interface_address_delete(device, if2, vrf, i_ip2)
+
+            self.client.switcht_api_interface_delete(device, if1)
+            self.client.switcht_api_interface_delete(device, if2)
+
+            self.client.switcht_api_router_mac_delete(device, rmac, '00:77:66:55:44:33')
+            self.client.switcht_api_router_mac_group_delete(device, rmac)
+            self.client.switcht_api_vrf_delete(device, vrf)
+
 
 ###############################################################################
 @group('l3')

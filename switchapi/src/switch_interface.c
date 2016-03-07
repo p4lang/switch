@@ -270,6 +270,25 @@ switch_api_interface_create_l3(switch_device_t device, switch_handle_t intf_hand
                                            intf_info,
                                            bd_info->bd_entry,
                                            &(intf_info->pv_entry));
+    if (status != SWITCH_STATUS_SUCCESS) {
+        SWITCH_API_ERROR("bd programming failed for l3 intf %lx", intf_handle);
+        return status;
+    }
+
+    if (SWITCH_INTF_TYPE(intf_info) == SWITCH_API_INTERFACE_L3_PORT_VLAN) {
+        status = switch_pd_egress_vlan_xlate_table_add_entry(
+                             device,
+                             intf_info->ifindex,
+                             handle_to_id(intf_info->bd_handle),
+                             vlan_id,
+                             &intf_info->xlate_entry);
+
+        if (status != SWITCH_STATUS_SUCCESS) {
+            SWITCH_API_ERROR("xlate programming failed for l3 vlan intf %lx", intf_handle);
+            return status;
+        }
+    }
+
     return status;
 }
 
@@ -419,6 +438,16 @@ switch_api_interface_delete_l3_interface(switch_device_t device,
     }
 
     switch_pd_port_vlan_mapping_table_delete_entry(device, intf_info->pv_entry);
+
+    if (SWITCH_INTF_TYPE(intf_info) == SWITCH_API_INTERFACE_L3_PORT_VLAN) {
+        status = switch_pd_egress_vlan_xlate_table_delete_entry(
+                             device,
+                             intf_info->xlate_entry);
+        if (status != SWITCH_STATUS_SUCCESS) {
+            SWITCH_API_ERROR("xlate entry delete failed for l3 intf %lx", intf_handle);
+        }
+    }
+
     switch_api_logical_network_delete(device, intf_info->bd_handle);
     intf_info->bd_handle = 0;
     api_intf_info = &intf_info->api_intf_info;
