@@ -32,7 +32,7 @@ limitations under the License.
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-    
+
 static void *switch_neighbor_array=NULL;
 static tommy_hashtable switch_dmac_rewrite_table;
 static tommy_hashtable switch_neighbor_dmac_table;
@@ -248,7 +248,7 @@ switch_neighbor_dmac_delete_hash(switch_device_t device, switch_handle_t bd_hand
     switch_neighbor_dmac_hash_key_init(key, bd_handle, mac, &len, &hash);
     neighbor_dmac = tommy_hashtable_remove(&switch_neighbor_dmac_table, switch_neighbor_dmac_hash_cmp, key, hash);
     switch_free(neighbor_dmac);
-    return status; 
+    return status;
 }
 
 switch_status_t
@@ -374,7 +374,7 @@ switch_api_neighbor_entry_add_tunnel_rewrite(switch_device_t device,
 
     return status;
 }
-    
+
 switch_handle_t
 switch_api_neighbor_entry_add(switch_device_t device, switch_api_neighbor_t *neighbor)
 {

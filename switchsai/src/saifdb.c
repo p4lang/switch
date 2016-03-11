@@ -57,7 +57,7 @@ static void sai_fdb_entry_attribute_parse(
         attribute = &attr_list[i];
         switch (attribute->id) {
             case SAI_FDB_ENTRY_ATTR_TYPE:
-                switch (attribute->value.u8) {
+                switch (attribute->value.s32) {
                     case SAI_FDB_ENTRY_DYNAMIC:
                         mac_entry->entry_type = SWITCH_MAC_ENTRY_DYNAMIC;
                         break;
@@ -73,7 +73,7 @@ static void sai_fdb_entry_attribute_parse(
                 break;
 
             case SAI_FDB_ENTRY_ATTR_PACKET_ACTION:
-                action = (switch_mac_action_t) attribute->value.u8;
+                action = (switch_mac_action_t) attribute->value.s32;
                 switch (action) {
                     case SAI_PACKET_ACTION_DROP:
                         mac_entry->mac_action = SWITCH_MAC_ACTION_DROP;
@@ -333,7 +333,7 @@ sai_status_t sai_flush_fdb_entries(
                 vlan_valid = true;
                 break;
             case SAI_FDB_FLUSH_ATTR_ENTRY_TYPE:
-                entry_type = attribute->value.u8;
+                entry_type = attribute->value.s32;
                 switch (entry_type) {
                     case SAI_FDB_FLUSH_ENTRY_DYNAMIC:
                     case SAI_FDB_FLUSH_ENTRY_STATIC:
@@ -397,11 +397,11 @@ sai_mac_learn_notify_cb(switch_api_mac_entry_t *mac_entry)
     sai_attribute_t attr_list[3];
     memset(attr_list, 0, sizeof(attr_list));
     attr_list[0].id = SAI_FDB_ENTRY_ATTR_TYPE;
-    attr_list[0].value.u8 = SAI_FDB_ENTRY_DYNAMIC;
+    attr_list[0].value.s32 = SAI_FDB_ENTRY_DYNAMIC;
     attr_list[1].id = SAI_FDB_ENTRY_ATTR_PORT_ID;
     attr_list[1].value.oid = intf_h;
     attr_list[2].id = SAI_FDB_ENTRY_ATTR_PACKET_ACTION;
-    attr_list[2].value.u8 = SAI_PACKET_ACTION_FORWARD;
+    attr_list[2].value.s32 = SAI_PACKET_ACTION_FORWARD;
     fdb_event.attr = attr_list;
     fdb_event.attr_count = 3;
     sai_switch_notifications.on_fdb_event(1, &fdb_event);

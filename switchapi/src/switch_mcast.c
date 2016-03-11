@@ -586,6 +586,7 @@ switch_api_multicast_member_add(switch_device_t device,
     switch_interface_info_t           *intf_info = NULL;
     switch_handle_t                    bd_handle = 0;
     switch_handle_t                    intf_handle = 0;
+    switch_handle_t                    handle = 0;
     switch_handle_type_t               handle_type;
     uint16_t                           rid = 0;
     bool                               inner_replica = TRUE;
@@ -611,11 +612,12 @@ switch_api_multicast_member_add(switch_device_t device,
             }
         }
 
+        handle = mbrs[index].intf_handle;
         intf_handle = mbrs[index].intf_handle;
         handle_type = switch_handle_get_type(intf_handle);
         if ((handle_type == SWITCH_HANDLE_TYPE_PORT) ||
             (handle_type == SWITCH_HANDLE_TYPE_LAG)) {
-            status = switch_intf_handle_get(bd_handle, intf_handle,
+            status = switch_interface_handle_get(handle,
                                             &intf_handle);
             if (status != SWITCH_STATUS_SUCCESS) {
                 SWITCH_API_ERROR("%s:%d: invalid interface %lx",
@@ -709,6 +711,7 @@ switch_api_multicast_member_delete(switch_device_t device,
     switch_bd_info_t                  *bd_info = NULL;
     switch_handle_t                    bd_handle = 0;
     switch_handle_t                    intf_handle = 0;
+    switch_handle_t                    handle = 0;
     switch_interface_info_t           *intf_info = NULL;
     switch_handle_type_t               handle_type;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
@@ -733,11 +736,12 @@ switch_api_multicast_member_delete(switch_device_t device,
             }
         }
 
+        handle = mbrs[index].intf_handle;
         intf_handle = mbrs[index].intf_handle;
         handle_type = switch_handle_get_type(intf_handle);
         if ((handle_type == SWITCH_HANDLE_TYPE_PORT) ||
             (handle_type == SWITCH_HANDLE_TYPE_LAG)) {
-            status = switch_intf_handle_get(bd_handle, intf_handle,
+            status = switch_interface_handle_get(handle,
                                             &intf_handle);
             if (status != SWITCH_STATUS_SUCCESS) {
                 SWITCH_API_ERROR("%s:%d: invalid interface %lx",

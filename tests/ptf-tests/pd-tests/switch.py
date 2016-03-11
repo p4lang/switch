@@ -480,7 +480,7 @@ class L2VxlanTunnelTest(pd_base_tests.ThriftInterfaceDataPlane):
         tun_dmac = program_tunnel_dst_mac_rewrite(self.client, sess_hdl, dev_tgt, dmac_index, '00:55:55:55:55:55')
         tun_l2 = program_tunnel_l2_unicast_rewrite(self.client, sess_hdl, dev_tgt, tunnel_index, tunnel_type, nhop, core_vlan)
         tun_rewrite = program_tunnel_rewrite(self.client, sess_hdl, dev_tgt, tunnel_index, sip_index, dip_index, smac_index, dmac_index, core_vlan)
-        tun_svtep = program_tunnel_ipv4_src_vtep(self.client, sess_hdl, dev_tgt, vrf, 0x0a0a0a02, 0)
+        tun_svtep = program_tunnel_ipv4_src_vtep(self.client, sess_hdl, dev_tgt, vrf, 0x0a0a0a02, 1, 0)
         tun_dvtep = program_tunnel_ipv4_dst_vtep(self.client, sess_hdl, dev_tgt, vrf, 0x0a0a0a01, 1)
         tun_vni = program_egress_vni(self.client, sess_hdl, dev_tgt, egress_tunnel_type, tenant_vlan, vnid)
 
@@ -670,7 +670,7 @@ class L3VxlanTunnelTest(pd_base_tests.ThriftInterfaceDataPlane):
         tun_dmac = program_tunnel_dst_mac_rewrite(self.client, sess_hdl, dev_tgt, dmac_index, '00:55:55:55:55:55')
         tun_l3 = program_tunnel_l3_unicast_rewrite(self.client, sess_hdl, dev_tgt, tunnel_index, egress_tunnel_type, nhop2, tenant_vlan2, '00:22:22:22:22:22')
         tun_rewrite = program_tunnel_rewrite(self.client, sess_hdl, dev_tgt, tunnel_index, sip_index, dip_index, smac_index, dmac_index, core_vlan)
-        tun_svtep = program_tunnel_ipv4_src_vtep(self.client, sess_hdl, dev_tgt, vrf, 0x0a0a0a02, 0)
+        tun_svtep = program_tunnel_ipv4_src_vtep(self.client, sess_hdl, dev_tgt, vrf, 0x0a0a0a02, 1, 0)
         tun_dvtep = program_tunnel_ipv4_dst_vtep(self.client, sess_hdl, dev_tgt, vrf, 0x0a0a0a01, 1)
         tun_vni = program_egress_vni(self.client, sess_hdl, dev_tgt, egress_tunnel_type, tenant_vlan2, vnid)
 

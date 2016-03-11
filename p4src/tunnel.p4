@@ -39,6 +39,7 @@ header_type tunnel_metadata_t {
         tunnel_terminate : 1;                  /* is tunnel being terminated? */
         tunnel_if_check : 1;                   /* tun terminate xor originate */
         egress_header_count: 4;                /* number of mpls header stack */
+        inner_ip_proto : 8;                    /* Inner IP protocol */
     }
 }
 metadata tunnel_metadata_t tunnel_metadata;
@@ -72,6 +73,10 @@ action set_tunnel_termination_flag() {
     modify_field(tunnel_metadata.tunnel_terminate, TRUE);
 }
 
+action set_tunnel_vni_and_termination_flag(tunnel_vni) {
+    modify_field(tunnel_metadata.tunnel_vni, tunnel_vni);
+    modify_field(tunnel_metadata.tunnel_terminate, TRUE);
+}
 action src_vtep_hit(ifindex) {
     modify_field(ingress_metadata.ifindex, ifindex);
 }
@@ -86,6 +91,7 @@ table ipv4_dest_vtep {
     actions {
         nop;
         set_tunnel_termination_flag;
+        set_tunnel_vni_and_termination_flag;
     }
     size : DEST_TUNNEL_TABLE_SIZE;
 }
@@ -94,6 +100,7 @@ table ipv4_src_vtep {
     reads {
         l3_metadata.vrf : exact;
         ipv4_metadata.lkp_ipv4_sa : exact;
+        tunnel_metadata.ingress_tunnel_type : exact;
     }
     actions {
         on_miss;
@@ -117,6 +124,7 @@ table ipv6_dest_vtep {
     actions {
         nop;
         set_tunnel_termination_flag;
+        set_tunnel_vni_and_termination_flag;
     }
     size : DEST_TUNNEL_TABLE_SIZE;
 }
@@ -125,12 +133,13 @@ table ipv6_src_vtep {
     reads {
         l3_metadata.vrf : exact;
         ipv6_metadata.lkp_ipv6_sa : exact;
+        tunnel_metadata.ingress_tunnel_type : exact;
     }
     actions {
         on_miss;
         src_vtep_hit;
     }
-    size : SRC_TUNNEL_TABLE_SIZE;
+    size : IPV6_SRC_TUNNEL_TABLE_SIZE;
 }
 #endif /* IPV6_DISABLE */
 #endif /* TUNNEL_DISABLE */
@@ -346,9 +355,11 @@ control process_tunnel {
                         process_ipv6_vtep();
                     } else {
                         /* check for mpls tunnel termination */
+#ifndef MPLS_DISABLE
                         if (valid(mpls[0])) {
                             process_mpls();
                         }
+#endif
                     }
                 }
             }
@@ -596,7 +607,7 @@ action decap_nvgre_inner_non_ip() {
     remove_header(ipv6);
 }
 
-action decap_ip_inner_ipv4() {
+action decap_gre_inner_ipv4() {
     copy_header(ipv4, inner_ipv4);
     remove_header(gre);
     remove_header(ipv6);
@@ -604,9 +615,30 @@ action decap_ip_inner_ipv4() {
     modify_field(ethernet.etherType, ETHERTYPE_IPV4);
 }
 
-action decap_ip_inner_ipv6() {
+action decap_gre_inner_ipv6() {
     copy_header(ipv6, inner_ipv6);
     remove_header(gre);
+    remove_header(ipv4);
+    remove_header(inner_ipv6);
+    modify_field(ethernet.etherType, ETHERTYPE_IPV6);
+}
+
+action decap_gre_inner_non_ip() {
+    modify_field(ethernet.etherType, gre.proto);
+    remove_header(gre);
+    remove_header(ipv4);
+    remove_header(inner_ipv6);
+}
+
+action decap_ip_inner_ipv4() {
+    copy_header(ipv4, inner_ipv4);
+    remove_header(ipv6);
+    remove_header(inner_ipv4);
+    modify_field(ethernet.etherType, ETHERTYPE_IPV4);
+}
+
+action decap_ip_inner_ipv6() {
+    copy_header(ipv6, inner_ipv6);
     remove_header(ipv4);
     remove_header(inner_ipv6);
     modify_field(ethernet.etherType, ETHERTYPE_IPV6);
@@ -753,6 +785,9 @@ table tunnel_decap_process_outer {
         decap_nvgre_inner_ipv4;
         decap_nvgre_inner_ipv6;
         decap_nvgre_inner_non_ip;
+        decap_gre_inner_ipv4;
+        decap_gre_inner_ipv6;
+        decap_gre_inner_non_ip;
         decap_ip_inner_ipv4;
         decap_ip_inner_ipv6;
 #ifndef MPLS_DISABLE
@@ -863,6 +898,7 @@ action inner_ipv4_udp_rewrite() {
     modify_field(egress_metadata.payload_length, ipv4.totalLen);
     remove_header(udp);
     remove_header(ipv4);
+    modify_field(tunnel_metadata.inner_ip_proto, IP_PROTOCOLS_IPV4);
 }
 
 action inner_ipv4_tcp_rewrite() {
@@ -871,6 +907,7 @@ action inner_ipv4_tcp_rewrite() {
     modify_field(egress_metadata.payload_length, ipv4.totalLen);
     remove_header(tcp);
     remove_header(ipv4);
+    modify_field(tunnel_metadata.inner_ip_proto, IP_PROTOCOLS_IPV4);
 }
 
 action inner_ipv4_icmp_rewrite() {
@@ -879,12 +916,14 @@ action inner_ipv4_icmp_rewrite() {
     modify_field(egress_metadata.payload_length, ipv4.totalLen);
     remove_header(icmp);
     remove_header(ipv4);
+    modify_field(tunnel_metadata.inner_ip_proto, IP_PROTOCOLS_IPV4);
 }
 
 action inner_ipv4_unknown_rewrite() {
     copy_header(inner_ipv4, ipv4);
     modify_field(egress_metadata.payload_length, ipv4.totalLen);
     remove_header(ipv4);
+    modify_field(tunnel_metadata.inner_ip_proto, IP_PROTOCOLS_IPV4);
 }
 
 action inner_ipv6_udp_rewrite() {
@@ -892,6 +931,7 @@ action inner_ipv6_udp_rewrite() {
     copy_header(inner_udp, udp);
     add(egress_metadata.payload_length, ipv6.payloadLen, 40);
     remove_header(ipv6);
+    modify_field(tunnel_metadata.inner_ip_proto, IP_PROTOCOLS_IPV6);
 }
 
 action inner_ipv6_tcp_rewrite() {
@@ -900,6 +940,7 @@ action inner_ipv6_tcp_rewrite() {
     add(egress_metadata.payload_length, ipv6.payloadLen, 40);
     remove_header(tcp);
     remove_header(ipv6);
+    modify_field(tunnel_metadata.inner_ip_proto, IP_PROTOCOLS_IPV6);
 }
 
 action inner_ipv6_icmp_rewrite() {
@@ -908,12 +949,14 @@ action inner_ipv6_icmp_rewrite() {
     add(egress_metadata.payload_length, ipv6.payloadLen, 40);
     remove_header(icmp);
     remove_header(ipv6);
+    modify_field(tunnel_metadata.inner_ip_proto, IP_PROTOCOLS_IPV6);
 }
 
 action inner_ipv6_unknown_rewrite() {
     copy_header(inner_ipv6, ipv6);
     add(egress_metadata.payload_length, ipv6.payloadLen, 40);
     remove_header(ipv6);
+    modify_field(tunnel_metadata.inner_ip_proto, IP_PROTOCOLS_IPV6);
 }
 
 action inner_non_ip_rewrite() {
@@ -1067,39 +1110,27 @@ action ipv4_gre_rewrite() {
     f_insert_gre_header();
     modify_field(gre.proto, ethernet.etherType);
     f_insert_ipv4_header(IP_PROTOCOLS_GRE);
-    add(ipv4.totalLen, egress_metadata.payload_length, 38);
+    add(ipv4.totalLen, egress_metadata.payload_length, 24);
     modify_field(ethernet.etherType, ETHERTYPE_IPV4);
 }
 
 action ipv6_gre_rewrite() {
     f_insert_gre_header();
-    modify_field(gre.proto, ETHERTYPE_IPV4);
+    modify_field(gre.proto, ethernet.etherType);
     f_insert_ipv6_header(IP_PROTOCOLS_GRE);
-    add(ipv6.payloadLen, egress_metadata.payload_length, 18);
+    add(ipv6.payloadLen, egress_metadata.payload_length, 4);
     modify_field(ethernet.etherType, ETHERTYPE_IPV6);
 }
 
-action ipv4_ipv4_rewrite() {
-    f_insert_ipv4_header(IP_PROTOCOLS_IPV4);
+action ipv4_ip_rewrite() {
+    f_insert_ipv4_header(tunnel_metadata.inner_ip_proto);
     add(ipv4.totalLen, egress_metadata.payload_length, 20);
     modify_field(ethernet.etherType, ETHERTYPE_IPV4);
 }
 
-action ipv4_ipv6_rewrite() {
-    f_insert_ipv4_header(IP_PROTOCOLS_IPV6);
-    add(ipv4.totalLen, egress_metadata.payload_length, 40);
-    modify_field(ethernet.etherType, ETHERTYPE_IPV4);
-}
-
-action ipv6_ipv4_rewrite() {
-    f_insert_ipv6_header(IP_PROTOCOLS_IPV4);
-    add(ipv6.payloadLen, egress_metadata.payload_length, 20);
-    modify_field(ethernet.etherType, ETHERTYPE_IPV6);
-}
-
-action ipv6_ipv6_rewrite() {
-    f_insert_ipv6_header(IP_PROTOCOLS_IPV6);
-    add(ipv6.payloadLen, egress_metadata.payload_length, 40);
+action ipv6_ip_rewrite() {
+    f_insert_ipv6_header(tunnel_metadata.inner_ip_proto);
+    modify_field(ipv6.payloadLen, egress_metadata.payload_length);
     modify_field(ethernet.etherType, ETHERTYPE_IPV6);
 }
 
@@ -1181,13 +1212,11 @@ table tunnel_encap_process_outer {
         ipv4_genv_rewrite;
         ipv4_nvgre_rewrite;
         ipv4_gre_rewrite;
-        ipv4_ipv4_rewrite;
-        ipv4_ipv6_rewrite;
-        ipv6_ipv4_rewrite;
+        ipv4_ip_rewrite;
         ipv4_erspan_t3_rewrite;
 #ifndef TUNNEL_OVER_IPV6_DISABLE
-        ipv6_ipv6_rewrite;
         ipv6_gre_rewrite;
+        ipv6_ip_rewrite;
         ipv6_nvgre_rewrite;
         ipv6_vxlan_rewrite;
         ipv6_genv_rewrite;

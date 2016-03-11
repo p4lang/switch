@@ -103,7 +103,7 @@ action dmac_hit(ifindex) {
 }
 
 action dmac_multicast_hit(mc_index) {
-    modify_field(intrinsic_metadata.mcast_grp, mc_index);
+    modify_field(intrinsic_mcast_grp, mc_index);
 #ifdef FABRIC_ENABLE
     modify_field(fabric_metadata.dst_device, FABRIC_DEVICE_MULTICAST);
 #endif /* FABRIC_ENABLE */

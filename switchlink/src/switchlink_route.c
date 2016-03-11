@@ -449,13 +449,13 @@ process_route_msg(struct nlmsghdr *nlmsg, int type) {
         if (type == RTM_NEWROUTE) {
             memset(&ifinfo, 0, sizeof(ifinfo));
             if (oif_valid) {
-               switchlink_db_status_t status;
-               status = switchlink_db_interface_get_info(oif, &ifinfo);
-               if (status != SWITCHLINK_DB_STATUS_SUCCESS) {
-                   NL_LOG_DEBUG(("route: switchlink_db_interface_get_info "
-                                 "(unicast) failed\n"));
-                   return;
-               }
+                switchlink_db_status_t status;
+                status = switchlink_db_interface_get_info(oif, &ifinfo);
+                if (status != SWITCHLINK_DB_STATUS_SUCCESS) {
+                    NL_LOG_DEBUG(("route: switchlink_db_interface_get_info "
+                                  "(unicast) failed\n"));
+                    return;
+                }
             }
             route_create(g_default_vrf_h, (dst_valid ? &dst_addr : NULL),
                          (gateway_valid ? &gateway_addr : NULL),

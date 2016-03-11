@@ -147,6 +147,8 @@ control process_rewrite {
         (l3_metadata.nexthop_index != 0)) {
         apply(rewrite);
     } else {
+#ifndef MULTICAST_DISABLE
         apply(rewrite_multicast);
+#endif /* MULTICAST_DISABLE */
     }
 }

@@ -183,21 +183,28 @@ parser parse_qinq_vlan {
 }
 
 #define MPLS_DEPTH 3
+/* all the tags but the last one */
 header mpls_t mpls[MPLS_DEPTH];
 
 parser parse_mpls {
+#ifndef MPLS_DISABLE
     extract(mpls[next]);
     return select(latest.bos) {
         0 : parse_mpls;
         1 : parse_mpls_bos;
         default: ingress;
     }
+#else
+    return ingress;
+#endif
 }
 
 parser parse_mpls_bos {
     return select(current(0, 4)) {
+#ifndef MPLS_DISABLE
         0x4 : parse_mpls_inner_ipv4;
         0x6 : parse_mpls_inner_ipv6;
+#endif
         default: parse_eompls;
     }
 }

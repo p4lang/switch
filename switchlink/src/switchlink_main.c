@@ -29,7 +29,7 @@ static struct nl_sock *g_nlsk = NULL;
 static pthread_t switchlink_thread;
 uint8_t g_log_level = SWITCHLINK_LOG_ERR;
 
-static enum {
+enum {
     SWITCHLINK_MSG_LINK,
     SWITCHLINK_MSG_ADDR,
     SWITCHLINK_MSG_NETCONF,

@@ -21,6 +21,7 @@ limitations under the License.
 #include "includes/sizes.p4"
 #include "includes/defines.p4"
 #include "includes/intrinsic.p4"
+#include "archdeps.p4"
 
 /* METADATA */
 header_type ingress_metadata_t {
@@ -51,6 +52,7 @@ header_type egress_metadata_t {
         routed : 1;                            /* is this replica routed */
         same_bd_check : BD_BIT_WIDTH;          /* ingress bd xor egress bd */
         drop_reason : 8;                       /* drop reason */
+        ifindex : IFINDEX_BIT_WIDTH;           /* egress interface index */
     }
 }
 
@@ -124,10 +126,9 @@ control ingress {
         /* storm control */
         process_storm_control();
 
-#ifndef TUNNEL_DISABLE
-        if ((not valid(mpls[0])) or
-             (valid(mpls[0]) and (tunnel_metadata.tunnel_terminate == TRUE))) {
-#endif /* TUNNEL_DISABLE */
+#ifndef MPLS_DISABLE
+        if (not (valid(mpls[0]) and (l3_metadata.fib_hit == TRUE))) {
+#endif /* MPLS_DISABLE */
 
             /* validate packet */
             process_validate_packet();
@@ -170,9 +171,9 @@ control ingress {
                     process_urpf_bd();
                 }
             }
-#ifndef TUNNEL_DISABLE
+#ifndef MPLS_DISABLE
         }
-#endif /* TUNNEL_DISABLE */
+#endif /* MPLS_DISABLE */
     } else {
 
 #ifdef OPENFLOW_ENABLE

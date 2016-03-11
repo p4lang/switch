@@ -153,8 +153,6 @@ switch_status_t switch_api_vlan_xlate_remove(switch_device_t device, switch_hand
                                              switch_handle_t intf_handle, switch_vlan_t vlan_id);
 switch_ln_member_t *
 switch_api_logical_network_search_member(switch_handle_t bd_handle, switch_handle_t intf_handle);
-switch_status_t switch_intf_handle_get(switch_handle_t vlan_handle, switch_handle_t port_lag_handle,
-                                       switch_handle_t *intf_handle);
 
 #ifdef __cplusplus
 }

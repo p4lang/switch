@@ -87,7 +87,7 @@ sai_status_t sai_create_router_interface(
                 intf_info.vrf_handle = (switch_handle_t) attribute->value.oid;
                 break;
             case SAI_ROUTER_INTERFACE_ATTR_TYPE:
-                sai_intf_type = attribute->value.u8;
+                sai_intf_type = attribute->value.s32;
                 break;
             case SAI_ROUTER_INTERFACE_ATTR_PORT_ID:
                 SAI_ASSERT(sai_intf_type == SAI_ROUTER_INTERFACE_TYPE_PORT);
@@ -117,11 +117,11 @@ sai_status_t sai_create_router_interface(
                 break;
             case SAI_ROUTER_INTERFACE_ATTR_V4_URPF_MODE:
                 intf_info.ipv4_urpf_mode =
-                    sai_to_switch_urpf_mode(attribute->value.u8);
+                    sai_to_switch_urpf_mode(attribute->value.s32);
                 break;
             case SAI_ROUTER_INTERFACE_ATTR_V6_URPF_MODE:
                 intf_info.ipv6_urpf_mode =
-                    sai_to_switch_urpf_mode(attribute->value.u8);
+                    sai_to_switch_urpf_mode(attribute->value.s32);
                 break;
             default:
                 return SAI_STATUS_INVALID_PARAMETER;
@@ -226,11 +226,11 @@ sai_status_t sai_set_router_interface_attribute(
             break;
         case SAI_ROUTER_INTERFACE_ATTR_V4_URPF_MODE:
             switch_status = switch_api_interface_ipv4_urpf_mode_set(
-                rif_id, sai_to_switch_urpf_mode(attr->value.u8));
+                rif_id, sai_to_switch_urpf_mode(attr->value.s32));
             break;
         case SAI_ROUTER_INTERFACE_ATTR_V6_URPF_MODE:
             switch_status = switch_api_interface_ipv6_urpf_mode_set(
-                rif_id, sai_to_switch_urpf_mode(attr->value.u8));
+                rif_id, sai_to_switch_urpf_mode(attr->value.s32));
             break;
         default:
             return SAI_STATUS_INVALID_PARAMETER;

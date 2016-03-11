@@ -96,7 +96,7 @@ action nop () {
 }
 
 action terminate_cpu_packet() {
-    modify_field(standard_metadata.egress_spec,fabric_header.dstPortOrGroup);
+    modify_field(ingress_egress_port,fabric_header.dstPortOrGroup);
     modify_field(ethernet.etherType, fabric_payload_header.etherType);
 
     remove_header(fabric_header);
@@ -124,7 +124,7 @@ action openflow_miss(reason, table_id) {
     shift_left(fabric_metadata.reason_code, fabric_metadata.reason_code, 8);
     bit_or(fabric_metadata.reason_code, fabric_metadata.reason_code, table_id);
 
-    modify_field(standard_metadata.egress_spec, CPU_PORT_ID);
+    modify_field(ingress_egress_port, CPU_PORT_ID);
 }
 
 /***************************************************************
@@ -138,7 +138,7 @@ action packet_out_eth_flood() {
 }
 
 action packet_out_unicast() {
-    modify_field(standard_metadata.egress_spec, fabric_header.dstPortOrGroup);
+    modify_field(ingress_egress_port, fabric_header.dstPortOrGroup);
     terminate_cpu_packet();
     modify_field(openflow_metadata.ofvalid, TRUE);
 }
@@ -167,7 +167,7 @@ action ofpat_group_egress_update(bmap) {
 table ofpat_group_egress {
     reads {
         openflow_metadata.group_id : exact;
-        standard_metadata.egress_port : exact;
+        egress_egress_port : exact;
     }
 
     actions {
@@ -181,11 +181,11 @@ table ofpat_group_egress {
  ****************************************************************/
 
 action ofpat_group_ingress_uc(ifindex) {
-    modify_field(standard_metadata.egress_spec, ifindex);
+    modify_field(ingress_egress_port, ifindex);
 }
 
 action ofpat_group_ingress_mc(mcindex) {
-    modify_field(intrinsic_metadata.mcast_grp, mcindex);
+    modify_field(intrinsic_mcast_grp, mcindex);
 }
 
 table ofpat_group_ingress {
@@ -204,15 +204,16 @@ table ofpat_group_ingress {
  * OFPAT_OUTPUT
  ****************************************************************/
 
-action ofpat_output(ifindex) {
-    modify_field(standard_metadata.egress_spec, ifindex);
+action ofpat_output(egress_port) {
+    modify_field(ingress_egress_port, egress_port);
+    modify_field(ingress_metadata.egress_ifindex, 0);
 }
 
 table ofpat_output {
     reads {
         openflow_metadata.index : ternary;
         openflow_metadata.group_id : ternary;
-        standard_metadata.egress_spec : ternary;
+        ingress_egress_port : ternary;
     }
 
     actions {
@@ -234,7 +235,7 @@ table ofpat_set_mpls_ttl {
     reads {
         openflow_metadata.index : ternary;
         openflow_metadata.group_id : ternary;
-        standard_metadata.egress_port : ternary;
+        egress_egress_port : ternary;
     }
 
     actions {
@@ -255,7 +256,7 @@ table ofpat_dec_mpls_ttl {
     reads {
         openflow_metadata.index : ternary;
         openflow_metadata.group_id : ternary;
-        standard_metadata.egress_port : ternary;
+        egress_egress_port : ternary;
     }
 
     actions {
@@ -277,7 +278,7 @@ table ofpat_push_mpls {
     reads {
         openflow_metadata.index : ternary;
         openflow_metadata.group_id : ternary;
-        standard_metadata.egress_port : ternary;
+        egress_egress_port : ternary;
     }
 
     actions {
@@ -298,7 +299,7 @@ table ofpat_pop_mpls {
     reads {
         openflow_metadata.index : ternary;
         openflow_metadata.group_id : ternary;
-        standard_metadata.egress_port : ternary;
+        egress_egress_port : ternary;
     }
 
     actions {
@@ -322,7 +323,7 @@ table ofpat_push_vlan {
     reads {
         openflow_metadata.index : ternary;
         openflow_metadata.group_id : ternary;
-        standard_metadata.egress_port : ternary;
+        egress_egress_port : ternary;
     }
 
     actions {
@@ -344,7 +345,7 @@ table ofpat_pop_vlan {
     reads {
         openflow_metadata.index : ternary;
         openflow_metadata.group_id : ternary;
-        standard_metadata.egress_port : ternary;
+        egress_egress_port : ternary;
     }
     
     actions {
@@ -365,7 +366,7 @@ table ofpat_set_field {
     reads {
         openflow_metadata.index : ternary;
         openflow_metadata.group_id : ternary;
-        standard_metadata.egress_port : ternary;
+        egress_egress_port : ternary;
     }
 
     actions {
@@ -396,7 +397,7 @@ table ofpat_set_nw_ttl_ipv4 {
     reads {
         openflow_metadata.index : ternary;
         openflow_metadata.group_id : ternary;
-        standard_metadata.egress_port : ternary;
+        egress_egress_port : ternary;
     }
 
     actions {
@@ -417,7 +418,7 @@ table ofpat_set_nw_ttl_ipv6 {
     reads {
         openflow_metadata.index : ternary;
         openflow_metadata.group_id : ternary;
-        standard_metadata.egress_port : ternary;
+        egress_egress_port : ternary;
     }
 
     actions {
@@ -438,7 +439,7 @@ table ofpat_dec_nw_ttl_ipv4 {
     reads {
         openflow_metadata.index : ternary;
         openflow_metadata.group_id : ternary;
-        standard_metadata.egress_port : ternary;
+        egress_egress_port : ternary;
     }
 
     actions {
@@ -459,7 +460,7 @@ table ofpat_dec_nw_ttl_ipv6 {
     reads {
         openflow_metadata.index : ternary;
         openflow_metadata.group_id : ternary;
-        standard_metadata.egress_port : ternary;
+        egress_egress_port : ternary;
     }
 
     actions {

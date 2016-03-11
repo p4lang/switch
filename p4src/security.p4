@@ -44,7 +44,7 @@ counter storm_control_stats {
 table storm_control_stats {
     reads {
         meter_metadata.meter_color: exact;
-        ingress_metadata.ingress_port: exact;
+        ingress_input_port: exact;
     }
     actions {
         nop;
@@ -72,7 +72,7 @@ action set_storm_control_meter(meter_idx) {
 
 table storm_control {
     reads {
-        ingress_metadata.ingress_port : exact;
+        ingress_input_port : exact;
         l2_metadata.lkp_pkt_type : ternary;
     }
     actions {

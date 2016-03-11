@@ -159,15 +159,22 @@ static sai_status_t sai_acl_match_table_type_get(
         for (index2 = 0; index2 < attr_count; index2++) {
             // skip ports and VLAN attributes on check
             switch(attr_list[index2].id) {
+                case SAI_ACL_TABLE_ATTR_STAGE:
+                case SAI_ACL_TABLE_ATTR_PRIORITY:
+                case SAI_ACL_TABLE_ATTR_SIZE:
+                case SAI_ACL_TABLE_ATTR_GROUP_ID:
                 case SAI_ACL_ENTRY_ATTR_FIELD_IN_PORTS:
                 case SAI_ACL_ENTRY_ATTR_FIELD_OUT_PORTS:
                 case SAI_ACL_ENTRY_ATTR_FIELD_IN_PORT:
                 case SAI_ACL_ENTRY_ATTR_FIELD_OUTER_VLAN_ID:
                 case SAI_ACL_ENTRY_ATTR_FIELD_INNER_VLAN_ID:
                     break;
+                // ignore above for matching fields
                 default:
-                    if (table[attr_list[index2].id - SAI_ACL_TABLE_ATTR_FIELD_START] == -1) {
-                        table_matched = FALSE;
+                    if (attr_list[index2].id >= SAI_ACL_TABLE_ATTR_FIELD_START && attr_list[index2].id <= SAI_ACL_TABLE_ATTR_FIELD_END) {
+                        if (table[attr_list[index2].id - SAI_ACL_TABLE_ATTR_FIELD_START] == -1) {
+                            table_matched = FALSE;
+                        }
                     }
                     break;
             }
@@ -555,7 +562,7 @@ sai_status_t sai_create_acl_entry(
                 break;
             case SAI_ACL_ENTRY_ATTR_PACKET_ACTION:
                 acl_action = 0;
-                packet_action = attr_list[index1].value.aclfield.data.u8;
+                packet_action = attr_list[index1].value.aclfield.data.s32;
                 if (packet_action == SAI_PACKET_ACTION_DROP) {
                     acl_action = SWITCH_ACL_ACTION_DROP;
                 } else if (packet_action == SAI_PACKET_ACTION_FORWARD) {
