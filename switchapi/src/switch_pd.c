@@ -4134,11 +4134,19 @@ switch_pd_system_acl_table_add_entry(switch_device_t device,
             break;
         case SWITCH_ACL_ACTION_NEGATIVE_MIRROR:
             {
+#ifndef BMV2
                 p4_pd_dc_negative_mirror_action_spec_t action_spec;
                 action_spec.action_session_id = handle_to_id(opt_action_params->mirror_handle);
+#endif /* BMV2 */
                 status = p4_pd_dc_system_acl_table_add_with_negative_mirror(
-                    g_sess_hdl, p4_pd_device, &match_spec, priority,
-                    &action_spec, entry_hdl);
+                             g_sess_hdl,
+                             p4_pd_device,
+                             &match_spec,
+                             priority,
+#ifndef BMV2
+                             &action_spec,
+#endif /* BMV2 */
+                             entry_hdl);
             }
             break;
         case SWITCH_ACL_ACTION_DROP:
