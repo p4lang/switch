@@ -276,6 +276,7 @@ switch_pd_mcast_table_add_entry(switch_device_t device,
         if (SWITCH_MCAST_GROUP_IP_TYPE(group_key) == SWITCH_API_IP_ADDR_V4) {
 #ifndef P4_IPV4_DISABLE
             if (vrf_entry) {
+#ifndef P4_L3_MULTICAST_DISABLE
                 p4_pd_dc_ipv4_multicast_route_match_spec_t match_spec;
                 p4_pd_dc_multicast_route_s_g_hit_action_spec_t action_spec;
 
@@ -291,7 +292,9 @@ switch_pd_mcast_table_add_entry(switch_device_t device,
                 status = p4_pd_dc_ipv4_multicast_route_table_add_with_multicast_route_s_g_hit(
                     g_sess_hdl, p4_pd_device, &match_spec, &action_spec,
                     &(group_info->inner_hw_entry));
+#endif /* P4_L3_MULTICAST_DISABLE */
             } else {
+#ifndef P4_L2_MULTICAST_DISABLE
                 p4_pd_dc_ipv4_multicast_bridge_match_spec_t match_spec;
                 p4_pd_dc_multicast_bridge_s_g_hit_action_spec_t action_spec;
 
@@ -306,11 +309,13 @@ switch_pd_mcast_table_add_entry(switch_device_t device,
                 status = p4_pd_dc_ipv4_multicast_bridge_table_add_with_multicast_bridge_s_g_hit(
                     g_sess_hdl, p4_pd_device, &match_spec, &action_spec,
                     &(group_info->inner_hw_entry));
+#endif /* P4_L2_MULTICAST_DISABLE */
             }
 #endif /* P4_IPV4_DISABLE */
         } else {
 #ifndef P4_IPV6_DISABLE
             if (vrf_entry) {
+#ifndef P4_L3_MULTICAST_DISABLE
                 p4_pd_dc_ipv6_multicast_route_match_spec_t match_spec;
                 p4_pd_dc_multicast_route_s_g_hit_action_spec_t action_spec;
 
@@ -328,7 +333,9 @@ switch_pd_mcast_table_add_entry(switch_device_t device,
                 status = p4_pd_dc_ipv6_multicast_route_table_add_with_multicast_route_s_g_hit(
                     g_sess_hdl, p4_pd_device, &match_spec, &action_spec,
                     &(group_info->inner_hw_entry));
+#endif /* P4_L3_MULTICAST_DISABLE */
             } else {
+#ifndef P4_L2_MULTICAST_DISABLE
                 p4_pd_dc_ipv6_multicast_bridge_match_spec_t match_spec;
                 p4_pd_dc_multicast_bridge_s_g_hit_action_spec_t action_spec;
 
@@ -345,6 +352,7 @@ switch_pd_mcast_table_add_entry(switch_device_t device,
                 status = p4_pd_dc_ipv6_multicast_bridge_table_add_with_multicast_bridge_s_g_hit(
                     g_sess_hdl, p4_pd_device, &match_spec, &action_spec,
                     &(group_info->inner_hw_entry));
+#endif /* P4_L2_MULTICAST_DISABLE */
             }
 #endif /* P4_IPV6_DISABLE */
         }
@@ -352,6 +360,7 @@ switch_pd_mcast_table_add_entry(switch_device_t device,
         if (SWITCH_MCAST_GROUP_IP_TYPE(group_key) == SWITCH_API_IP_ADDR_V4) {
 #ifndef P4_IPV4_DISABLE
             if (vrf_entry) {
+#ifndef P4_L3_MULTICAST_DISABLE
                 if (mc_mode == SWITCH_API_MCAST_IPMC_PIM_SM) {
                     p4_pd_dc_ipv4_multicast_route_star_g_match_spec_t match_spec;
                     p4_pd_dc_multicast_route_sm_star_g_hit_action_spec_t action_spec;
@@ -383,7 +392,9 @@ switch_pd_mcast_table_add_entry(switch_device_t device,
                         g_sess_hdl, p4_pd_device, &match_spec, &action_spec,
                         &(group_info->inner_hw_entry));
                 }
+#endif /* P4_L3_MULTICAST_DISABLE */
             } else {
+#ifndef P4_L2_MULTICAST_DISABLE
                 p4_pd_dc_ipv4_multicast_bridge_star_g_match_spec_t match_spec;
                 p4_pd_dc_multicast_bridge_star_g_hit_action_spec_t action_spec;
 
@@ -397,11 +408,13 @@ switch_pd_mcast_table_add_entry(switch_device_t device,
                 status = p4_pd_dc_ipv4_multicast_bridge_star_g_table_add_with_multicast_bridge_star_g_hit(
                     g_sess_hdl, p4_pd_device, &match_spec, &action_spec,
                     &(group_info->inner_hw_entry));
+#endif /* P4_L2_MULTICAST_DISABLE */
             }
 #endif /* P4_IPV4_DISABLE */
         } else {
 #ifndef P4_IPV6_DISABLE
             if (vrf_entry) {
+#ifndef P4_L3_MULTICAST_DISABLE
                 if (mc_mode == SWITCH_API_MCAST_IPMC_PIM_SM) {
                     p4_pd_dc_ipv6_multicast_route_star_g_match_spec_t match_spec;
                     p4_pd_dc_multicast_route_sm_star_g_hit_action_spec_t action_spec;
@@ -435,7 +448,9 @@ switch_pd_mcast_table_add_entry(switch_device_t device,
                         g_sess_hdl, p4_pd_device, &match_spec, &action_spec,
                         &(group_info->inner_hw_entry));
                 }
+#endif /* P4_L3_MULTICAST_DISABLE */
             } else {
+#ifndef P4_L2_MULTICAST_DISABLE
                 p4_pd_dc_ipv6_multicast_bridge_star_g_match_spec_t match_spec;
                 p4_pd_dc_multicast_bridge_star_g_hit_action_spec_t action_spec;
 
@@ -450,6 +465,7 @@ switch_pd_mcast_table_add_entry(switch_device_t device,
                 status = p4_pd_dc_ipv6_multicast_bridge_star_g_table_add_with_multicast_bridge_star_g_hit(
                     g_sess_hdl, p4_pd_device, &match_spec, &action_spec,
                     &(group_info->inner_hw_entry));
+#endif /* P4_L2_MULTICAST_DISABLE */
             }
 #endif /* P4_IPV6_DISABLE */
         }
@@ -507,21 +523,29 @@ switch_pd_mcast_table_delete_entry(switch_device_t device,
         if (SWITCH_MCAST_GROUP_IP_TYPE(group_key) == SWITCH_API_IP_ADDR_V4) {
 #ifndef P4_IPV4_DISABLE
             if (vrf_entry) {
+#ifndef P4_L3_MULTICAST_DISABLE
                 status = p4_pd_dc_ipv4_multicast_route_table_delete(
                     g_sess_hdl, device, group_info->inner_hw_entry);
+#endif /* P4_L3_MULTICAST_DISABLE */
             } else {
+#ifndef P4_L2_MULTICAST_DISABLE
                 status = p4_pd_dc_ipv4_multicast_bridge_table_delete(
                     g_sess_hdl, device, group_info->inner_hw_entry);
+#endif /* P4_L2_MULTICAST_DISABLE */
             }
 #endif /* P4_IPV4_DISABLE */
         } else {
 #ifndef P4_IPV6_DISABLE
             if (vrf_entry) {
+#ifndef P4_L3_MULTICAST_DISABLE
                 status = p4_pd_dc_ipv6_multicast_route_table_delete(
                     g_sess_hdl, device, group_info->inner_hw_entry);
+#endif /* P4_L3_MULTICAST_DISABLE */
             } else {
+#ifndef P4_L2_MULTICAST_DISABLE
                 status = p4_pd_dc_ipv6_multicast_bridge_table_delete(
                     g_sess_hdl, device, group_info->inner_hw_entry);
+#endif /* P4_L2_MULTICAST_DISABLE */
             }
 #endif /* P4_IPV6_DISABLE */
         }
@@ -529,21 +553,29 @@ switch_pd_mcast_table_delete_entry(switch_device_t device,
         if (SWITCH_MCAST_GROUP_IP_TYPE(group_key) == SWITCH_API_IP_ADDR_V4) {
 #ifndef P4_IPV4_DISABLE
             if (vrf_entry) {
+#ifndef P4_L3_MULTICAST_DISABLE
                 status = p4_pd_dc_ipv4_multicast_route_star_g_table_delete(
                     g_sess_hdl, device, group_info->inner_hw_entry);
+#endif /* P4_L3_MULTICAST_DISABLE */
             } else {
+#ifndef P4_L2_MULTICAST_DISABLE
                 status = p4_pd_dc_ipv4_multicast_bridge_star_g_table_delete(
                     g_sess_hdl, device, group_info->inner_hw_entry);
+#endif /* P4_L2_MULTICAST_DISABLE */
             }
 #endif /* P4_IPV4_DISABLE */
         } else {
 #ifndef P4_IPV6_DISABLE
             if (vrf_entry) {
+#ifndef P4_L3_MULTICAST_DISABLE
                 status = p4_pd_dc_ipv6_multicast_route_star_g_table_delete(
                     g_sess_hdl, device, group_info->inner_hw_entry);
+#endif /* P4_L3_MULTICAST_DISABLE */
             } else {
+#ifndef P4_L2_MULTICAST_DISABLE
                 status = p4_pd_dc_ipv6_multicast_bridge_star_g_table_delete(
                     g_sess_hdl, device, group_info->inner_hw_entry);
+#endif /* P4_L2_MULTICAST_DISABLE */
             }
 #endif /* P4_IPV6_DISABLE */
         }

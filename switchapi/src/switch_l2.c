@@ -526,7 +526,7 @@ switch_api_mac_table_entry_add(switch_device_t device,
     switch(handle_type) {
         case SWITCH_HANDLE_TYPE_PORT:
         case SWITCH_HANDLE_TYPE_LAG:
-            status = switch_intf_handle_get(mac_entry->vlan_handle, mac_entry->handle, &intf_handle);
+            status = switch_interface_handle_get(mac_entry->handle, &intf_handle);
             if (status != SWITCH_STATUS_SUCCESS) {
                 goto cleanup;
             }
@@ -695,7 +695,7 @@ switch_api_mac_table_entry_update(switch_device_t device,
     switch(handle_type) {
         case SWITCH_HANDLE_TYPE_PORT:
         case SWITCH_HANDLE_TYPE_LAG:
-            status = switch_intf_handle_get(mac_entry->vlan_handle, mac_entry->handle, &intf_handle);
+            status = switch_interface_handle_get(mac_entry->handle, &intf_handle);
             if (status != SWITCH_STATUS_SUCCESS) {
                 goto cleanup;
             }
@@ -835,7 +835,7 @@ switch_api_mac_table_entry_delete(switch_device_t device,
     switch(handle_type) {
         case SWITCH_HANDLE_TYPE_PORT:
         case SWITCH_HANDLE_TYPE_LAG:
-            status = switch_intf_handle_get(mac_entry->vlan_handle, handle,
+            status = switch_interface_handle_get(handle,
                                             &intf_handle);
             if (status != SWITCH_STATUS_SUCCESS) {
                 goto cleanup;

@@ -42,7 +42,7 @@ table_attr_list = []
 def sai_thrift_create_fdb(client, vlan_id, mac, port, mac_action):
     fdb_entry = sai_thrift_fdb_entry_t(mac_address=mac, vlan_id=vlan_id)
     #value 0 represents static entry, id=0, represents entry type
-    fdb_attribute1_value = sai_thrift_attribute_value_t(u8=SAI_FDB_ENTRY_STATIC)
+    fdb_attribute1_value = sai_thrift_attribute_value_t(s32=SAI_FDB_ENTRY_STATIC)
     fdb_attribute1 = sai_thrift_attribute_t(id=SAI_FDB_ENTRY_ATTR_TYPE,
                                             value=fdb_attribute1_value)
     #value oid represents object id, id=1 represents port id
@@ -50,7 +50,7 @@ def sai_thrift_create_fdb(client, vlan_id, mac, port, mac_action):
     fdb_attribute2 = sai_thrift_attribute_t(id=SAI_FDB_ENTRY_ATTR_PORT_ID,
                                             value=fdb_attribute2_value)
     #value oid represents object id, id=1 represents port id
-    fdb_attribute3_value = sai_thrift_attribute_value_t(u8=mac_action)
+    fdb_attribute3_value = sai_thrift_attribute_value_t(s32=mac_action)
     fdb_attribute3 = sai_thrift_attribute_t(id=SAI_FDB_ENTRY_ATTR_PACKET_ACTION,
                                             value=fdb_attribute3_value)
     fdb_attr_list = [fdb_attribute1, fdb_attribute2, fdb_attribute3]
@@ -64,7 +64,7 @@ def sai_thrift_flush_fdb_by_vlan(client, vlan_id):
     fdb_attribute1_value = sai_thrift_attribute_value_t(u16=vlan_id)
     fdb_attribute1 = sai_thrift_attribute_t(id=SAI_FDB_FLUSH_ATTR_VLAN_ID,
                                             value=fdb_attribute1_value)
-    fdb_attribute2_value = sai_thrift_attribute_value_t(u8=SAI_FDB_FLUSH_ENTRY_STATIC)
+    fdb_attribute2_value = sai_thrift_attribute_value_t(s32=SAI_FDB_FLUSH_ENTRY_STATIC)
     fdb_attribute2 = sai_thrift_attribute_t(id=SAI_FDB_FLUSH_ATTR_ENTRY_TYPE,
                                             value=fdb_attribute2_value)
     fdb_attr_list = [fdb_attribute1, fdb_attribute2]
@@ -92,7 +92,7 @@ def sai_thrift_create_router_interface(client, vr_id, is_port, port_id, vlan_id,
     rif_attr_list.append(rif_attribute1)
     if is_port:
         #port type and port id
-        rif_attribute2_value = sai_thrift_attribute_value_t(u8=SAI_ROUTER_INTERFACE_TYPE_PORT)
+        rif_attribute2_value = sai_thrift_attribute_value_t(s32=SAI_ROUTER_INTERFACE_TYPE_PORT)
         rif_attribute2 = sai_thrift_attribute_t(id=SAI_ROUTER_INTERFACE_ATTR_TYPE,
                                                 value=rif_attribute2_value)
         rif_attr_list.append(rif_attribute2)
@@ -102,7 +102,7 @@ def sai_thrift_create_router_interface(client, vr_id, is_port, port_id, vlan_id,
         rif_attr_list.append(rif_attribute3)
     else:
         #vlan type and vlan id
-        rif_attribute2_value = sai_thrift_attribute_value_t(u8=SAI_ROUTER_INTERFACE_TYPE_VLAN)
+        rif_attribute2_value = sai_thrift_attribute_value_t(s32=SAI_ROUTER_INTERFACE_TYPE_VLAN)
         rif_attribute2 = sai_thrift_attribute_t(id=SAI_ROUTER_INTERFACE_ATTR_TYPE,
                                                 value=rif_attribute2_value)
         rif_attr_list.append(rif_attribute2)
@@ -201,7 +201,7 @@ def sai_thrift_remove_neighbor(client, addr_family, rif_id, ip_addr, dmac):
     client.sai_thrift_remove_neighbor_entry(neighbor_entry)
 
 def sai_thrift_create_next_hop_group(client, nhop_list):
-    nhop_group_attribute1_value = sai_thrift_attribute_value_t(u8=SAI_NEXT_HOP_GROUP_ECMP)
+    nhop_group_attribute1_value = sai_thrift_attribute_value_t(s32=SAI_NEXT_HOP_GROUP_ECMP)
     nhop_group_attribute1 = sai_thrift_attribute_t(id=SAI_NEXT_HOP_GROUP_ATTR_TYPE,
                                                    value=nhop_group_attribute1_value)
     nhop_objlist = sai_thrift_object_list_t(count=len(nhop_list), object_id_list=nhop_list)
@@ -418,7 +418,7 @@ def sai_thrift_create_acl_entry(client, acl_table_id,
             #Drop
             attribute_value = sai_thrift_attribute_value_t(
                              aclfield = sai_thrift_acl_field_data_t(
-                             data = sai_thrift_acl_data_t(u8 = packet_action)))
+                             data = sai_thrift_acl_data_t(s32 = packet_action)))
             attribute = sai_thrift_attribute_t(
                              id = SAI_ACL_ENTRY_ATTR_PACKET_ACTION,
                              value=attribute_value)
@@ -495,7 +495,7 @@ def sai_thrift_create_mirror_session(client, mirror_type, port,
     mirror_attr_list = []
 
     #Mirror type
-    attribute1_value = sai_thrift_attribute_value_t(u8=mirror_type)
+    attribute1_value = sai_thrift_attribute_value_t(s32=mirror_type)
     attribute1 = sai_thrift_attribute_t(id=SAI_MIRROR_SESSION_ATTR_TYPE,
                                         value=attribute1_value)
     mirror_attr_list.append(attribute1)
@@ -531,7 +531,7 @@ def sai_thrift_create_mirror_session(client, mirror_type, port,
         mirror_attr_list.append(attribute5)
     elif mirror_type == SAI_MIRROR_TYPE_ENHANCED_REMOTE:
         #encap type
-        attribute3_value = sai_thrift_attribute_value_t(u8=encap_type)
+        attribute3_value = sai_thrift_attribute_value_t(s32=encap_type)
         attribute3 = sai_thrift_attribute_t(id=SAI_MIRROR_SESSION_ATTR_ENCAP_TYPE,
                                             value=attribute3_value)
         mirror_attr_list.append(attribute3)
@@ -647,17 +647,17 @@ def sai_thrift_create_policer(
 
     attr_list = []
 
-    attribute1_value = sai_thrift_attribute_value_t(u8=meter_type)
+    attribute1_value = sai_thrift_attribute_value_t(s32=meter_type)
     attribute1 = sai_thrift_attribute_t(id=SAI_POLICER_ATTR_METER_TYPE,
                                         value=attribute1_value)
     attr_list.append(attribute1)
 
-    attribute2_value = sai_thrift_attribute_value_t(u8=meter_mode)
+    attribute2_value = sai_thrift_attribute_value_t(s32=meter_mode)
     attribute2 = sai_thrift_attribute_t(id=SAI_POLICER_ATTR_MODE,
                                         value=attribute2_value)
     attr_list.append(attribute2)
 
-    attribute3_value = sai_thrift_attribute_value_t(u8=color_source)
+    attribute3_value = sai_thrift_attribute_value_t(s32=color_source)
     attribute3 = sai_thrift_attribute_t(id=SAI_POLICER_ATTR_COLOR_SOURCE,
                                         value=attribute3_value)
     attr_list.append(attribute3)
@@ -682,17 +682,17 @@ def sai_thrift_create_policer(
                                         value=attribute7_value)
     attr_list.append(attribute7)
 
-    attribute8_value = sai_thrift_attribute_value_t(u8=green_action)
+    attribute8_value = sai_thrift_attribute_value_t(s32=green_action)
     attribute8 = sai_thrift_attribute_t(id=SAI_POLICER_ATTR_GREEN_PACKET_ACTION,
                                         value=attribute8_value)
     attr_list.append(attribute8)
 
-    attribute9_value = sai_thrift_attribute_value_t(u8=yellow_action)
+    attribute9_value = sai_thrift_attribute_value_t(s32=yellow_action)
     attribute9 = sai_thrift_attribute_t(id=SAI_POLICER_ATTR_YELLOW_PACKET_ACTION,
                                         value=attribute9_value)
     attr_list.append(attribute9)
 
-    attribute10_value = sai_thrift_attribute_value_t(u8=red_action)
+    attribute10_value = sai_thrift_attribute_value_t(s32=red_action)
     attribute10 = sai_thrift_attribute_t(id=SAI_POLICER_ATTR_RED_PACKET_ACTION,
                                         value=attribute10_value)
     attr_list.append(attribute10)

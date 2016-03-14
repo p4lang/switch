@@ -149,6 +149,25 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       sai_thrift_string_to_mac(thrift_fdb_entry.mac_address, fdb_entry->mac_address);
   }
 
+  void sai_thrift_parse_port_attributes(const std::vector<sai_thrift_attribute_t> &thrift_attr_list, sai_attribute_t *attr_list) {
+      std::vector<sai_thrift_attribute_t>::const_iterator it = thrift_attr_list.begin();
+      sai_thrift_attribute_t attribute;
+      for(uint32_t i = 0; i < thrift_attr_list.size(); i++, it++) {
+          attribute = (sai_thrift_attribute_t)*it;
+          attr_list[i].id = attribute.id;
+          switch (attribute.id) {
+              case SAI_PORT_ATTR_ADMIN_STATE:
+                  attr_list[i].value.booldata = attribute.value.booldata;
+                  break;
+              case SAI_PORT_ATTR_PORT_VLAN_ID:
+                  attr_list[i].value.u16 = attribute.value.u16;
+                  break;
+              default:
+                  break;
+          }
+      }
+  }
+
   void sai_thrift_parse_unicast_route_entry(const sai_thrift_unicast_route_entry_t &thrift_unicast_route_entry, sai_unicast_route_entry_t *unicast_route_entry) {
       unicast_route_entry->vr_id = (sai_object_id_t) thrift_unicast_route_entry.vr_id;
       sai_thrift_parse_ip_prefix(thrift_unicast_route_entry.destination, &unicast_route_entry->destination);
@@ -167,13 +186,13 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
           attr_list[i].id = attribute.id;
           switch (attribute.id) {
               case SAI_FDB_ENTRY_ATTR_TYPE:
-                  attr_list[i].value.u8 = attribute.value.u8;
+                  attr_list[i].value.s32 = attribute.value.s32;
                   break;
               case SAI_FDB_ENTRY_ATTR_PORT_ID:
                   attr_list[i].value.oid = attribute.value.oid;
                   break;
               case SAI_FDB_ENTRY_ATTR_PACKET_ACTION:
-                  attr_list[i].value.u8 = attribute.value.u8;
+                  attr_list[i].value.s32 = attribute.value.s32;
                   break;
               default:
                   break;
@@ -195,7 +214,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
                   attr_list[i].value.u16 = attribute.value.u16;
                   break;
               case SAI_FDB_FLUSH_ATTR_ENTRY_TYPE:
-                  attr_list[i].value.u8 = attribute.value.u8;
+                  attr_list[i].value.s32 = attribute.value.s32;
                   break;
           }
       }
@@ -247,7 +266,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
                   attr_list[i].value.oid = attribute.value.oid;
                   break;
               case SAI_ROUTER_INTERFACE_ATTR_TYPE:
-                  attr_list[i].value.u8 = attribute.value.u8;
+                  attr_list[i].value.s32 = attribute.value.s32;
                   break;
               case SAI_ROUTER_INTERFACE_ATTR_VLAN_ID:
                   attr_list[i].value.u16 = attribute.value.u16;
@@ -273,7 +292,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
           attr_list[i].id = attribute.id;
           switch (attribute.id) {
               case SAI_NEXT_HOP_ATTR_TYPE:
-                  attr_list[i].value.u8 = attribute.value.u8;
+                  attr_list[i].value.s32 = attribute.value.s32;
                   break;
               case SAI_NEXT_HOP_ATTR_IP:
                   sai_thrift_parse_ip_address(attribute.value.ipaddr, &attr_list[i].value.ipaddr);
@@ -293,7 +312,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
           attr_list[i].id = attribute.id;
           switch (attribute.id) {
               case SAI_NEXT_HOP_GROUP_ATTR_TYPE:
-                  attr_list[i].value.u8 = attribute.value.u8;
+                  attr_list[i].value.s32 = attribute.value.s32;
                   break;
               case SAI_NEXT_HOP_GROUP_ATTR_NEXT_HOP_COUNT:
                   attr_list[i].value.u32 = attribute.value.u32;
@@ -394,7 +413,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
           attr_list[i].id = attribute.id;
           switch (attribute.id) {
               case SAI_HOSTIF_ATTR_TYPE:
-                  attr_list[i].value.u32 = attribute.value.u32;
+                  attr_list[i].value.s32 = attribute.value.s32;
                   break;
               case SAI_HOSTIF_ATTR_RIF_OR_PORT_ID:
                   attr_list[i].value.oid = attribute.value.oid;
@@ -468,6 +487,21 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       }
   }
 
+  int32_t sai_thrift_set_port_attribute(const sai_thrift_object_id_t port_id, const sai_thrift_attribute_t &thrift_attr) {
+      printf("sai_thrift_set_port\n");
+      sai_status_t status = SAI_STATUS_SUCCESS;
+      sai_port_api_t *port_api;
+      status = sai_api_query(SAI_API_PORT, (void **) &port_api);
+      if (status != SAI_STATUS_SUCCESS) {
+          return status;
+      }
+      std::vector<sai_thrift_attribute_t> thrift_attr_list;
+      thrift_attr_list.push_back(thrift_attr);
+      sai_attribute_t attr;
+      sai_thrift_parse_port_attributes(thrift_attr_list, &attr);
+      status = port_api->set_port_attribute((sai_object_id_t)port_id, &attr);
+      return status;
+  }
 
   int32_t sai_thrift_create_fdb_entry(const sai_thrift_fdb_entry_t& thrift_fdb_entry, const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
       printf("sai_thrift_create_fdb_entry\n");
@@ -787,7 +821,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       return status;
   }
 
-  sai_thrift_object_id_t sai_thrift_create_lag() {
+  sai_thrift_object_id_t sai_thrift_create_lag(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
       printf("sai_thrift_create_lag\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_lag_api_t *lag_api;
@@ -1210,7 +1244,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
                 attr_list[i].value.aclfield.data.oid = attribute.value.aclfield.data.oid;
                 break;
             case SAI_ACL_ENTRY_ATTR_PACKET_ACTION:
-                attr_list[i].value.aclfield.data.u8 = attribute.value.aclfield.data.u8;
+                attr_list[i].value.aclfield.data.s32 = attribute.value.aclfield.data.s32;
                 break;
               default:
                 break;
@@ -1398,7 +1432,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
           attr_list[i].id = attribute.id;
           switch (attribute.id) {
               case SAI_MIRROR_SESSION_ATTR_TYPE:
-                  attr_list[i].value.u8 = attribute.value.u8;
+                  attr_list[i].value.s32 = attribute.value.s32;
                   break;
               case SAI_MIRROR_SESSION_ATTR_MONITOR_PORT:
                   attr_list[i].value.oid = attribute.value.oid;
@@ -1416,7 +1450,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
                   attr_list[i].value.u8 = attribute.value.u8;
                   break;
               case SAI_MIRROR_SESSION_ATTR_ENCAP_TYPE:
-                  attr_list[i].value.u8 = attribute.value.u8;
+                  attr_list[i].value.s32 = attribute.value.s32;
                   break;
               case SAI_MIRROR_SESSION_ATTR_IPHDR_VERSION:
                   attr_list[i].value.u8 = attribute.value.u8;
@@ -1484,13 +1518,13 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
           attr_list[i].id = attribute.id;
           switch (attribute.id) {
               case SAI_POLICER_ATTR_METER_TYPE:
-                  attr_list[i].value.u8 = attribute.value.u8;
+                  attr_list[i].value.s32 = attribute.value.s32;
                   break;
               case SAI_POLICER_ATTR_MODE:
-                  attr_list[i].value.u8 = attribute.value.u8;
+                  attr_list[i].value.s32 = attribute.value.s32;
                   break;
               case SAI_POLICER_ATTR_COLOR_SOURCE:
-                  attr_list[i].value.u8 = attribute.value.u8;
+                  attr_list[i].value.s32 = attribute.value.s32;
                   break;
               case SAI_POLICER_ATTR_CBS:
                   attr_list[i].value.u64 = attribute.value.u64;
@@ -1505,13 +1539,13 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
                   attr_list[i].value.u64 = attribute.value.u64;
                   break;
               case SAI_POLICER_ATTR_GREEN_PACKET_ACTION:
-                  attr_list[i].value.u8 = attribute.value.u8;
+                  attr_list[i].value.s32 = attribute.value.s32;
                   break;
               case SAI_POLICER_ATTR_YELLOW_PACKET_ACTION:
-                  attr_list[i].value.u8 = attribute.value.u8;
+                  attr_list[i].value.s32 = attribute.value.s32;
                   break;
               case SAI_POLICER_ATTR_RED_PACKET_ACTION:
-                  attr_list[i].value.u8 = attribute.value.u8;
+                  attr_list[i].value.s32 = attribute.value.s32;
                   break;
           }
       }

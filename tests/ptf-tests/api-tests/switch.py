@@ -661,10 +661,8 @@ class L2LagTest(api_base_tests.ThriftInterfaceDataPlane):
                 dst_ip += 1
 
             print 'L2LagTest:', count
-            #setting the hash to 60% for bmv2
-            hash_factor = 0.6
             for i in range(0, 4):
-                self.assertTrue((count[i] >= ((max_itrs / 4) * hash_factor)),
+                self.assertTrue((count[i] >= ((max_itrs / 4) * 0.9)),
                         "Not all paths are equally balanced")
 
             pkt = simple_tcp_packet(eth_src='00:11:11:11:11:11',
@@ -792,7 +790,7 @@ class L2StpTest(api_base_tests.ThriftInterfaceDataPlane):
 class L3IPv4HostTest(api_base_tests.ThriftInterfaceDataPlane):
     def runTest(self):
         print
-        print "Sending packet port %d" % swports[1], " -> port %d" % swports[2], " (192.168.0.1 -> 10.10.10.1 [id = 101])"
+        print "Sending packet port %d" % swports[1], " -> port %d" % swports[2], " (192.168.0.1 -> 10.10.10.1 [id = 105])"
         self.client.switcht_api_init(device)
         vrf = self.client.switcht_api_vrf_create(device, swports[1])
 
@@ -856,11 +854,114 @@ class L3IPv4HostTest(api_base_tests.ThriftInterfaceDataPlane):
 ###############################################################################
 @group('l3')
 @group('ipv4')
+@group('maxsizes')
+class L3IPv4SubIntfHostTest(api_base_tests.ThriftInterfaceDataPlane):
+    def runTest(self):
+        print
+        print "Sending packet port %d" % swports[1], " -> port %d" % swports[2], " (192.168.0.1 -> 10.10.10.1 [id = 105])"
+        self.client.switcht_api_init(device)
+        vrf = self.client.switcht_api_vrf_create(device, swports[1])
+
+        rmac = self.client.switcht_api_router_mac_group_create(device)
+        self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
+
+        iu1 = interface_union(port_lag_handle = swports[1])
+        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        if1 = self.client.switcht_api_interface_create(device, i_info1)
+        i_ip1 = switcht_ip_addr_t(addr_type=0, ipaddr='192.168.0.2', prefix_length=16)
+        self.client.switcht_api_l3_interface_address_add(device, if1, vrf, i_ip1)
+
+        pv = switcht_port_vlan_t(port_lag_handle = swports[2], vlan_id=10)
+        iu2 = interface_union(port_vlan=pv)
+        i_info2 = switcht_interface_info_t(device=0, type=6, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        if2 = self.client.switcht_api_interface_create(device, i_info2)
+        i_ip2 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.0.2', prefix_length=16)
+        self.client.switcht_api_l3_interface_address_add(device, if2, vrf, i_ip2)
+
+        # Add a static route
+        i_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='10.10.10.1', prefix_length=32)
+        nhop_key = switcht_nhop_key_t(intf_handle=if2, ip_addr_valid=0)
+        nhop1 = self.client.switcht_api_nhop_create(device, nhop_key)
+        neighbor_entry = switcht_neighbor_info_t(nhop_handle=nhop1, interface_handle=if2, mac_addr='00:11:22:33:44:55', ip_addr=i_ip3, rw_type=1)
+        neighbor1 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry)
+        self.client.switcht_api_l3_route_add(device, vrf, i_ip3, nhop1)
+
+        i_ip4 = switcht_ip_addr_t(addr_type=0, ipaddr='20.20.20.1', prefix_length=32)
+        nhop_key = switcht_nhop_key_t(intf_handle=if1, ip_addr_valid=0)
+        nhop2 = self.client.switcht_api_nhop_create(device, nhop_key)
+        neighbor_entry = switcht_neighbor_info_t(nhop_handle=nhop2, interface_handle=if1, mac_addr='00:11:22:33:44:56', ip_addr=i_ip4, rw_type=1)
+        neighbor2 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry)
+        self.client.switcht_api_l3_route_add(device, vrf, i_ip4, nhop2)
+
+        # send the test packet(s)
+        try:
+            pkt = simple_tcp_packet(eth_dst='00:77:66:55:44:33',
+                                    eth_src='00:22:22:22:22:22',
+                                    ip_dst='10.10.10.1',
+                                    ip_src='192.168.0.1',
+                                    ip_id=105,
+                                    ip_ttl=64)
+            exp_pkt = simple_tcp_packet(
+                                    eth_dst='00:11:22:33:44:55',
+                                    eth_src='00:77:66:55:44:33',
+                                    ip_dst='10.10.10.1',
+                                    ip_src='192.168.0.1',
+                                    ip_id=105,
+                                    dl_vlan_enable=True,
+                                    vlan_vid=10,
+                                    pktlen=104,
+                                    ip_ttl=63)
+            send_packet(self, swports[1], str(pkt))
+            verify_packets(self, exp_pkt, [swports[2]])
+
+            pkt = simple_tcp_packet(eth_dst='00:77:66:55:44:33',
+                                    eth_src='00:11:11:11:11:11',
+                                    ip_dst='20.20.20.1',
+                                    ip_src='10.0.0.1',
+                                    dl_vlan_enable=True,
+                                    vlan_vid=10,
+                                    pktlen=104,
+                                    ip_id=105,
+                                    ip_ttl=64)
+            exp_pkt = simple_tcp_packet(
+                                    eth_dst='00:11:22:33:44:56',
+                                    eth_src='00:77:66:55:44:33',
+                                    ip_dst='20.20.20.1',
+                                    ip_src='10.0.0.1',
+                                    ip_id=105,
+                                    ip_ttl=63)
+            send_packet(self, swports[2], str(pkt))
+            verify_packets(self, exp_pkt, [swports[1]])
+
+        finally:
+            self.client.switcht_api_neighbor_entry_remove(device, neighbor1)
+            self.client.switcht_api_l3_route_delete(device, vrf, i_ip3, nhop1)
+            self.client.switcht_api_nhop_delete(device, nhop1)
+
+            self.client.switcht_api_neighbor_entry_remove(device, neighbor2)
+            self.client.switcht_api_l3_route_delete(device, vrf, i_ip4, nhop2)
+            self.client.switcht_api_nhop_delete(device, nhop2)
+
+            self.client.switcht_api_l3_interface_address_delete(device, if1, vrf, i_ip1)
+            self.client.switcht_api_l3_interface_address_delete(device, if2, vrf, i_ip2)
+
+            self.client.switcht_api_interface_delete(device, if1)
+            self.client.switcht_api_interface_delete(device, if2)
+
+            self.client.switcht_api_router_mac_delete(device, rmac, '00:77:66:55:44:33')
+            self.client.switcht_api_router_mac_group_delete(device, rmac)
+            self.client.switcht_api_vrf_delete(device, vrf)
+
+
+###############################################################################
+@group('l3')
+@group('ipv4')
+@group('maxsizes')
 class L3IPv4HostModifyTest(api_base_tests.ThriftInterfaceDataPlane):
     def runTest(self):
         print
-        print "Sending packet port %d" % swports[1], " -> port %d" % swports[2], " (192.168.0.1 -> 10.10.10.1 [id = 101] route add)"
-        print "Sending packet port %d" % swports[1], " -> port %d" % swports[3], "  (192.168.0.1 -> 10.10.10.1 [id = 101] route update)"
+        print "Sending packet port %d" % swports[1], " -> port %d" % swports[2], " (192.168.0.1 -> 10.10.10.1 [id = 105] route add)"
+        print "Sending packet port %d" % swports[1], " -> port %d" % swports[3], "  (192.168.0.1 -> 10.10.10.1 [id = 105] route update)"
         self.client.switcht_api_init(device)
         vrf = self.client.switcht_api_vrf_create(device, 1)
 
@@ -961,7 +1062,7 @@ class L3IPv4HostModifyTest(api_base_tests.ThriftInterfaceDataPlane):
 class L3IPv4LpmTest(api_base_tests.ThriftInterfaceDataPlane):
     def runTest(self):
         print
-        print "Sending packet port %d" % swports[1], " -> port %d" % swports[2], " (192.168.0.1 -> 10.0.0.1 [id = 101])"
+        print "Sending packet port %d" % swports[1], " -> port %d" % swports[2], " (192.168.0.1 -> 10.0.0.1 [id = 105])"
         self.client.switcht_api_init(device)
         vrf = self.client.switcht_api_vrf_create(device, 1)
 
@@ -3478,12 +3579,12 @@ class L2LNSubIntfEncapTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_init(device)
 
         vrf = self.client.switcht_api_vrf_create(device, 2)
-        pv1 = switcht_port_vlan_t(port_lag_handle=1, vlan_id=10)
+        pv1 = switcht_port_vlan_t(port_lag_handle=swports[1], vlan_id=10)
         iu1 = interface_union(port_vlan = pv1)
         i_info1 = switcht_interface_info_t(device=0, type=9, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
-        pv2 = switcht_port_vlan_t(port_lag_handle=2, vlan_id=20)
+        pv2 = switcht_port_vlan_t(port_lag_handle=swports[2], vlan_id=20)
         iu2 = interface_union(port_vlan = pv2)
         i_info2 = switcht_interface_info_t(device=0, type=9, u=iu2, mac='00:77:66:55:44:33', label=0)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
@@ -4733,7 +4834,6 @@ class L3VxlanUnicastBasicTest(api_base_tests.ThriftInterfaceDataPlane):
         # Create a logical network (LN)
         bt = switcht_bridge_type(tunnel_vni=0x1234)
         encap = switcht_encap_info_t(u=bt)
-        #encap_type 3 is vxlan
         ln_flags = switcht_ln_flags(ipv4_unicast_enabled=1)
         lognet_info = switcht_logical_network_t(type=4, encap_info=encap, age_interval=1800, vrf=vrf, rmac_handle=rmac, flags=ln_flags)
         ln1 = self.client.switcht_api_logical_network_create(device, lognet_info)
@@ -4743,6 +4843,7 @@ class L3VxlanUnicastBasicTest(api_base_tests.ThriftInterfaceDataPlane):
         src_ip = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.1', prefix_length=32)
         dst_ip = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.3', prefix_length=32)
         udp_tcp = switcht_udp_tcp_t(udp = udp)
+        #encap_type 3 is vxlan
         encap_info = switcht_encap_info_t(encap_type=3)
         ip_encap =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip, dst_ip=dst_ip, ttl=60, proto=17, u=udp_tcp)
         tunnel_encap = switcht_tunnel_encap_t(ip_encap=ip_encap)
@@ -8844,3 +8945,636 @@ class ExceptionPacketsTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_vrf_delete(device, self.vrf)
 
         api_base_tests.ThriftInterfaceDataPlane.tearDown(self)
+
+###############################################################################
+@group('tunnel')
+class IPinIPTest(api_base_tests.ThriftInterfaceDataPlane):
+    def setUp(self):
+        print
+        print 'Configuring device for IPinIP packet test cases'
+        api_base_tests.ThriftInterfaceDataPlane.setUp(self)
+        self.client.switcht_api_init(device)
+
+        self.vrf = self.client.switcht_api_vrf_create(device, 2)
+        self.rmac = self.client.switcht_api_router_mac_group_create(device)
+        self.client.switcht_api_router_mac_add(device, self.rmac,
+                                               '00:77:66:55:44:33')
+
+        iu1 = interface_union(port_lag_handle = swports[0])
+        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1,
+                                           mac='00:77:66:55:44:33', label=0,
+                                           vrf_handle=self.vrf,
+                                           rmac_handle=self.rmac)
+        self.if1 = self.client.switcht_api_interface_create(device, i_info1)
+
+        iu2 = interface_union(port_lag_handle = swports[1])
+        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2,
+                                           mac='00:77:66:55:44:33', label=0,
+                                           vrf_handle=self.vrf,
+                                           rmac_handle=self.rmac)
+        self.if2 = self.client.switcht_api_interface_create(device, i_info2)
+
+        # Create an GRE IPv4 tunnel interface (encap_type = 4)
+        src_ip = switcht_ip_addr_t(addr_type=0, ipaddr='10.100.1.1',
+                                   prefix_length=32)
+        dst_ip = switcht_ip_addr_t(addr_type=0, ipaddr='10.200.1.3',
+                                   prefix_length=32)
+        encap_info = switcht_encap_info_t(encap_type=4)
+        ip_encap =  switcht_ip_encap_t(vrf=self.vrf, src_ip=src_ip,
+                                       dst_ip=dst_ip, ttl=64, proto=47)
+        tunnel_encap = switcht_tunnel_encap_t(ip_encap=ip_encap)
+        iu3 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap,
+                                    encap_info=encap_info, out_if=self.if2)
+        self.ift1 = self.client.switcht_api_tunnel_interface_create(device,
+                                                                    0, iu3)
+
+        # Create nexthop over GRE IPv4 tunnel interface
+        nhop_key = switcht_nhop_key_t(intf_handle=self.ift1, ip_addr_valid=0)
+        self.nhop1 = self.client.switcht_api_nhop_create(device, nhop_key)
+        neighbor_entry = switcht_neighbor_info_t(nhop_handle=self.nhop1,
+                                                 interface_handle=self.ift1,
+                                                 mac_addr='00:44:44:44:44:44',
+                                                 rw_type=1, neigh_type=7)
+        self.neigh1 = self.client.switcht_api_neighbor_entry_add(device,
+                                                                 neighbor_entry)
+        neighbor_entry = switcht_neighbor_info_t(nhop_handle=0,
+                                                 interface_handle=self.ift1,
+                                                 mac_addr='00:55:55:55:55:55',
+                                                 ip_addr=dst_ip)
+        self.neigh2 = self.client.switcht_api_neighbor_entry_add(device,
+                                                                 neighbor_entry)
+
+        # Create an GRE IPv6 tunnel interface (encap_type = 4)
+        src_ip = switcht_ip_addr_t(addr_type=1, ipaddr='3ffe::1',
+                                   prefix_length=128)
+        dst_ip = switcht_ip_addr_t(addr_type=1, ipaddr='3ffe::2',
+                                   prefix_length=128)
+        encap_info = switcht_encap_info_t(encap_type=4)
+        ip_encap =  switcht_ip_encap_t(vrf=self.vrf, src_ip=src_ip,
+                                       dst_ip=dst_ip, ttl=64, proto=47)
+        tunnel_encap = switcht_tunnel_encap_t(ip_encap=ip_encap)
+        iu4 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap,
+                                    encap_info=encap_info, out_if=self.if2)
+        self.ift2 = self.client.switcht_api_tunnel_interface_create(device,
+                                                                    0, iu4)
+
+        # Create nexthop over GRE IPv6 tunnel interface
+        nhop_key = switcht_nhop_key_t(intf_handle=self.ift2, ip_addr_valid=0)
+        self.nhop2 = self.client.switcht_api_nhop_create(device, nhop_key)
+        neighbor_entry = switcht_neighbor_info_t(nhop_handle=self.nhop2,
+                                                 interface_handle=self.ift2,
+                                                 mac_addr='00:44:44:44:44:44',
+                                                 rw_type=1, neigh_type=8)
+        self.neigh3 = self.client.switcht_api_neighbor_entry_add(device,
+                                                                 neighbor_entry)
+        neighbor_entry = switcht_neighbor_info_t(nhop_handle=0,
+                                                 interface_handle=self.ift2,
+                                                 mac_addr='00:55:55:55:55:55',
+                                                 ip_addr=dst_ip)
+        self.neigh4 = self.client.switcht_api_neighbor_entry_add(device,
+                                                                 neighbor_entry)
+
+        # Create an IPv4 tunnel interface (encap_type = 8)
+        src_ip = switcht_ip_addr_t(addr_type=0, ipaddr='10.100.1.1',
+                                   prefix_length=32)
+        dst_ip = switcht_ip_addr_t(addr_type=0, ipaddr='10.200.1.3',
+                                   prefix_length=32)
+        encap_info = switcht_encap_info_t(encap_type=8)
+        ip_encap =  switcht_ip_encap_t(vrf=self.vrf, src_ip=src_ip,
+                                       dst_ip=dst_ip, ttl=64, proto=4)
+        tunnel_encap = switcht_tunnel_encap_t(ip_encap=ip_encap)
+        iu5 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap,
+                                    encap_info=encap_info, out_if=self.if2)
+        self.ift3 = self.client.switcht_api_tunnel_interface_create(device,
+                                                                    0, iu5)
+
+        # Create nexthop over IPv4 tunnel interface
+        nhop_key = switcht_nhop_key_t(intf_handle=self.ift3, ip_addr_valid=0)
+        self.nhop3 = self.client.switcht_api_nhop_create(device, nhop_key)
+        neighbor_entry = switcht_neighbor_info_t(nhop_handle=self.nhop3,
+                                                 interface_handle=self.ift3,
+                                                 mac_addr='00:44:44:44:44:44',
+                                                 rw_type=1, neigh_type=7)
+        self.neigh5 = self.client.switcht_api_neighbor_entry_add(device,
+                                                                 neighbor_entry)
+        neighbor_entry = switcht_neighbor_info_t(nhop_handle=0,
+                                                 interface_handle=self.ift3,
+                                                 mac_addr='00:55:55:55:55:55',
+                                                 ip_addr=dst_ip)
+        self.neigh6 = self.client.switcht_api_neighbor_entry_add(device,
+                                                                 neighbor_entry)
+
+        # Create an IPv6 tunnel interface (encap_type = 8)
+        src_ip = switcht_ip_addr_t(addr_type=1, ipaddr='3ffe::1',
+                                   prefix_length=128)
+        dst_ip = switcht_ip_addr_t(addr_type=1, ipaddr='3ffe::2',
+                                   prefix_length=128)
+        encap_info = switcht_encap_info_t(encap_type=8)
+        ip_encap =  switcht_ip_encap_t(vrf=self.vrf, src_ip=src_ip,
+                                       dst_ip=dst_ip, ttl=64, proto=41)
+        tunnel_encap = switcht_tunnel_encap_t(ip_encap=ip_encap)
+        iu6 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap,
+                                    encap_info=encap_info, out_if=self.if2)
+        self.ift4 = self.client.switcht_api_tunnel_interface_create(device,
+                                                                    0, iu6)
+
+        # Create nexthop over GRE IPv6 tunnel interface
+        nhop_key = switcht_nhop_key_t(intf_handle=self.ift4, ip_addr_valid=0)
+        self.nhop4 = self.client.switcht_api_nhop_create(device, nhop_key)
+        neighbor_entry = switcht_neighbor_info_t(nhop_handle=self.nhop4,
+                                                 interface_handle=self.ift4,
+                                                 mac_addr='00:44:44:44:44:44',
+                                                 rw_type=1, neigh_type=8)
+        self.neigh7 = self.client.switcht_api_neighbor_entry_add(device,
+                                                                 neighbor_entry)
+        neighbor_entry = switcht_neighbor_info_t(nhop_handle=0,
+                                                 interface_handle=self.ift4,
+                                                 mac_addr='00:55:55:55:55:55',
+                                                 ip_addr=dst_ip)
+        self.neigh8 = self.client.switcht_api_neighbor_entry_add(device,
+                                                                 neighbor_entry)
+
+        # Add route 10.10.10.1/32 => GRE IPv4 tunnel ift1
+        self.ip1 = switcht_ip_addr_t(addr_type=0, ipaddr='10.10.10.1',
+                                     prefix_length=32)
+        self.client.switcht_api_l3_route_add(device, self.vrf,
+                                             self.ip1, self.nhop1)
+        # Add route 2ffe::1/128 => GRE IPV4 tunnel ift1
+        self.ip2 = switcht_ip_addr_t(addr_type=1, ipaddr='2ffe::1',
+                                     prefix_length=128)
+        self.client.switcht_api_l3_route_add(device, self.vrf,
+                                             self.ip2, self.nhop1)
+
+        # Add route 10.10.10.2/32 => GRE IPv6 tunnel ift2
+        self.ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='10.10.10.2',
+                                     prefix_length=32)
+        self.client.switcht_api_l3_route_add(device, self.vrf,
+                                             self.ip3, self.nhop2)
+        # Add route 2ffe::2/128 => GRE IPV6 tunnel ift2
+        self.ip4 = switcht_ip_addr_t(addr_type=1, ipaddr='2ffe::2',
+                                     prefix_length=128)
+        self.client.switcht_api_l3_route_add(device, self.vrf,
+                                             self.ip4, self.nhop2)
+
+        # Add route 10.10.10.3/32 => IPv4 tunnel ift3
+        self.ip5 = switcht_ip_addr_t(addr_type=0, ipaddr='10.10.10.3',
+                                     prefix_length=32)
+        self.client.switcht_api_l3_route_add(device, self.vrf,
+                                             self.ip5, self.nhop3)
+        # Add route 2ffe::3/128 => IPV4 tunnel ift3
+        self.ip6 = switcht_ip_addr_t(addr_type=1, ipaddr='2ffe::3',
+                                     prefix_length=128)
+        self.client.switcht_api_l3_route_add(device, self.vrf,
+                                             self.ip6, self.nhop3)
+
+        # Add route 10.10.10.4/32 => IPv6 tunnel ift4
+        self.ip7 = switcht_ip_addr_t(addr_type=0, ipaddr='10.10.10.4',
+                                     prefix_length=32)
+        self.client.switcht_api_l3_route_add(device, self.vrf,
+                                             self.ip7, self.nhop4)
+        # Add route 2ffe::4/128 => IPV6 tunnel ift4
+        self.ip8 = switcht_ip_addr_t(addr_type=1, ipaddr='2ffe::4',
+                                     prefix_length=128)
+        self.client.switcht_api_l3_route_add(device, self.vrf,
+                                             self.ip8, self.nhop4)
+
+        # Create a logical network
+        bt = switcht_bridge_type(tunnel_vni=0)
+        encap = switcht_encap_info_t(u=bt)
+        ln_flags = switcht_ln_flags(ipv4_unicast_enabled=1)
+        ln_info = switcht_logical_network_t(type=4, encap_info=encap,
+                                            age_interval=1800, vrf=self.vrf,
+                                            rmac_handle=self.rmac,
+                                            flags=ln_flags)
+        self.ln1 = self.client.switcht_api_logical_network_create(device,
+                                                                  ln_info)
+        self.client.switcht_api_logical_network_member_add(device,
+                                                           self.ln1, self.ift1)
+        self.client.switcht_api_logical_network_member_add(device,
+                                                           self.ln1, self.ift3)
+
+        # Create nexthop over normal interface
+        nhop_key = switcht_nhop_key_t(intf_handle=self.if1, ip_addr_valid=0)
+        self.nhop5 = self.client.switcht_api_nhop_create(device, nhop_key)
+        neighbor_entry = switcht_neighbor_info_t(nhop_handle=self.nhop5,
+                                                 interface_handle=self.if1,
+                                                 mac_addr='00:11:11:11:11:11',
+                                                 rw_type=1, neigh_type=0)
+        self.neigh9 = self.client.switcht_api_neighbor_entry_add(device,
+                                                                 neighbor_entry)
+
+        # Add route 10.20.10.1/32 => if1
+        self.ip9 = switcht_ip_addr_t(addr_type=0, ipaddr='10.20.10.1',
+                                     prefix_length=32)
+        self.client.switcht_api_l3_route_add(device, self.vrf,
+                                             self.ip9, self.nhop5)
+        # Add route 2000::1/128 => ift1
+        self.ip10 = switcht_ip_addr_t(addr_type=1, ipaddr='2000::1',
+                                      prefix_length=128)
+        self.client.switcht_api_l3_route_add(device, self.vrf,
+                                             self.ip10, self.nhop5)
+
+    def runTest(self):
+        try:
+            print "Verifying GRE 4in4 (encap)"
+            pkt1 = simple_tcp_packet(eth_src='00:11:11:11:11:11',
+                                     eth_dst='00:77:66:55:44:33',
+                                     ip_dst='10.10.10.1',
+                                     ip_src='10.20.10.1',
+                                     ip_id=108,
+                                     ip_ttl=64)
+            pkt2 = simple_tcp_packet(eth_src='00:77:66:55:44:33',
+                                     eth_dst='00:44:44:44:44:44',
+                                     ip_dst='10.10.10.1',
+                                     ip_src='10.20.10.1',
+                                     ip_id=108,
+                                     ip_ttl=63)
+            ipip_pkt = simple_gre_packet(eth_src='00:77:66:55:44:33',
+                                         eth_dst='00:55:55:55:55:55',
+                                         ip_id=0,
+                                         ip_dst='10.200.1.3',
+                                         ip_src='10.100.1.1',
+                                         ip_ttl=64,
+                                         inner_frame=pkt2['IP'])
+            send_packet(self, swports[0], str(pkt1))
+            verify_packets(self, ipip_pkt, [swports[1]])
+
+            print "Verifying GRE 6in4 (encap)"
+            pkt1 = simple_tcpv6_packet(eth_src='00:11:11:11:11:11',
+                                       eth_dst='00:77:66:55:44:33',
+                                       ipv6_dst='2ffe::1',
+                                       ipv6_src='2000::1',
+                                       ipv6_hlim=64)
+            pkt2 = simple_tcpv6_packet(eth_src='00:77:66:55:44:33',
+                                       eth_dst='00:44:44:44:44:44',
+                                       ipv6_dst='2ffe::1',
+                                       ipv6_src='2000::1',
+                                       ipv6_hlim=63)
+            ipip_pkt = simple_gre_packet(eth_src='00:77:66:55:44:33',
+                                         eth_dst='00:55:55:55:55:55',
+                                         ip_id=0,
+                                         ip_dst='10.200.1.3',
+                                         ip_src='10.100.1.1',
+                                         ip_ttl=64,
+                                         inner_frame=pkt2['IPv6'])
+            send_packet(self, swports[0], str(pkt1))
+            verify_packets(self, ipip_pkt, [swports[1]])
+
+            print "Verifying GRE 4in6 (encap)"
+            pkt1 = simple_tcp_packet(eth_src='00:11:11:11:11:11',
+                                     eth_dst='00:77:66:55:44:33',
+                                     ip_dst='10.10.10.2',
+                                     ip_src='10.20.10.1',
+                                     ip_id=108,
+                                     ip_ttl=64)
+            pkt2 = simple_tcp_packet(eth_src='00:77:66:55:44:33',
+                                     eth_dst='00:44:44:44:44:44',
+                                     ip_dst='10.10.10.2',
+                                     ip_src='10.20.10.1',
+                                     ip_id=108,
+                                     ip_ttl=63)
+            ipip_pkt = simple_grev6_packet(eth_src='00:77:66:55:44:33',
+                                           eth_dst='00:55:55:55:55:55',
+                                           ipv6_dst='3ffe::2',
+                                           ipv6_src='3ffe::1',
+                                           ipv6_hlim=64,
+                                           inner_frame=pkt2['IP'])
+            send_packet(self, swports[0], str(pkt1))
+            verify_packets(self, ipip_pkt, [swports[1]])
+
+            print "Verifying GRE 6in6 (encap)"
+            pkt1 = simple_tcpv6_packet(eth_src='00:11:11:11:11:11',
+                                       eth_dst='00:77:66:55:44:33',
+                                       ipv6_dst='2ffe::2',
+                                       ipv6_src='2000::1',
+                                       ipv6_hlim=64)
+            pkt2 = simple_tcpv6_packet(eth_src='00:77:66:55:44:33',
+                                       eth_dst='00:44:44:44:44:44',
+                                       ipv6_dst='2ffe::2',
+                                       ipv6_src='2000::1',
+                                       ipv6_hlim=63)
+            ipip_pkt = simple_grev6_packet(eth_src='00:77:66:55:44:33',
+                                           eth_dst='00:55:55:55:55:55',
+                                           ipv6_dst='3ffe::2',
+                                           ipv6_src='3ffe::1',
+                                           ipv6_hlim=64,
+                                           inner_frame=pkt2['IPv6'])
+            send_packet(self, swports[0], str(pkt1))
+            verify_packets(self, ipip_pkt, [swports[1]])
+
+            print "Verifying 4in4 (encap)"
+            pkt1 = simple_tcp_packet(eth_src='00:11:11:11:11:11',
+                                     eth_dst='00:77:66:55:44:33',
+                                     ip_dst='10.10.10.3',
+                                     ip_src='10.20.10.1',
+                                     ip_id=108,
+                                     ip_ttl=64)
+            pkt2 = simple_tcp_packet(eth_src='00:77:66:55:44:33',
+                                     eth_dst='00:44:44:44:44:44',
+                                     ip_dst='10.10.10.3',
+                                     ip_src='10.20.10.1',
+                                     ip_id=108,
+                                     ip_ttl=63)
+            ipip_pkt = simple_ipv4ip_packet(eth_src='00:77:66:55:44:33',
+                                            eth_dst='00:55:55:55:55:55',
+                                            ip_id=0,
+                                            ip_dst='10.200.1.3',
+                                            ip_src='10.100.1.1',
+                                            ip_ttl=64,
+                                            inner_frame=pkt2['IP'])
+            send_packet(self, swports[0], str(pkt1))
+            verify_packets(self, ipip_pkt, [swports[1]])
+
+            print "Verifying 6in4 (encap)"
+            pkt1 = simple_tcpv6_packet(eth_src='00:11:11:11:11:11',
+                                       eth_dst='00:77:66:55:44:33',
+                                       ipv6_dst='2ffe::3',
+                                       ipv6_src='2000::1',
+                                       ipv6_hlim=64)
+            pkt2 = simple_tcpv6_packet(eth_src='00:77:66:55:44:33',
+                                       eth_dst='00:44:44:44:44:44',
+                                       ipv6_dst='2ffe::3',
+                                       ipv6_src='2000::1',
+                                       ipv6_hlim=63)
+            ipip_pkt = simple_ipv4ip_packet(eth_src='00:77:66:55:44:33',
+                                            eth_dst='00:55:55:55:55:55',
+                                            ip_id=0,
+                                            ip_dst='10.200.1.3',
+                                            ip_src='10.100.1.1',
+                                            ip_ttl=64,
+                                            inner_frame=pkt2['IPv6'])
+            send_packet(self, swports[0], str(pkt1))
+            verify_packets(self, ipip_pkt, [swports[1]])
+
+            print "Verifying 4in6 (encap)"
+            pkt1 = simple_tcp_packet(eth_src='00:11:11:11:11:11',
+                                     eth_dst='00:77:66:55:44:33',
+                                     ip_dst='10.10.10.4',
+                                     ip_src='10.20.10.1',
+                                     ip_id=108,
+                                     ip_ttl=64)
+            pkt2 = simple_tcp_packet(eth_src='00:77:66:55:44:33',
+                                     eth_dst='00:44:44:44:44:44',
+                                     ip_dst='10.10.10.4',
+                                     ip_src='10.20.10.1',
+                                     ip_id=108,
+                                     ip_ttl=63)
+            ipip_pkt = simple_ipv6ip_packet(eth_src='00:77:66:55:44:33',
+                                            eth_dst='00:55:55:55:55:55',
+                                            ipv6_dst='3ffe::2',
+                                            ipv6_src='3ffe::1',
+                                            ipv6_hlim=64,
+                                            inner_frame=pkt2['IP'])
+            send_packet(self, swports[0], str(pkt1))
+            verify_packets(self, ipip_pkt, [swports[1]])
+
+            print "Verifying 6in6 (encap)"
+            pkt1 = simple_tcpv6_packet(eth_src='00:11:11:11:11:11',
+                                       eth_dst='00:77:66:55:44:33',
+                                       ipv6_dst='2ffe::4',
+                                       ipv6_src='2000::1',
+                                       ipv6_hlim=64)
+            pkt2 = simple_tcpv6_packet(eth_src='00:77:66:55:44:33',
+                                       eth_dst='00:44:44:44:44:44',
+                                       ipv6_dst='2ffe::4',
+                                       ipv6_src='2000::1',
+                                       ipv6_hlim=63)
+            ipip_pkt = simple_ipv6ip_packet(eth_src='00:77:66:55:44:33',
+                                            eth_dst='00:55:55:55:55:55',
+                                            ipv6_dst='3ffe::2',
+                                            ipv6_src='3ffe::1',
+                                            ipv6_hlim=64,
+                                            inner_frame=pkt2['IPv6'])
+            send_packet(self, swports[0], str(pkt1))
+            verify_packets(self, ipip_pkt, [swports[1]])
+
+            print "Verifying GRE 4in4 (decap)"
+            pkt1 = simple_tcp_packet(eth_src='00:44:44:44:44:44',
+                                     eth_dst='00:77:66:55:44:33',
+                                     ip_dst='10.20.10.1',
+                                     ip_src='10.10.10.1',
+                                     ip_id=108,
+                                     ip_ttl=64)
+            ipip_pkt = simple_gre_packet(eth_src='00:55:55:55:55:55',
+                                         eth_dst='00:77:66:55:44:33',
+                                         ip_id=0,
+                                         ip_dst='10.200.1.3',
+                                         ip_src='10.100.1.1',
+                                         ip_ttl=64,
+                                         inner_frame=pkt1['IP'])
+            pkt2 = simple_tcp_packet(eth_src='00:77:66:55:44:33',
+                                     eth_dst='00:11:11:11:11:11',
+                                     ip_dst='10.20.10.1',
+                                     ip_src='10.10.10.1',
+                                     ip_id=108,
+                                     ip_ttl=63)
+            send_packet(self, swports[1], str(ipip_pkt))
+            verify_packets(self, pkt2, [swports[0]])
+
+            print "Verifying GRE 6in4 (decap)"
+            pkt1 = simple_tcpv6_packet(eth_src='00:44:44:44:44:44',
+                                       eth_dst='00:77:66:55:44:33',
+                                       ipv6_dst='2000::1',
+                                       ipv6_src='2ffe::1',
+                                       ipv6_hlim=64)
+            ipip_pkt = simple_gre_packet(eth_src='00:55:55:55:55:55',
+                                         eth_dst='00:77:66:55:44:33',
+                                         ip_id=0,
+                                         ip_dst='10.200.1.3',
+                                         ip_src='10.100.1.1',
+                                         ip_ttl=64,
+                                         inner_frame=pkt1['IPv6'])
+            pkt2 = simple_tcpv6_packet(eth_src='00:77:66:55:44:33',
+                                       eth_dst='00:11:11:11:11:11',
+                                       ipv6_dst='2000::1',
+                                       ipv6_src='2ffe::1',
+                                       ipv6_hlim=63)
+            send_packet(self, swports[1], str(ipip_pkt))
+            verify_packets(self, pkt2, [swports[0]])
+
+            print "Verifying GRE 4in6 (decap)"
+            pkt1 = simple_tcp_packet(eth_src='00:44:44:44:44:44',
+                                     eth_dst='00:77:66:55:44:33',
+                                     ip_dst='10.20.10.1',
+                                     ip_src='10.10.10.1',
+                                     ip_id=108,
+                                     ip_ttl=64)
+            ipip_pkt = simple_grev6_packet(eth_src='00:55:55:55:55:55',
+                                           eth_dst='00:77:66:55:44:33',
+                                           ipv6_dst='3ffe::2',
+                                           ipv6_src='3ffe::1',
+                                           ipv6_hlim=64,
+                                           inner_frame=pkt1['IP'])
+            pkt2 = simple_tcp_packet(eth_src='00:77:66:55:44:33',
+                                     eth_dst='00:11:11:11:11:11',
+                                     ip_dst='10.20.10.1',
+                                     ip_src='10.10.10.1',
+                                     ip_id=108,
+                                     ip_ttl=63)
+            send_packet(self, swports[1], str(ipip_pkt))
+            verify_packets(self, pkt2, [swports[0]])
+
+            print "Verifying GRE 6in6 (decap)"
+            pkt1 = simple_tcpv6_packet(eth_src='00:44:44:44:44:44',
+                                       eth_dst='00:77:66:55:44:33',
+                                       ipv6_dst='2000::1',
+                                       ipv6_src='2ffe::1',
+                                       ipv6_hlim=64)
+            ipip_pkt = simple_grev6_packet(eth_src='00:55:55:55:55:55',
+                                           eth_dst='00:77:66:55:44:33',
+                                           ipv6_dst='3ffe::2',
+                                           ipv6_src='3ffe::1',
+                                           ipv6_hlim=64,
+                                           inner_frame=pkt1['IPv6'])
+            pkt2 = simple_tcpv6_packet(eth_src='00:77:66:55:44:33',
+                                       eth_dst='00:11:11:11:11:11',
+                                       ipv6_dst='2000::1',
+                                       ipv6_src='2ffe::1',
+                                       ipv6_hlim=63)
+            send_packet(self, swports[1], str(ipip_pkt))
+            verify_packets(self, pkt2, [swports[0]])
+
+            print "Verifying 4in4 (decap)"
+            pkt1 = simple_tcp_packet(eth_src='00:44:44:44:44:44',
+                                     eth_dst='00:77:66:55:44:33',
+                                     ip_dst='10.20.10.1',
+                                     ip_src='10.10.10.1',
+                                     ip_id=108,
+                                     ip_ttl=64)
+            ipip_pkt = simple_ipv4ip_packet(eth_src='00:55:55:55:55:55',
+                                            eth_dst='00:77:66:55:44:33',
+                                            ip_id=0,
+                                            ip_dst='10.200.1.3',
+                                            ip_src='10.100.1.1',
+                                            ip_ttl=64,
+                                            inner_frame=pkt1['IP'])
+            pkt2 = simple_tcp_packet(eth_src='00:77:66:55:44:33',
+                                     eth_dst='00:11:11:11:11:11',
+                                     ip_dst='10.20.10.1',
+                                     ip_src='10.10.10.1',
+                                     ip_id=108,
+                                     ip_ttl=63)
+            send_packet(self, swports[1], str(ipip_pkt))
+            verify_packets(self, pkt2, [swports[0]])
+
+            print "Verifying 6in4 (decap)"
+            pkt1 = simple_tcpv6_packet(eth_src='00:44:44:44:44:44',
+                                       eth_dst='00:77:66:55:44:33',
+                                       ipv6_dst='2000::1',
+                                       ipv6_src='2ffe::1',
+                                       ipv6_hlim=64)
+            ipip_pkt = simple_ipv4ip_packet(eth_src='00:55:55:55:55:55',
+                                            eth_dst='00:77:66:55:44:33',
+                                            ip_id=0,
+                                            ip_dst='10.200.1.3',
+                                            ip_src='10.100.1.1',
+                                            ip_ttl=64,
+                                            inner_frame=pkt1['IPv6'])
+            pkt2 = simple_tcpv6_packet(eth_src='00:77:66:55:44:33',
+                                       eth_dst='00:11:11:11:11:11',
+                                       ipv6_dst='2000::1',
+                                       ipv6_src='2ffe::1',
+                                       ipv6_hlim=63)
+            send_packet(self, swports[1], str(ipip_pkt))
+            verify_packets(self, pkt2, [swports[0]])
+
+            print "Verifying 4in6 (decap)"
+            pkt1 = simple_tcp_packet(eth_src='00:44:44:44:44:44',
+                                     eth_dst='00:77:66:55:44:33',
+                                     ip_dst='10.20.10.1',
+                                     ip_src='10.10.10.1',
+                                     ip_id=108,
+                                     ip_ttl=64)
+            ipip_pkt = simple_ipv6ip_packet(eth_src='00:55:55:55:55:55',
+                                            eth_dst='00:77:66:55:44:33',
+                                            ipv6_dst='3ffe::2',
+                                            ipv6_src='3ffe::1',
+                                            ipv6_hlim=64,
+                                            inner_frame=pkt1['IP'])
+            pkt2 = simple_tcp_packet(eth_src='00:77:66:55:44:33',
+                                     eth_dst='00:11:11:11:11:11',
+                                     ip_dst='10.20.10.1',
+                                     ip_src='10.10.10.1',
+                                     ip_id=108,
+                                     ip_ttl=63)
+            send_packet(self, swports[1], str(ipip_pkt))
+            verify_packets(self, pkt2, [swports[0]])
+
+            print "Verifying 6in6 (decap)"
+            pkt1 = simple_tcpv6_packet(eth_src='00:44:44:44:44:44',
+                                       eth_dst='00:77:66:55:44:33',
+                                       ipv6_dst='2000::1',
+                                       ipv6_src='2ffe::1',
+                                       ipv6_hlim=64)
+            ipip_pkt = simple_ipv6ip_packet(eth_src='00:55:55:55:55:55',
+                                            eth_dst='00:77:66:55:44:33',
+                                            ipv6_dst='3ffe::2',
+                                            ipv6_src='3ffe::1',
+                                            ipv6_hlim=64,
+                                            inner_frame=pkt1['IPv6'])
+            pkt2 = simple_tcpv6_packet(eth_src='00:77:66:55:44:33',
+                                       eth_dst='00:11:11:11:11:11',
+                                       ipv6_dst='2000::1',
+                                       ipv6_src='2ffe::1',
+                                       ipv6_hlim=63)
+            send_packet(self, swports[1], str(ipip_pkt))
+            verify_packets(self, pkt2, [swports[0]])
+
+        finally:
+            self.client.switcht_api_l3_route_delete(device, self.vrf,
+                                                    self.ip1, self.nhop1)
+            self.client.switcht_api_l3_route_delete(device, self.vrf,
+                                                    self.ip2, self.nhop1)
+            self.client.switcht_api_l3_route_delete(device, self.vrf,
+                                                    self.ip3, self.nhop2)
+            self.client.switcht_api_l3_route_delete(device, self.vrf,
+                                                    self.ip4, self.nhop2)
+            self.client.switcht_api_l3_route_delete(device, self.vrf,
+                                                    self.ip5, self.nhop3)
+            self.client.switcht_api_l3_route_delete(device, self.vrf,
+                                                    self.ip6, self.nhop3)
+            self.client.switcht_api_l3_route_delete(device, self.vrf,
+                                                    self.ip7, self.nhop4)
+            self.client.switcht_api_l3_route_delete(device, self.vrf,
+                                                    self.ip8, self.nhop4)
+            self.client.switcht_api_l3_route_delete(device, self.vrf,
+                                                    self.ip9, self.nhop5)
+            self.client.switcht_api_l3_route_delete(device, self.vrf,
+                                                    self.ip10, self.nhop5)
+
+            self.client.switcht_api_neighbor_entry_remove(device, self.neigh1)
+            self.client.switcht_api_neighbor_entry_remove(device, self.neigh2)
+            self.client.switcht_api_neighbor_entry_remove(device, self.neigh3)
+            self.client.switcht_api_neighbor_entry_remove(device, self.neigh4)
+            self.client.switcht_api_neighbor_entry_remove(device, self.neigh5)
+            self.client.switcht_api_neighbor_entry_remove(device, self.neigh6)
+            self.client.switcht_api_neighbor_entry_remove(device, self.neigh7)
+            self.client.switcht_api_neighbor_entry_remove(device, self.neigh8)
+            self.client.switcht_api_neighbor_entry_remove(device, self.neigh9)
+            self.client.switcht_api_nhop_delete(device, self.nhop1)
+            self.client.switcht_api_nhop_delete(device, self.nhop2)
+            self.client.switcht_api_nhop_delete(device, self.nhop3)
+            self.client.switcht_api_nhop_delete(device, self.nhop4)
+            self.client.switcht_api_nhop_delete(device, self.nhop5)
+
+            self.client.switcht_api_logical_network_member_remove(device,
+                                                                  self.ln1,
+                                                                  self.ift1)
+            self.client.switcht_api_logical_network_member_remove(device,
+                                                                  self.ln1,
+                                                                  self.ift3)
+            self.client.switcht_api_logical_network_delete(device, self.ln1)
+
+            self.client.switcht_api_tunnel_interface_delete(device, self.ift1)
+            self.client.switcht_api_tunnel_interface_delete(device, self.ift2)
+            self.client.switcht_api_tunnel_interface_delete(device, self.ift3)
+            self.client.switcht_api_tunnel_interface_delete(device, self.ift4)
+
+            self.client.switcht_api_interface_delete(device, self.if1)
+            self.client.switcht_api_interface_delete(device, self.if2)
+
+            self.client.switcht_api_router_mac_delete(device, self.rmac,
+                                                      '00:77:66:55:44:33')
+            self.client.switcht_api_router_mac_group_delete(device, self.rmac)
+            self.client.switcht_api_vrf_delete(device, self.vrf)
+

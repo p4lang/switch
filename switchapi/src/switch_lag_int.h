@@ -41,7 +41,6 @@ typedef struct switch_lag_member_ {
     switch_direction_t direction;          /**< direction */
 #ifdef SWITCH_PD
     p4_pd_mbr_hdl_t mbr_hdl;         /**< Member handle */
-    p4_pd_entry_hdl_t xlate_entry;
 #endif
 } switch_lag_member_t;
     

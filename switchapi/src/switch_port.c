@@ -39,21 +39,25 @@ switch_port_init(switch_device_t device)
         if (index == CPU_PORT_ID) {
             port_info->port_type = SWITCH_PORT_TYPE_CPU;
         }
+        port_info->lag_handle = 0;
+
 #ifdef SWITCH_PD
         switch_pd_lag_group_table_add_entry(device, port_info->ifindex,
                                      SWITCH_PORT_ID(port_info),
                                      &(port_info->mbr_hdl),
                                      &(port_info->lg_entry));
-        switch_pd_port_mapping_table_add_entry(device,
+        port_info->hw_entry = SWITCH_HW_INVALID_HANDLE;
+        switch_pd_ingress_port_mapping_table_add_entry(device,
                                      SWITCH_PORT_ID(port_info),
                                      port_info->ifindex,
                                      port_info->port_type,
                                      &(port_info->hw_entry));
-        port_info->eg_lag_entry = 0;
-        switch_pd_egress_lag_table_add_entry(device,
+        port_info->eg_port_entry = SWITCH_HW_INVALID_HANDLE;
+        switch_pd_egress_port_mapping_table_add_entry(device,
                                      SWITCH_PORT_ID(port_info),
                                      port_info->ifindex,
-                                     &(port_info->eg_lag_entry));
+                                     port_info->port_type,
+                                     &(port_info->eg_port_entry));
         port_info->port_handle = id_to_handle(SWITCH_HANDLE_TYPE_PORT, index);
 #endif
     }

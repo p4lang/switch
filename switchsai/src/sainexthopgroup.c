@@ -16,7 +16,9 @@ limitations under the License.
 
 #include <sainexthop.h>
 #include "saiinternal.h"
+#include <switchapi/switch_interface.h>
 #include <switchapi/switch_nhop.h>
+#include <switchapi/switch_mcast.h>
 
 static sai_api_t api_id = SAI_API_NEXT_HOP_GROUP;
 
@@ -84,7 +86,7 @@ sai_status_t sai_create_next_hop_group_entry(
             case SAI_NEXT_HOP_GROUP_ATTR_NEXT_HOP_COUNT:
                 break;
             case SAI_NEXT_HOP_GROUP_ATTR_TYPE:
-                nhgroup_type = attribute.value.u8;
+                nhgroup_type = attribute.value.s32;
                 break;
             case SAI_NEXT_HOP_GROUP_ATTR_NEXT_HOP_LIST:
                 nhop_list = attribute.value.objlist.list;
@@ -221,7 +223,7 @@ sai_status_t sai_get_next_hop_group_entry_attribute(
     for (index = 0; index < attr_count; index++) {
         switch(attr_list[index].id) {
             case SAI_NEXT_HOP_GROUP_ATTR_TYPE: {
-                attr_list[index].value.u8 =
+                attr_list[index].value.s32 =
                     sai_get_next_hop_group_type(next_hop_group_id);
                 break;
             }

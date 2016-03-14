@@ -47,10 +47,10 @@ header_type multicast_metadata_t {
 
 metadata multicast_metadata_t multicast_metadata;
 
-#ifndef MULTICAST_DISABLE
 /*****************************************************************************/
 /* Outer IP multicast RPF check                                              */
 /*****************************************************************************/
+#if !defined(TUNNEL_DISABLE) && !defined(MULTICAST_DISABLE)
 action outer_multicast_rpf_check_pass() {
     modify_field(tunnel_metadata.tunnel_terminate, TRUE);
     modify_field(l3_metadata.outer_routed, TRUE);
@@ -67,24 +67,24 @@ table outer_multicast_rpf {
     }
     size : OUTER_MCAST_RPF_TABLE_SIZE;
 }
-#endif /* MULTICAST_DISABLE */
+#endif /* !TUNNEL_DISABLE && !MULTICAST_DISABLE */
 
 control process_outer_multicast_rpf {
-#if !defined(MULTICAST_DISABLE) && !defined(OUTER_PIM_BIDIR_OPTIMIZATION)
+#if !defined(OUTER_PIM_BIDIR_OPTIMIZATION)
     /* outer mutlicast RPF check - sparse and bidir */
     if (multicast_metadata.outer_mcast_route_hit == TRUE) {
         apply(outer_multicast_rpf);
     }
-#endif /* !MULTICAST_DISABLE && !OUTER_PIM_BIDIR_OPTIMIZATION */
+#endif /* !OUTER_PIM_BIDIR_OPTIMIZATION */
 }
 
 
 /*****************************************************************************/
 /* Outer IP mutlicast lookup actions                                         */
 /*****************************************************************************/
-#ifndef MULTICAST_DISABLE
+#if !defined(TUNNEL_DISABLE) && !defined(MULTICAST_DISABLE)
 action outer_multicast_bridge_star_g_hit(mc_index) {
-    modify_field(intrinsic_metadata.mcast_grp, mc_index);
+    modify_field(intrinsic_mcast_grp, mc_index);
     modify_field(tunnel_metadata.tunnel_terminate, TRUE);
 #ifdef FABRIC_ENABLE
     modify_field(fabric_metadata.dst_device, FABRIC_DEVICE_MULTICAST);
@@ -92,7 +92,7 @@ action outer_multicast_bridge_star_g_hit(mc_index) {
 }
 
 action outer_multicast_bridge_s_g_hit(mc_index) {
-    modify_field(intrinsic_metadata.mcast_grp, mc_index);
+    modify_field(intrinsic_mcast_grp, mc_index);
     modify_field(tunnel_metadata.tunnel_terminate, TRUE);
 #ifdef FABRIC_ENABLE
     modify_field(fabric_metadata.dst_device, FABRIC_DEVICE_MULTICAST);
@@ -101,7 +101,7 @@ action outer_multicast_bridge_s_g_hit(mc_index) {
 
 action outer_multicast_route_sm_star_g_hit(mc_index, mcast_rpf_group) {
     modify_field(multicast_metadata.outer_mcast_mode, MCAST_MODE_SM);
-    modify_field(intrinsic_metadata.mcast_grp, mc_index);
+    modify_field(intrinsic_mcast_grp, mc_index);
     modify_field(multicast_metadata.outer_mcast_route_hit, TRUE);
     bit_xor(multicast_metadata.mcast_rpf_group, mcast_rpf_group,
             multicast_metadata.bd_mrpf_group);
@@ -112,7 +112,7 @@ action outer_multicast_route_sm_star_g_hit(mc_index, mcast_rpf_group) {
 
 action outer_multicast_route_bidir_star_g_hit(mc_index, mcast_rpf_group) {
     modify_field(multicast_metadata.outer_mcast_mode, MCAST_MODE_BIDIR);
-    modify_field(intrinsic_metadata.mcast_grp, mc_index);
+    modify_field(intrinsic_mcast_grp, mc_index);
     modify_field(multicast_metadata.outer_mcast_route_hit, TRUE);
 #ifdef OUTER_PIM_BIDIR_OPTIMIZATION
     bit_or(multicast_metadata.mcast_rpf_group, mcast_rpf_group,
@@ -126,7 +126,7 @@ action outer_multicast_route_bidir_star_g_hit(mc_index, mcast_rpf_group) {
 }
 
 action outer_multicast_route_s_g_hit(mc_index, mcast_rpf_group) {
-    modify_field(intrinsic_metadata.mcast_grp, mc_index);
+    modify_field(intrinsic_mcast_grp, mc_index);
     modify_field(multicast_metadata.outer_mcast_route_hit, TRUE);
     bit_xor(multicast_metadata.mcast_rpf_group, mcast_rpf_group,
             multicast_metadata.bd_mrpf_group);
@@ -134,12 +134,13 @@ action outer_multicast_route_s_g_hit(mc_index, mcast_rpf_group) {
     modify_field(fabric_metadata.dst_device, FABRIC_DEVICE_MULTICAST);
 #endif /* FABRIC_ENABLE */
 }
-#endif /* MULTICAST_DISABLE */
+#endif /* !TUNNEL_DISABLE && !MULTICAST_DISABLE */
 
-#if !defined(MULTICAST_DISABLE) && !defined(IPV4_DISABLE)
+
 /*****************************************************************************/
 /* Outer IPv4 multicast lookup                                               */
 /*****************************************************************************/
+#if  !defined(TUNNEL_DISABLE) && !defined(MULTICAST_DISABLE) && !defined(IPV4_DISABLE)
 table outer_ipv4_multicast_star_g {
     reads {
         multicast_metadata.ipv4_mcast_key_type : exact;
@@ -170,23 +171,24 @@ table outer_ipv4_multicast {
     }
     size : OUTER_MULTICAST_S_G_TABLE_SIZE;
 }
-#endif /* !MULTICAST_DISABLE && !IPV4_DISABLE */
+#endif /* !TUNNEL_DISABLE && !MULTICAST_DISABLE && !IPV4_DISABLE */
 
 control process_outer_ipv4_multicast {
-#if !defined(MULTICAST_DISABLE) && !defined(IPV4_DISABLE)
+#if  !defined(TUNNEL_DISABLE) && !defined(MULTICAST_DISABLE) && !defined(IPV4_DISABLE)
     /* check for ipv4 multicast tunnel termination  */
     apply(outer_ipv4_multicast) {
         on_miss {
             apply(outer_ipv4_multicast_star_g);
         }
     }
-#endif /* !MULTICAST_DISABLE && !IPV4_DISABLE */
+#endif /* !TUNNEL_DISABLE && !MULTICAST_DISABLE && !IPV4_DISABLE */
 }
 
-#if !defined(MULTICAST_DISABLE) && !defined(IPV6_DISABLE)
+
 /*****************************************************************************/
 /* Outer IPv6 multicast lookup                                               */
 /*****************************************************************************/
+#if !defined(TUNNEL_DISABLE) && !defined(MULTICAST_DISABLE) && !defined(IPV6_DISABLE)
 table outer_ipv6_multicast_star_g {
     reads {
         multicast_metadata.ipv6_mcast_key_type : exact;
@@ -217,17 +219,17 @@ table outer_ipv6_multicast {
     }
     size : OUTER_MULTICAST_S_G_TABLE_SIZE;
 }
-#endif /* !MULTICAST_DISABLE && !IPV6_DISABLE */
+#endif /* !TUNNEL_DISABLE && !MULTICAST_DISABLE && !IPV6_DISABLE */
 
 control process_outer_ipv6_multicast {
-#if !defined(MULTICAST_DISABLE) && !defined(IPV6_DISABLE)
+#if !defined(TUNNEL_DISABLE) && !defined(MULTICAST_DISABLE) && !defined(IPV6_DISABLE)
     /* check for ipv6 multicast tunnel termination  */
     apply(outer_ipv6_multicast) {
         on_miss {
             apply(outer_ipv6_multicast_star_g);
         }
     }
-#endif /* !MULTICAST_DISABLE && !IPV6_DISABLE */
+#endif /* !TUNNEL_DISABLE && !MULTICAST_DISABLE && !IPV6_DISABLE */
 }
 
 
@@ -235,7 +237,7 @@ control process_outer_ipv6_multicast {
 /* Process outer IP multicast                                                */
 /*****************************************************************************/
 control process_outer_multicast {
-#ifndef MULTICAST_DISABLE
+#if !defined(TUNNEL_DISABLE) && !defined(MULTICAST_DISABLE)
     if (valid(ipv4)) {
         process_outer_ipv4_multicast();
     } else {
@@ -244,13 +246,14 @@ control process_outer_multicast {
         }
     }
     process_outer_multicast_rpf();
-#endif /* MULTICAST_DISABLE */
+#endif /* !TUNNEL_DISABLE && !MULTICAST_DISABLE */
 }
 
-#ifndef MULTICAST_DISABLE
+
 /*****************************************************************************/
 /* IP multicast RPF check                                                    */
 /*****************************************************************************/
+#ifndef L3_MULTICAST_DISABLE
 action multicast_rpf_check_pass() {
     modify_field(l3_metadata.routed, TRUE);
 }
@@ -274,20 +277,21 @@ table multicast_rpf {
     }
     size : MCAST_RPF_TABLE_SIZE;
 }
-#endif /* MULTICAST_DISABLE */
+#endif /* L3_MULTICAST_DISABLE */
 
 control process_multicast_rpf {
-#if !defined(MULTICAST_DISABLE) && !defined(PIM_BIDIR_OPTIMIZATION)
+#if !defined(L3_MULTICAST_DISABLE) && !defined(PIM_BIDIR_OPTIMIZATION)
     if (multicast_metadata.mcast_route_hit == TRUE) {
         apply(multicast_rpf);
     }
-#endif /* !MULTICAST_DISABLE && !PIM_BIDIR_OPTIMIZATION */
+#endif /* !L3_MULTICAST_DISABLE && !PIM_BIDIR_OPTIMIZATION */
 }
 
-#ifndef MULTICAST_DISABLE
+
 /*****************************************************************************/
 /* IP multicast lookup actions                                               */
 /*****************************************************************************/
+#ifndef MULTICAST_DISABLE
 action multicast_bridge_star_g_hit(mc_index) {
     modify_field(multicast_metadata.multicast_bridge_mc_index, mc_index);
     modify_field(multicast_metadata.mcast_bridge_hit, TRUE);
@@ -331,20 +335,11 @@ action multicast_route_s_g_hit(mc_index, mcast_rpf_group) {
 }
 #endif /* MULTICAST_DISABLE */
 
+
 /*****************************************************************************/
 /* IPv4 multicast lookup                                                     */
 /*****************************************************************************/
-#if !defined(MULTICAST_DISABLE) && !defined(IPV4_DISABLE)
-counter ipv4_multicast_route_star_g_stats {
-    type : packets;
-    direct : ipv4_multicast_route_star_g;
-}
-
-counter ipv4_multicast_route_s_g_stats {
-    type : packets;
-    direct : ipv4_multicast_route;
-}
-
+#if !defined(L2_MULTICAST_DISABLE) && !defined(IPV4_DISABLE)
 table ipv4_multicast_bridge_star_g {
     reads {
         ingress_metadata.bd : exact;
@@ -368,6 +363,18 @@ table ipv4_multicast_bridge {
         multicast_bridge_s_g_hit;
     }
     size : IPV4_MULTICAST_S_G_TABLE_SIZE;
+}
+#endif /* !L2_MULTICAST_DISABLE && !IPV4_DISABLE */
+
+#if !defined(L3_MULTICAST_DISABLE) && !defined(IPV4_DISABLE)
+counter ipv4_multicast_route_star_g_stats {
+    type : packets;
+    direct : ipv4_multicast_route_star_g;
+}
+
+counter ipv4_multicast_route_s_g_stats {
+    type : packets;
+    direct : ipv4_multicast_route;
 }
 
 table ipv4_multicast_route_star_g {
@@ -395,16 +402,19 @@ table ipv4_multicast_route {
     }
     size : IPV4_MULTICAST_S_G_TABLE_SIZE;
 }
-#endif /* !MULTICAST_DISABLE && !IPV4_DISABLE */
+#endif /* !L3_MULTICAST_DISABLE && !IPV4_DISABLE */
 
 control process_ipv4_multicast {
-#if !defined(MULTICAST_DISABLE) && !defined(IPV4_DISABLE)
+#if !defined(L2_MULTICAST_DISABLE) && !defined(IPV4_DISABLE)
     /* ipv4 multicast lookup */
     apply(ipv4_multicast_bridge) {
         on_miss {
             apply(ipv4_multicast_bridge_star_g);
         }
     }
+#endif /* !L2_MULTICAST_DISABLE && !IPV4_DISABLE */
+
+#if !defined(L3_MULTICAST_DISABLE) && !defined(IPV4_DISABLE)
     if (multicast_metadata.ipv4_multicast_enabled == TRUE) {
         apply(ipv4_multicast_route) {
             on_miss {
@@ -412,23 +422,14 @@ control process_ipv4_multicast {
             }
         }
     }
-#endif /* !MULTICAST_DISABLE && !IPV4_DISABLE */
+#endif /* !L3_MULTICAST_DISABLE && !IPV4_DISABLE */
 }
+
 
 /*****************************************************************************/
 /* IPv6 multicast lookup                                                     */
 /*****************************************************************************/
-#if !defined(MULTICAST_DISABLE) && !defined(IPV6_DISABLE)
-counter ipv6_multicast_route_star_g_stats {
-    type : packets;
-    direct : ipv6_multicast_route_star_g;
-}
-
-counter ipv6_multicast_route_s_g_stats {
-    type : packets;
-    direct : ipv6_multicast_route;
-}
-
+#if !defined(L2_MULTICAST_DISABLE) && !defined(IPV6_DISABLE)
 table ipv6_multicast_bridge_star_g {
     reads {
         ingress_metadata.bd : exact;
@@ -452,6 +453,18 @@ table ipv6_multicast_bridge {
         multicast_bridge_s_g_hit;
     }
     size : IPV6_MULTICAST_S_G_TABLE_SIZE;
+}
+#endif /* !L2_MULTICAST_DISABLE && !IPV6_DISABLE */
+
+#if !defined(L3_MULTICAST_DISABLE) && !defined(IPV6_DISABLE)
+counter ipv6_multicast_route_star_g_stats {
+    type : packets;
+    direct : ipv6_multicast_route_star_g;
+}
+
+counter ipv6_multicast_route_s_g_stats {
+    type : packets;
+    direct : ipv6_multicast_route;
 }
 
 table ipv6_multicast_route_star_g {
@@ -479,15 +492,18 @@ table ipv6_multicast_route {
     }
     size : IPV6_MULTICAST_S_G_TABLE_SIZE;
 }
-#endif /* !defined(MULTICAST_DISABLE) && !defined(IPV6_DISABLE) */
+#endif /* !L3_MULTICAST_DISABLE && !IPV6_DISABLE */
 
 control process_ipv6_multicast {
-#if !defined(MULTICAST_DISABLE) && !defined(IPV6_DISABLE)
+#if !defined(L2_MULTICAST_DISABLE) && !defined(IPV6_DISABLE)
     apply(ipv6_multicast_bridge) {
         on_miss {
             apply(ipv6_multicast_bridge_star_g);
         }
     }
+#endif /* !L2_MULTICAST_DISABLE && !IPV6_DISABLE */
+
+#if !defined(L3_MULTICAST_DISABLE) && !defined(IPV6_DISABLE)
     if (multicast_metadata.ipv6_multicast_enabled == TRUE) {
         apply(ipv6_multicast_route) {
             on_miss {
@@ -495,8 +511,9 @@ control process_ipv6_multicast {
             }
         }
     }
-#endif /* !defined(MULTICAST_DISABLE) && !defined(IPV6_DISABLE) */
+#endif /* !L3_MULTICAST_DISABLE && !IPV6_DISABLE */
 }
+
 
 /*****************************************************************************/
 /* IP multicast processing                                                   */
@@ -519,7 +536,7 @@ control process_multicast {
 /* Multicast flooding                                                        */
 /*****************************************************************************/
 action set_bd_flood_mc_index(mc_index) {
-    modify_field(intrinsic_metadata.mcast_grp, mc_index);
+    modify_field(intrinsic_mcast_grp, mc_index);
 }
 
 table bd_flood {
@@ -569,7 +586,7 @@ action inner_replica_from_rid(bd, tunnel_index, tunnel_type, header_count) {
 
 table rid {
     reads {
-        intrinsic_metadata.egress_rid : exact;
+        egress_egress_rid : exact;
     }
     actions {
         nop;
@@ -598,7 +615,7 @@ table replica_type {
 
 control process_replication {
 #ifndef MULTICAST_DISABLE
-    if (intrinsic_metadata.egress_rid != 0) {
+    if(egress_egress_rid != 0) {
         /* set info from rid */
         apply(rid);
 

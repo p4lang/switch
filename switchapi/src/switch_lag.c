@@ -232,6 +232,17 @@ switch_api_lag_member_add(switch_device_t device, switch_handle_t lag_handle,
                 return status;
             }
 
+            port_info = switch_api_port_get_internal(port);
+            status = switch_pd_egress_port_mapping_table_add_entry(
+                             device,
+                             port,
+                             lag_info->ifindex,
+                             port_info->port_type,
+                             &port_info->eg_port_entry);
+            if (status != SWITCH_STATUS_SUCCESS) {
+                SWITCH_API_ERROR("failed to add egress port mapping entry");
+                return status;
+            }
             if (direction == SWITCH_API_DIRECTION_EGRESS)
                 break;
         case SWITCH_API_DIRECTION_INGRESS:
@@ -243,17 +254,14 @@ switch_api_lag_member_add(switch_device_t device, switch_handle_t lag_handle,
             if (!port_info) {
                 return SWITCH_STATUS_INVALID_PORT_NUMBER;
             }
-            status = switch_pd_port_mapping_table_add_entry(device, port,
+            status = switch_pd_ingress_port_mapping_table_add_entry(device, port,
                     lag_info->ifindex,
                     port_info->port_type,
                     &port_info->hw_entry);
+            port_info->lag_handle = lag_handle;
             if (status != SWITCH_STATUS_SUCCESS) {
                 return status;
             }
-            status = switch_pd_egress_lag_table_add_entry(device,
-                                     SWITCH_PORT_ID(port_info),
-                                     lag_info->ifindex,
-                                     &(port_info->eg_lag_entry));
             break;
         default:
             break;
@@ -313,6 +321,20 @@ switch_api_lag_member_delete(switch_device_t device, switch_handle_t lag_handle,
             }
             lag_info->count--;
 
+            port_info = switch_api_port_get_internal(port);
+            if (!port_info) {
+                return SWITCH_STATUS_INVALID_PORT_NUMBER;
+            }
+            status = switch_pd_egress_port_mapping_table_add_entry(
+                             device,
+                             port,
+                             port_info->ifindex,
+                             port_info->port_type,
+                             &port_info->eg_port_entry);
+            if (status != SWITCH_STATUS_SUCCESS) {
+                SWITCH_API_ERROR("failed to add egress port mapping entry");
+                return status;
+            }
             if (direction == SWITCH_API_DIRECTION_EGRESS)
                 break;
             // else fall through
@@ -334,17 +356,11 @@ switch_api_lag_member_delete(switch_device_t device, switch_handle_t lag_handle,
                 return SWITCH_STATUS_INVALID_PORT_NUMBER;
             }
             //part of lag
-            status = switch_pd_port_mapping_table_add_entry(device, port,
+            status = switch_pd_ingress_port_mapping_table_add_entry(device, port,
                                      port_info->ifindex,
                                      port_info->port_type,
                                      &port_info->hw_entry);
-            if (status != SWITCH_STATUS_SUCCESS) {
-                return status;
-            }
-            status = switch_pd_egress_lag_table_add_entry(device,
-                                     SWITCH_PORT_ID(port_info),
-                                     port_info->ifindex,
-                                     &(port_info->eg_lag_entry));
+            port_info->lag_handle = 0;
             if (status != SWITCH_STATUS_SUCCESS) {
                 return status;
             }

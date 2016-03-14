@@ -49,6 +49,7 @@ typedef struct switch_interface_info_ {
     switch_handle_t ln_bd_handle;                    /**< Logical network BD Handle */
     switch_handle_t nhop_handle;
     switch_handle_t hostif_handle;
+    uint16_t vlan_count;
 #ifdef SWITCH_PD
     p4_pd_entry_hdl_t nhop_type_entry;
     p4_pd_entry_hdl_t lag_group_entry;
@@ -143,6 +144,8 @@ switch_status_t switch_api_interface_create_l2(switch_device_t device, switch_ha
                                                switch_interface_info_t *intf_info);
 switch_status_t switch_api_interface_create_l3(switch_device_t device, switch_handle_t intf_handle,
                                                switch_interface_info_t *intf_info);
+
+switch_status_t switch_interface_handle_get(switch_handle_t port_lag_handle, switch_handle_t *intf_handle);
 
 #ifdef __cplusplus
 }
