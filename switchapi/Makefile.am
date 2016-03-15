@@ -2,13 +2,13 @@ ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS} -I m4
 
 SUBDIRS = third-party/tommyds
 
-libswitchapi_la_CFLAGS = -I$(srcdir)/inc
-libswitchapi_la_CFLAGS += -I$(srcdir)/src/gen-cpp
-libswitchapi_la_CFLAGS += -I$(srcdir)/third-party/tommyds/include
-libswitchapi_la_CFLAGS += -I$(srcdir)/../p4src/include
-libswitchapi_la_CXXFLAGS = $(libswitchapi_la_CFLAGS)
-libswitchapi_a_CFLAGS = $(libswitchapi_la_CFLAGS)
-libswitchapi_a_CXXFLAGS = $(libswitchapi_a_CFLAGS)
+# using AM_CPPFLAGS so it applies to all libraries
+
+AM_CPPFLAGS = -I$(srcdir)/inc
+AM_CPPFLAGS += -I$(builddir)/src/gen-cpp
+AM_CPPFLAGS += -I$(srcdir)/third-party/tommyds/include
+AM_CPPFLAGS += -I$(top_srcdir)/p4src/includes
+AM_CPPFLAGS += -I$(includedir)
 
 BUILT_SOURCES = \
 src/gen-cpp/switch_api_constants.cpp \
@@ -18,13 +18,34 @@ src/gen-cpp/switch_api_rpc.h \
 src/gen-cpp/switch_api_types.cpp \
 src/gen-cpp/switch_api_types.h
 
-$(BUILT_SOURCES): src/switch_api.thrift
-	$(THRIFT) -o $(srcdir)/src/ --gen cpp -r $(srcdir)/src/switch_api.thrift
+# http://www.gnu.org/software/automake/manual/html_node/Multiple-Outputs.html
+switchapi.ts : @srcdir@/src/switch_api.thrift
+	@rm -f switchapi.tmp
+	@touch switchapi.tmp
+	$(THRIFT) -o @builddir@/src/ --gen cpp -r @srcdir@/src/switch_api.thrift
+	$(THRIFT) -o @builddir@/src/ --gen py -r @srcdir@/src/switch_api.thrift
+	@mv -f switchapi.tmp $@
 
-lib_LIBRARIES = libswitchapi.a
-lib_LTLIBRARIES = libswitchapi.la
+$(BUILT_SOURCES): switchapi.ts
+## Recover from the removal of $@
+	@if test -f $@; then :; else \
+	  trap 'rm -rf switchapi.lock switchapi.ts' 1 2 13 15; \
+## mkdir is a portable test-and-set
+	if mkdir switchapi.lock 2>/dev/null; then \
+## This code is being executed by the first process.
+	  rm -f switchapi.ts; \
+	  $(MAKE) $(AM_MAKEFLAGS) switchapi.ts; \
+	  result=$$?; rm -rf switchapi.lock; exit $$result; \
+	else \
+## This code is being executed by the follower processes.
+## Wait until the first process is done.
+	  while test -d switchapi.lock; do sleep 1; done; \
+## Succeed if and only if the first process succeeded.
+	    test -f switchapi.ts; \
+	  fi; \
+	fi
 
-libswitchapi_la_SOURCES = \
+switchapi_sources = \
 $(BUILT_SOURCES) \
 src/switch_acl.c \
 src/switch_acl_int.h \
@@ -107,5 +128,23 @@ inc/switch_vlan.h \
 inc/switch_INT.h \
 inc/switch_vrf.h
 
-libswitchapi_a_SOURCES = $(libswitchapi_la_SOURCES)
-libswitchapi_la_LIBADD = third-party/tommyds/libtommyds.la
+lib_LTLIBRARIES =
+lib_LIBRARIES =
+
+if WITH_BMV2
+libbmswitchapi_la_CPPFLAGS = $(AM_CPPFLAGS)
+libbmswitchapi_la_CPPFLAGS += -DBMV2
+libbmswitchapi_la_CPPFLAGS += -I$(top_srcdir)/bmv2/p4_pd
+libbmswitchapi_la_CPPFLAGS += -I$(BM_PDFIXED_PATH)/
+lib_LTLIBRARIES += libbmswitchapi.la
+libbmswitchapi_la_SOURCES = $(switchapi_sources)
+libbmswitchapi_la_LIBADD = third-party/tommyds/libtommyds.la
+endif
+
+# FIXME: legacy support, relies on p4factory
+if WITH_P4FACTORY
+lib_LIBRARIES += libswitchapi.a
+libswitchapi_a_SOURCES = $(switchapi_sources)
+endif
+
+CLEANFILES = $(BUILT_SOURCES)
