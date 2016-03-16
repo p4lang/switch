@@ -139,6 +139,7 @@ libbmswitchapi_la_CPPFLAGS += -I$(BM_PDFIXED_PATH)/
 lib_LTLIBRARIES += libbmswitchapi.la
 libbmswitchapi_la_SOURCES = $(switchapi_sources)
 libbmswitchapi_la_LIBADD = third-party/tommyds/libtommyds.la
+libbmswitchapi_la_LIBADD += -lJudy
 endif
 
 # FIXME: legacy support, relies on p4factory

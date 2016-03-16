@@ -4,7 +4,19 @@ if WITH_BMV2
 MAYBE_BMV2 = bmv2
 endif
 
-SUBDIRS = $(MAYBE_BMV2) switchapi switchsai switchlink .
+if WITH_SWITCHAPI
+MAYBE_SWITCHAPI = switchapi
+endif
+
+if WITH_SWITCHSAI
+MAYBE_SWITCHSAI = switchsai
+endif
+
+if WITH_SWITCHLINK
+MAYBE_SWITCHLINK = switchlink
+endif
+
+SUBDIRS = $(MAYBE_BMV2) $(MAYBE_SWITCHAPI) $(MAYBE_SWITCHSAI) $(MAYBE_SWITCHLINK) .
 
 bin_PROGRAMS =
 

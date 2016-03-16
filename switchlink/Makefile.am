@@ -39,6 +39,7 @@ libswitchlink_la_CPPFLAGS += -DBMV2
 lib_LTLIBRARIES += libswitchlink.la
 libswitchlink_la_SOURCES = $(switchlink_sources)
 libswitchlink_la_LIBADD = third-party/xxhash/libxxhash.la
+libswitchlink_la_LIBADD += $(NETLINK_LIBS)
 endif
 
 # FIXME: legacy support, relies on p4factory

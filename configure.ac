@@ -42,6 +42,43 @@ AC_ARG_WITH([p4factory],
 
 AM_CONDITIONAL([WITH_P4FACTORY], [test "$want_p4factory" = yes])
 
+want_switchapi=no
+AC_ARG_WITH([switchapi],
+    AS_HELP_STRING([--with-switchapi], [Build with switchapi]),
+    [want_switchapi=yes], [])
+
+want_switchsai=no
+AC_ARG_WITH([switchsai],
+    AS_HELP_STRING([--with-switchsai],
+                   [Build with switchsai, will build switchapi as well]),
+    [want_switchsai=yes], [])
+
+want_switchlink=no
+AC_ARG_WITH([switchlink],
+    AS_HELP_STRING([--with-switchlink],
+                   [Build with switchlink, will build switchsai and switchapi as well]),
+    [want_switchlink=yes], [])
+
+MY_CPPFLAGS=
+
+AS_IF([test "$want_switchlink" = yes], [
+    want_switchsai=yes
+    MY_CPPFLAGS="$MY_CPPFLAGS -DSWITCHLINK_ENABLE"
+    netlink_libs=$(pkg-config --libs libnl-route-3.0)
+    AC_SUBST([NETLINK_LIBS], ["$netlink_libs"])
+])
+
+AS_IF([test "$want_switchsai" = yes], [
+    want_switchapi=yes
+    MY_CPPFLAGS="$MY_CPPFLAGS -DSWITCHSAI_ENABLE"])
+
+AS_IF([test "$want_switchapi" = yes], [
+    MY_CPPFLAGS="$MY_CPPFLAGS -DSWITCHAPI_ENABLE"])
+
+AM_CONDITIONAL([WITH_SWITCHAPI], [test "$want_switchapi" = yes])
+AM_CONDITIONAL([WITH_SWITCHSAI], [test "$want_switchsai" = yes])
+AM_CONDITIONAL([WITH_SWITCHLINK], [test "$want_switchlink" = yes])
+
 AC_PROG_CC_STDC
 AC_PROG_CXX
 LT_INIT
@@ -114,6 +151,9 @@ if test -n "$COVERAGE_FLAGS"; then
     AC_CHECK_LIB([gcov], [__gcov_init], [], [AC_MSG_ERROR([Missing gcov library])])
 fi
 
+# Check for libJudy
+AC_CHECK_LIB([Judy], [Judy1Next], [], [AC_MSG_ERROR([Missing libJudy])])
+
 # Checks for typedefs, structures, and compiler characteristics.
 AC_CHECK_FUNCS([memset])
 AC_CHECK_FUNCS([select])
@@ -138,7 +178,8 @@ AC_TYPE_UINT32_T
 AC_TYPE_UINT64_T
 AC_TYPE_UINT8_T
 
-AC_SUBST([AM_CPPFLAGS], ["-I$INCLUDE_DIR"])
+MY_CPPFLAGS="$MY_CPPFLAGS -I$INCLUDE_DIR"
+AC_SUBST([AM_CPPFLAGS], ["$MY_CPPFLAGS"])
 AC_SUBST([AM_LDFLAGS], ["-L$LIB_DIR"])
 AC_SUBST([PYTHONPATH], ["PYTHONPATH=$PYTHONPATH:$PYTHON_DIR"])
 
@@ -155,5 +196,8 @@ AC_OUTPUT
 AS_ECHO("")
 AS_ECHO("Features recap ......................")
 AS_ECHO("Coverage enabled .............. : $coverage_enabled")
+AS_ECHO("With switchlink ............... : $want_switchlink")
+AS_ECHO("With switchsai ................ : $want_switchsai")
+AS_ECHO("With switchapi ................ : $want_switchapi")
 AS_ECHO("Compile for p4factory ......... : $want_p4factory")
 AS_ECHO("Compile for bmv2 .............. : $want_bmv2")
