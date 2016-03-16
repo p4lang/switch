@@ -2,16 +2,13 @@ ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS} -I m4
 
 SUBDIRS = third-party/xxhash
 
-libswitchlink_la_CFLAGS  = -I$(srcdir)/third-party/xxhash/include
-libswitchlink_la_CFLAGS += -I$(SUBMODULE_SWITCHSAI)/submodules/SAI/inc
-libswitchlink_la_CFLAGS += -I$(SUBMODULE_SWITCHAPI)/third-party/tommyds/include
-libswitchlink_la_CFLAGS += $(shell pkg-config --cflags libnl-3.0)
-libswitchlink_a_CFLAGS = $(libswitchlink_la_CFLAGS)
+AM_CPPFLAGS = -I$(srcdir)/third-party/xxhash/include
+AM_CPPFLAGS += -I$(top_srcdir)/switchsai/submodules/SAI/inc
+AM_CPPFLAGS += -I$(top_srcdir)/switchapi/third-party/tommyds/include
+# TODO: could this be done in configure?
+AM_CPPFLAGS += $(shell pkg-config --cflags libnl-3.0)
 
-lib_LIBRARIES = libswitchlink.a
-lib_LTLIBRARIES = libswitchlink.la
-
-libswitchlink_la_SOURCES = \
+switchlink_sources = \
 src/switchlink_address.c \
 src/switchlink_db.c \
 src/switchlink_db.h \
@@ -32,9 +29,25 @@ src/switchlink_route.h \
 src/switchlink_sai.c \
 src/switchlink_sai.h
 
-libswitchlink_a_SOURCES = $(libswitchlink_la_SOURCES)
+noinst_LTLIBRARIES =
+lib_LIBRARIES =
 
+if WITH_BMV2
+# has the advantage of avoiding "created both with libtool and without" error
+libswitchlink_la_CPPFLAGS = $(AM_CPPFLAGS)
+libswitchlink_la_CPPFLAGS += -DBMV2
+noinst_LTLIBRARIES += libswitchlink.la
+libswitchlink_la_SOURCES = $(switchlink_sources)
 libswitchlink_la_LIBADD = third-party/xxhash/libxxhash.la
+libswitchlink_la_LIBADD += $(NETLINK_LIBS)
+endif
 
+# FIXME: legacy support, relies on p4factory
+if WITH_P4FACTORY
+lib_LIBRARIES += libswitchlink.a
+libswitchlink_a_SOURCES = $(switchlink_sources)
+endif
+
+# FIXME: dos this really serve a purpose?
 switch-local: all
 switch-install-local: install

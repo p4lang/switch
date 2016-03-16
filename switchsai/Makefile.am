@@ -1,13 +1,10 @@
 ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS} -I m4
 
-libswitchsai_la_CFLAGS  = -I$(srcdir)/submodules/SAI/inc
-libswitchsai_la_CFLAGS += -I$(srcdir)/../../modules/BMI/module/inc
-libswitchsai_la_CFLAGS += -I$(builddir)/src/gen-cpp
-libswitchsai_la_CFLAGS += -I$(top_srcdir)/switchapi/third-party/tommyds/include
-libswitchsai_la_CFLAGS += -I$(top_srcdir)/p4src/includes
-libswitchsai_la_CXXFLAGS = $(libswitchsai_la_CFLAGS)
-libswitchsai_a_CFLAGS = $(libswitchsai_la_CFLAGS)
-libswitchsai_a_CXXFLAGS = $(libswitchsai_a_CFLAGS)
+AM_CPPFLAGS = -I$(srcdir)/submodules/SAI/inc
+AM_CPPFLAGS += -I$(top_srcdir)/switchapi/inc
+AM_CPPFLAGS += -I$(builddir)/src/gen-cpp
+AM_CPPFLAGS += -I$(top_srcdir)/switchapi/third-party/tommyds/include
+AM_CPPFLAGS += -I$(top_srcdir)/p4src/includes
 
 thrift_cpp_sources = \
 @builddir@/src/gen-cpp/switch_sai_constants.cpp \
@@ -22,41 +19,6 @@ thrift_py_sources = \
 @builddir@/src/gen-py/switch_sai/switch_sai_rpc.py \
 @builddir@/src/gen-py/switch_sai/switch_sai_rpc-remote \
 @builddir@/src/gen-py/switch_sai/ttypes.py
-
-lib_LIBRARIES = libswitchsai.a
-lib_LTLIBRARIES = libswitchsai.la
-
-$(lib_LIBRARIES) : $(thrift_py_sources)
-$(lib_LTLIBRARIES) : $(thrift_py_sources)
-
-libswitchsai_la_SOURCES = \
-$(thrift_cpp_sources) \
-src/saiacl.c \
-src/saiapi.h \
-src/sai.c \
-src/sai_bmlib.c \
-src/saifdb.c \
-src/saihostintf.c \
-src/saiinternal.h \
-src/saiipmc.c \
-src/sail2mc.c \
-src/sailag.c \
-src/saimirror.c \
-src/saineighbor.c \
-src/sainexthop.c \
-src/sainexthopgroup.c \
-src/saipolicer.c \
-src/saiport.c \
-src/sairoute.c \
-src/sairouter.c \
-src/sairouterintf.c \
-src/saistp.c \
-src/saiswitch.c \
-src/saiutils.c \
-src/saivlan.c \
-src/switch_sai_rpc_server.cpp
-
-libswitchsai_a_SOURCES = $(libswitchsai_la_SOURCES)
 
 BUILT_SOURCES = \
 $(thrift_cpp_sources) \
@@ -89,5 +51,53 @@ $(BUILT_SOURCES) : switchsai.ts
 	    test -f switchsai.ts; \
 	  fi; \
 	fi
+
+switchsai_sources = \
+$(thrift_cpp_sources) \
+src/saiacl.c \
+src/saiapi.h \
+src/sai.c \
+src/sai_bmlib.c \
+src/saifdb.c \
+src/saihostintf.c \
+src/saiinternal.h \
+src/saiipmc.c \
+src/sail2mc.c \
+src/sailag.c \
+src/saimirror.c \
+src/saineighbor.c \
+src/sainexthop.c \
+src/sainexthopgroup.c \
+src/saipolicer.c \
+src/saiport.c \
+src/sairoute.c \
+src/sairouter.c \
+src/sairouterintf.c \
+src/saistp.c \
+src/saiswitch.c \
+src/saiutils.c \
+src/saivlan.c \
+src/switch_sai_rpc_server.cpp
+
+noinst_LTLIBRARIES =
+lib_LIBRARIES =
+
+if WITH_BMV2
+libbmswitchsai_la_CPPFLAGS = $(AM_CPPFLAGS)
+libbmswitchsai_la_CPPFLAGS += -DBMV2
+libbmswitchsai_la_CPPFLAGS += -I$(top_srcdir)/bmv2/p4_pd
+libbmswitchsai_la_CPPFLAGS += -I$(BM_PDFIXED_PATH)
+noinst_LTLIBRARIES += libbmswitchsai.la
+libbmswitchsai_la_SOURCES = $(switchsai_sources)
+endif
+
+# FIXME: legacy support, relies on p4factory
+if WITH_P4FACTORY
+lib_LIBRARIES += libswitchsai.a
+libswitchsai_a_SOURCES = $(switchsai_sources)
+endif
+
+# FIXME: not sure if this serves a real purpose
+$(lib_LTLIBRARIES) : $(thrift_py_sources)
 
 CLEANFILES = $(BUILT_SOURCES)

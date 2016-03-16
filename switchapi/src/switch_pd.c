@@ -23,7 +23,6 @@ limitations under the License.
 #include "switch_mirror_int.h"
 #include "switch_tunnel_int.h"
 #include "switch_config_int.h"
-#include "model_flags.h"
 #include <string.h>
 
 #define ingress_input_port standard_metadata_ingress_port
