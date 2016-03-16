@@ -128,7 +128,7 @@ inc/switch_vlan.h \
 inc/switch_INT.h \
 inc/switch_vrf.h
 
-lib_LTLIBRARIES =
+noinst_LTLIBRARIES =
 lib_LIBRARIES =
 
 if WITH_BMV2
@@ -136,7 +136,7 @@ libbmswitchapi_la_CPPFLAGS = $(AM_CPPFLAGS)
 libbmswitchapi_la_CPPFLAGS += -DBMV2
 libbmswitchapi_la_CPPFLAGS += -I$(top_srcdir)/bmv2/p4_pd
 libbmswitchapi_la_CPPFLAGS += -I$(BM_PDFIXED_PATH)/
-lib_LTLIBRARIES += libbmswitchapi.la
+noinst_LTLIBRARIES += libbmswitchapi.la
 libbmswitchapi_la_SOURCES = $(switchapi_sources)
 libbmswitchapi_la_LIBADD = third-party/tommyds/libtommyds.la
 libbmswitchapi_la_LIBADD += -lJudy

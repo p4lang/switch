@@ -79,7 +79,7 @@ src/saiutils.c \
 src/saivlan.c \
 src/switch_sai_rpc_server.cpp
 
-lib_LTLIBRARIES =
+noinst_LTLIBRARIES =
 lib_LIBRARIES =
 
 if WITH_BMV2
@@ -87,7 +87,7 @@ libbmswitchsai_la_CPPFLAGS = $(AM_CPPFLAGS)
 libbmswitchsai_la_CPPFLAGS += -DBMV2
 libbmswitchsai_la_CPPFLAGS += -I$(top_srcdir)/bmv2/p4_pd
 libbmswitchsai_la_CPPFLAGS += -I$(BM_PDFIXED_PATH)
-lib_LTLIBRARIES += libbmswitchsai.la
+noinst_LTLIBRARIES += libbmswitchsai.la
 libbmswitchsai_la_SOURCES = $(switchsai_sources)
 endif
 

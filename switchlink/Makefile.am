@@ -29,14 +29,14 @@ src/switchlink_route.h \
 src/switchlink_sai.c \
 src/switchlink_sai.h
 
-lib_LTLIBRARIES =
+noinst_LTLIBRARIES =
 lib_LIBRARIES =
 
 if WITH_BMV2
 # has the advantage of avoiding "created both with libtool and without" error
 libswitchlink_la_CPPFLAGS = $(AM_CPPFLAGS)
 libswitchlink_la_CPPFLAGS += -DBMV2
-lib_LTLIBRARIES += libswitchlink.la
+noinst_LTLIBRARIES += libswitchlink.la
 libswitchlink_la_SOURCES = $(switchlink_sources)
 libswitchlink_la_LIBADD = third-party/xxhash/libxxhash.la
 libswitchlink_la_LIBADD += $(NETLINK_LIBS)

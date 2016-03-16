@@ -132,7 +132,7 @@ nobase_pkginclude_HEADERS = \
 $(pd_headers) \
 p4_pd/thrift-src/pd_rpc_server.h
 
-lib_LTLIBRARIES = libbmpd.la libbmpdthrift.la
+noinst_LTLIBRARIES = libbmpd.la libbmpdthrift.la
 
 libbmpd_la_SOURCES = \
 $(pd_files)
