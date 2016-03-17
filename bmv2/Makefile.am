@@ -146,12 +146,10 @@ AM_CPPFLAGS += -I$(BM_PDFIXED_PATH)/src/
 AM_CPPFLAGS += -I$(BM_THRIFT_PATH)/
 AM_CPPFLAGS += -I$(builddir)/p4_pd/
 AM_CPPFLAGS += -I$(builddir)/pd_thrift_gen/gen-cpp/
-# AM_CPPFLAGS += -I$(builddir)/p4_pd/
-# AM_CPPFLAGS += -I$(top_builddir)/pdfixed/bmv2_thrift_gen/gen-cpp/
+AM_CPPFLAGS += -DHOST_BYTE_ORDER_CALLER
 
 AM_CXXFLAGS = --std=c++11
 
 CLEANFILES = $(BUILT_SOURCES) \
 pd_files.ts pd_thrift_files.ts \
 .bmv2-pd-sane
-
