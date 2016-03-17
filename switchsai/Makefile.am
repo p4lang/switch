@@ -6,6 +6,10 @@ AM_CPPFLAGS += -I$(builddir)/src/gen-cpp
 AM_CPPFLAGS += -I$(top_srcdir)/switchapi/third-party/tommyds/include
 AM_CPPFLAGS += -I$(top_srcdir)/p4src/includes
 
+if P4THRIFT
+    AM_CPPFLAGS += -DP4THRIFT
+endif
+
 thrift_cpp_sources = \
 @builddir@/src/gen-cpp/switch_sai_constants.cpp \
 @builddir@/src/gen-cpp/switch_sai_constants.h \

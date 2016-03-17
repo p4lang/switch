@@ -10,6 +10,10 @@ AM_CPPFLAGS += -I$(srcdir)/third-party/tommyds/include
 AM_CPPFLAGS += -I$(top_srcdir)/p4src/includes
 AM_CPPFLAGS += -I$(includedir)
 
+if P4THRIFT
+    AM_CPPFLAGS += -DP4THRIFT
+endif
+
 BUILT_SOURCES = \
 src/gen-cpp/switch_api_constants.cpp \
 src/gen-cpp/switch_api_constants.h \
