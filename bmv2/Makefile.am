@@ -35,7 +35,7 @@ include $(top_srcdir)/p4src/p4_files.am
 pd_files.ts : $(p4_files)
 	@rm -f pd_files.tmp
 	@touch pd_files.tmp
-	PYTHONPATH=$(PYTHONPATH) $(P4C_BM) --pd $(builddir)/p4_pd/ --p4-prefix $(P4_PREFIX) --json $(builddir)/$(P4_JSON_OUTPUT) $(P4_PATH)
+	PYTHONPATH=$$PYTHONPATH:$(MY_PYTHONPATH) $(P4C_BM) --pd $(builddir)/p4_pd/ --p4-prefix $(P4_PREFIX) --json $(builddir)/$(P4_JSON_OUTPUT) $(P4_PATH)
 	@mv -f pd_files.tmp $@
 $(pd_files) $(pd_p4_IDL) $(pd_p4_src) : pd_files.ts
 ## Recover from the removal of $@
