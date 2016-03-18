@@ -24,9 +24,16 @@ thrift_py_sources = \
 @builddir@/src/gen-py/switch_sai/switch_sai_rpc-remote \
 @builddir@/src/gen-py/switch_sai/ttypes.py
 
+sai_ctypesgen = @builddir@/switch_sai_thrift/sai_headers.py
+
 BUILT_SOURCES = \
 $(thrift_cpp_sources) \
-$(thrift_py_sources)
+$(thrift_py_sources) \
+$(sai_ctypesgen)
+
+$(sai_ctypesgen) : $(thrift_py_sources)
+	$(CTYPESGEN) -I/usr/include -I$(srcdir)/submodules/SAI/inc \
+		$(srcdir)/submodules/SAI/inc/*.h -o $@
 
 # The recipe to invoke the thrift compiler is copied from:
 # http://www.gnu.org/software/automake/manual/html_node/Multiple-Outputs.html
@@ -35,9 +42,11 @@ switchsai.ts : @srcdir@/src/switch_sai.thrift
 	@touch switchsai.tmp
 	$(THRIFT) -o @builddir@/src/ --gen cpp -r @srcdir@/src/switch_sai.thrift
 	$(THRIFT) -o @builddir@/src/ --gen py -r @srcdir@/src/switch_sai.thrift
+## FIXME: p4factory legacy
+	cp -r @builddir@/src/gen-py/switch_sai/ @builddir@/switch_sai_thrift
 	@mv -f switchsai.tmp $@
 
-$(BUILT_SOURCES) : switchsai.ts
+$(thrift_cpp_sources) $(thrift_py_sources) : switchsai.ts
 ## Recover from the removal of $@
 	@if test -f $@; then :; else \
 	  trap 'rm -rf switchsai.lock switchsai.ts' 1 2 13 15; \
