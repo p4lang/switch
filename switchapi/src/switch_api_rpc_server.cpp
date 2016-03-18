@@ -41,10 +41,10 @@ limitations under the License.
 
 #define SWITCH_API_RPC_SERVER_PORT (9091)
 
-using namespace ::apache::thrift;
-using namespace ::apache::thrift::protocol;
-using namespace ::apache::thrift::transport;
-using namespace ::apache::thrift::server;
+using namespace ::thrift_provider;
+using namespace ::thrift_provider::protocol;
+using namespace ::thrift_provider::transport;
+using namespace ::thrift_provider::server;
 
 using boost::shared_ptr;
 

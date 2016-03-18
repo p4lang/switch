@@ -31,8 +31,20 @@ AC_LANG_PUSH(C)
 AC_CHECK_HEADERS([assert.h stdio.h string.h sys/stat.h sys/types.h unistd.h], \
 [], [AC_MSG_ERROR([Missing header file])])
 
-# Check for thrift support (Facebook's Thrift RPC library)
-AC_PATH_PROG([THRIFT], [thrift], [])
+# Thrift
+AC_WITH([p4thrift],
+    [
+        AC_PATH_PROG([THRIFT], [p4thrift], [])
+        AC_SUBST([THRIFT_LIB], ["-lp4thrift"])
+        WITH_P4THRIFT="true"
+        AC_CHECK_HEADER([p4thrift/P4Thrift.h], [], [AC_MSG_ERROR([P4Thrift headers not found. Install P4Thrift from http://github.com/p4lang/thrift/])])
+    ],
+    [
+        AC_PATH_PROG([THRIFT], [thrift], [])
+        AC_SUBST([THRIFT_LIB], ["-lthrift"])
+        AC_CHECK_HEADER([thrift/Thrift.h], [], [AC_MSG_ERROR([Thrift headers not found. Install Thrift from http://thrift.apache.org/docs/install/])])
+    ])
+AM_CONDITIONAL([P4THRIFT], [test "x$WITH_P4THRIFT" != "x"])
 AS_IF([test x"$THRIFT" = x],
 [AC_MSG_ERROR([cannot find thrift])])
 

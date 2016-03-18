@@ -41,7 +41,7 @@ endif
 libbmswitchp4_la_LIBADD += \
 @builddir@/bmv2/libbmpd.la \
 @builddir@/bmv2/libbmpdthrift.la \
--lbmpdfixed -lbmpdfixedthrift -lthrift
+-lbmpdfixed -lbmpdfixedthrift $(THRIFT_LIB) 
 libbmswitchp4_la_SOURCES = \
 @srcdir@/bmv2/bmv2_init.c
 

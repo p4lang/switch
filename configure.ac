@@ -13,12 +13,6 @@ AM_INIT_AUTOMAKE([foreign subdir-objects])
 AM_SILENT_RULES([yes])
 AC_CONFIG_HEADERS([config.h])
 
-# Check for thrift support (Apache Thrift RPC library)
-AC_PATH_PROG([THRIFT], [thrift], [])
-AS_IF([test x"$THRIFT" = x], [AC_MSG_ERROR([Missing thrift executable])])
-# Thrift must always be enabled by default
-AM_CONDITIONAL([IS_THRIFT_ENABLED], [test "x" = "x"])
-
 coverage_enabled=no
 AC_ARG_ENABLE([coverage],
     AS_HELP_STRING([--enable-coverage], [Enable gcov flags]))
@@ -147,12 +141,21 @@ AS_IF([test "$want_bmv2" = yes], [
 AC_CHECK_HEADERS([assert.h stdio.h string.h sys/stat.h sys/types.h unistd.h], \
 [], [AC_MSG_ERROR([Missing header file])])
 
-AC_CHECK_HEADER([thrift/Thrift.h], [], \
-  [AC_MSG_ERROR([Thrift headers not found])])
-
-# Check for thrift support (Facebook's Thrift RPC library)
-AC_PATH_PROG([THRIFT], [thrift], [])
-AS_IF([test x"$THRIFT" = x && IS_THRIFT_ENABLED],
+# Thrift
+AC_WITH([p4thrift],
+    [
+        AC_PATH_PROG([THRIFT], [p4thrift], [])
+        AC_SUBST([THRIFT_LIB], ["-lp4thrift"])
+        WITH_P4THRIFT="true"
+        AC_CHECK_HEADER([p4thrift/P4Thrift.h], [], [AC_MSG_ERROR([P4Thrift headers not found. Install P4Thrift from http://github.com/p4lang/thrift/])])
+    ],
+    [
+        AC_PATH_PROG([THRIFT], [thrift], [])
+        AC_SUBST([THRIFT_LIB], ["-lthrift"])
+        AC_CHECK_HEADER([thrift/Thrift.h], [], [AC_MSG_ERROR([Thrift headers not found. Install Thrift from http://thrift.apache.org/docs/install/])])
+    ])
+AM_CONDITIONAL([P4THRIFT], [test "x$WITH_P4THRIFT" != "x"])
+AS_IF([test x"$THRIFT" = x],
 [AC_MSG_ERROR([cannot find thrift])])
 
 AC_CHECK_LIB([pcap], [pcap_create], [], [AC_MSG_ERROR([Missing libpcap])])
