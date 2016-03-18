@@ -24,6 +24,8 @@ switchapi.ts : @srcdir@/src/switch_api.thrift
 	@touch switchapi.tmp
 	$(THRIFT) -o @builddir@/src/ --gen cpp -r @srcdir@/src/switch_api.thrift
 	$(THRIFT) -o @builddir@/src/ --gen py -r @srcdir@/src/switch_api.thrift
+## FIXME: p4factory legacy
+	cp -r @builddir@/src/gen-py/switch_api/ @builddir@/switch_api_thrift
 	@mv -f switchapi.tmp $@
 
 $(BUILT_SOURCES): switchapi.ts

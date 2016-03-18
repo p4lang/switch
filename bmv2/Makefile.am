@@ -35,7 +35,7 @@ include $(top_srcdir)/p4src/p4_files.am
 pd_files.ts : $(p4_files)
 	@rm -f pd_files.tmp
 	@touch pd_files.tmp
-	PYTHONPATH=$(PYTHONPATH) $(P4C_BM) --pd $(builddir)/p4_pd/ --p4-prefix $(P4_PREFIX) --json $(builddir)/$(P4_JSON_OUTPUT) $(P4_PATH)
+	PYTHONPATH=$$PYTHONPATH:$(MY_PYTHONPATH) $(P4C_BM) --pd $(builddir)/p4_pd/ --p4-prefix $(P4_PREFIX) --json $(builddir)/$(P4_JSON_OUTPUT) $(P4_PATH)
 	@mv -f pd_files.tmp $@
 $(pd_files) $(pd_p4_IDL) $(pd_p4_src) : pd_files.ts
 ## Recover from the removal of $@
@@ -146,12 +146,10 @@ AM_CPPFLAGS += -I$(BM_PDFIXED_PATH)/src/
 AM_CPPFLAGS += -I$(BM_THRIFT_PATH)/
 AM_CPPFLAGS += -I$(builddir)/p4_pd/
 AM_CPPFLAGS += -I$(builddir)/pd_thrift_gen/gen-cpp/
-# AM_CPPFLAGS += -I$(builddir)/p4_pd/
-# AM_CPPFLAGS += -I$(top_builddir)/pdfixed/bmv2_thrift_gen/gen-cpp/
+AM_CPPFLAGS += -DHOST_BYTE_ORDER_CALLER
 
 AM_CXXFLAGS = --std=c++11
 
 CLEANFILES = $(BUILT_SOURCES) \
 pd_files.ts pd_thrift_files.ts \
 .bmv2-pd-sane
-

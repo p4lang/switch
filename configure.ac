@@ -70,7 +70,11 @@ AS_IF([test "$want_switchlink" = yes], [
 
 AS_IF([test "$want_switchsai" = yes], [
     want_switchapi=yes
-    MY_CPPFLAGS="$MY_CPPFLAGS -DSWITCHSAI_ENABLE"])
+    MY_CPPFLAGS="$MY_CPPFLAGS -DSWITCHSAI_ENABLE"
+    AC_PATH_PROG([CTYPESGEN], [ctypesgen.py], [])
+    AS_IF([test x"$CTYPESGEN" = x],
+          AC_MSG_ERROR([cannot find ctypesgen.py, you can install it with 'pip install ctypesgen']))
+])
 
 AS_IF([test "$want_switchapi" = yes], [
     MY_CPPFLAGS="$MY_CPPFLAGS -DSWITCHAPI_ENABLE"])
@@ -99,9 +103,12 @@ AC_PROG_GREP
 AC_LANG_PUSH(C)
 AC_LANG_PUSH(C++)
 
+warn_if_no_ptf=no
+
 # To simplify usage, we will update PATH, CPPFLAGS,.. to include the 'prefix'
 # ones
 adl_RECURSIVE_EVAL([$bindir], [BIN_DIR])
+AC_SUBST([BIN_DIR], ["$BIN_DIR"])
 adl_RECURSIVE_EVAL([$includedir], [INCLUDE_DIR])
 adl_RECURSIVE_EVAL([$pythondir], [PYTHON_DIR])
 adl_RECURSIVE_EVAL([$libdir], [LIB_DIR])
@@ -133,6 +140,8 @@ AS_IF([test "$want_bmv2" = yes], [
       [$PATH$PATH_SEPARATOR$BIN_DIR])
     AS_IF([test x"$BM_SIMPLE_SWITCH" = x],
       [AC_MSG_WARN([You are compiling for bmv2, but simple_switch binary was not found])])
+
+    warn_if_no_ptf=yes
 ])
 
 AC_CHECK_HEADERS([assert.h stdio.h string.h sys/stat.h sys/types.h unistd.h], \
@@ -153,6 +162,13 @@ fi
 
 # Check for libJudy
 AC_CHECK_LIB([Judy], [Judy1Next], [], [AC_MSG_ERROR([Missing libJudy])])
+
+AC_PATH_PROG([PTF], [ptf], [])
+ptf_found=no
+AS_IF([test x"$PTF" != x],
+  [ptf_found=yes],
+  [AS_IF([test "$warn_if_no_ptf" = yes],
+    [AC_MSG_WARN([No installed version of the ptf testing framework were found])])])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_CHECK_FUNCS([memset])
@@ -181,7 +197,7 @@ AC_TYPE_UINT8_T
 MY_CPPFLAGS="$MY_CPPFLAGS -I$INCLUDE_DIR"
 AC_SUBST([AM_CPPFLAGS], ["$MY_CPPFLAGS"])
 AC_SUBST([AM_LDFLAGS], ["-L$LIB_DIR"])
-AC_SUBST([PYTHONPATH], ["PYTHONPATH=$PYTHONPATH:$PYTHON_DIR"])
+AC_SUBST([MY_PYTHONPATH], ["$PYTHON_DIR"])
 
 # Generate makefiles
 AC_CONFIG_FILES([switchapi/third-party/tommyds/Makefile
@@ -191,6 +207,15 @@ AC_CONFIG_FILES([switchapi/third-party/tommyds/Makefile
                  switchlink/Makefile
                  Makefile
                  bmv2/Makefile])
+
+AS_IF([test "$want_bmv2" = yes], [
+  AC_CONFIG_FILES([bmv2/run_bm.sh], [chmod +x bmv2/run_bm.sh])
+  AC_CONFIG_FILES([bmv2/run_drivers.sh], [chmod +x bmv2/run_drivers.sh])
+  AC_CONFIG_FILES([bmv2/run_tests.sh], [chmod +x bmv2/run_tests.sh])
+])
+
+AC_CONFIG_FILES([tests/run_tests.py])
+
 AC_OUTPUT
 
 AS_ECHO("")
@@ -201,3 +226,4 @@ AS_ECHO("With switchsai ................ : $want_switchsai")
 AS_ECHO("With switchapi ................ : $want_switchapi")
 AS_ECHO("Compile for p4factory ......... : $want_p4factory")
 AS_ECHO("Compile for bmv2 .............. : $want_bmv2")
+AS_ECHO("PTF found ..................... : $ptf_found")

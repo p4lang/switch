@@ -28,10 +28,17 @@ AM_CPPFLAGS += -I$(BM_PDFIXED_PATH)
 
 lib_LTLIBRARIES += libbmswitchp4.la
 libbmswitchp4_la_CPPFLAGS = $(AM_CPPFLAGS)
-libbmswitchp4_la_LIBADD = \
-@builddir@/switchlink/libswitchlink.la \
-@builddir@/switchsai/libbmswitchsai.la \
-@builddir@/switchapi/libbmswitchapi.la \
+libbmswitchp4_la_LIBADD =
+if WITH_SWITCHLINK
+libbmswitchp4_la_LIBADD += @builddir@/switchlink/libswitchlink.la
+endif
+if WITH_SWITCHSAI
+libbmswitchp4_la_LIBADD += @builddir@/switchsai/libbmswitchsai.la
+endif
+if WITH_SWITCHAPI
+libbmswitchp4_la_LIBADD += @builddir@/switchapi/libbmswitchapi.la
+endif
+libbmswitchp4_la_LIBADD += \
 @builddir@/bmv2/libbmpd.la \
 @builddir@/bmv2/libbmpdthrift.la \
 -lbmpdfixed -lbmpdfixedthrift -lthrift
