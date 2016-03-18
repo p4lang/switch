@@ -6,7 +6,7 @@ PFX ?=
 
 if TARGET_BMV2
 TARGET_CFLAGS = -D BMV2
-TARGET_CFLAGS += -I $(PFX)/$(includedir)/pdfixed
+TARGET_CFLAGS += $(P4C_LIBPDFIXED_CFLAGS)
 TARGET_CFLAGS += -I $(srcdir)/../p4src/bmv2_p4_pd
 endif
 

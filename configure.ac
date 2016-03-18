@@ -82,6 +82,10 @@ AC_ARG_ENABLE([bmv2], \
 
 AM_CONDITIONAL(TARGET_BMV2, [test "x$p4target" =  "xbmv2"])
 
+if test x"$p4target" = x"bmv2" ; then
+    PKG_CHECK_MODULES([P4C_LIBPDFIXED], [p4c-libpdfixed])
+fi
+
 # Generate makefiles
 AC_CONFIG_FILES([switchapi/third-party/tommyds/Makefile switchapi/Makefile
          switchsai/Makefile 

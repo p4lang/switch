@@ -11,10 +11,7 @@ PFX ?=
 if TARGET_BMV2
 TARGET=bmv2
 libbmv2pd_la_CXXFLAGS = -I $(srcdir)/bmv2_p4_pd
-libbmv2pd_la_CXXFLAGS += \
-	-I $(PFX)$(includedir)/pdfixed \
-	-I $(PFX)$(includedir)/pdfixed/pd \
-	-I $(PFX)$(includedir)/pdfixed/src \
+libbmv2pd_la_CXXFLAGS += $(P4C_LIBPDFIXED_CFLAGS) \
 	-std=c++11
 
 # take all the pd files created by the compiler
@@ -42,18 +39,16 @@ BUILT_SOURCES = $(bmv2_pd_files) $(bmv2_pd_headers)
 
 libbmv2pd_la_SOURCES = $(BUILT_SOURCES)
 
-P4CC_BM = $(PFX)$(bindir)/p4c-bmv2
-
 # target specific definitions - each target may require different output files
 p4_bmv2_output = $(p4_name)_bmv2.json
 
 bmv2_pd_files.ts : $(p4_bmv2_output)
 
+P4CC_BM ?= p4c-bmv2
+
 $(p4_bmv2_output) : $(p4_files)
 	@mkdir -p bmv2_p4_pd
-	PYTHONPATH=$(PFX)/$(libdir)/python$(PYTHON_VERSION)/site-packages \
-	PATH=$(PFX)$(bindir):$(PATH) $(P4CC_BM) --pd bmv2_p4_pd --p4-prefix dc --json $@ $(p4_prg)
-
+	$(P4CC_BM) --pd bmv2_p4_pd --p4-prefix dc --json $@ $(p4_prg)
 pkgdata_DATA = $(p4_bmv2_output)
 
 endif
