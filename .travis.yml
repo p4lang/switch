@@ -2,6 +2,8 @@
 
 sudo: required
 
+dist: trusty
+
 language: c
 
 # My very smart trick to force inclusion of the veth kernel module
@@ -16,27 +18,24 @@ env:
 # it 
 addons:
   apt:
-    sources:
-      - boost-latest
-      - ubuntu-toolchain-r-test
     packages:
       - libjudy-dev
       - libgmp-dev
       - libpcap-dev
-      - libboost1.55-dev
-      - libboost-test1.55-dev
-      - libboost-program-options1.55-dev
-      - libboost-system1.55-dev
-      - libboost-filesystem1.55-dev
-      - libboost-thread1.55-dev
-      - libboost-test1.55-dev
+      - libboost-dev
+      - libboost-test-dev
+      - libboost-program-options-dev
+      - libboost-system-dev
+      - libboost-filesystem-dev
+      - libboost-thread-dev
+      - libboost-test-dev
       - libevent-dev
       - automake
       - libtool
       - flex 
       - bison
       - pkg-config
-      - g++-4.8
+      - g++
       - libssl-dev
       - doxygen
       - git
@@ -65,7 +64,6 @@ before_install:
   - sudo pip install --upgrade thrift
   - sudo pip install ctypesgen
   - sudo pip install crc16
-  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 99
 
 # install bmv2 before p4c-bmv2 to get nanomsg
 install:
