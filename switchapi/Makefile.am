@@ -107,32 +107,32 @@ src/switch_meter.c \
 src/switch_meter_int.h \
 src/switch_vrf_int.h \
 src/thrift_cache.h \
-inc/switch_acl.h \
-inc/switch_base_types.h \
-inc/switch_capability.h \
+inc/switchapi/switch_acl.h \
+inc/switchapi/switch_base_types.h \
+inc/switchapi/switch_capability.h \
 inc/switchapi/switch_config.h \
-inc/switch_handle.h \
+inc/switchapi/switch_handle.h \
 inc/switchapi/switch_hostif.h \
-inc/switch_id.h \
-inc/switch_interface.h \
-inc/switch_l2.h \
-inc/switch_l3.h \
-inc/switch_lag.h \
-inc/switch_mcast.h \
+inc/switchapi/switch_id.h \
+inc/switchapi/switch_interface.h \
+inc/switchapi/switch_l2.h \
+inc/switchapi/switch_l3.h \
+inc/switchapi/switch_lag.h \
+inc/switchapi/switch_mcast.h \
 inc/switchapi/switch_meter.h \
-inc/switch_neighbor.h \
-inc/switch_nhop.h \
-inc/switch_port.h \
-inc/switch_porting.h \
-inc/switch_protocol.h \
-inc/switch_rmac.h \
-inc/switch_status.h \
-inc/switch_stp.h \
-inc/switch_tunnel.h \
-inc/switch_utils.h \
-inc/switch_vlan.h \
-inc/switch_INT.h \
-inc/switch_vrf.h
+inc/switchapi/switch_neighbor.h \
+inc/switchapi/switch_nhop.h \
+inc/switchapi/switch_port.h \
+inc/switchapi/switch_porting.h \
+inc/switchapi/switch_protocol.h \
+inc/switchapi/switch_rmac.h \
+inc/switchapi/switch_status.h \
+inc/switchapi/switch_stp.h \
+inc/switchapi/switch_tunnel.h \
+inc/switchapi/switch_utils.h \
+inc/switchapi/switch_vlan.h \
+inc/switchapi/switch_INT.h \
+inc/switchapi/switch_vrf.h
 
 noinst_LTLIBRARIES =
 lib_LIBRARIES =
@@ -140,7 +140,7 @@ lib_LIBRARIES =
 if WITH_BMV2
 libbmswitchapi_la_CPPFLAGS = $(AM_CPPFLAGS)
 libbmswitchapi_la_CPPFLAGS += -DBMV2
-libbmswitchapi_la_CPPFLAGS += -I$(top_srcdir)/bmv2/p4_pd
+libbmswitchapi_la_CPPFLAGS += -I$(top_builddir)/bmv2/p4_pd
 libbmswitchapi_la_CPPFLAGS += -I$(BM_PDFIXED_PATH)/
 noinst_LTLIBRARIES += libbmswitchapi.la
 libbmswitchapi_la_SOURCES = $(switchapi_sources)
@@ -154,4 +154,4 @@ lib_LIBRARIES += libswitchapi.a
 libswitchapi_a_SOURCES = $(switchapi_sources)
 endif
 
-CLEANFILES = $(BUILT_SOURCES)
+CLEANFILES = $(BUILT_SOURCES) switchapi.ts
