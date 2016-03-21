@@ -68,7 +68,6 @@ $(thrift_cpp_sources) $(thrift_py_sources) : switchsai.ts
 switchsai_sources = \
 $(thrift_cpp_sources) \
 src/saiacl.c \
-src/saiapi.h \
 src/sai.c \
 src/sai_bmlib.c \
 src/saifdb.c \
@@ -98,7 +97,7 @@ lib_LIBRARIES =
 if WITH_BMV2
 libbmswitchsai_la_CPPFLAGS = $(AM_CPPFLAGS)
 libbmswitchsai_la_CPPFLAGS += -DBMV2
-libbmswitchsai_la_CPPFLAGS += -I$(top_srcdir)/bmv2/p4_pd
+libbmswitchsai_la_CPPFLAGS += -I$(top_builddir)/bmv2/p4_pd
 libbmswitchsai_la_CPPFLAGS += -I$(BM_PDFIXED_PATH)
 noinst_LTLIBRARIES += libbmswitchsai.la
 libbmswitchsai_la_SOURCES = $(switchsai_sources)
@@ -113,4 +112,4 @@ endif
 # FIXME: not sure if this serves a real purpose
 $(lib_LTLIBRARIES) : $(thrift_py_sources)
 
-CLEANFILES = $(BUILT_SOURCES)
+CLEANFILES = $(BUILT_SOURCES) switchsai.ts
