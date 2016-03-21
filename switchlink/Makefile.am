@@ -31,6 +31,7 @@ src/switchlink_sai.h
 
 noinst_LTLIBRARIES =
 lib_LIBRARIES =
+lib_LTLIBRARIES =
 
 if WITH_BMV2
 # has the advantage of avoiding "created both with libtool and without" error
@@ -46,6 +47,12 @@ endif
 if WITH_P4FACTORY
 lib_LIBRARIES += libswitchlink.a
 libswitchlink_a_SOURCES = $(switchlink_sources)
+# FIXME: this also creates shared libraries for p4factory, needs to be
+# deprecated
+lib_LTLIBRARIES += libswitchlink.la
+# has the advantage of avoiding "created both with libtool and without" error
+libswitchlink_la_CPPFLAGS = $(AM_CPPFLAGS)
+libswitchlink_la_SOURCES = $(switchlink_sources)
 endif
 
 # FIXME: dos this really serve a purpose?

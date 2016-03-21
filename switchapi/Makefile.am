@@ -136,6 +136,7 @@ inc/switchapi/switch_vrf.h
 
 noinst_LTLIBRARIES =
 lib_LIBRARIES =
+lib_LTLIBRARIES =
 
 if WITH_BMV2
 libbmswitchapi_la_CPPFLAGS = $(AM_CPPFLAGS)
@@ -152,6 +153,12 @@ endif
 if WITH_P4FACTORY
 lib_LIBRARIES += libswitchapi.a
 libswitchapi_a_SOURCES = $(switchapi_sources)
+# FIXME: this also creates shared libraries for p4factory, needs to be
+# deprecated
+lib_LTLIBRARIES += libswitchapi.la
+# has the advantage of avoiding "created both with libtool and without" error
+libswitchapi_la_CPPFLAGS = $(AM_CPPFLAGS)
+libswitchapi_la_SOURCES = $(switchapi_sources)
 endif
 
 CLEANFILES = $(BUILT_SOURCES) switchapi.ts
