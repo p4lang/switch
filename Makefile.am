@@ -23,7 +23,7 @@ lib_LTLIBRARIES =
 
 if WITH_BMV2
 AM_CPPFLAGS += -DBMV2
-AM_CPPFLAGS += -I$(top_srcdir)/bmv2/p4_pd
+AM_CPPFLAGS += -I$(top_builddir)/bmv2/p4_pd
 AM_CPPFLAGS += -I$(BM_PDFIXED_PATH)
 
 lib_LTLIBRARIES += libbmswitchp4.la
