@@ -166,7 +166,7 @@ fi
 # Check for libJudy
 AC_CHECK_LIB([Judy], [Judy1Next], [], [AC_MSG_ERROR([Missing libJudy])])
 
-AC_PATH_PROG([PTF], [ptf], [])
+AC_PATH_PROG([PTF], [ptf], [], [$PATH$PATH_SEPARATOR$BIN_DIR])
 ptf_found=no
 AS_IF([test x"$PTF" != x],
   [ptf_found=yes],
