@@ -100,15 +100,16 @@ typedef enum _switch_vlan_stats_t
     SWITCH_VLAN_STATS_MAX,
 } switch_vlan_stats_t;
 
-/** vlan port info */
+/** Vlan Port info */
 typedef struct switch_vlan_port_ {
     switch_handle_t handle;                    /**< port or interface handle */
     switch_vlan_tagging_mode_t tagging_mode;   /**< tagging mode */
 } switch_vlan_port_t;
 
+/** Vlan Interface info */
 typedef struct switch_vlan_interface_ {
-    switch_handle_t vlan_handle;
-    switch_handle_t intf_handle;
+    switch_handle_t vlan_handle;               /**< vlan handle */
+    switch_handle_t intf_handle;               /**< interface handle */
 } switch_vlan_interface_t;
 
 /** Logical Network information */
@@ -453,6 +454,7 @@ switch_status_t switch_api_vlan_stats_disable(switch_device_t device, switch_han
 
 /**
  Get vlan statistics
+ @param device device to be programmed
  @param vlan_handle Vlan handle that identifies vlan uniquely
  @param count number of counter ids
  @param counter_ids list of counter ids

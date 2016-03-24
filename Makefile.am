@@ -53,4 +53,7 @@ bmswitchp4_drivers_SOURCES = \
 @srcdir@/bmv2/main.c
 endif
 
+@DX_RULES@
+MOSTLYCLEANFILES = $(DX_CLEANFILES)
+
 # AM_DISTCHECK_CONFIGURE_FLAGS = --with-bmv2 --with-switchlink

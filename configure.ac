@@ -202,6 +202,13 @@ AC_SUBST([AM_CPPFLAGS], ["$MY_CPPFLAGS"])
 AC_SUBST([AM_LDFLAGS], ["-L$LIB_DIR"])
 AC_SUBST([MY_PYTHONPATH], ["$PYTHON_DIR"])
 
+# Doxygen support
+DX_DOXYGEN_FEATURE(ON)
+DX_HTML_FEATURE(ON)
+DX_PDF_FEATURE(OFF)
+DX_PS_FEATURE(OFF)
+DX_INIT_DOXYGEN(switchapi, switchapi/Doxyfile, switchapi-doc)
+
 # Generate makefiles
 AC_CONFIG_FILES([switchapi/third-party/tommyds/Makefile
                  switchapi/Makefile

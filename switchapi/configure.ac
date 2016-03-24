@@ -58,14 +58,6 @@ AC_CHECK_HEADER_STDBOOL
 AC_TYPE_SIZE_T
 AC_TYPE_UINT64_T
 
-# Doxygen support.
-#AC_CHECK_PROGS([DOXYGEN], [doxygen])
-#if test -z "$DOXYGEN";
-#   then AC_MSG_WARN([Doxygen not found - continuing without Doxygen support])
-#fi
-#AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])AM_COND_IF([HAVE_DOXYGEN],
-#[AC_CONFIG_FILES([doc/Doxyfile])])
-
 # Generate makefiles
 AC_CONFIG_FILES([Makefile third-party/tommyds/Makefile])
 AC_OUTPUT
