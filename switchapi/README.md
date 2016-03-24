@@ -48,8 +48,8 @@ Upcoming Features
 Documentation
 -------------
 
-To generate doxygen documentation for switchapi
+To generate doxygen documentation for switchapi (from switch directory)
 
-    make doc
+    make doxygen-doc
 
-or view a hosted version at http://p4lang.github.io/switchapi
+or view a hosted version at http://p4lang.github.io/switch/switchapi/html/
