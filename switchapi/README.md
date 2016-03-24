@@ -52,4 +52,4 @@ To generate doxygen documentation for switchapi (from switch directory)
 
     make doxygen-doc
 
-or view a hosted version at http://p4lang.github.io/switch/switchapi/html/
+or view a hosted version at http://p4lang.github.io/switch/switchapi-doc/html/
