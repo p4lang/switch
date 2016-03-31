@@ -2,6 +2,8 @@ ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS} -I m4
 
 SUBDIRS = third-party/tommyds
 
+# using AM_CPPFLAGS so it applies to all libraries
+
 AM_CPPFLAGS = -I$(srcdir)/inc
 AM_CPPFLAGS += -I$(builddir)/src/gen-cpp
 AM_CPPFLAGS += -I$(srcdir)/third-party/tommyds/include
