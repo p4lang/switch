@@ -1250,40 +1250,6 @@ switch_api_vlan_ports_remove(switch_device_t device,
     return status;
 }
 
-
-switch_status_t
-switch_api_vlan_ports_get(switch_device_t device, switch_handle_t vlan_handle,
-        switch_vlan_port_t *ports)
-{
-    switch_status_t                   status;
-//    tommy_node                        *node = NULL;
-//    switch_ln_member_t                *vlan_member = NULL;
-//    int                               index = 0;
-//
-//    if (!SWITCH_BD_HANDLE_VALID(vlan_handle)) {
-//        return SWITCH_STATUS_INVALID_HANDLE;
-//    }
-//
-//    info = switch_bd_get(vlan_handle);
-//    if (!info) {
-//        return SWITCH_STATUS_INVALID_VLAN_ID;
-//    }
-//
-//    node = tommy_list_head(&(info->members));
-//    while (node) {
-//        vlan_member = (switch_ln_member_t *) node->data;
-//        if (SWITCH_PORT_HANDLE_VALID(vlan_member->member)
-//            || SWITCH_LAG_HANDLE_VALID(vlan_member->member)) {
-//            ports[index].handle = vlan_member->member;
-//            ++index;
-//        }
-//        node = node->next;
-//    }
-//
-    return status;
-}
-
-
 switch_status_t
 switch_api_vlan_interfaces_get(switch_device_t device,
                                switch_handle_t vlan_handle,
