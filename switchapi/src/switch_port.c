@@ -154,10 +154,12 @@ switch_api_port_speed_set(switch_device_t device, switch_port_t port,
 
 switch_status_t
 switch_api_port_speed_get(switch_device_t device, switch_port_t port,
-                         switch_port_speed_t *speed)
+                          switch_port_speed_t *speed)
 {
     return SWITCH_STATUS_SUCCESS;
 }
+
+// end of stubs for linking
 
 switch_status_t
 switch_api_port_print_entry(switch_port_t port)
