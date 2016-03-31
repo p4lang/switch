@@ -184,26 +184,9 @@ sai_api_uninitialize(void) {
     return status;
 }
 
-#else
-
-sai_status_t
-sai_api_initialize(_In_ uint64_t flags,
-                   _In_ const service_method_table_t* services) {
-    sai_status_t status =  SAI_STATUS_SUCCESS;
-    UNUSED(services);
-
-    initialized = 1;
-    sai_initialize();
-
-    services = &sai_services;
-    return status;
+#ifdef __cplusplus
 }
-
-sai_status_t
-sai_api_uninitialize(void) {
-    sai_status_t status =  SAI_STATUS_SUCCESS;
-    return status;
-}
+#endif /* __cplusplus */
 
 #else
 extern int bmv2_model_init();
@@ -226,7 +209,3 @@ sai_api_initialize(uint64_t flags,
 }
 
 #endif /* SAI_BMLIB */
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
