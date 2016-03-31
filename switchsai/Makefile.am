@@ -1,13 +1,10 @@
 ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS} -I m4
 
-#libswitchsai_la_CFLAGS = -I$(srcdir)/submodules/ocpsai/sai/inc -I$(srcdir)/../../modules/BMI/module/inc
-libswitchsai_la_CFLAGS = -I$(srcdir)/submodules/ocpsai/inc -I$(srcdir)/../../modules/BMI/module/inc
-libswitchsai_la_CFLAGS += -I$(builddir)/src/gen-cpp
-libswitchsai_la_CFLAGS += -I$(top_srcdir)/switchapi/third-party/tommyds/include
-libswitchsai_la_CFLAGS += -I$(top_srcdir)/p4src/includes
-libswitchsai_la_CXXFLAGS = $(libswitchsai_la_CFLAGS)
-libswitchsai_a_CFLAGS = $(libswitchsai_la_CFLAGS)
-libswitchsai_a_CXXFLAGS = $(libswitchsai_a_CFLAGS)
+AM_CPPFLAGS = -I$(srcdir)/submodules/SAI/inc
+AM_CPPFLAGS += -I$(top_srcdir)/switchapi/inc
+AM_CPPFLAGS += -I$(builddir)/src/gen-cpp
+AM_CPPFLAGS += -I$(top_srcdir)/switchapi/third-party/tommyds/include
+AM_CPPFLAGS += -I$(top_srcdir)/p4src/includes
 
 if P4THRIFT
     AM_CPPFLAGS += -DP4THRIFT
