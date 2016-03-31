@@ -86,6 +86,7 @@ switch_api_nhop_set(switch_device_t device, switch_handle_t handle,
     switch_nhop_info_t *info = switch_nhop_get(handle);
     switch (info->type) {
         case SWITCH_NHOP_INDEX_TYPE_ONE_PATH:
+            // need to check each field in key diff?
             memcpy(&info->u.spath.nhop_key, nhop_key, sizeof(switch_nhop_key_t));
             break;
         case SWITCH_NHOP_INDEX_TYPE_ECMP:

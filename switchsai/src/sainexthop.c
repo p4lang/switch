@@ -132,17 +132,6 @@ sai_status_t sai_remove_next_hop_entry(
     return (sai_status_t) status;
 }
 
-// just a helper function
-sai_status_t sai_get_switch_nhop_key(
-        sai_object_id_t next_hop_id,
-        switch_nhop_key_t **key) {
-
-    sai_status_t status = SAI_STATUS_SUCCESS;
-
-
-    return status;
-}
-
 /*
 * Routine Description:
 *    Set Next Hop attribute
@@ -162,6 +151,7 @@ sai_status_t sai_set_next_hop_entry_attribute(
     SAI_LOG_ENTER();
 
     sai_status_t status = SAI_STATUS_SUCCESS;
+    switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
 
     if (!attr) {
         status = SAI_STATUS_INVALID_PARAMETER;
@@ -170,23 +160,31 @@ sai_status_t sai_set_next_hop_entry_attribute(
         return status;
     }
 
-    switch_nhop_key_t key;
+    switch_nhop_key_t *key;
+    if ((switch_status = switch_api_nhop_get(
+            device,
+            (switch_handle_t) next_hop_id,
+            &key))
+        != SWITCH_STATUS_SUCCESS) {
+        return sai_switch_status_to_sai_status(switch_status);
+    }
+
     switch (attr->id) {
         case SAI_NEXT_HOP_ATTR_TYPE:
             break;
         case SAI_NEXT_HOP_ATTR_IP:
             status = sai_ip_addr_to_switch_ip_addr(
                 &attr->value.ipaddr,
-                &key.ip_addr);
+                &key->ip_addr);
             break;
         case SAI_NEXT_HOP_ATTR_ROUTER_INTERFACE_ID:
-            key.intf_handle = attr->value.oid;
+            key->intf_handle = attr->value.oid;
             break;
         default:
             return SAI_STATUS_INVALID_PARAMETER;
     }
 
-    if (switch_api_nhop_update(device, (switch_handle_t) next_hop_id, &key)
+    if (switch_api_nhop_set(device, (switch_handle_t) next_hop_id, key)
         == SWITCH_STATUS_SUCCESS) {
         status = SAI_STATUS_SUCCESS;
     } else {
@@ -221,6 +219,7 @@ sai_status_t sai_get_next_hop_entry_attribute(
     SAI_LOG_ENTER();
 
     sai_status_t status = SAI_STATUS_SUCCESS;
+    switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
 
     if (!attr_list) {
         status = SAI_STATUS_INVALID_PARAMETER;
@@ -230,9 +229,12 @@ sai_status_t sai_get_next_hop_entry_attribute(
     }
 
     switch_nhop_key_t *key;
-    if (switch_api_nhop_get(device, (switch_handle_t) next_hop_id, &key)
+    if ((switch_status = switch_api_nhop_get
+            device,
+            (switch_handle_t) next_hop_id,
+            &key)
         != SWITCH_STATUS_SUCCESS) {
-        return SAI_STATUS_FAILURE;
+        return sai_switch_status_to_sai_status(switch_status);
     }
 
     int index;
