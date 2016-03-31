@@ -480,7 +480,7 @@ switch_mac_update_nhop(switch_device_t device,
         }
         spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
         spath_info->nhop_key.intf_handle = intf_handle;
-        status = switch_api_nhop_refresh(device, nhop_handle);
+        status = switch_api_nhop_update(device, nhop_handle);
     }
     return status;
 }

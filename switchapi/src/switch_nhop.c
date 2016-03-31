@@ -80,8 +80,8 @@ switch_nhop_get(switch_handle_t nhop_handle)
 }
 
 switch_status_t
-switch_api_nhop_update(switch_device_t device, switch_handle_t handle,
-                       switch_nhop_key_t *nhop_key)
+switch_api_nhop_set(switch_device_t device, switch_handle_t handle,
+                    switch_nhop_key_t *nhop_key)
 {
     switch_nhop_info_t *info = switch_nhop_get(handle);
     switch (info->type) {
@@ -93,7 +93,7 @@ switch_api_nhop_update(switch_device_t device, switch_handle_t handle,
             return SWITCH_STATUS_NOT_SUPPORTED;
     }
 
-    return switch_api_nhop_refresh(device, handle);
+    return switch_api_nhop_update(device, handle);
 }
 
 switch_status_t
@@ -404,7 +404,7 @@ switch_api_nhop_create(switch_device_t device, switch_nhop_key_t *nhop_key)
 }
 
 switch_status_t
-switch_api_nhop_refresh(switch_device_t device, switch_handle_t nhop_handle)
+switch_api_nhop_update(switch_device_t device, switch_handle_t nhop_handle)
 {
     switch_nhop_info_t                *nhop_info = NULL;
     switch_interface_info_t           *intf_info = NULL;

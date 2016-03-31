@@ -51,8 +51,8 @@ switch_handle_t switch_api_nhop_create(switch_device_t device, switch_nhop_key_t
  @param handle - handle of the next hop to update
  @param nhop_key - nhop key with new info
 */
-switch_status_t switch_api_nhop_update(switch_device_t device,
-    switch_handle_t handle, switch_nhop_key_t *nhop_key);
+switch_status_t switch_api_nhop_set(switch_device_t device, switch_handle_t handle,
+                                    switch_nhop_key_t *nhop_key);
 
 /**
  Get attributes of a Nexthop
@@ -60,8 +60,8 @@ switch_status_t switch_api_nhop_update(switch_device_t device,
  @param handle - handle of the next hop to get 
  @param [out]nhop_key - pointer to the attribute obj 
 */
-switch_status_t switch_api_nhop_get(switch_device_t device,
-    switch_handle_t handle, switch_nhop_key_t **nhop_key);
+switch_status_t switch_api_nhop_get(switch_device_t device, switch_handle_t handle,
+                                    switch_nhop_key_t **nhop_key);
 
 /**
  Delete a Nexthop

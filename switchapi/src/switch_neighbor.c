@@ -418,7 +418,7 @@ switch_api_neighbor_entry_add(switch_device_t device, switch_api_neighbor_t *nei
         spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
         spath_info->neighbor_handle = handle;
         neighbor_info->neighbor.nhop_handle = nhop_handle;
-        status = switch_api_nhop_refresh(device, nhop_handle);
+        status = switch_api_nhop_update(device, nhop_handle);
         status = switch_api_neighbor_entry_add_rewrite(device, handle, neighbor_info);
     } else {
         status = switch_api_neighbor_entry_add_tunnel_rewrite(device, neighbor_info);
@@ -475,7 +475,7 @@ switch_api_neighbor_entry_remove(switch_device_t device, switch_handle_t neighbo
     nhop_info = switch_nhop_get(neighbor_info->neighbor.nhop_handle);
     if (nhop_info) {
         nhop_info->u.spath.neighbor_handle = 0;
-        status = switch_api_nhop_refresh(device, neighbor_info->neighbor.nhop_handle);
+        status = switch_api_nhop_update(device, neighbor_info->neighbor.nhop_handle);
         if (nhop_info->valid == 0) {
             switch_api_nhop_delete(device, neighbor_info->neighbor.nhop_handle);
         }
