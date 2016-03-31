@@ -100,7 +100,7 @@ src/switch_sai_rpc_server.cpp
 
 noinst_LTLIBRARIES =
 lib_LIBRARIES =
-lib_LTLIBRARIES = 
+lib_LTLIBRARIES =
 
 if WITH_BMV2
 libbmswitchsai_la_CPPFLAGS = $(AM_CPPFLAGS)
@@ -115,6 +115,12 @@ endif
 if WITH_P4FACTORY
 lib_LIBRARIES += libswitchsai.a
 libswitchsai_a_SOURCES = $(switchsai_sources)
+# FIXME: this also creates shared libraries for p4factory, needs to be
+# deprecated
+lib_LTLIBRARIES += libswitchsai.la
+# has the advantage of avoiding "created both with libtool and without" error
+libswitchsai_la_CPPFLAGS = $(AM_CPPFLAGS)
+libswitchsai_la_SOURCES = $(switchsai_sources)
 endif
 
 # FIXME: not sure if this serves a real purpose

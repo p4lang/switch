@@ -167,7 +167,7 @@ fi
 # Check for libJudy
 AC_CHECK_LIB([Judy], [Judy1Next], [], [AC_MSG_ERROR([Missing libJudy])])
 
-AC_PATH_PROG([PTF], [ptf], [])
+AC_PATH_PROG([PTF], [ptf], [], [$PATH$PATH_SEPARATOR$BIN_DIR])
 ptf_found=no
 AS_IF([test x"$PTF" != x],
   [ptf_found=yes],
@@ -202,6 +202,13 @@ MY_CPPFLAGS="$MY_CPPFLAGS -I$INCLUDE_DIR"
 AC_SUBST([AM_CPPFLAGS], ["$MY_CPPFLAGS"])
 AC_SUBST([AM_LDFLAGS], ["-L$LIB_DIR"])
 AC_SUBST([MY_PYTHONPATH], ["$PYTHON_DIR"])
+
+# Doxygen support
+DX_DOXYGEN_FEATURE(ON)
+DX_HTML_FEATURE(ON)
+DX_PDF_FEATURE(OFF)
+DX_PS_FEATURE(OFF)
+DX_INIT_DOXYGEN(switchapi, switchapi/Doxyfile, switchapi-doc)
 
 # Generate makefiles
 AC_CONFIG_FILES([switchapi/third-party/tommyds/Makefile

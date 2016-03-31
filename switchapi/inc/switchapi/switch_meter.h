@@ -27,7 +27,7 @@ limitations under the License.
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-/** @defgroup Switching Meters Switching API
+/** @defgroup Meters Meters Switching API
  *  API functions listed to configure meters
  *  @{
  */ // begin of meters
@@ -36,7 +36,7 @@ extern "C" {
 /** Meter mode */
 typedef enum switch_meter_mode_ {
     SWITCH_METER_MODE_NONE,                          /**< none */
-    SWITCH_METER_MODE_TWO_RATE_THREE_COLOR,          /**< two rate, three color */   
+    SWITCH_METER_MODE_TWO_RATE_THREE_COLOR,          /**< two rate, three color */
     SWITCH_METER_MODE_STORM_CONTROL                  /**< storm control */
 } switch_meter_mode_t;
 
@@ -54,7 +54,7 @@ typedef enum switch_meter_type_ {
     SWITCH_METER_TYPE_BYTES = 2,
 } switch_meter_type_t;
 
-/* Meter color */
+/** Meter color */
 typedef enum switch_meter_color_ {
     SWITCH_METER_COLOR_GREEN,
     SWITCH_METER_COLOR_YELLOW,
@@ -62,6 +62,7 @@ typedef enum switch_meter_color_ {
     SWITCH_METER_COLOR_MAX
 } switch_meter_color_t;
 
+/** Meter stats */
 typedef enum switch_meter_stats_ {
     SWITCH_METER_STATS_GREEEN,
     SWITCH_METER_STATS_YELLOW,
