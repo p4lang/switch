@@ -141,6 +141,39 @@ switch_status_t switch_api_interface_attribute_get(switch_handle_t intf_handle,
                                            switch_intf_attr_t attr_type,
                                            uint64_t *value);
 
+// read only
+
+/**
+ Get the interface's port id
+ @param intf_handle - Handle that uniquely identifies interface
+ @param value - Address of vrf destination 
+ */
+switch_status_t switch_api_interface_vrf_get(switch_handle_t intf_handle, uint64_t value);
+
+/**
+ Get the interface's port id
+ @param intf_handle - Handle that uniquely identifies interface
+ @param value - Address of port id destination 
+ */
+switch_status_t switch_api_interface_port_id_get(switch_handle_t intf_handle, uint64_t value);
+
+/**
+ Get the interface's vlan id
+ @param intf_handle - Handle that uniquely identifies interface
+ @param value - Address of vlan id destination 
+ */
+switch_status_t switch_api_interface_vlan_id_get(switch_handle_t intf_handle, uint64_t value);
+
+/**
+ Get the interface's mac address
+ @param intf_handle - Handle that uniquely identifies interface
+ @param value - Address of destination mac container 
+ */
+switch_status_t
+switch_api_interface_rmac_addr_get(switch_handle_t intf_handle, uint64_t value);
+
+// read-write
+
 /**
  Set IPv4 enable interface attribute
  @param intf_handle - Handle that uniquely identifies interface

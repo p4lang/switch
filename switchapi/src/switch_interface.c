@@ -586,27 +586,19 @@ switch_api_interface_attribute_get(switch_handle_t intf_handle,
 
     switch (attr_type) {
         case SWITCH_INTF_ATTR_VRF:
-            *value = intf_info->api_intf_info.vrf_handle;
+            switch_api_interface_vrf_get(intf_handle, value);
             break;
         case SWITCH_INTF_ATTR_TYPE:
             // not sure yet
             break;
         case SWITCH_INTF_ATTR_PORT_ID:
-            if (!SWITCH_INTF_IS_PORT_L3(intf_info)
-                && !SWITCH_INTF_IS_PORT_L2(intf_info)) {
-                return SWITCH_STATUS_INVALID_INTERFACE;
-            }
-            *value = intf_info->api_intf_info.u.port_lag_handle;
+            switch_api_interface_port_id_get(intf_handle, value);
             break;
         case SWITCH_INTF_ATTR_VLAN_ID:
-            if (SWITCH_INTF_IS_PORT_L3(intf_info)
-                || SWITCH_INTF_IS_PORT_L2(intf_info)) {
-                return SWITCH_STATUS_INVALID_INTERFACE;
-            }
-            *value = intf_info->api_intf_info.u.vlan_id;
+            switch_api_interface_vlan_id_get(intf_handle, value);
             break;
         case SWITCH_INTF_ATTR_RMAC_ADDR:
-            memcpy((uint8_t *) value, intf_info->api_intf_info.mac.mac_addr, 6);
+            status = switch_api_interface_rmac_addr_get(intf_handle, value);
             break;
         case SWITCH_INTF_ATTR_V4_UNICAST:
             status = switch_api_interface_ipv4_unicast_enabled_get(
@@ -625,6 +617,93 @@ switch_api_interface_attribute_get(switch_handle_t intf_handle,
     }
     return status;
 }
+
+// read only
+
+switch_status_t
+switch_api_interface_vrf_get(switch_handle_t intf_handle, uint64_t value)
+{
+    switch_interface_info_t           *intf_info = NULL;
+    switch_api_interface_info_t       *api_intf_info = NULL;
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+
+    intf_info = switch_api_interface_get(intf_handle);
+    if (!intf_info) {
+        return SWITCH_STATUS_INVALID_INTERFACE;
+    }
+
+    api_intf_info = &intf_info->api_intf_info;
+    
+    *value = api_intf_info->vrf_handle;
+
+    return status;
+}
+
+switch_status_t
+switch_api_interface_port_id_get(switch_handle_t intf_handle, uint64_t value)
+{
+    switch_interface_info_t           *intf_info = NULL;
+    switch_api_interface_info_t       *api_intf_info = NULL;
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+
+    intf_info = switch_api_interface_get(intf_handle);
+    if (!intf_info) {
+        return SWITCH_STATUS_INVALID_INTERFACE;
+    }
+
+    api_intf_info = &intf_info->api_intf_info;
+    if (!SWITCH_INTF_IS_PORT_L3(intf_info)
+        && !SWITCH_INTF_IS_PORT_L2(intf_info)) {
+        return SWITCH_STATUS_INVALID_INTERFACE;
+    }
+    *value = api_intf_info->u.port_lag_handle;
+
+    return status;
+}
+
+switch_status_t
+switch_api_interface_vlan_id_get(switch_handle_t intf_handle, uint64_t value)
+{
+    switch_interface_info_t           *intf_info = NULL;
+    switch_api_interface_info_t       *api_intf_info = NULL;
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+
+    intf_info = switch_api_interface_get(intf_handle);
+    if (!intf_info) {
+        return SWITCH_STATUS_INVALID_INTERFACE;
+    }
+
+    api_intf_info = &intf_info->api_intf_info;
+    if (SWITCH_INTF_IS_PORT_L3(intf_info)
+        || SWITCH_INTF_IS_PORT_L2(intf_info)) {
+        return SWITCH_STATUS_INVALID_INTERFACE;
+    }
+    *value = api_intf_info->u.vlan_id;
+
+    return status;
+}
+
+switch_status_t
+switch_api_interface_rmac_addr_get(switch_handle_t intf_handle,
+                                              uint64_t value)
+{
+    switch_interface_info_t           *intf_info = NULL;
+    switch_api_interface_info_t       *api_intf_info = NULL;
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+
+    intf_info = switch_api_interface_get(intf_handle);
+    if (!intf_info) {
+        return SWITCH_STATUS_INVALID_INTERFACE;
+    }
+
+    api_intf_info = &intf_info->api_intf_info;
+
+    memcpy((uint8_t *) value, api_intf_info->mac.mac_addr, 6);
+
+    return status;
+}
+
+// read-write
 
 switch_status_t
 switch_api_interface_ipv4_unicast_enabled_set(switch_handle_t intf_handle,
