@@ -47,7 +47,7 @@ sai_status_t sai_set_port_attribute(
     if (!attr) {
         status = SAI_STATUS_INVALID_PARAMETER;
         SAI_LOG_ERROR("null attribute: %s",
-                       sai_status_to_string(status));
+            sai_status_to_string(status));
         return status;
     }
 
@@ -58,8 +58,8 @@ sai_status_t sai_set_port_attribute(
                 &vlan_handle);
             status = sai_switch_status_to_sai_status(switch_status);
             if (status != SAI_STATUS_SUCCESS) {
-                SAI_LOG_ERROR("failed to get vlan %d: %s",
-                              sai_status_to_string(status));
+                SAI_LOG_ERROR("failed to get vlan for port %d. Vlan %d",
+                  sai_status_to_string(status));
                 return status;
             }
             switch_port.handle = (switch_handle_t) port_id;
@@ -79,8 +79,8 @@ sai_status_t sai_set_port_attribute(
                     attr->value.u32,
                     &port_speed))
                 != SAI_STATUS_SUCCESS) {
-                SAI_LOG_ERROR("failed to set port %d speed: %s",
-                              port_id, sai_status_to_string(status));
+                SAI_LOG_ERROR("bad port speed for port %d speed: %s",
+                    port_id, sai_status_to_string(status));
                 return status;
             }
             switch_status = switch_api_port_speed_set(
@@ -90,7 +90,7 @@ sai_status_t sai_set_port_attribute(
             if ((status = sai_switch_status_to_sai_status(switch_status))
                 != SAI_STATUS_SUCCESS) {
                 SAI_LOG_ERROR("failed to set port %d speed: %s",
-                              port_id, sai_status_to_string(status));
+                    port_id, sai_status_to_string(status));
                 return status;
             }
             break;
@@ -152,7 +152,7 @@ sai_status_t sai_get_port_attribute(
                 if ((status = sai_switch_status_to_sai_status(switch_status))
                     != SAI_STATUS_SUCCESS) {
                     SAI_LOG_ERROR("failed to get port %d oper state: %s",
-                                  port_id, sai_status_to_string(status));
+                        port_id, sai_status_to_string(status));
                     return status;
                 }
                 status = switch_port_enabled_to_sai_oper_status(attribute);
@@ -165,7 +165,7 @@ sai_status_t sai_get_port_attribute(
                 if ((status = sai_switch_status_to_sai_status(switch_status))
                     != SAI_STATUS_SUCCESS) {
                     SAI_LOG_ERROR("failed to get port %d speed: %s",
-                                  port_id, sai_status_to_string(status));
+                        port_id, sai_status_to_string(status));
                     return status;
                 }
                 break;
