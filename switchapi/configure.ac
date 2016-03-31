@@ -27,7 +27,7 @@ AS_IF([test "x$enable_coverage" = "xyes"], [
 CFLAGS="-g -Wall -Wextra -Wno-unused-parameter"
 AC_PROG_CC_STDC
 AC_PROG_CXX
-AC_PROG_RANLIB
+LT_INIT
 
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -39,6 +39,23 @@ AC_LANG_PUSH(C)
 
 AC_CHECK_HEADERS([assert.h stdio.h string.h sys/stat.h sys/types.h unistd.h], \
 [], [AC_MSG_ERROR([Missing header file])])
+
+# Thrift
+AC_WITH([p4thrift],
+    [
+        AC_PATH_PROG([THRIFT], [p4thrift], [])
+        AC_SUBST([THRIFT_LIB], ["-lp4thrift"])
+        WITH_P4THRIFT="true"
+        AC_CHECK_HEADER([p4thrift/P4Thrift.h], [], [AC_MSG_ERROR([P4Thrift headers not found. Install P4Thrift from http://github.com/p4lang/thrift/])])
+    ],
+    [
+        AC_PATH_PROG([THRIFT], [thrift], [])
+        AC_SUBST([THRIFT_LIB], ["-lthrift"])
+        AC_CHECK_HEADER([thrift/Thrift.h], [], [AC_MSG_ERROR([Thrift headers not found. Install Thrift from http://thrift.apache.org/docs/install/])])
+    ])
+AM_CONDITIONAL([P4THRIFT], [test "x$WITH_P4THRIFT" != "x"])
+AS_IF([test x"$THRIFT" = x],
+[AC_MSG_ERROR([cannot find thrift])])
 
 AC_CHECK_LIB([pcap], [pcap_create], [], [AC_MSG_ERROR([Missing libpcap])])
 if test -n "$COVERAGE_FLAGS"; then
@@ -59,5 +76,5 @@ AC_TYPE_UINT64_T
 #[AC_CONFIG_FILES([doc/Doxyfile])])
 
 # Generate makefiles
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile third-party/tommyds/Makefile])
 AC_OUTPUT

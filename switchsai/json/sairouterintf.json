@@ -1,0 +1,95 @@
+{
+    "module_name"          :      "routerinterface",
+    "attributes"           : [
+    {
+        "attribute_desc"          :      "rif",
+        "attribute_list"          : [
+            {
+                "name"          :     "SAI_ROUTER_INTERFACE_ATTR_VIRTUAL_ROUTER_ID",
+                "mandatory"     :     "true",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "oid"
+            },
+            {
+                "name"          :     "SAI_ROUTER_INTERFACE_ATTR_TYPE",
+                "mandatory"     :     "true",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u8"
+            },
+            {
+                "name"          :     "SAI_ROUTER_INTERFACE_ATTR_PORT_ID",
+                "mandatory"     :     "true",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "oid",
+                "dependency"    : {
+                    "attr1"         :         "SAI_ROUTER_INTERFACE_ATTR_TYPE",
+                    "value1"        :         "SAI_ROUTER_INTERFACE_TYPE_PORT"
+                }
+            },
+            {
+                "name"          :     "SAI_ROUTER_INTERFACE_ATTR_VLAN_ID",
+                "mandatory"     :     "true",
+                "create"        :     "true",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_ONLY",
+                "data_type"     :     "u16",
+                "dependency"    : {
+                    "attr1"         :         "SAI_ROUTER_INTERFACE_ATTR_TYPE",
+                    "value1"        :         "SAI_ROUTER_INTERFACE_TYPE_PORT"
+                }
+            },
+            {
+                "name"          :     "SAI_ROUTER_INTERFACE_ATTR_SRC_MAC_ADDRESS",
+                "mandatory"     :     "true",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "mac",
+                "default"       :     "SAI_VIRTUAL_ROUTER_ATTR_SRC_MAC_ADDRESS",
+                "default_query" :     "router"
+            },
+            {
+                "name"          :     "SAI_ROUTER_INTERFACE_ATTR_ADMIN_V4_STATE",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool",
+                "default"       :     "true"
+            },
+            {
+                "name"          :     "SAI_ROUTER_INTERFACE_ATTR_ADMIN_V6_STATE",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool",
+                "default"       :     "true"
+            },
+            {
+                "name"          :     "SAI_ROUTER_INTERFACE_ATTR_MTU",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u32",
+                "default"       :     "1514"
+            }
+        ]
+    }
+    ]
+}

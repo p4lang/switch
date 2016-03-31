@@ -138,16 +138,16 @@ switch_packet_rx_from_hw()
                in_packet + SWITCH_PACKET_HEADER_OFFSET +
                sizeof(switch_packet_header_t),
                packet_size - SWITCH_PACKET_HEADER_OFFSET);
-        packet_header->cpu_header.ingress_ifindex =
-            ntohs(packet_header->cpu_header.ingress_ifindex);
         packet_header->cpu_header.reason_code =
             ntohs(packet_header->cpu_header.reason_code);
         if(packet_header->cpu_header.reason_code == SWITCH_HOSTIF_REASON_CODE_NULL_DROP)
             continue;
         packet_header->cpu_header.ingress_port =
             ntohs(packet_header->cpu_header.ingress_port);
-//         SWITCH_API_TRACE("Received packet from hw ifindex %x\n",
-//                          packet_header->fabric_header.ingress_ifindex);
+        packet_header->cpu_header.ingress_ifindex =
+            ntohs(packet_header->cpu_header.ingress_ifindex);
+        packet_header->cpu_header.ingress_bd =
+            ntohs(packet_header->cpu_header.ingress_bd);
         status = switch_api_hostif_rx_packet_from_hw(packet_header, packet, packet_size);
         if (status != SWITCH_STATUS_SUCCESS) {
             return;

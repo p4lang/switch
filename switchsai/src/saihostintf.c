@@ -444,7 +444,7 @@ switch_hostif_reason_code_t switch_sai_to_switch_api_reason_code(
 
 switch_acl_action_t switch_sai_action_to_switch_api_action(
         sai_packet_action_t packet_action) {
-    switch_acl_action_t acl_action;
+    switch_acl_action_t acl_action = SWITCH_ACL_ACTION_NOP;
     switch (packet_action) {
         case SAI_PACKET_ACTION_DROP:
             acl_action = SWITCH_ACL_ACTION_DROP;

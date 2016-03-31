@@ -20,7 +20,6 @@ limitations under the License.
 #include "switch_base_types.h"
 #include "switch_handle.h"
 #include "switch_tunnel.h"
-#include "model_flags.h"
 #ifdef BMV2
 #include "pd/pd_mirroring.h"
 #else
@@ -74,8 +73,14 @@ typedef struct switch_api_mirror_info_ {
     uint32_t max_pkt_len;
     switch_handle_t nhop_handle;
     bool enable;
+    uint32_t extract_len;
+    uint32_t timeout_usec;
 } switch_api_mirror_info_t;
 
+/*
+ * MAX mirroring sessions supported
+ */
+#define SWITCH_MAX_MIRROR_SESSIONS 1024
 /**
 * ID for cpu mirror session
 */

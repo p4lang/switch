@@ -186,22 +186,25 @@ parser parse_qinq_vlan {
 /* all the tags but the last one */
 header mpls_t mpls[MPLS_DEPTH];
 
-/* TODO: this will be optimized when pushed to the chip ? */
 parser parse_mpls {
+#ifndef MPLS_DISABLE
     extract(mpls[next]);
     return select(latest.bos) {
         0 : parse_mpls;
         1 : parse_mpls_bos;
         default: ingress;
     }
+#else
+    return ingress;
+#endif
 }
 
 parser parse_mpls_bos {
-    //TODO: last keyword is not supported in compiler yet.
-    // replace mpls[0] to mpls[last]
     return select(current(0, 4)) {
+#ifndef MPLS_DISABLE
         0x4 : parse_mpls_inner_ipv4;
         0x6 : parse_mpls_inner_ipv6;
+#endif
         default: parse_eompls;
     }
 }
@@ -248,9 +251,9 @@ parser parse_pw {
 #define IP_PROTOCOLS_IPHL_IPV6         0x529
 #define IP_PROTOCOLS_IPHL_GRE          0x52f
 
-/* Vxlan header decoding for INT */
+// Vxlan header decoding for INT
+// flags.p == 1 && next_proto == 5
 #ifndef __TARGET_BMV2__
-/* flags.p == 1 && next_proto == 5 */
 #define VXLAN_GPE_NEXT_PROTO_INT        0x0805 mask 0x08ff
 #else
 #define VXLAN_GPE_NEXT_PROTO_INT        0x05 mask 0xff
@@ -438,7 +441,7 @@ parser parse_udp {
         UDP_PORT_VXLAN : parse_vxlan;
         UDP_PORT_GENV: parse_geneve;
 #ifdef INT_ENABLE
-        /* vxlan-gpe is only supported in the context of INT at this time */
+        // vxlan-gpe is only supported in the context of INT at this time
         UDP_PORT_VXLAN_GPE : parse_vxlan_gpe;
 #endif
 #ifdef ADV_FEATURES
@@ -471,7 +474,7 @@ header int_egress_port_tx_utilization_header_t  int_egress_port_tx_utilization_h
 header vxlan_gpe_int_header_t                   vxlan_gpe_int_header;
 
 parser parse_gpe_int_header {
-    /* GPE uses a shim header to preserve the next_protocol field */
+    // GPE uses a shim header to preserve the next_protocol field
     extract(vxlan_gpe_int_header);
     set_metadata(int_metadata.gpe_int_hdr_len, latest.len);
     return parse_int_header;
@@ -480,20 +483,37 @@ parser parse_int_header {
     extract(int_header);
     set_metadata(int_metadata.instruction_cnt, latest.ins_cnt);
     return select (latest.rsvd1, latest.total_hop_cnt) {
-        /* reserved bits = 0 and total_hop_cnt == 0 
-         * no int_values are added by upstream
-         */
+        // reserved bits = 0 and total_hop_cnt == 0 
+        // no int_values are added by upstream
         0x000: ingress;
-        /* use an invalid value below so we never transition to the state */
-        0x100: parse_all_int_meta_value_heders;
-        default: ingress;
+#ifdef INT_EP_ENABLE
+        // parse INT val headers added by upstream devices (total_hop_cnt != 0)
+        // reserved bits must be 0
+        0x000 mask 0xf00: parse_int_val;
+#endif
+        0 mask 0: ingress;
+        // never transition to the following state
+        default: parse_all_int_meta_value_heders;
     }
 }
 
+#ifdef INT_EP_ENABLE
+#define MAX_INT_INFO    24
+header int_value_t int_val[MAX_INT_INFO];
+
+parser parse_int_val {
+    extract(int_val[next]);
+    return select(latest.bos) {
+        0 : parse_int_val;
+        1 : parse_inner_ethernet;
+    }
+}
+#endif // INT_EP_ENABLE
+
 parser parse_all_int_meta_value_heders {
-    /* bogus state.. just extract all posiible int headers in the 
-     * correct order to build the correct parse graph for deparser 
-     */
+    // bogus state.. just extract all possible int headers in the 
+    // correct order to build 
+    // the correct parse graph for deparser (while adding headers)
     extract(int_switch_id_header);
     extract(int_ingress_port_id_header);
     extract(int_hop_latency_header);
@@ -502,7 +522,11 @@ parser parse_all_int_meta_value_heders {
     extract(int_egress_port_id_header);
     extract(int_q_congestion_header);
     extract(int_egress_port_tx_utilization_header);
+#ifdef INT_EP_ENABLE
+    return parse_int_val;
+#else
     return ingress;
+#endif
 }
 
 #endif // INT_ENABLE
@@ -641,9 +665,9 @@ parser parse_vxlan_gpe {
                  INGRESS_TUNNEL_TYPE_VXLAN_GPE);
     set_metadata(tunnel_metadata.tunnel_vni, latest.vni);
 #ifndef __TARGET_BMV2__
-    return select (vxlan_gpe.flags, vxlan_gpe.next_proto)
+    return select(vxlan_gpe.flags, vxlan_gpe.next_proto)
 #else
-    return select (vxlan_gpe.next_proto)
+    return select(vxlan_gpe.next_proto)
 #endif
     {
         VXLAN_GPE_NEXT_PROTO_INT : parse_gpe_int_header;

@@ -153,14 +153,16 @@ sai_status_t sai_get_switch_attribute(
                     objlist->list[index2] = api_switch_info.port_list[index2];
                 }
                 break;
-//            case SAI_SWITCH_ATTR_LAG_HASH_ALGO:
-//            case SAI_SWITCH_ATTR_LAG_HASH_SEED:
-//            case SAI_SWITCH_ATTR_LAG_HASH_FIELDS:
-//                break;
-//            case SAI_SWITCH_ATTR_ECMP_HASH_ALGO:
-//            case SAI_SWITCH_ATTR_ECMP_HASH_SEED:
-//            case SAI_SWITCH_ATTR_ECMP_HASH_FIELDS:
-//                break;
+            case SAI_SWITCH_ATTR_LAG_DEFAULT_HASH_ALGORITHM:
+            case SAI_SWITCH_ATTR_LAG_DEFAULT_HASH_SEED:
+            case SAI_SWITCH_ATTR_LAG_HASH_IPV4:
+            case SAI_SWITCH_ATTR_LAG_HASH_IPV4_IN_IPV4:
+                break;
+            case SAI_SWITCH_ATTR_ECMP_DEFAULT_HASH_ALGORITHM:
+            case SAI_SWITCH_ATTR_ECMP_DEFAULT_HASH_SEED:
+            case SAI_SWITCH_ATTR_ECMP_HASH_IPV4:
+            case SAI_SWITCH_ATTR_ECMP_HASH_IPV4_IN_IPV4:
+                break;
             case SAI_SWITCH_ATTR_MAX_VIRTUAL_ROUTERS:
                 break;
             case SAI_SWITCH_ATTR_DEFAULT_STP_INST_ID:
@@ -173,9 +175,6 @@ sai_status_t sai_get_switch_attribute(
             case SAI_SWITCH_ATTR_CPU_PORT:
                 attr_list->value.oid = api_switch_info.port_list[64];
                 break;
-//            case SAI_SWITCH_ATTR_DEFAULT_PORT_VLAN_ID:
-//                attribute->value.u16 = api_switch_info.default_vlan;
-//                break;
         }
     }
 

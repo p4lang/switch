@@ -23,15 +23,15 @@ limitations under the License.
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-    
+
 /** @defgroup L3 L3 API
  *  API functions create IP interfaces and route
  *  @{
  */ // begin of L3 API
 //L3
-    
+
 //RPF check
-/** Mode for RPF check - Only use src or dest address or qualify in interface */
+/** Mode for RPF check - loose or strict mode */
 typedef enum {
     SWITCH_API_RPF_CHECK_DEFAULT,
     SWITCH_API_RPF_CHECK_LOOSE,
@@ -80,7 +80,7 @@ switch_status_t switch_api_l3_route_add(switch_device_t device, switch_handle_t 
 */
 switch_status_t switch_api_l3_route_delete(switch_device_t device, switch_handle_t vrf,
                                    switch_ip_addr_t *ip_addr, switch_handle_t nhop_handle);
-    
+
 /**
  Set native vlan on interface
  @param intf_handle - Handle that uniquely identifies interface
@@ -131,14 +131,14 @@ switch_status_t switch_api_l3_route_entries_get(switch_l3_table_iterator_fn iter
 switch_status_t switch_api_l3_route_entries_get_by_vrf(switch_handle_t vrf_handle, switch_l3_table_iterator_fn iterator_fn);
 
 /**
- Get all L3 V4 routes in a vrf 
+ Get all L3 V4 routes in a vrf
  @param vrf_handle Vrf handle
  @param iterator_fn - Iterator function to be called
  */
 switch_status_t switch_api_l3_v4_route_entries_get_by_vrf(switch_handle_t vrf_handle, switch_l3_table_iterator_fn iterator_fn);
 
 /**
- Get all L3 V6 routes in a vrf 
+ Get all L3 V6 routes in a vrf
  @param vrf_handle Vrf handle
  @param iterator_fn - Iterator function to be called
  */

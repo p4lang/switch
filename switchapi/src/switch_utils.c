@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 #include "switchapi/switch_utils.h"
+#include "switch_ver.h"
 
 #define SWITCH_L3_HASH_TABLE_SIZE (64*1024)
 
@@ -69,6 +70,18 @@ uint32_t MurmurHash2 ( const void * key, size_t len, uint32_t seed )
     h ^= h >> 15;
 
     return h;
+}
+
+const char *
+switch_get_version(void)
+{
+    return SWITCH_VER;
+}
+
+const char *
+switch_get_internal_version(void)
+{
+    return SWITCH_INTERNAL_VER;
 }
 
 #ifdef __cplusplus

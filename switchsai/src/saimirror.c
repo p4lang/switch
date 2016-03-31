@@ -63,7 +63,7 @@ static void sai_mirror_session_attribute_parse(
         switch (attribute->id) {
             case SAI_MIRROR_SESSION_ATTR_TYPE:
                 api_mirror_info->mirror_type = 
-                            sai_session_to_switch_session(attribute->value.u8);
+                            sai_session_to_switch_session(attribute->value.s32);
                 break;
             case SAI_MIRROR_SESSION_ATTR_MONITOR_PORT:
                 api_mirror_info->egress_port = attribute->value.oid;
@@ -82,7 +82,7 @@ static void sai_mirror_session_attribute_parse(
                 break;
             case SAI_MIRROR_SESSION_ATTR_ENCAP_TYPE:
                 tunnel_info->encap_info.encap_type = 
-                             sai_erspan_encap_to_switch_erspan_encap(attribute->value.u8);
+                             sai_erspan_encap_to_switch_erspan_encap(attribute->value.s32);
                 break;
             case SAI_MIRROR_SESSION_ATTR_IPHDR_VERSION:
                 break;
@@ -165,12 +165,14 @@ sai_status_t sai_create_mirror_session(
 sai_status_t sai_remove_mirror_session(
         _In_ sai_object_id_t session_id) {
     sai_status_t status = SAI_STATUS_SUCCESS;
+    switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
 
     SAI_LOG_ENTER();
 
     SAI_ASSERT(sai_object_type_query(session_id) == SAI_OBJECT_TYPE_MIRROR);
 
-    status = switch_api_mirror_session_delete(device, session_id);
+    switch_status = switch_api_mirror_session_delete(device, session_id);
+    status = sai_switch_status_to_sai_status(switch_status);
     if (status != SAI_STATUS_SUCCESS) {
         SAI_LOG_ERROR("failed to remove mirror session %lx: %s",
                       session_id,

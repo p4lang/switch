@@ -1,0 +1,49 @@
+{
+    "module_name"          :      "neighbor",
+    "attributes"           : [
+    {
+        "attribute_desc"          :      "neighbor_attributes",
+        "attribute_list"          : [
+            {
+                "name"          :     "SAI_NEIGHBOR_ATTR_DST_MAC_ADDRESS",
+                "mandatory"     :     "true",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "mac"
+            },
+            {
+                "name"          :     "SAI_NEIGHBOR_ATTR_PACKET_ACTION",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u8",
+                "default"       :     "SAI_PACKET_ACTION_FORWARD"
+            },
+            {
+                "name"          :     "SAI_NEIGHBOR_ATTR_NO_HOST_ROUTE",
+                "mandatory"     :     "false",
+                "create"        :     "true",
+                "set"           :     "true",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "bool",
+                "default"       :     "false"
+            },
+            {
+                "name"          :     "SAI_NEIGHBOR_ATTR_META_DATA",
+                "mandatory"     :     "false",
+                "create"        :     "false",
+                "set"           :     "false",
+                "get"           :     "true",
+                "rw_type"       :     "READ_WRITE",
+                "data_type"     :     "u32",
+                "range_type"    :     "SAI_SWITCH_ATTR_NEIGHBOR_DST_USER_META_DATA_RANGE"
+            }
+        ]
+    }
+    ]
+}

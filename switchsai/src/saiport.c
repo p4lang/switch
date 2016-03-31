@@ -62,20 +62,11 @@ sai_status_t sai_set_port_attribute(
                               sai_status_to_string(status));
                 return status;
             }
-            switch_port.handle = (switch_handle_t)port_id;
+            switch_port.handle = (switch_handle_t) port_id;
             switch_port.tagging_mode = SWITCH_VLAN_PORT_UNTAGGED;
-//            switch_status = 
-//            switch_api_vlan_ports_add(
-//                device,
-//                vlan_handle,
-//                1,
-//                &switch_port);
-//            status = sai_switch_status_to_sai_status(switch_status);
-//            if (status != SAI_STATUS_SUCCESS) {
-//                SAI_LOG_ERROR("failed to add port %d to default vlan: %s",
-//                              port_id, sai_status_to_string(status));
-//                return status;
-//            }
+
+            /* TBD: Default BD */
+
             break;
         case SAI_PORT_ATTR_GLOBAL_FLOW_CONTROL:
             // need for disabling ports on shutdown
@@ -103,6 +94,8 @@ sai_status_t sai_set_port_attribute(
                 return status;
             }
             break;
+
+
         default:
             break;
     }
@@ -177,7 +170,7 @@ sai_status_t sai_get_port_attribute(
                 }
                 break;
             case SAI_PORT_ATTR_SUPPORTED_SPEED:
-            // TODO: implement this, should return list of supported port speeds
+                // TODO: implement this, should return list of supported port speeds
                 attribute->value.u32list.count = 0;
                 break;
             default:

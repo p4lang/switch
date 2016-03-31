@@ -28,14 +28,14 @@ extern "C" {
 typedef struct switch_rmac_node_ {
     switch_mac_addr_t mac;
     tommy_node node;
-} switch_rmac_entry_t;
-
-typedef struct switch_rmac_info_ {
-    tommy_list rmac_list;
 #ifdef SWITCH_PD
     p4_pd_entry_hdl_t outer_rmac_entry;
     p4_pd_entry_hdl_t inner_rmac_entry;
 #endif
+} switch_rmac_entry_t;
+
+typedef struct switch_rmac_info_ {
+    tommy_list rmac_list;
 } switch_rmac_info_t;
 
 typedef struct switch_smac_entry_ {
@@ -44,7 +44,7 @@ typedef struct switch_smac_entry_ {
     uint16_t ref_count;
     tommy_hashtable_node node;
 #ifdef SWITCH_PD
-    p4_pd_entry_hdl_t hw_smac_entry[3];
+    p4_pd_entry_hdl_t hw_smac_entry;
 #endif
 } switch_smac_entry_t;
 
@@ -53,7 +53,7 @@ switch_status_t switch_router_mac_init(switch_device_t device);
 switch_status_t switch_router_mac_free(switch_device_t device);
 switch_rmac_info_t * switch_api_rmac_info_get_internal(switch_handle_t rmac_handle);
 
-uint16_t switch_smac_rewrite_add_entry(switch_mac_addr_t *mac);
+switch_status_t switch_smac_rewrite_add_entry(switch_mac_addr_t *mac);
 switch_status_t switch_smac_rewrite_delete_entry(switch_mac_addr_t *mac);
 uint16_t switch_smac_rewrite_index_from_rmac(switch_handle_t rmac_handle);
 #ifdef __cplusplus

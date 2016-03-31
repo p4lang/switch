@@ -47,6 +47,7 @@ sai_status_t sai_create_next_hop_entry(
     uint32_t index = 0;
     const sai_ip_address_t *sai_ip_addr;
     switch_nhop_key_t nhop_key;
+    sai_next_hop_type_t nhtype = SAI_NEXT_HOP_IP;
 
     if (!attr_list) {
         status = SAI_STATUS_INVALID_PARAMETER;
@@ -60,14 +61,16 @@ sai_status_t sai_create_next_hop_entry(
         attribute = &attr_list[index];
         switch (attribute->id) {
             case SAI_NEXT_HOP_ATTR_TYPE:
+                nhtype = attribute->value.s32;
                 break;
             case SAI_NEXT_HOP_ATTR_IP:
+                assert(nhtype == SAI_NEXT_HOP_IP);
                 sai_ip_addr = &attribute->value.ipaddr;
                 sai_ip_addr_to_switch_ip_addr(sai_ip_addr, &nhop_key.ip_addr);
                 nhop_key.ip_addr_valid = 1;
                 break;
             case SAI_NEXT_HOP_ATTR_ROUTER_INTERFACE_ID:
-                 SAI_ASSERT(sai_object_type_query(attribute->value.oid) == 
+                 SAI_ASSERT(sai_object_type_query(attribute->value.oid) ==
                             SAI_OBJECT_TYPE_ROUTER_INTERFACE);
                 nhop_key.intf_handle = (switch_handle_t) attribute->value.oid;
                 break;
@@ -110,7 +113,10 @@ sai_status_t sai_remove_next_hop_entry(
     sai_status_t status = SAI_STATUS_SUCCESS;
     switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
 
-    SAI_ASSERT(sai_object_type_query(next_hop_id) == SAI_OBJECT_TYPE_NEXT_HOP);
+    if (sai_object_type_query(next_hop_id) != SAI_OBJECT_TYPE_NEXT_HOP) {
+        SAI_LOG_ERROR("nexthop remove failed: invalid nexthop handle %lx\n", next_hop_id);
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
 
     switch_status = switch_api_nhop_delete(device, (switch_handle_t) next_hop_id);
     status = sai_switch_status_to_sai_status(switch_status);

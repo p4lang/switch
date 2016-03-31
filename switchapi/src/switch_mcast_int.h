@@ -17,6 +17,7 @@ limitations under the License.
 #include "switch_port_int.h"
 #include "switch_lag_int.h"
 #include "switchapi/switch_mcast.h"
+#include "switchapi/switch_capability.h"
 
 #ifndef switch_mcast_internal_h
 #define switch_mcast_internal_h
@@ -25,7 +26,9 @@ limitations under the License.
 extern "C" {
 #endif /* __cplusplus */
 
-#define SWITCH_MCAST_RID_HASH_KEY_SIZE 24 
+
+#define SWITCH_MCAST_RID_HASH_KEY_SIZE   24
+#define SWITCH_MCAST_GROUP_HASH_KEY_SIZE 64
 
 typedef uint16_t switch_rid_t;
 typedef uint32_t mc_mgrp_hdl_t;
@@ -98,6 +101,9 @@ typedef struct switch_mcast_node_ {
 typedef struct switch_mcast_info_ {
     p4_pd_entry_hdl_t mgrp_hdl;
     tommy_list node_list;
+    uint16_t mbr_count_max;
+    uint16_t mbr_count;
+    switch_vlan_interface_t *mbrs;
 } switch_mcast_info_t;
 
 typedef struct switch_mcast_rid_key_ {
@@ -112,11 +118,46 @@ typedef struct switch_mcast_rid_ {
     tommy_hashtable_node node;
 } switch_mcast_rid_t;
 
+typedef struct switch_mcast_group_key_ {
+    switch_handle_t bd_vrf_handle;
+    switch_ip_addr_t src_ip;
+    switch_ip_addr_t grp_ip;
+    bool sg_entry;
+} switch_mcast_group_key_t;
+
+typedef struct switch_mcast_group_info_ {
+    switch_mcast_group_key_t group_key;
+    tommy_hashtable_node node;
+    switch_handle_t mgid_handle;
+    p4_pd_entry_hdl_t outer_hw_entry;
+    p4_pd_entry_hdl_t inner_hw_entry;
+} switch_mcast_group_info_t;
+
+typedef enum switch_mcast_key_type_ {
+    SWITCH_MCAST_KEY_TYPE_BD,
+    SWITCH_MCAST_KEY_TYPE_VRF
+} switch_mcast_key_type_t;
+
 #define SWITCH_MCAST_NODE_RID(node) \
     node->u.node_info.rid
 
 #define SWITCH_MCAST_NODE_RID_HW_ENTRY(node) \
     node->u.node_info.rid_hw_entry
+
+#define SWITCH_MCAST_GROUP_IPV4_SRC_IP(group_key) \
+    group_key->src_ip.ip.v4addr
+
+#define SWITCH_MCAST_GROUP_IPV6_SRC_IP(group_key) \
+    group_key->src_ip.ip.v6addr
+
+#define SWITCH_MCAST_GROUP_IPV4_GRP_IP(group_key) \
+    group_key->grp_ip.ip.v4addr
+
+#define SWITCH_MCAST_GROUP_IPV6_GRP_IP(group_key) \
+    group_key->grp_ip.ip.v6addr
+
+#define SWITCH_MCAST_GROUP_IP_TYPE(group_key) \
+    group_key->grp_ip.type
 
 #define SWITCH_MCAST_NODE_INFO_HW_ENTRY(node) \
     node->u.node_info.hw_entry
@@ -127,6 +168,14 @@ typedef struct switch_mcast_rid_ {
 #define SWITCH_MCAST_NODE_INFO_LAG_MAP(node) \
     node->u.node_info.lag_map
 
+#define SWITCH_MCAST_ECMP_INFO_HW_ENTRY(node) \
+    node->u.ecmp_info.hw_entry
+
+#define SWITCH_MCAST_ECMP_INFO_NODE_LIST(node) \
+    node->u.ecmp_info.node_list
+
+#define SWITCH_MCAST_ECMP_INFO_HDL(node) \
+    node->u.ecmp_info.handle
 
 /* MCAST Internal API's */
 switch_status_t switch_mcast_init(switch_device_t device);

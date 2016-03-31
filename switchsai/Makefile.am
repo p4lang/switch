@@ -9,6 +9,10 @@ libswitchsai_la_CXXFLAGS = $(libswitchsai_la_CFLAGS)
 libswitchsai_a_CFLAGS = $(libswitchsai_la_CFLAGS)
 libswitchsai_a_CXXFLAGS = $(libswitchsai_a_CFLAGS)
 
+if P4THRIFT
+    AM_CPPFLAGS += -DP4THRIFT
+endif
+
 thrift_cpp_sources = \
 @builddir@/src/gen-cpp/switch_sai_constants.cpp \
 @builddir@/src/gen-cpp/switch_sai_constants.h \
@@ -23,45 +27,16 @@ thrift_py_sources = \
 @builddir@/src/gen-py/switch_sai/switch_sai_rpc-remote \
 @builddir@/src/gen-py/switch_sai/ttypes.py
 
-lib_LIBRARIES = libswitchsai.a
-lib_LTLIBRARIES = libswitchsai.la
-
-$(lib_LIBRARIES) : $(thrift_py_sources)
-$(lib_LTLIBRARIES) : $(thrift_py_sources)
-
-libswitchsai_la_SOURCES = \
-$(thrift_cpp_sources) \
-src/saiacl.c \
-src/saibuffer.c \
-src/saiapi.h \
-src/sai.c \
-src/sai_bmlib.c \
-src/saifdb.c \
-src/saihash.c \
-src/saihostintf.c \
-src/saiinternal.h \
-src/sailag.c \
-src/saimirror.c \
-src/saineighbor.c \
-src/sainexthop.c \
-src/sainexthopgroup.c \
-src/saiobject.c \
-src/saiport.c \
-src/sairoute.c \
-src/sairouter.c \
-src/sairouterintf.c \
-src/saistp.c \
-src/saiswitch.c \
-src/saiudf.c \
-src/saiutils.c \
-src/saivlan.c \
-src/switch_sai_rpc_server.cpp
-
-libswitchsai_a_SOURCES = $(libswitchsai_la_SOURCES)
+sai_ctypesgen = @builddir@/switch_sai_thrift/sai_headers.py
 
 BUILT_SOURCES = \
 $(thrift_cpp_sources) \
-$(thrift_py_sources)
+$(thrift_py_sources) \
+$(sai_ctypesgen)
+
+$(sai_ctypesgen) : $(thrift_py_sources)
+	$(CTYPESGEN) -I/usr/include -I$(srcdir)/submodules/SAI/inc \
+		$(srcdir)/submodules/SAI/inc/*.h -o $@
 
 # The recipe to invoke the thrift compiler is copied from:
 # http://www.gnu.org/software/automake/manual/html_node/Multiple-Outputs.html
@@ -70,9 +45,11 @@ switchsai.ts : @srcdir@/src/switch_sai.thrift
 	@touch switchsai.tmp
 	$(THRIFT) -o @builddir@/src/ --gen cpp -r @srcdir@/src/switch_sai.thrift
 	$(THRIFT) -o @builddir@/src/ --gen py -r @srcdir@/src/switch_sai.thrift
+## FIXME: p4factory legacy
+	cp -r @builddir@/src/gen-py/switch_sai/ @builddir@/switch_sai_thrift
 	@mv -f switchsai.tmp $@
 
-$(BUILT_SOURCES) : switchsai.ts
+$(thrift_cpp_sources) $(thrift_py_sources) : switchsai.ts
 ## Recover from the removal of $@
 	@if test -f $@; then :; else \
 	  trap 'rm -rf switchsai.lock switchsai.ts' 1 2 13 15; \
@@ -91,4 +68,56 @@ $(BUILT_SOURCES) : switchsai.ts
 	  fi; \
 	fi
 
-CLEANFILES = $(BUILT_SOURCES)
+switchsai_sources = \
+$(thrift_cpp_sources) \
+src/sai.c \
+src/sai_bmlib.c \
+src/saiacl.c \
+src/saibuffer.c \
+src/saifdb.c \
+src/saihash.c \
+src/saihostintf.c \
+src/saiinternal.h \
+src/saiipmc.c \
+src/sail2mc.c \
+src/sailag.c \
+src/saimirror.c \
+src/saineighbor.c \
+src/sainexthop.c \
+src/sainexthopgroup.c \
+src/saiobject.c \
+src/saipolicer.c \
+src/saiport.c \
+src/sairoute.c \
+src/sairouter.c \
+src/sairouterintf.c \
+src/saistp.c \
+src/saiswitch.c \
+src/saiudf.c \
+src/saiutils.c \
+src/saivlan.c \
+src/switch_sai_rpc_server.cpp
+
+noinst_LTLIBRARIES =
+lib_LIBRARIES =
+lib_LTLIBRARIES = 
+
+if WITH_BMV2
+libbmswitchsai_la_CPPFLAGS = $(AM_CPPFLAGS)
+libbmswitchsai_la_CPPFLAGS += -DBMV2
+libbmswitchsai_la_CPPFLAGS += -I$(top_builddir)/bmv2/p4_pd
+libbmswitchsai_la_CPPFLAGS += -I$(BM_PDFIXED_PATH)
+noinst_LTLIBRARIES += libbmswitchsai.la
+libbmswitchsai_la_SOURCES = $(switchsai_sources)
+endif
+
+# FIXME: legacy support, relies on p4factory
+if WITH_P4FACTORY
+lib_LIBRARIES += libswitchsai.a
+libswitchsai_a_SOURCES = $(switchsai_sources)
+endif
+
+# FIXME: not sure if this serves a real purpose
+$(lib_LTLIBRARIES) : $(thrift_py_sources)
+
+CLEANFILES = $(BUILT_SOURCES) switchsai.ts

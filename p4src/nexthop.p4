@@ -35,24 +35,39 @@ metadata nexthop_metadata_t nexthop_metadata;
 action set_l2_redirect_action() {
     modify_field(l3_metadata.nexthop_index, l2_metadata.l2_nexthop);
     modify_field(nexthop_metadata.nexthop_type, l2_metadata.l2_nexthop_type);
+    modify_field(ingress_metadata.egress_ifindex, 0);
+    modify_field(intrinsic_mcast_grp, 0);
+#ifdef FABRIC_ENABLE
+    modify_field(fabric_metadata.dst_device, 0);
+#endif /* FABRIC_ENABLE */
 }
 
 action set_acl_redirect_action() {
     modify_field(l3_metadata.nexthop_index, acl_metadata.acl_nexthop);
     modify_field(nexthop_metadata.nexthop_type, acl_metadata.acl_nexthop_type);
+    modify_field(ingress_metadata.egress_ifindex, 0);
+    modify_field(intrinsic_mcast_grp, 0);
+#ifdef FABRIC_ENABLE
+    modify_field(fabric_metadata.dst_device, 0);
+#endif /* FABRIC_ENABLE */
 }
 
 action set_racl_redirect_action() {
     modify_field(l3_metadata.nexthop_index, acl_metadata.racl_nexthop);
     modify_field(nexthop_metadata.nexthop_type, acl_metadata.racl_nexthop_type);
     modify_field(l3_metadata.routed, TRUE);
+    modify_field(ingress_metadata.egress_ifindex, 0);
+    modify_field(intrinsic_mcast_grp, 0);
+#ifdef FABRIC_ENABLE
+    modify_field(fabric_metadata.dst_device, 0);
+#endif /* FABRIC_ENABLE */
 }
 
 action set_fib_redirect_action() {
     modify_field(l3_metadata.nexthop_index, l3_metadata.fib_nexthop);
     modify_field(nexthop_metadata.nexthop_type, l3_metadata.fib_nexthop_type);
     modify_field(l3_metadata.routed, TRUE);
-    modify_field(intrinsic_metadata.mcast_grp, 0);
+    modify_field(intrinsic_mcast_grp, 0);
 #ifdef FABRIC_ENABLE
     modify_field(fabric_metadata.dst_device, 0);
 #endif /* FABRIC_ENABLE */
@@ -60,12 +75,44 @@ action set_fib_redirect_action() {
 
 action set_cpu_redirect_action() {
     modify_field(l3_metadata.routed, FALSE);
-    modify_field(intrinsic_metadata.mcast_grp, 0);
-    modify_field(standard_metadata.egress_spec, CPU_PORT_ID);
+    modify_field(intrinsic_mcast_grp, 0);
+    modify_field(ingress_egress_port, CPU_PORT_ID);
     modify_field(ingress_metadata.egress_ifindex, 0);
 #ifdef FABRIC_ENABLE
     modify_field(fabric_metadata.dst_device, 0);
 #endif /* FABRIC_ENABLE */
+}
+
+action set_multicast_route_action() {
+#ifdef FABRIC_ENABLE
+    modify_field(fabric_metadata.dst_device, FABRIC_DEVICE_MULTICAST);
+#endif /* FABRIC_ENABLE */
+    modify_field(ingress_metadata.egress_ifindex, 0);
+    modify_field(intrinsic_mcast_grp,
+                 multicast_metadata.multicast_route_mc_index);
+    modify_field(l3_metadata.routed, TRUE);
+    modify_field(l3_metadata.same_bd_check, 0xFFFF);
+}
+
+action set_multicast_bridge_action() {
+#ifdef FABRIC_ENABLE
+    modify_field(fabric_metadata.dst_device, FABRIC_DEVICE_MULTICAST);
+#endif /* FABRIC_ENABLE */
+    modify_field(ingress_metadata.egress_ifindex, 0);
+    modify_field(intrinsic_mcast_grp,
+                 multicast_metadata.multicast_bridge_mc_index);
+}
+
+action set_multicast_flood() {
+#ifdef FABRIC_ENABLE
+    modify_field(fabric_metadata.dst_device, FABRIC_DEVICE_MULTICAST);
+#endif /* FABRIC_ENABLE */
+    modify_field(ingress_metadata.egress_ifindex, IFINDEX_FLOOD);
+}
+
+action set_multicast_drop() {
+    modify_field(ingress_metadata.drop_flag, TRUE);
+    modify_field(ingress_metadata.drop_reason, DROP_MULTICAST_SNOOPING_ENABLED);
 }
 
 table fwd_result {
@@ -75,6 +122,14 @@ table fwd_result {
         acl_metadata.racl_redirect : ternary;
         l3_metadata.rmac_hit : ternary;
         l3_metadata.fib_hit : ternary;
+        l2_metadata.lkp_pkt_type : ternary;
+        l3_metadata.lkp_ip_type : ternary;
+        multicast_metadata.igmp_snooping_enabled : ternary;
+        multicast_metadata.mld_snooping_enabled : ternary;
+        multicast_metadata.mcast_route_hit : ternary;
+        multicast_metadata.mcast_bridge_hit : ternary;
+        multicast_metadata.mcast_rpf_group : ternary;
+        multicast_metadata.mcast_mode : ternary;
     }
     actions {
         nop;
@@ -85,6 +140,12 @@ table fwd_result {
         set_acl_redirect_action;
         set_racl_redirect_action;
 #endif /* ACL_DISABLE */
+#ifndef MULTICAST_DISABLE
+        set_multicast_route_action;
+        set_multicast_bridge_action;
+        set_multicast_flood;
+        set_multicast_drop;
+#endif /* MULTICAST_DISABLE */
     }
     size : FWD_RESULT_TABLE_SIZE;
 }
@@ -103,7 +164,7 @@ control process_fwd_results {
  */
 action set_ecmp_nexthop_details_for_post_routed_flood(bd, uuc_mc_index,
                                                       nhop_index) {
-    modify_field(intrinsic_metadata.mcast_grp, uuc_mc_index);
+    modify_field(intrinsic_mcast_grp, uuc_mc_index);
     modify_field(l3_metadata.nexthop_index, nhop_index);
     modify_field(ingress_metadata.egress_ifindex, 0);
     bit_xor(l3_metadata.same_bd_check, ingress_metadata.bd, bd);
@@ -165,7 +226,7 @@ table ecmp_group {
  * egress BD
  */
 action set_nexthop_details_for_post_routed_flood(bd, uuc_mc_index) {
-    modify_field(intrinsic_metadata.mcast_grp, uuc_mc_index);
+    modify_field(intrinsic_mcast_grp, uuc_mc_index);
     modify_field(ingress_metadata.egress_ifindex, 0);
     bit_xor(l3_metadata.same_bd_check, ingress_metadata.bd, bd);
 #ifdef FABRIC_ENABLE

@@ -17,12 +17,12 @@ limitations under the License.
 #ifndef _switch_base_types_h_
 #define _switch_base_types_h_
 
-#include "tommyds/tommyhashtbl.h"
-#include "tommyds/tommylist.h"
+#include <tommyds/tommyhashtbl.h>
+#include <tommyds/tommylist.h>
 
+#include "p4features.h"
 #include "drop_reasons.h"
 #include "p4features.h"
-#include "model_flags.h"
 #ifdef BMV2
 #include "pd/pd.h"
 #include "pd/pd_pre.h"
@@ -66,6 +66,8 @@ typedef unsigned char switch_device_t;
 typedef uint8_t switch_cos_t;
 typedef unsigned int switch_vrf_id_t;
 
+typedef uint16_t switch_rid_t;
+
 /** Direction - ingress, egress or both */
 typedef enum {
     SWITCH_API_DIRECTION_BOTH,           /**< Ingress and Egress directions */
@@ -75,8 +77,11 @@ typedef enum {
 
 /** 128 bit field */
 typedef struct uint128_t {
-    uint64_t high;                   /**< higher 64 bits of 128 bit value */
-    uint64_t low;                    /**< lower 64 bits of 128 bit value */
+    union {
+        uint8_t  addr8[16];
+        uint16_t addr16[8];
+        uint16_t addr32[4];
+    } u;
 } uint128_t;
 
 /** Mac address declaration for use in API */
@@ -119,6 +124,13 @@ typedef struct switch_counter_ {
     uint64_t num_packets;           /**< number of packets */
     uint64_t num_bytes;             /**< number of bytes */
 } switch_counter_t;
+
+typedef enum switch_packet_type_ {
+    SWITCH_PACKET_TYPE_UNICAST = 1,
+    SWITCH_PACKET_TYPE_MULTICAST = 2,
+    SWITCH_PACKET_TYPE_BROADCAST = 4,
+    SWITCH_PACKET_TYPE_MAX = SWITCH_PACKET_TYPE_BROADCAST
+} switch_packet_type_t;
 
 #ifdef __cplusplus
 }

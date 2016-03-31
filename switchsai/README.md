@@ -27,11 +27,15 @@ Refer to https://github.com/p4lang/p4factory/tree/master/targets/switch for more
 Supported Features
 ------------------
 
-1. Basic L2 switching: VLAN flooding and STP
-2. Basic L3 Routing: IPv4, IPv6 and VRF
-3. LAG
-4. ECMP
-5. Basic ACL: MAC and IP ACLs
-6. Host interface
+1. Basic L2 switching: VLAN flooding and STP, learning, aging
+2. L2 Multicast
+3. Basic L3 Routing: IPv4, IPv6 and VRF
+4. L3 Multicast
+5. LAG
+6. ECMP
+7. Basic ACL: MAC and IP ACLs
+8. Host interface
+9. Ingress Policers
+10. Statistics: VLAN, ACL
 
 For the list of supported APIs and attributes, please refer to sai_support.pdf file in the doc directory.

@@ -20,6 +20,7 @@ limitations under the License.
 #include "switch_pd.h"
 #include "switch_capability_int.h"
 #include "switch_vrf_int.h"
+#include "switch_l3_int.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -65,7 +66,6 @@ switch_api_vrf_create(switch_device_t device, switch_vrf_id_t vrf_id)
     switch_vrf_info_t                 *vrf_info = NULL;
     switch_handle_t                    handle;
 
-    UNUSED(device);
     if ((vrf_id == SWITCH_API_DEFAULT_VRF) &&
         (switch_api_default_vrf_internal() != 0)) {
         handle = switch_api_default_vrf_internal();

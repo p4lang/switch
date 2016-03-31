@@ -47,6 +47,8 @@ extern switchlink_handle_t g_default_bridge_h;
 extern switchlink_handle_t g_default_stp_h;
 extern switchlink_handle_t g_cpu_rx_nhop_h;
 
+extern struct nl_sock * switchlink_get_nl_sock();
+
 #define SWITCHLINK_DEFAULT_VRF_ID 1
 
 #endif /* __SWITCHLINK_H__ */

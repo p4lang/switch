@@ -23,8 +23,9 @@ limitations under the License.
 #define L2_MULTICAST                           2
 #define L2_BROADCAST                           4
 
-#define STORM_CONTROL_COLOR_GREEN              0
-#define STORM_CONTROL_COLOR_RED                1
+#define METER_COLOR_GREEN                      0
+#define METER_COLOR_YELLOW                     1
+#define METER_COLOR_RED                        2
 
 /* IP types */
 #define IPTYPE_NONE                            0
@@ -36,8 +37,8 @@ limitations under the License.
 #define MCAST_MODE_SM                          1
 #define MCAST_MODE_BIDIR                       2
 
-#define OUTER_MCAST_KEY_TYPE_BD                0
-#define OUTER_MCAST_KEY_TYPE_VRF               1
+#define MCAST_KEY_TYPE_BD                      0
+#define MCAST_KEY_TYPE_VRF                     1
 
 /* URPF modes */
 #define URPF_MODE_NONE                         0
@@ -68,7 +69,7 @@ limitations under the License.
 #define EGRESS_TUNNEL_TYPE_FABRIC              15
 #define EGRESS_TUNNEL_TYPE_CPU                 16
 
-#define VRF_BIT_WIDTH                          12
+#define VRF_BIT_WIDTH                          16
 #define BD_BIT_WIDTH                           16
 #define ECMP_BIT_WIDTH                         10
 #define LAG_BIT_WIDTH                          8

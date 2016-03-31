@@ -20,9 +20,9 @@ limitations under the License.
 
 header_type l2_metadata_t {
     fields {
-        lkp_pkt_type : 3;
         lkp_mac_sa : 48;
         lkp_mac_da : 48;
+        lkp_pkt_type : 3;
         lkp_mac_type : 16;
 
         l2_nexthop : 16;                       /* next hop from l2 */
@@ -103,7 +103,7 @@ action dmac_hit(ifindex) {
 }
 
 action dmac_multicast_hit(mc_index) {
-    modify_field(intrinsic_metadata.mcast_grp, mc_index);
+    modify_field(intrinsic_mcast_grp, mc_index);
 #ifdef FABRIC_ENABLE
     modify_field(fabric_metadata.dst_device, FABRIC_DEVICE_MULTICAST);
 #endif /* FABRIC_ENABLE */
@@ -234,26 +234,14 @@ action set_malformed_packet(drop_reason) {
 
 table validate_packet {
     reads {
-#ifndef __TARGET_BMV2__
         l2_metadata.lkp_mac_sa mask 0x010000000000 : ternary;
-#else
-        l2_metadata.lkp_mac_sa : ternary;
-#endif
         l2_metadata.lkp_mac_da : ternary;
         l3_metadata.lkp_ip_type : ternary;
         l3_metadata.lkp_ip_ttl : ternary;
         l3_metadata.lkp_ip_version : ternary;
-#ifndef __TARGET_BMV2__
         ipv4_metadata.lkp_ipv4_sa mask 0xFF000000 : ternary;
-#else
-        ipv4_metadata.lkp_ipv4_sa : ternary;
-#endif
 #ifndef IPV6_DISABLE
-#ifndef __TARGET_BMV2__
         ipv6_metadata.lkp_ipv6_sa mask 0xFFFF0000000000000000000000000000 : ternary;
-#else
-        ipv6_metadata.lkp_ipv6_sa : ternary;
-#endif
 #endif /* IPV6_DISABLE */
     }
     actions {
@@ -278,9 +266,36 @@ control process_validate_packet {
 /*****************************************************************************/
 /* Egress BD lookup                                                          */
 /*****************************************************************************/
-action set_egress_bd_properties() {
+#ifndef STATS_DISABLE
+counter egress_bd_stats {
+    type : packets_and_bytes;
+    direct : egress_bd_stats;
+    min_width : 32;
 }
 
+table egress_bd_stats {
+    reads {
+        egress_metadata.bd : exact;
+        l2_metadata.lkp_pkt_type: exact;
+    }
+    actions {
+        nop;
+    }
+    size : EGRESS_BD_STATS_TABLE_SIZE;
+}
+#endif /* STATS_DISABLE */
+
+control process_egress_bd_stats {
+#ifndef STATS_DISABLE
+    apply(egress_bd_stats);
+#endif /* STATS_DISABLE */
+}
+
+action set_egress_bd_properties(smac_idx) {
+    modify_field(egress_metadata.smac_idx, smac_idx);
+}
+
+@pragma ternary 1
 table egress_bd_map {
     reads {
         egress_metadata.bd : exact;
@@ -295,7 +310,6 @@ table egress_bd_map {
 control process_egress_bd {
     apply(egress_bd_map);
 }
-
 
 /*****************************************************************************/
 /* Egress VLAN decap                                                         */
