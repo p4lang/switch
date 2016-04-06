@@ -22,7 +22,6 @@ parser start {
 }
 
 #define ETHERTYPE_BF_FABRIC    0x9000
-#define ETHERTYPE_BF_SFLOW     0x9001
 #define ETHERTYPE_VLAN         0x8100
 #define ETHERTYPE_QINQ         0x9100
 #define ETHERTYPE_MPLS         0x8847
@@ -89,7 +88,6 @@ parser start {
         ETHERTYPE_VNTAG : parse_vntag;                     \
         ETHERTYPE_LLDP  : parse_set_prio_high;             \
         ETHERTYPE_LACP  : parse_set_prio_high;             \
-        ETHERTYPE_BF_SFLOW : parse_bf_internal_sflow;      \
         default: ingress
 
 #define PARSE_ETHERTYPE_MINUS_VLAN                         \
@@ -105,7 +103,6 @@ parser start {
         ETHERTYPE_VNTAG : parse_vntag;                     \
         ETHERTYPE_LLDP  : parse_set_prio_high;             \
         ETHERTYPE_LACP  : parse_set_prio_high;             \
-        ETHERTYPE_BF_SFLOW : parse_bf_internal_sflow;      \
         default: ingress
 #endif
 
@@ -441,7 +438,6 @@ parser parse_udp {
         UDP_PORT_ROCE_V2: parse_roce_v2;
         UDP_PORT_LISP : parse_lisp;
         UDP_PORT_BFD : parse_bfd;
-        UDP_PORT_SFLOW : parse_sflow;
 #endif
         UDP_PORT_BOOTPS : parse_set_prio_med;
         UDP_PORT_BOOTPC : parse_set_prio_med;
@@ -450,6 +446,7 @@ parser parse_udp {
         UDP_PORT_RIP : parse_set_prio_med;
         UDP_PORT_RIPNG : parse_set_prio_med;
         UDP_PORT_HSRP : parse_set_prio_med;
+        UDP_PORT_SFLOW : parse_sflow;
         default: ingress;
     }
 }
@@ -793,29 +790,26 @@ parser parse_bfd {
     return parse_set_prio_max;
 }
 
-header sflow_t sflow;
-header sflow_internal_ethernet_t sflow_internal_ethernet;
+#ifdef SFLOW_ENABLE
+header sflow_hdr_t sflow;
 header sflow_sample_t sflow_sample;
-header sflow_record_t sflow_record;
+header sflow_raw_hdr_record_t sflow_raw_hdr_record;
+#endif
 
 parser parse_sflow {
+#ifdef SFLOW_ENABLE
     extract(sflow);
+#endif
     return ingress;
 }
 
-parser parse_bf_internal_sflow {
-    extract(sflow_internal_ethernet);
-    extract(sflow_sample);
-    extract(sflow_record);
-    return ingress;
-}
-
-header fabric_header_t                 fabric_header;
-header fabric_header_unicast_t         fabric_header_unicast;
-header fabric_header_multicast_t       fabric_header_multicast;
-header fabric_header_mirror_t          fabric_header_mirror;
-header fabric_header_cpu_t             fabric_header_cpu;
-header fabric_payload_header_t         fabric_payload_header;
+header fabric_header_t                  fabric_header;
+header fabric_header_unicast_t          fabric_header_unicast;
+header fabric_header_multicast_t        fabric_header_multicast;
+header fabric_header_mirror_t           fabric_header_mirror;
+header fabric_header_cpu_t              fabric_header_cpu;
+header fabric_header_sflow_t            fabric_header_sflow;
+header fabric_payload_header_t          fabric_payload_header;
 
 parser parse_fabric_header {
     extract(fabric_header);
@@ -847,8 +841,22 @@ parser parse_fabric_header_mirror {
 
 parser parse_fabric_header_cpu {
     extract(fabric_header_cpu);
+#ifdef SFLOW_ENABLE
+    return select(latest.reasonCode) {
+        CPU_REASON_CODE_SFLOW: parse_fabric_sflow_header;
+        default : parse_fabric_payload_header;
+    }
+#else
+    return parse_fabric_payload_header;
+#endif
+}
+
+#ifdef SFLOW_ENABLE
+parser parse_fabric_sflow_header {
+    extract(fabric_header_sflow);
     return parse_fabric_payload_header;
 }
+#endif
 
 parser parse_fabric_payload_header {
     extract(fabric_payload_header);

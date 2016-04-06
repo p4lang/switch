@@ -20,6 +20,7 @@ limitations under the License.
 #define INT_TRANSIT_ENABLE
 #define OUTER_PIM_BIDIR_OPTIMIZATION
 #define PIM_BIDIR_OPTIMIZATION
+#define SFLOW_ENABLE
 
 // Defines for switchapi library
 #ifdef URPF_DISABLE
@@ -92,6 +93,10 @@ limitations under the License.
 #define P4_INT_TRANSIT_ENABLE
 #define INT_ENABLE
 #define P4_INT_ENABLE
+#endif
+
+#ifdef SFLOW_ENABLE
+#define P4_SFLOW_ENABLE
 #endif
 
 #ifdef METER_DISABLE

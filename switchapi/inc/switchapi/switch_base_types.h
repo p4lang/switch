@@ -23,7 +23,6 @@ limitations under the License.
 #include "p4features.h"
 #include "drop_reasons.h"
 #include "p4features.h"
-//#include "model_flags.h"
 #ifdef BMV2
 #include "pd/pd.h"
 #include "pd/pd_pre.h"
@@ -79,11 +78,11 @@ typedef enum {
 /** 128 bit field */
 typedef struct uint128_t {
     union {
-        uint8_t  addr8[16];
-        uint16_t addr16[8];
-        uint16_t addr32[4];
-    } u;
-} uint128_t;
+        uint8_t  addr8[16];              /** 16x8bit */
+        uint16_t addr16[8];              /** 8x16bit */
+        uint32_t addr32[4];              /** 4x32bit */
+    } u;                                 /**< union */
+} uint128_t;                             /**< 128-bit value */
 
 /** Mac address declaration for use in API */
 typedef struct switch_mac_addr {
