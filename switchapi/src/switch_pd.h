@@ -44,6 +44,7 @@ extern "C" {
 #include "switch_defines.h"
 #include "switch_mirror_int.h"
 #include "switch_meter_int.h"
+#include "switch_sflow_int.h"
 
 #define SWITCH_MAX_DEVICE 32
 
@@ -876,6 +877,9 @@ switch_pd_rewrite_multicast_table_init_entry(switch_device_t device);
 switch_status_t
 switch_pd_l3_rewrite_table_init_entry(switch_device_t device);
 
+p4_pd_status_t
+switch_pd_sflow_tables_init(switch_device_t device);
+
 // mirroring apis
 p4_pd_status_t
 switch_pd_mirror_session_update(switch_device_t device,
@@ -1010,6 +1014,26 @@ p4_pd_status_t
 switch_pd_meter_action_table_delete_entry(
         switch_device_t device,
         p4_pd_entry_hdl_t *entry_hdl);
+
+#ifdef P4_SFLOW_ENABLE
+switch_status_t
+switch_pd_sflow_ingress_table_add (switch_device_t device, 
+                                switch_sflow_match_key_t *match_key,
+                                uint32_t priority, uint32_t sample_rate,
+                                switch_sflow_info_t *sflow_info,
+                                switch_sflow_match_entry_t *entry);
+switch_status_t
+switch_pd_sflow_match_table_delete (switch_device_t device,
+                                      switch_sflow_match_entry_t *match_entry);
+switch_status_t
+switch_pd_sflow_session_create (switch_device_t device,
+                                        switch_sflow_info_t *sflow_info);
+
+switch_status_t
+switch_pd_sflow_session_delete (switch_device_t device,
+                                        switch_sflow_info_t *sflow_info);
+
+#endif
 
 p4_pd_status_t
 switch_pd_stats_update(switch_device_t device);
