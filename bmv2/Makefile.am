@@ -5,7 +5,6 @@ p4_pd/src/pd.cpp \
 p4_pd/src/pd_learning.cpp \
 p4_pd/src/pd_meters.cpp \
 p4_pd/src/pd_counters.cpp \
-p4_pd/src/pd_registers.cpp \
 p4_pd/src/pd_tables.cpp \
 p4_pd/src/pd_ageing.cpp \
 p4_pd/src/pd_mirroring.cpp
@@ -15,7 +14,6 @@ p4_pd/pd/pd.h \
 p4_pd/pd/pd_learning.h \
 p4_pd/pd/pd_meters.h \
 p4_pd/pd/pd_counters.h \
-p4_pd/pd/pd_registers.h \
 p4_pd/pd/pd_tables.h \
 p4_pd/pd/pd_types.h \
 p4_pd/pd/pd_mirroring.h

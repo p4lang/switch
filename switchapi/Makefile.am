@@ -106,6 +106,8 @@ src/switch_vrf.c \
 src/switch_meter.c \
 src/switch_meter_int.h \
 src/switch_vrf_int.h \
+src/switch_sflow_int.h \
+src/switch_sflow.c \
 src/thrift_cache.h \
 inc/switchapi/switch_acl.h \
 inc/switchapi/switch_base_types.h \
@@ -132,7 +134,8 @@ inc/switchapi/switch_tunnel.h \
 inc/switchapi/switch_utils.h \
 inc/switchapi/switch_vlan.h \
 inc/switchapi/switch_INT.h \
-inc/switchapi/switch_vrf.h
+inc/switchapi/switch_vrf.h \
+inc/switchapi/switch_sflow.h
 
 noinst_LTLIBRARIES =
 lib_LIBRARIES =

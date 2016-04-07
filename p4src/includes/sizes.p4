@@ -96,3 +96,7 @@ limitations under the License.
 #define INT_TERMINATE_TABLE_SIZE               256
 #define INT_SOURCE_TABLE_SIZE                  256
 #define INT_UNDERLAY_ENCAP_TABLE_SIZE          8
+
+#define SFLOW_INGRESS_TABLE_SIZE               512
+#define SFLOW_EGRESS_TABLE_SIZE                512
+#define MAX_SFLOW_SESSIONS                     16
