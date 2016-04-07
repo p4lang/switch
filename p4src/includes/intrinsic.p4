@@ -52,7 +52,8 @@ header_type ingress_intrinsic_metadata_t {
 }
 metadata ingress_intrinsic_metadata_t intrinsic_metadata;
 
-#define _ingress_global_tstamp_     intrinsic_metadata.ingress_global_tstamp
+#define _ingress_global_tstamp_         intrinsic_metadata.ingress_global_tstamp
+#define modify_field_from_rng(_d, _w)   modify_field_rng_uniform(_d, 0, (1<<(_w))-1)
 
 action deflect_on_drop(enable_dod) {
     modify_field(intrinsic_metadata.deflect_on_drop, enable_dod);
