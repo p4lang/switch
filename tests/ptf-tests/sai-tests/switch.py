@@ -2063,6 +2063,8 @@ class EgressERSpanMirrorTest(sai_base_test.ThriftInterfaceDataPlane):
             self.client.sai_thrift_remove_ports_from_vlan(vlan_id, [vlan_port1, vlan_port2])
             self.client.sai_thrift_delete_vlan(vlan_id)
 
+from switch_sai_thrift.sai_headers import SAI_VLAN_STAT_IN_OCTETS, SAI_VLAN_STAT_IN_UCAST_PKTS, SAI_VLAN_STAT_OUT_UCAST_PKTS
+
 class L2VlanStatsTest(sai_base_test.ThriftInterfaceDataPlane):
     def runTest(self):
         print
@@ -2110,10 +2112,10 @@ class L2VlanStatsTest(sai_base_test.ThriftInterfaceDataPlane):
 
             sai_thrift_print_vlan_stats(counter2_ids, counter2)
 
-            self.assertEqual(counter2[0], num_bytes)
-            self.assertEqual(counter2[2], num_packets)
+            self.assertEqual(counter2[SAI_VLAN_STAT_IN_OCTETS], num_bytes)
+            self.assertEqual(counter2[SAI_VLAN_STAT_IN_UCAST_PKTS], num_packets)
             #self.assertEqual(counter2[6], num_bytes)
-            self.assertEqual(counter2[9], num_packets)
+            self.assertEqual(counter2[SAI_VLAN_STAT_OUT_UCAST_PKTS], num_packets)
 
         finally:
             sai_thrift_delete_fdb(self.client, vlan_id, mac1, port1)
