@@ -96,6 +96,9 @@ typedef struct _sai_api_service_t {
     sai_policer_api_t               policer_api;
     sai_ipmc_api_t                  ipmc_api;
     sai_l2mc_api_t                  l2mc_api;
+    sai_hash_api_t                  hash_api;
+    sai_buffer_api_t                buffer_api;
+    sai_udf_api_t                   udf_api;
 } sai_api_service_t;
 
 extern switch_device_t device;

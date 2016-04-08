@@ -571,6 +571,7 @@ def sai_thrift_get_vlan_stats(client, vlan_id, ingress=True, egress=True):
     counter_ids = []
     if ingress:
         counter_ids.append(SAI_VLAN_STAT_IN_OCTETS)
+        counter_ids.append(SAI_VLAN_STAT_IN_PACKETS)
         counter_ids.append(SAI_VLAN_STAT_IN_UCAST_PKTS)
         counter_ids.append(SAI_VLAN_STAT_IN_NON_UCAST_PKTS)
         counter_ids.append(SAI_VLAN_STAT_IN_DISCARDS)
@@ -578,6 +579,7 @@ def sai_thrift_get_vlan_stats(client, vlan_id, ingress=True, egress=True):
         counter_ids.append(SAI_VLAN_STAT_IN_UNKNOWN_PROTOS)
     if egress:
         counter_ids.append(SAI_VLAN_STAT_OUT_OCTETS)
+        counter_ids.append(SAI_VLAN_STAT_OUT_PACKETS)
         counter_ids.append(SAI_VLAN_STAT_OUT_UCAST_PKTS)
         counter_ids.append(SAI_VLAN_STAT_OUT_NON_UCAST_PKTS)
         counter_ids.append(SAI_VLAN_STAT_OUT_DISCARDS)
