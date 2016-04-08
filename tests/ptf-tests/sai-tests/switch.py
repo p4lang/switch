@@ -2111,9 +2111,9 @@ class L2VlanStatsTest(sai_base_test.ThriftInterfaceDataPlane):
             sai_thrift_print_vlan_stats(counter2_ids, counter2)
 
             self.assertEqual(counter2[0], num_bytes)
-            self.assertEqual(counter2[1], num_packets)
+            self.assertEqual(counter2[2], num_packets)
             #self.assertEqual(counter2[6], num_bytes)
-            self.assertEqual(counter2[7], num_packets)
+            self.assertEqual(counter2[9], num_packets)
 
         finally:
             sai_thrift_delete_fdb(self.client, vlan_id, mac1, port1)

@@ -68,9 +68,11 @@ $(thrift_cpp_sources) $(thrift_py_sources) : switchsai.ts
 switchsai_sources = \
 $(thrift_cpp_sources) \
 src/saiacl.c \
+src/saibuffer.c \
 src/sai.c \
 src/sai_bmlib.c \
 src/saifdb.c \
+src/saihash.c \
 src/saihostintf.c \
 src/saiinternal.h \
 src/saiipmc.c \
@@ -80,6 +82,7 @@ src/saimirror.c \
 src/saineighbor.c \
 src/sainexthop.c \
 src/sainexthopgroup.c \
+src/saiobject.c \
 src/saipolicer.c \
 src/saiport.c \
 src/sairoute.c \
@@ -87,6 +90,7 @@ src/sairouter.c \
 src/sairouterintf.c \
 src/saistp.c \
 src/saiswitch.c \
+src/saiudf.c \
 src/saiutils.c \
 src/saivlan.c \
 src/switch_sai_rpc_server.cpp
