@@ -84,6 +84,12 @@ class FabricCpuHeader(Packet):
         XShortField("reason_code", 0)
     ]
 
+class FabricCpuSflowHeader(Packet):
+    name = "Fabric Cpu Sflow Header"
+    fields_desc = [
+        XShortField("sflow_sid", 0),
+    ]
+
 class FabricPayloadHeader(Packet):
     name = "Fabric Payload Header"
     fields_desc = [
@@ -130,6 +136,7 @@ def simple_cpu_packet(header_version = 0,
                       tx_bypass = False,
                       ingress_port = 1,
                       reason_code = 0,
+                      sflow_sid = 0,
                       inner_pkt = None):
 
     ether = Ether(str(inner_pkt))
@@ -155,11 +162,18 @@ def simple_cpu_packet(header_version = 0,
 
     fabric_payload_header = FabricPayloadHeader(ether_type = eth_type)
 
+    pkt = (str(ether)[:14]) / fabric_header / fabric_cpu_header
+
+    if sflow_sid:
+        pkt = pkt / FabricCpuSflowHeader(sflow_sid = sflow_sid)
+
+    pkt = pkt / fabric_payload_header
+
     if inner_pkt:
-        pkt = (str(ether)[:14]) / fabric_header / fabric_cpu_header / fabric_payload_header / (str(inner_pkt)[14:])
+        pkt = pkt / (str(inner_pkt)[14:])
     else:
         ip_pkt = simple_ip_only_packet()
-        pkt = (str(ether)[:14]) / fabric_header / fabric_cpu_header / fabric_payload_header / ip_pkt
+        pkt = pkt / ip_pkt
 
     return pkt
 

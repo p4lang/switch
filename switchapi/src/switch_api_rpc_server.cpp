@@ -37,6 +37,7 @@ limitations under the License.
 #include "switchapi/switch_config.h"
 #include "switchapi/switch_protocol.h"
 #include "switchapi/switch_meter.h"
+#include "switchapi/switch_sflow.h"
 #include "arpa/inet.h"
 
 #define SWITCH_API_RPC_SERVER_PORT (9091)
@@ -1362,6 +1363,84 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   switcht_status_t switcht_api_set_deflect_on_drop (const switcht_device_t device, const bool enable_dod) {
     printf("switcht_set_dod\n");
     return switch_api_set_deflect_on_drop(device, enable_dod);
+  }
+
+  switcht_handle_t switcht_api_sflow_session_create(const switcht_device_t device, const switcht_sflow_info_t& api_sflow_info) {
+    printf("switcht_api_sflow_session_create\n");
+    switch_api_sflow_session_info_t lapi_sflow_info;
+    memset(&lapi_sflow_info, 0, sizeof(switch_api_sflow_session_info_t));
+    lapi_sflow_info.timeout_usec = api_sflow_info.timeout_usec;
+    lapi_sflow_info.sample_rate = api_sflow_info.sample_rate;
+    lapi_sflow_info.extract_len = api_sflow_info.extract_len;
+    lapi_sflow_info.collector_type = (switch_sflow_collector_type_e)api_sflow_info.collector_type;
+    lapi_sflow_info.sample_mode = (switch_sflow_sample_mode_e)api_sflow_info.sample_mode;
+    lapi_sflow_info.egress_port_hdl = (switch_handle_t)api_sflow_info.egress_port_hdl;
+    return switch_api_sflow_session_create(device, &lapi_sflow_info);
+  }
+
+  switcht_status_t switcht_api_sflow_session_delete(const switcht_device_t device, const switcht_handle_t sflow_hdl, const bool all_cleanup) {
+    printf("switcht_api_sflow_session_delete\n");
+    return switch_api_sflow_session_delete(device,
+                (switch_handle_t)((uint32_t)sflow_hdl), all_cleanup);
+  }
+
+  switcht_handle_t switcht_api_sflow_session_attach(
+                             const switcht_device_t device,
+                             const switcht_handle_t sflow_handle,
+                             const switcht_direction_t direction,
+                             const int32_t priority,
+                             const int32_t sample_rate,
+                             const std::vector<switcht_sflow_key_value_pair_t> & kvp)
+  {
+    printf("switcht_api_sflow_session_attach\n");
+
+    std::vector<switcht_sflow_key_value_pair_t>::const_iterator f;
+    uint32_t i = 0;
+    switch_handle_t entry_hdl = -1;
+
+    switch_sflow_match_key_value_pair_t *lkvp = (switch_sflow_match_key_value_pair_t *)
+                calloc( sizeof(switch_sflow_match_key_value_pair_t)*kvp.size(), 1);
+
+    for (f = kvp.begin(); f != kvp.end(); f++) {
+        bool key_valid = true;
+        switch (f->field) {
+            case SWITCH_SFLOW_MATCH_PORT:
+                lkvp[i].value.port = (uint32_t)f->value.value_num;
+                lkvp[i].mask.u.mask = (uint32_t)f->mask.value_num;
+                break;
+            case SWITCH_SFLOW_MATCH_VLAN:
+                lkvp[i].value.vlan = (uint32_t)f->value.value_num;
+                lkvp[i].mask.u.mask = (uint32_t)f->mask.value_num;
+                break;
+            case SWITCH_SFLOW_MATCH_SIP:
+                lkvp[i].value.sip = (uint32_t)f->value.value_num;
+                lkvp[i].mask.u.mask = (uint32_t)f->mask.value_num;
+                break;
+            case SWITCH_SFLOW_MATCH_DIP:
+                lkvp[i].value.dip = (uint32_t)f->value.value_num;
+                lkvp[i].mask.u.mask = (uint32_t)f->mask.value_num;
+                break;
+            default: key_valid = false; break;
+        }
+        lkvp[i].field = (switch_sflow_match_field_t)f->field;
+        if (key_valid) {
+            i++;
+        }
+    }
+    switch_api_sflow_session_attach (device, sflow_handle,
+                                            (switch_direction_t)direction,
+                                            priority, sample_rate, i, lkvp, &entry_hdl);
+    return entry_hdl;
+  }
+
+  switcht_status_t switcht_api_sflow_session_detach(
+                             const switcht_device_t device,
+                             const switcht_handle_t sflow_handle,
+                             const switcht_handle_t entry_handle) {
+    printf("switcht_api_sflow_session_detach\n");
+    return switch_api_sflow_session_detach (device,
+                                (switch_handle_t)((uint32_t)sflow_handle),
+                                (switch_handle_t)((uint32_t)entry_handle));
   }
 
   switcht_status_t switcht_api_mac_table_set_learning_timeout(const switcht_device_t device, const int32_t timeout) {

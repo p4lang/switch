@@ -64,6 +64,11 @@ enum switcht_direction_t {
     SWITCHT_API_DIRECTION_EGRESS
 }
 
+enum switcht_sflow_collector_type_t {
+    SWITCHT_API_SFLOW_COLLECTOR_TYPE_CPU = 0;
+    SWITCHT_API_SFLOW_COLLECTOR_TYPE_REMOTE;
+}
+
 */
 
 typedef i32 switcht_status_t
@@ -89,6 +94,9 @@ typedef i16 switcht_mcast_mode_t
 
 typedef i32 switcht_urpf_group_t
 
+typedef i32 switcht_sflow_collector_type_t
+typedef i32 switcht_sflow_sample_mode_t
+
 typedef byte switcht_packet_type_t
 
 struct switcht_port_info_t {
@@ -109,6 +117,13 @@ struct switcht_ip_addr_t {
         2: string ipaddr;
         3: i32 prefix_length;
 }
+
+struct switcht_flow_t {
+        1: switcht_ip_addr_t src_ip;
+        2: switcht_ip_addr_t dst_ip;
+}
+
+typedef list<switcht_flow_t> switcht_flow_list_t
 
 struct switcht_port_vlan_t {
         2: switcht_handle_t port_lag_handle;
@@ -429,6 +444,15 @@ struct switcht_mirror_info_t {
     14: i32 timeout_usec;
 }
 
+struct switcht_sflow_info_t {
+    1: i32    timeout_usec;
+    2: i32    sample_rate;
+    3: i32    extract_len;
+    4: switcht_sflow_collector_type_t  collector_type;
+    5: switcht_handle_t         egress_port_hdl;
+    6: switcht_sflow_sample_mode_t  sample_mode;
+}
+
 typedef i64 switcht_cbs_t
 typedef i64 switcht_pbs_t
 typedef i64 switcht_cir_t
@@ -743,4 +767,22 @@ service switch_api_rpc {
 
     /* Global config */
     switcht_status_t switcht_api_set_deflect_on_drop (1:switcht_device_t device, 2:bool enable_dod);
+
+    /* SFLOW APIs */
+    switcht_handle_t switcht_api_sflow_session_create(1:switcht_device_t device, 2:switcht_sflow_info_t api_sflow_info);
+
+    switcht_status_t switcht_api_sflow_session_delete(1:switcht_device_t device, 2:switcht_handle_t sflow_hdl, 3:bool all_cleanup);
+
+    switcht_status_t switcht_api_sflow_session_attach(
+                             1:switcht_device_t device,
+                             2:switcht_handle_t sflow_handle,
+                             3:switcht_direction_t direction,
+                             4:i32 priority,
+                             5:i32 sample_rate,
+                             6:list<switcht_sflow_key_value_pair_t> sflow_kvp);
+
+    switcht_status_t switcht_api_sflow_session_detach(
+                             1:switcht_device_t device,
+                             2:switcht_handle_t sflow_handle
+                             3:switcht_handle_t entry_hdl);
 }

@@ -23,6 +23,7 @@ limitations under the License.
 #include "switch_mirror_int.h"
 #include "switch_tunnel_int.h"
 #include "switch_config_int.h"
+#include "switch_sflow_int.h"
 #include <string.h>
 
 #define ingress_input_port standard_metadata_ingress_port
@@ -7809,7 +7810,7 @@ switch_pd_p4_pd_mirror_type(switch_mirror_session_type_t type)
         case SWITCH_MIRROR_SESSION_TYPE_SIMPLE:
             pd_mirror_type = PD_MIRROR_TYPE_NORM;
             break;
-        case SWITCH_MIRROR_SESSION_TYPE_COALESCE: 
+        case SWITCH_MIRROR_SESSION_TYPE_COALESCE:
             pd_mirror_type = PD_MIRROR_TYPE_COAL;
             break;
         case SWITCH_MIRROR_SESSION_TYPE_TRUNCATE:
@@ -9047,7 +9048,7 @@ switch_pd_switch_config_params_update (switch_device_t device)
     memset(&cfg_action, 0, sizeof(cfg_action));
     switch_config_action_populate(device, &cfg_action);
 
-    status = 
+    status =
         p4_pd_dc_switch_config_params_set_default_action_set_config_parameters(
                                         g_sess_hdl,
                                         p4_pd_device,
@@ -9076,44 +9077,35 @@ switch_pd_sflow_tables_init(switch_device_t device)
 
     p4_pd_device.device_id = device;
     p4_pd_device.dev_pipe_id = PD_DEV_PIPE_ALL;
-    // ingress_sflow
-    p4_pd_dc_ingress_sflow_set_default_action_set_ing_sflow_session_disable(
+
+    p4_pd_dc_sflow_ingress_set_default_action_nop(
         g_sess_hdl, p4_pd_device, &entry_hdl);
 
-    // egress_sflow
-    p4_pd_dc_egress_sflow_set_default_action_set_egr_sflow_session_disable(
-                        g_sess_hdl, p4_pd_device, &entry_hdl);
-
-    // sflow_session_headers
-    p4_pd_dc_sflow_session_headers_set_default_action_nop(
-                        g_sess_hdl, p4_pd_device, &entry_hdl);
-
-    p4_pd_dc_i2e_mirror_set_default_action_nop(
-                        g_sess_hdl, p4_pd_device, &entry_hdl);
-    p4_pd_dc_sflow_take_sample_set_default_action_nop(
-                        g_sess_hdl, p4_pd_device, &entry_hdl);
+    p4_pd_dc_sflow_ing_take_sample_set_default_action_nop(
+        g_sess_hdl, p4_pd_device, &entry_hdl);
 
     return status;
 }
 
 switch_status_t
-switch_pd_sflow_ingress_table_add (switch_device_t device, 
+switch_pd_sflow_ingress_table_add (switch_device_t device,
                                 switch_sflow_match_key_t *match_key,
                                 uint32_t priority,
+                                uint32_t sample_rate,
                                 switch_sflow_info_t *sflow_info,
                                 switch_sflow_match_entry_t *match_entry)
 {
     switch_status_t     status = SWITCH_STATUS_FAILURE;
     p4_pd_dev_target_t p4_pd_device;
-    p4_pd_dc_ingress_sflow_match_spec_t ingress_sflow_match;
-    p4_pd_dc_set_ing_sflow_session_enable_action_spec_t action_spec;
+    p4_pd_dc_sflow_ingress_match_spec_t ingress_sflow_match;
+    p4_pd_dc_sflow_ing_session_enable_action_spec_t action_spec;
 
     p4_pd_device.device_id = device;
     p4_pd_device.dev_pipe_id = PD_DEV_PIPE_ALL;
     memset(&ingress_sflow_match, 0, sizeof(ingress_sflow_match));
 
     if (match_key->port != SWITCH_API_INVALID_HANDLE) {
-        ingress_sflow_match.ingress_metadata_ifindex = 
+        ingress_sflow_match.ingress_metadata_ifindex =
                         switch_api_interface_get(match_key->port)->ifindex;
         ingress_sflow_match.ingress_metadata_ifindex_mask = -1;
     }
@@ -9122,7 +9114,7 @@ switch_pd_sflow_ingress_table_add (switch_device_t device,
     }
     if (match_key->sip) {
         ingress_sflow_match.ipv4_metadata_lkp_ipv4_sa = match_key->sip;
-        ingress_sflow_match.ipv4_metadata_lkp_ipv4_sa_mask = 
+        ingress_sflow_match.ipv4_metadata_lkp_ipv4_sa_mask =
                                                     match_key->sip_mask;
     }
     if (match_key->dip) {
@@ -9130,12 +9122,15 @@ switch_pd_sflow_ingress_table_add (switch_device_t device,
         ingress_sflow_match.ipv4_metadata_lkp_ipv4_da_mask =
                                                     match_key->dip_mask;
     }
-    // divide the RNG space (32bits) into equal chunks based on rate
-    action_spec.action_rate_thr = (uint32_t)((uint32_t)-1 / 
-                                sflow_info->api_info.sample_rate);
+    if (sample_rate == 0) {
+        // use the sample_rate from the session
+        sample_rate = sflow_info->api_info.sample_rate;
+    }
+    // divide the RNG space (31bits) into equal chunks based on rate
+    action_spec.action_rate_thr = (uint32_t)(((uint32_t)-1 >> 1) / sample_rate);
     action_spec.action_session_id = sflow_info->session_id;
-    status = p4_pd_dc_ingress_sflow_table_add_with_set_ing_sflow_session_enable(
-                g_sess_hdl, p4_pd_device, &ingress_sflow_match, priority, 
+    status = p4_pd_dc_sflow_ingress_table_add_with_sflow_ing_session_enable(
+                g_sess_hdl, p4_pd_device, &ingress_sflow_match, priority,
                 &action_spec, &match_entry->ingress_sflow_ent_hdl
                 );
     p4_pd_complete_operations(g_sess_hdl);
@@ -9148,7 +9143,7 @@ switch_pd_sflow_ingress_table_delete (switch_device_t device,
 {
     switch_status_t status = SWITCH_STATUS_FAILURE;
 
-    status = p4_pd_dc_ingress_sflow_table_delete(g_sess_hdl, device,
+    status = p4_pd_dc_sflow_ingress_table_delete(g_sess_hdl, device,
                                             match_entry->ingress_sflow_ent_hdl);
     p4_pd_complete_operations(g_sess_hdl);
     return status;
@@ -9158,180 +9153,79 @@ switch_status_t
 switch_pd_sflow_match_table_delete (switch_device_t device,
                                       switch_sflow_match_entry_t *match_entry)
 {
-    // XXX - batching ?
     switch_status_t status = SWITCH_STATUS_FAILURE;
-    if (match_entry->ingress_sflow_ent_hdl) {
+    if (match_entry->ingress_sflow_ent_hdl != SWITCH_API_INVALID_HANDLE) {
         status = switch_pd_sflow_ingress_table_delete(device, match_entry);
     }
-    // XXX - add clearing egress entries if present
+    // XXX - delete egress entries if present
     return status;
 }
 
 switch_status_t
-switch_pd_sflow_i2e_mirror_create (switch_device_t device,
-                                        switch_sflow_info_t *sflow_info)
-{
-    switch_status_t                         status = SWITCH_STATUS_FAILURE;
-    p4_pd_dev_target_t                      p4_pd_device;
-    p4_pd_dc_i2e_mirror_match_spec_t        match_spec;
-    p4_pd_dc_sflow_i2e_mirror_action_spec_t action_spec;
-
-    p4_pd_device.device_id = device;
-    p4_pd_device.dev_pipe_id = PD_DEV_PIPE_ALL;
-
-    // {take_sample = max_val_32, sflow_session_id} => 
-    //          sflow_i2e_mirror(mirror_id);
-    memset(&match_spec, 0, sizeof(match_spec)); 
-    memset(&action_spec, 0, sizeof(action_spec)); 
-
-    match_spec.ingress_metadata_sflow_take_sample = (uint32_t)-1;
-    match_spec.ingress_metadata_sflow_take_sample_mask = -1;
-    match_spec.ingress_metadata_sflow_session_id = sflow_info->session_id;
-    match_spec.ingress_metadata_sflow_session_id_mask = -1;
-
-    action_spec.action_sflow_i2e_mirror_id = 
-                            handle_to_id(sflow_info->i2e_mirror_hdl);
-
-    status = p4_pd_dc_i2e_mirror_table_add_with_sflow_i2e_mirror(
-                g_sess_hdl, p4_pd_device, &match_spec, 0/*priority*/,
-                &action_spec, &sflow_info->i2e_mirror_table_ent_hdl);
-
-    p4_pd_complete_operations(g_sess_hdl);
-    return status;
-}
-
-switch_status_t
-switch_pd_sflow_mirror_table_sflow_i2e_create (switch_device_t device,
-                                        switch_sflow_info_t *sflow_info)
+switch_pd_mirror_table_sflow_add (switch_device_t device,
+                                            switch_sflow_info_t *sflow_info)
 {
     switch_status_t     status = SWITCH_STATUS_FAILURE;
-    p4_pd_dev_target_t p4_pd_device;
+    p4_pd_dev_target_t  p4_pd_device;
     p4_pd_dc_mirror_match_spec_t match_spec;
-    p4_pd_dc_set_ingress_sflow_from_mirror_action_spec_t action_spec;
 
-    p4_pd_device.device_id = device;
-    p4_pd_device.dev_pipe_id = PD_DEV_PIPE_ALL;
-
-    // mirror table {i2e_mirror_id} => set_ingress_sflow_from_mirror
-    memset(&match_spec, 0, sizeof(match_spec)); 
-    memset(&action_spec, 0, sizeof(action_spec)); 
-
-    match_spec.i2e_metadata_mirror_session_id = 
-                            handle_to_id(sflow_info->i2e_mirror_hdl);
-
-    action_spec.action_sflow_session_id = sflow_info->session_id;
-    // add size of sflow raw header record
-    action_spec.action_max_sample_len = sflow_info->api_info.extract_len + 24;
-
-    // total sample len must be < 80B (tofino)
-    if (action_spec.action_max_sample_len > 80) {
-        action_spec.action_max_sample_len = 80;
+    if ((sflow_info->api_info.collector_type != SFLOW_COLLECTOR_TYPE_CPU)  ||
+        (sflow_info->api_info.sample_mode != SWITCH_SFLOW_SAMPLE_PKT)) {
+        // if collector == REMOTE : set action as sflow_pkt_to_remote - TBD
+        return status;
     }
-
-    status = p4_pd_dc_mirror_table_add_with_set_ingress_sflow_from_mirror(
-                g_sess_hdl, p4_pd_device, &match_spec, &action_spec,
-                &sflow_info->mirror_table_ent_hdl);
-
-    p4_pd_complete_operations(g_sess_hdl);
-    return status;
-}
-
-switch_status_t
-switch_pd_sflow_session_headers_create (switch_device_t device,
-                                        switch_sflow_info_t *sflow_info)
-{
-    switch_status_t     status = SWITCH_STATUS_FAILURE;
-    p4_pd_dev_target_t p4_pd_device;
-    p4_pd_dc_sflow_session_headers_match_spec_t match_spec;
-    p4_pd_dc_sflow_to_cpu_action_spec_t         action_spec;
-
-    p4_pd_device.device_id = device;
-    p4_pd_device.dev_pipe_id = PD_DEV_PIPE_ALL;
-
-    // sflow_session_headers for sending the coalesced pkt to cpu
-    memset(&match_spec, 0, sizeof(match_spec)); 
-    memset(&action_spec, 0, sizeof(action_spec)); 
-
-    status = p4_pd_dc_sflow_session_headers_table_add_with_sflow_to_cpu(
-                g_sess_hdl, p4_pd_device, &match_spec, &action_spec,
-                &sflow_info->session_headers_table_ent_hdl);
-        
-    p4_pd_complete_operations(g_sess_hdl);
-    return status;
-}
-
-switch_status_t
-switch_pd_sflow_take_sample_table_create (switch_device_t device,
-                                          switch_sflow_info_t *sflow_info)
-{
-    switch_status_t     status = SWITCH_STATUS_FAILURE;
-    p4_pd_dev_target_t p4_pd_device;
-    p4_pd_dc_sflow_take_sample_match_spec_t       match_spec;
-
+    // if collector == CPU : set action as sflow_pkt_to_cpu
     p4_pd_device.device_id = device;
     p4_pd_device.dev_pipe_id = PD_DEV_PIPE_ALL;
 
     memset(&match_spec, 0, sizeof(match_spec)); 
+    match_spec.i2e_metadata_mirror_session_id = handle_to_id(sflow_info->mirror_hdl);
+    status = p4_pd_dc_mirror_table_add_with_sflow_pkt_to_cpu(
+            g_sess_hdl, p4_pd_device, &match_spec,
+            &sflow_info->mirror_table_ent_hdl);
 
-    // create two entries,
-    // 1: for ingress sflow - applied to i2e mirrored packet which is sampled
-    // ingress_sflow flag is set, ignore take_sample value
-    match_spec.sflow_meta_sflow_session_id = sflow_info->session_id;
-    match_spec.sflow_meta_ingress_sflow = 1;
-    match_spec.sflow_meta_ingress_sflow_mask = -1;
-    match_spec.egress_metadata_sflow_take_sample = (uint32_t)-1;
-    match_spec.egress_metadata_sflow_take_sample_mask = 0; // don't care
-
-    status = p4_pd_dc_sflow_take_sample_table_add_with_sflow_sample_pkt_i2e(
-                g_sess_hdl, p4_pd_device, &match_spec, 0,
-                &sflow_info->take_sample_table_ent_hdl_i2e);
-    if (status != SWITCH_STATUS_SUCCESS) {
-        goto error_return;
-    }
-
-    // 2: for egress sflow - applied to packet being sampled
-    match_spec.sflow_meta_sflow_session_id = sflow_info->session_id;
-    match_spec.sflow_meta_ingress_sflow = 0;
-    match_spec.sflow_meta_ingress_sflow_mask = -1;
-    match_spec.egress_metadata_sflow_take_sample = (uint32_t)-1;
-    match_spec.egress_metadata_sflow_take_sample_mask = -1;
-
-    status = p4_pd_dc_sflow_take_sample_table_add_with_sflow_sample_pkt(
-                g_sess_hdl, p4_pd_device, &match_spec, 0,
-                &sflow_info->take_sample_table_ent_hdl);
-
-error_return:
     p4_pd_complete_operations(g_sess_hdl);
     return status;
 }
 
 switch_status_t
 switch_pd_sflow_session_create (switch_device_t device,
-                                        switch_sflow_info_t *sflow_info)
+                                switch_sflow_info_t *sflow_info)
 {
     switch_status_t     status = SWITCH_STATUS_FAILURE;
+    p4_pd_dev_target_t p4_pd_device;
 
-    status = switch_pd_sflow_i2e_mirror_create(device, sflow_info);
-    if (status != SWITCH_STATUS_SUCCESS) {
-        // caller does cleanup
-        return status;
-    }
-    // mirror table {i2e_mirror_id} => set_ingress_sflow_from_mirror
-    status = switch_pd_sflow_mirror_table_sflow_i2e_create(device, sflow_info);
-    if (status != SWITCH_STATUS_SUCCESS) {
-        // caller does cleanup
-        return status;
-    }
-    // sflow_session_headers
-    status = switch_pd_sflow_session_headers_create(device, sflow_info);
-    if (status != SWITCH_STATUS_SUCCESS) {
-        // caller does cleanup
-        return status;
-    }
-    status = switch_pd_sflow_take_sample_table_create(device, sflow_info);
-    if (status != SWITCH_STATUS_SUCCESS) {
-        // caller does cleanup
-        return status;
+    p4_pd_device.device_id = device;
+    p4_pd_device.dev_pipe_id = PD_DEV_PIPE_ALL;
+
+    if ((sflow_info->api_info.collector_type == SFLOW_COLLECTOR_TYPE_CPU) &&
+        (sflow_info->api_info.sample_mode == SWITCH_SFLOW_SAMPLE_PKT)) {
+
+        p4_pd_dc_sflow_ing_pkt_to_cpu_action_spec_t     action_spec;
+        p4_pd_dc_sflow_ing_take_sample_match_spec_t     match_spec;
+        match_spec.ingress_metadata_sflow_take_sample = 0x80000000; // Bit 31 set
+        match_spec.ingress_metadata_sflow_take_sample_mask = 0x80000000;    // Bit 31 set
+        match_spec.sflow_metadata_sflow_session_id = sflow_info->session_id;
+
+        action_spec.action_sflow_i2e_mirror_id = handle_to_id(
+                                            sflow_info->mirror_hdl);
+        action_spec.action_reason_code = SWITCH_HOSTIF_REASON_CODE_SFLOW_SAMPLE;
+
+        // For sflow to cpu, program ing_take_sample table in ingress pipeline to
+        // perform mirroring and set correct reason code
+        status = p4_pd_dc_sflow_ing_take_sample_table_add_with_sflow_ing_pkt_to_cpu(
+                    g_sess_hdl, p4_pd_device, &match_spec, 0, &action_spec,
+                    &sflow_info->ing_take_sample_table_ent_hdl);
+
+        if (status != SWITCH_STATUS_SUCCESS) {
+            return status;
+        }
+        // For sflow to cpu, program mirror table in egress pipeline to
+        // send pkt to CPU
+        status = switch_pd_mirror_table_sflow_add (device, sflow_info);
+    } else {
+        // XXX - Not supported yet
+        assert(0);
     }
     return status;
 }
@@ -9341,29 +9235,17 @@ switch_pd_sflow_session_delete (switch_device_t device,
                                         switch_sflow_info_t *sflow_info)
 {
     bool op_started = false;
-    if (sflow_info->mirror_table_ent_hdl) {
+    if (sflow_info->mirror_table_ent_hdl != SWITCH_API_INVALID_HANDLE) {
         p4_pd_dc_mirror_table_delete(g_sess_hdl, device, 
                                          sflow_info->mirror_table_ent_hdl);
+        sflow_info->mirror_table_ent_hdl = SWITCH_API_INVALID_HANDLE;
         op_started = true;
     }
-    if (sflow_info->session_headers_table_ent_hdl) {
-        p4_pd_dc_sflow_session_headers_table_delete(g_sess_hdl, device,
-                                sflow_info->session_headers_table_ent_hdl);
-        op_started = true;
-    }
-    if (sflow_info->i2e_mirror_table_ent_hdl) {
-        p4_pd_dc_i2e_mirror_table_delete(g_sess_hdl, device, 
-                                         sflow_info->i2e_mirror_table_ent_hdl);
-        op_started = true;
-    }
-    if (sflow_info->take_sample_table_ent_hdl_i2e) {
-        p4_pd_dc_sflow_take_sample_table_delete(g_sess_hdl, device, 
-                                         sflow_info->take_sample_table_ent_hdl_i2e);
-        op_started = true;
-    }
-    if (sflow_info->take_sample_table_ent_hdl) {
-        p4_pd_dc_sflow_take_sample_table_delete(g_sess_hdl, device, 
-                                         sflow_info->take_sample_table_ent_hdl);
+    if (sflow_info->ing_take_sample_table_ent_hdl != SWITCH_API_INVALID_HANDLE) {
+
+        p4_pd_dc_sflow_ing_take_sample_table_delete( g_sess_hdl, device,
+                                         sflow_info->ing_take_sample_table_ent_hdl);
+        sflow_info->ing_take_sample_table_ent_hdl = SWITCH_API_INVALID_HANDLE;
         op_started = true;
     }
     if (op_started) {
