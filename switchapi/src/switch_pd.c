@@ -9241,7 +9241,7 @@ switch_pd_sflow_session_delete (switch_device_t device,
         sflow_info->mirror_table_ent_hdl = SWITCH_API_INVALID_HANDLE;
         op_started = true;
     }
-    if (sflow_info-> ing_take_sample_table_ent_hdl != SWITCH_API_INVALID_HANDLE) {
+    if (sflow_info->ing_take_sample_table_ent_hdl != SWITCH_API_INVALID_HANDLE) {
 
         p4_pd_dc_sflow_ing_take_sample_table_delete( g_sess_hdl, device,
                                          sflow_info->ing_take_sample_table_ent_hdl);
