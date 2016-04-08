@@ -551,6 +551,12 @@ switch_api_hostif_reason_code_create(switch_device_t device,
                                        &ace_handle);
             break;
         }
+        case SWITCH_HOSTIF_REASON_CODE_SFLOW_SAMPLE: {
+            // SFLOW reasoncode is generated from different ACLs, which are created
+            // when SFLOW session is created, the acl_handle is not stored here.
+            rcode_info->acl_handle = SWITCH_API_INVALID_HANDLE;
+            break;
+        }
         default:
             status = SWITCH_STATUS_NOT_SUPPORTED;
             break;
@@ -709,6 +715,8 @@ switch_api_hostif_code_string(switch_hostif_reason_code_t reason_code)
             return "pim";
         case SWITCH_HOSTIF_REASON_CODE_IGMP_TYPE_V2_REPORT:
             return "igmpv2-report";
+        case SWITCH_HOSTIF_REASON_CODE_SFLOW_SAMPLE:
+            return "sflow-sample";
         default:
             return "unknown";
     }

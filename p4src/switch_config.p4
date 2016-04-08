@@ -23,7 +23,14 @@ action set_config_parameters(enable_dod) {
      * or take appropriate action
      */
     deflect_on_drop(enable_dod);
-    /* Add more parameters here */
+
+#ifdef SFLOW_ENABLE
+    /* use 31 bit random number generator and detect overflow into upper half
+     * to decide to take a sample
+     */
+    modify_field_rng_uniform(ingress_metadata.sflow_take_sample,
+                                0, 0x7FFFFFFF);
+#endif
 }
 
 table switch_config_params {
