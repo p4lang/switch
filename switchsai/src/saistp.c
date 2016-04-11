@@ -69,7 +69,7 @@ sai_status_t sai_create_stp_entry(
         if (attribute->id == SAI_STP_ATTR_VLAN_LIST) {
             vlans = &attribute->value.vlanlist;
 
-            vlan_handle = (switch_handle_t *) SAI_MALLOC(sizeof(switch_handle_t) * vlans->vlan_count);
+            vlan_handle = (switch_handle_t *) SAI_MALLOC(sizeof(switch_handle_t) * vlans->count);
             if (!vlan_handle) {
                 status = SAI_STATUS_NO_MEMORY;
                 SAI_LOG_ERROR("failed to create stp entry : %s",
@@ -77,8 +77,8 @@ sai_status_t sai_create_stp_entry(
                 return status;
             }
 
-            for (index2 = 0; index2 < vlans->vlan_count; index2++) {
-                vlan_id = vlans->vlan_list[index2];
+            for (index2 = 0; index2 < vlans->count; index2++) {
+                vlan_id = vlans->list[index2];
                 switch_status = switch_api_vlan_id_to_handle_get(vlan_id,
                                                          &vlan_handle[index2]);
                 status = sai_switch_status_to_sai_status(switch_status);
@@ -90,7 +90,7 @@ sai_status_t sai_create_stp_entry(
                 }
             }
             switch_status = switch_api_stp_group_vlans_add(device, *stp_id,
-                                                         vlans->vlan_count,
+                                                         vlans->count,
                                                          vlan_handle);
             status = sai_switch_status_to_sai_status(switch_status);
             SAI_FREE(vlan_handle);

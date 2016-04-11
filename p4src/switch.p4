@@ -37,6 +37,7 @@ header_type ingress_metadata_t {
         drop_flag : 1;                         /* if set, drop the packet */
         drop_reason : 8;                       /* drop reason */
         control_frame: 1;                      /* control frame */
+        sflow_take_sample : 32 (saturating);
     }
 }
 
@@ -89,6 +90,7 @@ metadata global_config_metadata_t global_config_metadata;
 #include "int_transit.p4"
 #include "hashes.p4"
 #include "meter.p4"
+#include "sflow.p4"
 
 action nop() {
 }
@@ -119,6 +121,9 @@ control ingress {
 
         /* INT src,sink determination */
         process_int_endpoint();
+
+        /* ingress sflow determination */
+        process_ingress_sflow();
 
         /* tunnel termination processing */
         process_tunnel();
@@ -247,6 +252,7 @@ control egress {
             /* check if pkt is mirrored */
             if (pkt_is_mirrored) {
                 /* set the nexthop for the mirror id */
+                /* for sflow i2e mirror pkt, result will set required sflow info */
                 apply(mirror);
             } else {
 

@@ -24,6 +24,14 @@ action set_config_parameters(enable_dod) {
      */
     deflect_on_drop(enable_dod);
 
+#ifdef SFLOW_ENABLE
+    /* use 31 bit random number generator and detect overflow into upper half
+     * to decide to take a sample
+     */
+    modify_field_rng_uniform(ingress_metadata.sflow_take_sample,
+                                0, 0x7FFFFFFF);
+#endif
+
     /* initialization */
     modify_field(i2e_metadata.ingress_tstamp, _ingress_global_tstamp_);
     modify_field(ingress_metadata.ingress_port, ingress_input_port);

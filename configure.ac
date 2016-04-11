@@ -90,9 +90,6 @@ AC_PROG_AWK
 AC_PROG_SED
 AC_PROG_GREP
 
-# enforce -std=c++11
-# AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
-
 # Checks for header files.
 AC_LANG_PUSH(C)
 AC_LANG_PUSH(C++)
@@ -108,6 +105,9 @@ adl_RECURSIVE_EVAL([$pythondir], [PYTHON_DIR])
 adl_RECURSIVE_EVAL([$libdir], [LIB_DIR])
 
 AS_IF([test "$want_bmv2" = yes], [
+    # enforce -std=c++11
+    AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
+
     AC_PATH_PROG([P4C_BM], [p4c-bmv2], [], [$PATH$PATH_SEPARATOR$BIN_DIR])
     AS_IF([test x"$P4C_BM" = x], AC_MSG_ERROR([cannot find p4c-bmv2 compiler]))
 
