@@ -147,6 +147,14 @@ sai_status_t sai_api_query(
             *api_method_table = &sai_api_service.hash_api;
             break;
 
+        case SAI_API_BUFFERS:
+            *api_method_table = &sai_api_service.buffer_api;
+            break;
+
+        case SAI_API_UDF:
+            *api_method_table = &sai_api_service.udf_api;
+            break;
+
         case SAI_API_IPMC:
             *api_method_table = &sai_api_service.ipmc_api;
             break;

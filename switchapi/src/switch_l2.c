@@ -474,12 +474,6 @@ switch_mac_update_nhop(switch_device_t device,
 
     nhop_handle = neighbor_info->neighbor.nhop_handle;
     if (SWITCH_NHOP_HANDLE_VALID(nhop_handle)) {
-        nhop_info = switch_nhop_get(nhop_handle);
-        if (!nhop_info) {
-            return SWITCH_STATUS_INVALID_HANDLE;
-        }
-        spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
-        spath_info->nhop_key.intf_handle = intf_handle;
         status = switch_api_nhop_update(device, nhop_handle);
     }
     return status;

@@ -169,15 +169,6 @@ sai_status_t sai_get_vlan_entry_attribute(
         return status;
     }
 
-    int index;
-    for (index = 0; index < attr_count; index++) {
-        sai_attribute_t *attr = &attr_list[index];
-        switch (attr->id) {
-            default:
-                status = SAI_STATUS_NOT_SUPPORTED;
-        }
-    }
-
     SAI_LOG_EXIT();
 
     return (sai_status_t) status;
