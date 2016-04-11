@@ -93,9 +93,6 @@ typedef struct _sai_api_service_t {
     sai_hostif_api_t                hostif_api;
     sai_mirror_api_t                mirror_api;
     sai_samplepacket_api_t          samplepacket_api;
-    sai_buffer_api_t                buffer_api;
-    sai_udf_api_t                   udf_api;
-    sai_hash_api_t                  hash_api;
     sai_policer_api_t               policer_api;
     sai_ipmc_api_t                  ipmc_api;
     sai_l2mc_api_t                  l2mc_api;
@@ -125,6 +122,7 @@ sai_status_t sai_acl_initialize(sai_api_service_t *sai_api_service);
 sai_status_t sai_mirror_initialize(sai_api_service_t *sai_api_service);
 sai_status_t sai_hash_initialize(sai_api_service_t *sai_api_service);
 sai_status_t sai_udf_initialize(sai_api_service_t *sai_api_service);
+sai_status_t sai_buffer_initialize(sai_api_service_t *sai_api_service);
 sai_status_t sai_policer_initialize(sai_api_service_t *sai_api_service);
 sai_status_t sai_ipmc_initialize(sai_api_service_t *sai_api_service);
 sai_status_t sai_l2mc_initialize(sai_api_service_t *sai_api_service);

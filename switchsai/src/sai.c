@@ -142,9 +142,11 @@ sai_status_t sai_api_query(
         case SAI_API_SAMPLEPACKET:
             *api_method_table = &sai_api_service.samplepacket_api;
             break;
+
         case SAI_API_HASH:
             *api_method_table = &sai_api_service.hash_api;
             break;
+
         case SAI_API_IPMC:
             *api_method_table = &sai_api_service.ipmc_api;
             break;
@@ -156,6 +158,7 @@ sai_status_t sai_api_query(
         case SAI_API_POLICER:
             *api_method_table = &sai_api_service.policer_api;
             break;
+
         default:
             *api_method_table = NULL;
             status = SAI_STATUS_INVALID_PARAMETER;
@@ -286,8 +289,6 @@ sai_status_t sai_initialize() {
     sai_hostif_initialize(&sai_api_service);
     sai_acl_initialize(&sai_api_service);
     sai_mirror_initialize(&sai_api_service);
-    sai_hash_initialize(&sai_api_service);
-    sai_udf_initialize(&sai_api_service);
     sai_policer_initialize(&sai_api_service);
     sai_ipmc_initialize(&sai_api_service);
     sai_l2mc_initialize(&sai_api_service);
