@@ -155,7 +155,7 @@ sai_status_t sai_get_port_attribute(
                         port_id, sai_status_to_string(status));
                     return status;
                 }
-                status = switch_port_enabled_to_sai_oper_status(attribute);
+                status = sai_switch_port_enabled_to_sai_oper_status(attribute);
                 break;
             case SAI_PORT_ATTR_SPEED:
                 switch_status = switch_api_port_speed_get(

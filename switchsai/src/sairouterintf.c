@@ -208,7 +208,6 @@ sai_status_t sai_set_router_interface_attribute(
         return status;
     }
 
-    switch_status_t switch_status;
     switch (attr->id) {
         case SAI_ROUTER_INTERFACE_ATTR_SRC_MAC_ADDRESS:
             break;

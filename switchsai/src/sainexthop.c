@@ -229,10 +229,10 @@ sai_status_t sai_get_next_hop_entry_attribute(
     }
 
     switch_nhop_key_t *key;
-    if ((switch_status = switch_api_nhop_get
+    if ((switch_status = switch_api_nhop_get(
             device,
             (switch_handle_t) next_hop_id,
-            &key)
+            &key))
         != SWITCH_STATUS_SUCCESS) {
         return sai_switch_status_to_sai_status(switch_status);
     }
@@ -245,7 +245,7 @@ sai_status_t sai_get_next_hop_entry_attribute(
             case SAI_NEXT_HOP_ATTR_TYPE:
                 break;
             case SAI_NEXT_HOP_ATTR_IP:
-                status = switch_ip_addr_to_sai_ip_addr(
+                status = sai_switch_ip_addr_to_sai_ip_addr(
                     &attribute->value.ipaddr,
                     &key->ip_addr);
                 break;

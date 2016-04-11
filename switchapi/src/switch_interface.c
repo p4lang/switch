@@ -621,7 +621,7 @@ switch_api_interface_attribute_get(switch_handle_t intf_handle,
 // read only
 
 switch_status_t
-switch_api_interface_vrf_get(switch_handle_t intf_handle, uint64_t value)
+switch_api_interface_vrf_get(switch_handle_t intf_handle, uint64_t *value)
 {
     switch_interface_info_t           *intf_info = NULL;
     switch_api_interface_info_t       *api_intf_info = NULL;
@@ -640,7 +640,7 @@ switch_api_interface_vrf_get(switch_handle_t intf_handle, uint64_t value)
 }
 
 switch_status_t
-switch_api_interface_port_id_get(switch_handle_t intf_handle, uint64_t value)
+switch_api_interface_port_id_get(switch_handle_t intf_handle, uint64_t *value)
 {
     switch_interface_info_t           *intf_info = NULL;
     switch_api_interface_info_t       *api_intf_info = NULL;
@@ -662,7 +662,7 @@ switch_api_interface_port_id_get(switch_handle_t intf_handle, uint64_t value)
 }
 
 switch_status_t
-switch_api_interface_vlan_id_get(switch_handle_t intf_handle, uint64_t value)
+switch_api_interface_vlan_id_get(switch_handle_t intf_handle, uint64_t *value)
 {
     switch_interface_info_t           *intf_info = NULL;
     switch_api_interface_info_t       *api_intf_info = NULL;
@@ -685,7 +685,7 @@ switch_api_interface_vlan_id_get(switch_handle_t intf_handle, uint64_t value)
 
 switch_status_t
 switch_api_interface_rmac_addr_get(switch_handle_t intf_handle,
-                                              uint64_t value)
+                                              uint64_t *value)
 {
     switch_interface_info_t           *intf_info = NULL;
     switch_api_interface_info_t       *api_intf_info = NULL;

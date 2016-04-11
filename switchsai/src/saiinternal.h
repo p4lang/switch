@@ -21,6 +21,7 @@ limitations under the License.
 #include <switchapi/switch_status.h>
 #include <switchapi/switch_handle.h>
 #include <switchapi/switch_acl.h>
+#include <switchapi/switch_port.h>
 
 #include <assert.h>
 #include <stdio.h>
