@@ -9035,7 +9035,7 @@ switch_pd_meter_action_table_delete_entry(
 }
 
 switch_status_t
-switch_pd_switch_config_params_update (switch_device_t device)
+switch_pd_switch_config_params_update(switch_device_t device)
 {
     p4_pd_entry_hdl_t entry_hdl;
     p4_pd_dev_target_t p4_pd_device;
@@ -9060,7 +9060,7 @@ switch_pd_switch_config_params_update (switch_device_t device)
 }
 
 switch_status_t
-switch_pd_switch_config_params_table_init (switch_device_t device)
+switch_pd_switch_config_params_table_init(switch_device_t device)
 {
     switch_config_params_init(device);
     return switch_pd_switch_config_params_update(device);
@@ -9088,7 +9088,7 @@ switch_pd_sflow_tables_init(switch_device_t device)
 }
 
 switch_status_t
-switch_pd_sflow_ingress_table_add (switch_device_t device,
+switch_pd_sflow_ingress_table_add(switch_device_t device,
                                 switch_sflow_match_key_t *match_key,
                                 uint32_t priority,
                                 uint32_t sample_rate,
@@ -9138,7 +9138,7 @@ switch_pd_sflow_ingress_table_add (switch_device_t device,
 }
 
 static switch_status_t
-switch_pd_sflow_ingress_table_delete (switch_device_t device,
+switch_pd_sflow_ingress_table_delete(switch_device_t device,
                                       switch_sflow_match_entry_t *match_entry)
 {
     switch_status_t status = SWITCH_STATUS_FAILURE;
@@ -9150,7 +9150,7 @@ switch_pd_sflow_ingress_table_delete (switch_device_t device,
 }
 
 switch_status_t
-switch_pd_sflow_match_table_delete (switch_device_t device,
+switch_pd_sflow_match_table_delete(switch_device_t device,
                                       switch_sflow_match_entry_t *match_entry)
 {
     switch_status_t status = SWITCH_STATUS_FAILURE;
@@ -9162,7 +9162,7 @@ switch_pd_sflow_match_table_delete (switch_device_t device,
 }
 
 switch_status_t
-switch_pd_mirror_table_sflow_add (switch_device_t device,
+switch_pd_mirror_table_sflow_add(switch_device_t device,
                                             switch_sflow_info_t *sflow_info)
 {
     switch_status_t     status = SWITCH_STATUS_FAILURE;
@@ -9189,7 +9189,7 @@ switch_pd_mirror_table_sflow_add (switch_device_t device,
 }
 
 switch_status_t
-switch_pd_sflow_session_create (switch_device_t device,
+switch_pd_sflow_session_create(switch_device_t device,
                                 switch_sflow_info_t *sflow_info)
 {
     switch_status_t     status = SWITCH_STATUS_FAILURE;
@@ -9231,7 +9231,7 @@ switch_pd_sflow_session_create (switch_device_t device,
 }
 
 switch_status_t
-switch_pd_sflow_session_delete (switch_device_t device,
+switch_pd_sflow_session_delete(switch_device_t device,
                                         switch_sflow_info_t *sflow_info)
 {
     bool op_started = false;
