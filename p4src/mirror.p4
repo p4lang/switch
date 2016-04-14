@@ -34,6 +34,9 @@ table mirror {
         nop;
         set_mirror_nhop;
         set_mirror_bd;
+#ifdef SFLOW_ENABLE
+        sflow_pkt_to_cpu;
+#endif
     }
     size : MIRROR_SESSIONS_TABLE_SIZE;
 }

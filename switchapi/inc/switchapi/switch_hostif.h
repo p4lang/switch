@@ -69,6 +69,7 @@ typedef enum switch_hostif_reason_code_ {
     SWITCH_HOSTIF_REASON_CODE_NULL_DROP = 0x103,
     SWITCH_HOSTIF_REASON_CODE_ICMP_REDIRECT = 0x104,
     SWITCH_HOSTIF_REASON_CODE_SRC_IS_LINK_LOCAL = 0x105,
+    SWITCH_HOSTIF_REASON_CODE_SFLOW_SAMPLE = 0x106, /* must match the value in headers.p4 */
     SWITCH_HOSTIF_REASON_CODE_MAX = 0x200,
 } switch_hostif_reason_code_t;
 

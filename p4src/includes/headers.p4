@@ -397,23 +397,15 @@ header_type bfd_t {
     }
 }
 
-header_type sflow_t {
+header_type sflow_hdr_t {
     fields {
         version : 32;
-        ipVersion : 32;
+        addrType : 32;
         ipAddress : 32;
         subAgentId : 32;
         seqNumber : 32;
         uptime : 32;
         numSamples : 32;
-    }
-}
-
-header_type sflow_internal_ethernet_t {
-    fields {
-        dstAddr : 48;
-        srcAddr : 48;
-        etherType : 16;
     }
 }
 
@@ -423,7 +415,7 @@ header_type sflow_sample_t {
         format : 12;
         sampleLength : 32;
         seqNumer : 32;
-        srcIdClass : 8;
+        srcIdType : 8;
         srcIdIndex : 24;
         samplingRate : 32;
         samplePool : 32;
@@ -434,7 +426,8 @@ header_type sflow_sample_t {
     }
 }
 
-header_type sflow_record_t {
+header_type sflow_raw_hdr_record_t {
+    // this header is attached to each pkt sample (flow_record)
     fields {
         enterprise : 20;
         format : 12;
@@ -443,6 +436,19 @@ header_type sflow_record_t {
         frameLength : 32;
         bytesRemoved : 32;
         headerSize : 32;
+    }
+}
+
+
+header_type sflow_sample_cpu_t {
+    fields {
+        sampleLength        : 16;
+        samplePool          : 32;
+        inputIfindex        : 16;
+        outputIfindex       : 16;
+        numFlowRecords      : 8;
+        sflow_session_id    : 3;
+        pipe_id             : 2;
     }
 }
 
@@ -502,6 +508,8 @@ header_type fabric_header_mirror_t {
     }
 }
 
+#define CPU_REASON_CODE_SFLOW   0x106 // must match switch_hostif.h reson_code
+
 header_type fabric_header_cpu_t {
     fields {
         egressQueue : 5;
@@ -513,6 +521,12 @@ header_type fabric_header_cpu_t {
         ingressBd : 16;
 
         reasonCode : 16;
+    }
+}
+
+header_type fabric_header_sflow_t {
+    fields {
+        sflow_session_id  : 16;
     }
 }
 
@@ -600,14 +614,3 @@ header_type int_value_t {
     }
 }
 
-header_type coal_pkt_hdr_t {
-    // Internal header used for coalesced packet
-    // must be multiple of 4 bytes.
-    // First two bytes, num_samples and internal parser byte are
-    // assumed to be removed already by the parser
-    fields {
-        session_id : 16;
-    }
-}
-
-header coal_pkt_hdr_t coal_pkt_hdr;

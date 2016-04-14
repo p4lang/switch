@@ -29,6 +29,13 @@ action set_config_parameters(enable_dod) {
     modify_field(ingress_metadata.ingress_port, ingress_input_port);
     modify_field(l2_metadata.same_if_check, ingress_metadata.ifindex);
     modify_field(ingress_egress_port, INVALID_PORT_ID);
+#ifdef SFLOW_ENABLE
+    /* use 31 bit random number generator and detect overflow into upper half
+     * to decide to take a sample
+     */
+    modify_field_rng_uniform(ingress_metadata.sflow_take_sample,
+                                0, 0x7FFFFFFF);
+#endif
 }
 
 table switch_config_params {
