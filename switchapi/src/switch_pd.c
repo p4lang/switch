@@ -9048,12 +9048,12 @@ switch_pd_switch_config_params_table_init (switch_device_t device)
     return switch_pd_switch_config_params_update(device);
 }
 
-#ifdef P4_SFLOW_ENABLE
 // sFlow APIs
 p4_pd_status_t
 switch_pd_sflow_tables_init(switch_device_t device)
 {
     switch_status_t     status = SWITCH_STATUS_SUCCESS;
+#ifdef P4_SFLOW_ENABLE
     p4_pd_dev_target_t  p4_pd_device;
     p4_pd_entry_hdl_t   entry_hdl;
 
@@ -9066,9 +9066,14 @@ switch_pd_sflow_tables_init(switch_device_t device)
     p4_pd_dc_sflow_ing_take_sample_set_default_action_nop(
         g_sess_hdl, p4_pd_device, &entry_hdl);
 
+#else
+    (void)device;
+    return status;
+#endif
     return status;
 }
 
+#ifdef P4_SFLOW_ENABLE
 switch_status_t
 switch_pd_sflow_ingress_table_add (switch_device_t device,
                                 switch_sflow_match_key_t *match_key,
