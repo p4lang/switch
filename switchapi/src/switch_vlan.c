@@ -156,7 +156,7 @@ switch_api_logical_network_create(switch_device_t device, switch_logical_network
 
 #ifdef SWITCH_PD
     status = switch_pd_bd_table_add_entry(device, handle_to_id(handle),
-                                          bd_info, &bd_info->bd_entry);
+                                          bd_info);
     if (status != SWITCH_STATUS_SUCCESS) {
         return SWITCH_API_INVALID_HANDLE;
     }
@@ -226,8 +226,7 @@ switch_api_logical_network_update(switch_device_t device,
 #ifdef SWITCH_PD
     status = switch_pd_bd_table_update_entry(device,
                                              handle_to_id(network_handle),
-                                             bd_info,
-                                             bd_info->bd_entry);
+                                             bd_info);
     if (status != SWITCH_STATUS_SUCCESS) {
         return status;
     }
@@ -413,10 +412,8 @@ switch_api_vlan_flood_type_set(switch_handle_t vlan_handle, uint64_t value)
     ln_info = &bd_info->ln_info;
     ln_info->flood_type = (switch_vlan_flood_type_t) value;
     switch_logical_network_mc_index_allocate(device, bd_info);
-    status = switch_pd_bd_table_update_entry(device,
-                                        handle_to_id(vlan_handle),
-                                        bd_info,
-                                        bd_info->bd_entry);
+    status = switch_pd_bd_table_update_entry(device, handle_to_id(vlan_handle),
+                                             bd_info);
     return status;
 }
 
@@ -480,10 +477,8 @@ switch_api_vlan_vrf_handle_set(switch_handle_t vlan_handle, uint64_t value)
 
     ln_info = &bd_info->ln_info;
     ln_info->vrf_handle = (switch_handle_t) value; 
-    status = switch_pd_bd_table_update_entry(device,
-                                        handle_to_id(vlan_handle),
-                                        bd_info,
-                                        bd_info->bd_entry);
+    status = switch_pd_bd_table_update_entry(device, handle_to_id(vlan_handle),
+                                             bd_info);
     return status;
 }
 
@@ -515,10 +510,8 @@ switch_api_ln_network_type_set(switch_handle_t ln_handle, uint64_t value)
     }
 
     SWITCH_LN_NETWORK_TYPE(bd_info) = (switch_handle_t) value; 
-    status = switch_pd_bd_table_update_entry(device,
-                                        handle_to_id(ln_handle),
-                                        bd_info,
-                                        bd_info->bd_entry);
+    status = switch_pd_bd_table_update_entry(device, handle_to_id(ln_handle),
+                                             bd_info);
     return status;
 }
 
@@ -548,10 +541,8 @@ switch_bd_ipv4_unicast_enabled_set(switch_handle_t bd_handle, uint64_t value)
     }
 
     SWITCH_LN_IPV4_UNICAST_ENABLED(bd_info) = (uint8_t) value;
-    status = switch_pd_bd_table_update_entry(device,
-                                        handle_to_id(bd_handle),
-                                        bd_info,
-                                        bd_info->bd_entry);
+    status = switch_pd_bd_table_update_entry(device, handle_to_id(bd_handle),
+                                             bd_info);
     return status;
 }
 
@@ -593,10 +584,8 @@ switch_bd_ipv6_unicast_enabled_set(switch_handle_t bd_handle, uint64_t value)
     }
 
     SWITCH_LN_IPV6_UNICAST_ENABLED(bd_info) = (uint8_t) value;
-    status = switch_pd_bd_table_update_entry(device,
-                                        handle_to_id(bd_handle),
-                                        bd_info,
-                                        bd_info->bd_entry);
+    status = switch_pd_bd_table_update_entry(device, handle_to_id(bd_handle),
+                                             bd_info);
     return status;
 }
 
@@ -638,10 +627,8 @@ switch_bd_ipv4_multicast_enabled_set(switch_handle_t bd_handle, uint64_t value)
     }
 
     SWITCH_LN_IPV4_MULTICAST_ENABLED(bd_info) = (uint8_t) value;
-    status = switch_pd_bd_table_update_entry(device,
-                                        handle_to_id(bd_handle),
-                                        bd_info,
-                                        bd_info->bd_entry);
+    status = switch_pd_bd_table_update_entry(device, handle_to_id(bd_handle),
+                                             bd_info);
     return status;
 }
 
@@ -686,10 +673,8 @@ switch_bd_ipv6_multicast_enabled_set(switch_handle_t bd_handle, uint64_t value)
     }
 
     SWITCH_LN_IPV6_MULTICAST_ENABLED(bd_info) = (uint8_t) value;
-    status = switch_pd_bd_table_update_entry(device,
-                                        handle_to_id(bd_handle),
-                                        bd_info,
-                                        bd_info->bd_entry);
+    status = switch_pd_bd_table_update_entry(device, handle_to_id(bd_handle),
+                                             bd_info);
     return status;
 }
 
@@ -734,10 +719,8 @@ switch_bd_ipv4_urpf_mode_set(switch_handle_t bd_handle, uint64_t value)
     }
 
     bd_info->ipv4_urpf_mode = (uint8_t) value;
-    status = switch_pd_bd_table_update_entry(device,
-                                        handle_to_id(bd_handle),
-                                        bd_info,
-                                        bd_info->bd_entry);
+    status = switch_pd_bd_table_update_entry(device, handle_to_id(bd_handle),
+                                             bd_info);
     return status;
 }
 
@@ -767,10 +750,8 @@ switch_bd_ipv6_urpf_mode_set(switch_handle_t bd_handle, uint64_t value)
     }
 
     bd_info->ipv6_urpf_mode = (uint8_t) value;
-    status = switch_pd_bd_table_update_entry(device,
-                                        handle_to_id(bd_handle),
-                                        bd_info,
-                                        bd_info->bd_entry);
+    status = switch_pd_bd_table_update_entry(device, handle_to_id(bd_handle),
+                                             bd_info);
     return status;
 }
 
@@ -800,10 +781,8 @@ switch_api_vlan_learning_enabled_set(switch_handle_t vlan_handle, uint64_t value
     }
 
     SWITCH_LN_LEARN_ENABLED(bd_info) = (uint8_t) value;
-    status = switch_pd_bd_table_update_entry(device,
-                                        handle_to_id(vlan_handle),
-                                        bd_info,
-                                        bd_info->bd_entry);
+    status = switch_pd_bd_table_update_entry(device, handle_to_id(vlan_handle),
+                                             bd_info);
     return status;
 }
 
@@ -834,10 +813,8 @@ switch_api_vlan_igmp_snooping_enabled_set(switch_handle_t vlan_handle,
     }
 
     SWITCH_LN_IGMP_SNOOPING_ENABLED(bd_info) = (uint8_t) value;
-    status = switch_pd_bd_table_update_entry(device,
-                                        handle_to_id(vlan_handle),
-                                        bd_info,
-                                        bd_info->bd_entry);
+    status = switch_pd_bd_table_update_entry(device, handle_to_id(vlan_handle),
+                                             bd_info);
     return status;
 }
 
@@ -869,10 +846,8 @@ switch_api_vlan_mld_snooping_enabled_set(switch_handle_t vlan_handle,
     }
 
     SWITCH_LN_MLD_SNOOPING_ENABLED(bd_info) = (uint8_t) value;
-    status = switch_pd_bd_table_update_entry(device,
-                                        handle_to_id(vlan_handle),
-                                        bd_info,
-                                        bd_info->bd_entry);
+    status = switch_pd_bd_table_update_entry(device, handle_to_id(vlan_handle),
+                                             bd_info);
     return status;
 }
 
@@ -904,7 +879,7 @@ switch_api_vlan_mrpf_group_set(switch_handle_t vlan_handle, uint64_t value)
 
     bd_info->ln_info.mrpf_group = value;
     status = switch_pd_bd_table_update_entry(device, handle_to_id(vlan_handle),
-                                             bd_info, bd_info->bd_entry);
+                                             bd_info);
     return status;
 }
 
@@ -944,99 +919,40 @@ switch_status_t switch_api_vlan_handle_to_id_get(switch_handle_t vlan_handle,
     return SWITCH_STATUS_SUCCESS;
 }
 
-static inline void
-switch_vlan_port_hash_key_init(uchar *key, switch_vlan_port_key_t *vlan_port_key,
-                               uint32_t *len, uint32_t *hash)
+bool
+switch_vlan_interface_check(
+        switch_handle_t vlan_handle,
+        switch_handle_t intf_handle)
 {
-    *len = 0;
-    memset(key, 0, SWITCH_VLAN_PORT_HASH_KEY_SIZE);
+    switch_interface_info_t           *intf_info = NULL;
+    void                              *temp = NULL;
+    switch_handle_t                    tmp_vlan_handle = 0;
 
-    memcpy(key, &(vlan_port_key->vlan_handle), sizeof(switch_handle_t));
-    *len += sizeof(switch_handle_t);
-
-    memcpy((key + *len), &(vlan_port_key->port_lag_handle), sizeof(switch_handle_t));
-    *len += sizeof(switch_handle_t);
-
-    *hash = MurmurHash2(key, *len, 0x98761234);
-}
-
-static inline int
-switch_vlan_port_hash_cmp(const void *key1, const void *key2)
-{
-    return memcmp(key1, key2, SWITCH_VLAN_PORT_HASH_KEY_SIZE);
-}
-
-static switch_status_t
-switch_vlan_port_key_insert_hash(switch_vlan_port_key_t *vlan_port_key, switch_handle_t intf_handle)
-{
-    switch_vlan_port_info_t           *vlan_port_info = NULL;
-    unsigned char                      key[SWITCH_VLAN_PORT_HASH_KEY_SIZE];
-    uint32_t                           len = 0;
-    uint32_t                           hash = 0;
-
-    switch_vlan_port_hash_key_init(key, vlan_port_key, &len, &hash);
-    vlan_port_info = switch_malloc(sizeof(switch_vlan_port_info_t), 1);
-    if (!vlan_port_info) { 
-        return SWITCH_STATUS_NO_MEMORY;
+    intf_info = switch_api_interface_get(intf_handle);
+    if (!intf_info) {
+        return FALSE;
     }
-    memcpy(&vlan_port_info->vlan_port_key, vlan_port_key, sizeof(switch_vlan_port_key_t));
-    vlan_port_info->intf_handle = intf_handle;
-    tommy_hashtable_insert(&switch_vlan_port_hash_table,
-                           &(vlan_port_info->node),
-                           vlan_port_info, hash);
-    return SWITCH_STATUS_SUCCESS;
-}
 
-static switch_status_t
-switch_vlan_port_key_delete_hash(switch_vlan_port_key_t *vlan_port_key)
-{
-    switch_vlan_port_info_t           *vlan_port_info = NULL;
-    unsigned char                      key[SWITCH_VLAN_PORT_HASH_KEY_SIZE];
-    uint32_t                           len = 0;
-    uint32_t                           hash = 0;
+    JLF(temp, intf_info->vlan_array, tmp_vlan_handle);
+    while (temp) {
+        tmp_vlan_handle = *((switch_handle_t *) temp);
+        if (tmp_vlan_handle == vlan_handle) {
+            SWITCH_API_ERROR("intf_handle %lx is already member of vlan_handle %lx",
+                              intf_handle,
+                              tmp_vlan_handle);
+            return FALSE;
+        }
 
-    switch_vlan_port_hash_key_init(key, vlan_port_key, &len, &hash);
-    vlan_port_info= tommy_hashtable_remove(&switch_vlan_port_hash_table,
-                                           switch_vlan_port_hash_cmp,
-                                           key, hash);
-    if (!vlan_port_info) {
-        return SWITCH_STATUS_ITEM_NOT_FOUND;
+        if (SWITCH_INTF_IS_PORT_L2_ACCESS(intf_info)) {
+            SWITCH_API_ERROR("access intf_handle %lx is already member of vlan_handle %lx",
+                              intf_handle,
+                              tmp_vlan_handle);
+            return FALSE;
+        }
+
+        JLN(temp, intf_info->vlan_array, tmp_vlan_handle);
     }
-    switch_free(vlan_port_info);
-    return SWITCH_STATUS_SUCCESS;
-}
-
-static switch_vlan_port_info_t *
-switch_vlan_port_key_search_hash(switch_vlan_port_key_t *vlan_port_key)
-{
-    switch_vlan_port_info_t           *vlan_port_info = NULL;
-    unsigned char                      key[SWITCH_VLAN_PORT_HASH_KEY_SIZE];
-    uint32_t                           len = 0;
-    uint32_t                           hash = 0;
-
-    switch_vlan_port_hash_key_init(key, vlan_port_key, &len, &hash);
-    vlan_port_info = tommy_hashtable_search(&switch_vlan_port_hash_table,
-                                           switch_vlan_port_hash_cmp,
-                                           key, hash);
-    return vlan_port_info;
-}
-
-switch_status_t switch_intf_handle_get(switch_handle_t vlan_handle,
-                                       switch_handle_t port_lag_handle,
-                                       switch_handle_t *intf_handle)
-{
-    switch_vlan_port_info_t           *vlan_port_info = NULL;
-    switch_vlan_port_key_t             vlan_port_key;
-
-    vlan_port_key.vlan_handle = vlan_handle;
-    vlan_port_key.port_lag_handle = port_lag_handle;
-    vlan_port_info = switch_vlan_port_key_search_hash(&vlan_port_key);
-    if (!vlan_port_info) {
-        *intf_handle = 0;
-        return SWITCH_STATUS_ITEM_NOT_FOUND;
-    }
-    *intf_handle = vlan_port_info->intf_handle;
-    return SWITCH_STATUS_SUCCESS;
+    return TRUE;
 }
 
 switch_status_t
@@ -1053,7 +969,10 @@ switch_api_vlan_ports_add(switch_device_t device,
     switch_vlan_t                      vlan_id = 0;
     switch_handle_type_t               handle_type = 0;
     switch_api_interface_info_t        api_intf_info;
-    switch_vlan_port_key_t             vlan_port_key;
+    switch_handle_t                    handle = 0;
+    switch_handle_t                    port_lag_handle = 0;
+    switch_port_info_t                *port_info = NULL;
+    void                              *temp = NULL;
     int                                count = 0;
 
     if (!SWITCH_BD_HANDLE_VALID(vlan_handle)) {
@@ -1065,38 +984,85 @@ switch_api_vlan_ports_add(switch_device_t device,
         return SWITCH_STATUS_INVALID_VLAN_ID;
     }
 
-    while (count < port_count) {
+    for (count = 0; count < port_count; count++) {
+        handle = vlan_port[count].handle;
         intf_handle = vlan_port[count].handle;
-        if ((!SWITCH_PORT_HANDLE_VALID(intf_handle)) &&
-            (!SWITCH_LAG_HANDLE_VALID(intf_handle)) &&
-            (!SWITCH_INTERFACE_HANDLE_VALID(intf_handle))) {
+        port_lag_handle = 0;
+
+        if ((!SWITCH_PORT_HANDLE_VALID(handle)) &&
+            (!SWITCH_LAG_HANDLE_VALID(handle)) &&
+            (!SWITCH_INTERFACE_HANDLE_VALID(handle))) {
             return SWITCH_STATUS_INVALID_HANDLE;
         }
 
-        intf_handle = vlan_port[count].handle;
-        handle_type = switch_handle_get_type(vlan_port[count].handle);
+        handle_type = switch_handle_get_type(handle);
         if (handle_type == SWITCH_HANDLE_TYPE_PORT ||
             handle_type == SWITCH_HANDLE_TYPE_LAG) {
-            if (vlan_port[count].tagging_mode == SWITCH_VLAN_PORT_UNTAGGED) {
-                api_intf_info.type = SWITCH_API_INTERFACE_L2_VLAN_ACCESS;
-            } else if (vlan_port[count].tagging_mode == SWITCH_VLAN_PORT_TAGGED) {
+
+            port_lag_handle = handle;
+
+            if (handle_type == SWITCH_HANDLE_TYPE_PORT) {
+                port_info = switch_api_port_get_internal(handle);
+                if (!port_info) {
+                    SWITCH_API_ERROR("vlan ports add failed. "
+                                     "invalid port handle %lx",
+                                      handle);
+                    return SWITCH_STATUS_INVALID_HANDLE;
+                }
+
+                if (port_info->lag_handle) {
+                    port_lag_handle = port_info->lag_handle;
+                }
+            }
+
+            status = switch_interface_handle_get(
+                             port_lag_handle,
+                             0x0,
+                             &intf_handle);
+            if (status != SWITCH_STATUS_ITEM_NOT_FOUND &&
+                status != SWITCH_STATUS_SUCCESS) {
+                SWITCH_API_ERROR("vlan ports add failed. "
+                                 "interface handle get failed\n");
+                continue;
+            }
+
+            if (!intf_handle) {
+                memset(&api_intf_info, 0x0, sizeof(api_intf_info));
+                api_intf_info.u.port_lag_handle = port_lag_handle;
                 api_intf_info.type = SWITCH_API_INTERFACE_L2_VLAN_TRUNK;
+                if (vlan_port[count].tagging_mode == SWITCH_VLAN_PORT_UNTAGGED) {
+                    api_intf_info.native_vlan = vlan_handle;
+                }
+                intf_handle = switch_api_interface_create(device, &api_intf_info);
+            } else {
+                vlan_member = switch_api_logical_network_search_member(vlan_handle, intf_handle);
+                if (vlan_member) {
+                    SWITCH_API_TRACE("intf_handle %lx is already a member of vlan handle %lx\n",
+                                      intf_handle, vlan_handle);
+                    continue;
+                }
             }
-            api_intf_info.u.port_lag_handle = vlan_port[count].handle;
-            intf_handle = switch_api_interface_create(device, &api_intf_info);
-            if (intf_handle == SWITCH_API_INVALID_HANDLE) {
-                SWITCH_API_ERROR("%s:%d: unable to create interface for vlan %d",
-                                 __FUNCTION__, __LINE__, vlan_id);
-                return SWITCH_STATUS_FAILURE;
-            }
-            vlan_port_key.vlan_handle = vlan_handle;
-            vlan_port_key.port_lag_handle = vlan_port[count].handle;
-            switch_vlan_port_key_insert_hash(&vlan_port_key, intf_handle);
         }
+
         intf_info = switch_api_interface_get(intf_handle);
         if (!intf_info) {
             return SWITCH_STATUS_INVALID_INTERFACE;
         }
+
+        if (handle_type == SWITCH_HANDLE_TYPE_PORT ||
+            handle_type == SWITCH_HANDLE_TYPE_LAG) {
+            intf_info->vlan_count++;
+        }
+
+        if (!switch_vlan_interface_check(vlan_handle, intf_handle)) {
+            SWITCH_API_ERROR("failed to add vlan %lx to interface %lx",
+                              vlan_handle,
+                              intf_handle);
+            continue;
+        }
+
+        JLI(temp, intf_info->vlan_array, vlan_handle);
+        *(unsigned long *) temp = vlan_handle;
 
         if (!SWITCH_INTF_IS_PORT_L3(intf_info)) {
             if (SWITCH_INTF_IS_PORT_L2_ACCESS(intf_info)) {
@@ -1143,7 +1109,6 @@ switch_api_vlan_ports_add(switch_device_t device,
             return status;
         }
 #endif
-        count++;
     }
 
     return status;
@@ -1160,11 +1125,13 @@ switch_api_vlan_ports_remove(switch_device_t device,
     switch_ln_member_t                *vlan_member = NULL;
     tommy_node                        *node = NULL;
     switch_handle_t                    intf_handle = 0;
+    switch_handle_t                    port_lag_handle = 0;
     int                                count = 0;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
     switch_vlan_t                      vlan_id = 0;
     switch_handle_type_t               handle_type = 0;
-    switch_vlan_port_key_t             vlan_port_key;
+    switch_handle_t                    handle = 0;
+    switch_port_info_t                *port_info = NULL;
 
     if (!SWITCH_BD_HANDLE_VALID(vlan_handle)) {
         return SWITCH_STATUS_INVALID_HANDLE;
@@ -1176,7 +1143,10 @@ switch_api_vlan_ports_remove(switch_device_t device,
     }
 
     for(count = 0; count < port_count; count++) {
+
+        handle = vlan_port[count].handle;
         intf_handle = vlan_port[count].handle;
+
         if ((!SWITCH_PORT_HANDLE_VALID(intf_handle)) &&
             (!SWITCH_LAG_HANDLE_VALID(intf_handle)) &&
             (!SWITCH_INTERFACE_HANDLE_VALID(intf_handle))) {
@@ -1185,10 +1155,34 @@ switch_api_vlan_ports_remove(switch_device_t device,
         handle_type = switch_handle_get_type(vlan_port[count].handle);
         if (handle_type == SWITCH_HANDLE_TYPE_PORT ||
             handle_type == SWITCH_HANDLE_TYPE_LAG) {
-            status = switch_intf_handle_get(vlan_handle, vlan_port[count].handle, &intf_handle);
+            port_lag_handle = handle;
+            if (handle_type == SWITCH_HANDLE_TYPE_PORT) {
+                port_info = switch_api_port_get_internal(handle);
+                if (!port_info) {
+                    SWITCH_API_ERROR("vlan ports delete failed. "
+                                     "invalid port handle %lx\n",
+                                      handle);
+                    return SWITCH_STATUS_INVALID_HANDLE;
+                }
+
+                if (port_info->lag_handle) {
+                    port_lag_handle = port_info->lag_handle;
+                }
+            }
+
+            status = switch_interface_handle_get(
+                             port_lag_handle,
+                             0x0,
+                             &intf_handle);
             if (status != SWITCH_STATUS_SUCCESS) {
-                SWITCH_API_ERROR("%s:%d unable to get interface!\n", __FUNCTION__, __LINE__);
-                return SWITCH_STATUS_INVALID_INTERFACE;
+                SWITCH_API_ERROR("vlan ports delete failed. "
+                                 "interface handle get failed\n");
+                continue;
+            }
+
+            vlan_member = switch_api_logical_network_search_member(vlan_handle, intf_handle);
+            if (!vlan_member) {
+                continue;
             }
         }
 
@@ -1196,6 +1190,9 @@ switch_api_vlan_ports_remove(switch_device_t device,
         if (!intf_info) {
             return SWITCH_STATUS_INVALID_INTERFACE;
         }
+
+        JLD(status, intf_info->vlan_array, vlan_handle);
+
         if (!SWITCH_INTF_IS_PORT_L3(intf_info)) {
             if (SWITCH_INTF_IS_PORT_L2_ACCESS(intf_info)) {
                 vlan_id = 0;
@@ -1245,13 +1242,13 @@ switch_api_vlan_ports_remove(switch_device_t device,
 
                 if (handle_type == SWITCH_HANDLE_TYPE_PORT||
                     handle_type == SWITCH_HANDLE_TYPE_LAG) {
-                    status = switch_api_interface_delete(device, intf_handle);
-                    if (status != SWITCH_STATUS_SUCCESS) {
-                        return status;
+                    intf_info->vlan_count--;
+                    if (intf_info->vlan_count == 0) {
+                        status = switch_api_interface_delete(device, intf_handle);
+                        if (status != SWITCH_STATUS_SUCCESS) {
+                            return status;
+                        }
                     }
-                    vlan_port_key.vlan_handle = vlan_handle;
-                    vlan_port_key.port_lag_handle = vlan_port[count].handle;
-                    switch_vlan_port_key_delete_hash(&vlan_port_key);
                 }
             }
         }
@@ -1315,10 +1312,8 @@ switch_bd_router_mac_handle_set(switch_handle_t bd_handle, switch_handle_t rmac_
 
     ln_info = &bd_info->ln_info;
     ln_info->rmac_handle = rmac_handle;
-    status = switch_pd_bd_table_update_entry(device,
-                                        handle_to_id(bd_handle),
-                                        bd_info,
-                                        bd_info->bd_entry);
+    status = switch_pd_bd_table_update_entry(device, handle_to_id(bd_handle),
+                                             bd_info);
     return status;
 }
 
@@ -1477,7 +1472,7 @@ switch_api_vlan_print_all(void)
 }
 
 switch_status_t
-switch_api_vlan_stats_enable(switch_device_t device, switch_handle_t vlan_handle)
+switch_api_bd_stats_enable(switch_device_t device, switch_handle_t bd_handle)
 {
     switch_bd_info_t                  *bd_info  = NULL;
     switch_logical_network_t          *ln_info = NULL;
@@ -1487,7 +1482,7 @@ switch_api_vlan_stats_enable(switch_device_t device, switch_handle_t vlan_handle
     int                                index = 0;
     uint16_t                           bd_stats_start_idx = 0;
 
-    bd_info = switch_bd_get(vlan_handle);
+    bd_info = switch_bd_get(bd_handle);
     if (!bd_info) {
         return SWITCH_STATUS_INVALID_VLAN_ID;
     }
@@ -1506,28 +1501,25 @@ switch_api_vlan_stats_enable(switch_device_t device, switch_handle_t vlan_handle
         }
         memset(bd_info->egress_bd_stats, 0, sizeof(switch_bd_stats_t));
         ingress_bd_stats = bd_info->ingress_bd_stats;
-        bd_stats_start_idx = switch_api_id_allocator_allocate_contiguous(bd_stats_index, SWITCH_VLAN_STATS_MAX);
-        for (index = 0; index < SWITCH_VLAN_STATS_MAX; index++) {
+        bd_stats_start_idx = switch_api_id_allocator_allocate_contiguous(bd_stats_index, SWITCH_BD_STATS_MAX);
+        for (index = 0; index < SWITCH_BD_STATS_MAX; index++) {
             ingress_bd_stats->stats_idx[index] = bd_stats_start_idx;
             bd_stats_start_idx++;
         }
         if (bd_info->bd_entry != SWITCH_HW_INVALID_HANDLE) {
             status = switch_pd_bd_table_update_entry(device,
-                                        handle_to_id(vlan_handle),
-                                        bd_info,
-                                        bd_info->bd_entry);
+                                                     handle_to_id(bd_handle),
+                                                     bd_info);
         }
         egress_bd_stats = bd_info->egress_bd_stats;
         status = switch_pd_egress_bd_stats_table_add_entry(
-                             device,
-                             handle_to_id(vlan_handle),
-                             egress_bd_stats->stats_hw_entry);
+            device, handle_to_id(bd_handle), egress_bd_stats->stats_hw_entry);
     }
     return status;
 }
 
 switch_status_t
-switch_api_vlan_stats_disable(switch_device_t device, switch_handle_t vlan_handle)
+switch_api_bd_stats_disable(switch_device_t device, switch_handle_t bd_handle)
 {
     switch_bd_info_t                  *bd_info  = NULL;
     switch_logical_network_t          *ln_info = NULL;
@@ -1536,7 +1528,7 @@ switch_api_vlan_stats_disable(switch_device_t device, switch_handle_t vlan_handl
     switch_bd_stats_t                 *egress_bd_stats = NULL;
     int                                index = 0;
 
-    bd_info = switch_bd_get(vlan_handle);
+    bd_info = switch_bd_get(bd_handle);
     if (!bd_info) {
         return SWITCH_STATUS_INVALID_VLAN_ID;
     }
@@ -1545,15 +1537,14 @@ switch_api_vlan_stats_disable(switch_device_t device, switch_handle_t vlan_handl
     if (ln_info->flags.stats_enabled) {
         ln_info->flags.stats_enabled = FALSE;
         ingress_bd_stats = bd_info->ingress_bd_stats;
-        for (index = 0; index < SWITCH_VLAN_STATS_MAX; index++) {
+        for (index = 0; index < SWITCH_BD_STATS_MAX; index++) {
             switch_api_id_allocator_release(bd_stats_index, ingress_bd_stats->stats_idx[index]);
             ingress_bd_stats->stats_idx[index] = 0;
         }
         if (bd_info->bd_entry != SWITCH_HW_INVALID_HANDLE) {
             status = switch_pd_bd_table_update_entry(device,
-                                        handle_to_id(vlan_handle),
-                                        bd_info,
-                                        bd_info->bd_entry);
+                                                     handle_to_id(bd_handle),
+                                                     bd_info);
         }
         switch_free(bd_info->ingress_bd_stats);
         egress_bd_stats = bd_info->egress_bd_stats;
@@ -1566,11 +1557,11 @@ switch_api_vlan_stats_disable(switch_device_t device, switch_handle_t vlan_handl
 }
 
 switch_status_t
-switch_api_vlan_stats_get(
+switch_api_bd_stats_get(
         switch_device_t device,
-        switch_handle_t vlan_handle,
+        switch_handle_t bd_handle,
         uint8_t count,
-        switch_vlan_stats_t *counter_ids,
+        switch_bd_stats_id_t *counter_ids,
         switch_counter_t *counters)
 {
     switch_bd_info_t                  *bd_info  = NULL;
@@ -1579,9 +1570,9 @@ switch_api_vlan_stats_get(
     switch_bd_stats_t                 *ingress_bd_stats = NULL;
     switch_bd_stats_t                 *egress_bd_stats = NULL;
     int                                index = 0;
-    switch_vlan_stats_t                counter_id = 0;
+    switch_bd_stats_id_t              counter_id = 0;
 
-    bd_info = switch_bd_get(vlan_handle);
+    bd_info = switch_bd_get(bd_handle);
     if (!bd_info) {
         return SWITCH_STATUS_INVALID_VLAN_ID;
     }
@@ -1590,19 +1581,19 @@ switch_api_vlan_stats_get(
     if (ln_info->flags.stats_enabled) {
         ingress_bd_stats = bd_info->ingress_bd_stats;
         egress_bd_stats = bd_info->egress_bd_stats;
-        status = switch_pd_vlan_ingress_stats_get(device, ingress_bd_stats);
-        status = switch_pd_vlan_egress_stats_get(device, egress_bd_stats);
+        status = switch_pd_bd_ingress_stats_get(device, ingress_bd_stats);
+        status = switch_pd_bd_egress_stats_get(device, egress_bd_stats);
         for (index = 0; index < count; index++) {
             counter_id = counter_ids[index];
             switch (counter_id) {
-                case SWITCH_VLAN_STATS_IN_UCAST:
-                case SWITCH_VLAN_STATS_IN_MCAST:
-                case SWITCH_VLAN_STATS_IN_BCAST:
+                case SWITCH_BD_STATS_IN_UCAST:
+                case SWITCH_BD_STATS_IN_MCAST:
+                case SWITCH_BD_STATS_IN_BCAST:
                     counters[index] = ingress_bd_stats->counters[counter_id];
                     break;
-                case SWITCH_VLAN_STATS_OUT_UCAST:
-                case SWITCH_VLAN_STATS_OUT_MCAST:
-                case SWITCH_VLAN_STATS_OUT_BCAST:
+                case SWITCH_BD_STATS_OUT_UCAST:
+                case SWITCH_BD_STATS_OUT_MCAST:
+                case SWITCH_BD_STATS_OUT_BCAST:
                     counters[index] = egress_bd_stats->counters[counter_id];
                     break;
                 default:
@@ -1611,6 +1602,38 @@ switch_api_vlan_stats_get(
         }
     }
     return status;
+}
+
+switch_status_t
+switch_api_vlan_stats_enable(
+        switch_device_t device,
+        switch_handle_t vlan_handle)
+{
+    return switch_api_bd_stats_enable(device, vlan_handle);
+}
+
+switch_status_t
+switch_api_vlan_stats_disable(
+        switch_device_t device,
+        switch_handle_t vlan_handle)
+{
+    return switch_api_bd_stats_disable(device, vlan_handle);
+}
+
+switch_status_t
+switch_api_vlan_stats_get(
+        switch_device_t device,
+        switch_handle_t vlan_handle,
+        uint8_t count,
+        switch_bd_stats_id_t *counter_ids,
+        switch_counter_t *counters)
+{
+    return switch_api_bd_stats_get(
+                             device,
+                             vlan_handle,
+                             count,
+                             counter_ids,
+                             counters);
 }
 
 #ifdef __cplusplus

@@ -312,7 +312,9 @@ switch_mac_learn_notify_cb(p4_pd_sess_hdl_t sess_hdl,
             continue;
         }
 
-        intf_handle = switch_api_interface_get_from_ifindex(learn_entry->ingress_metadata_ifindex);
+        intf_handle = switch_api_interface_get_from_ifindex(
+                             learn_entry->ingress_metadata_ifindex,
+                             mac_entry.vlan_handle);
         if (!intf_handle) {
             SWITCH_API_TRACE("%s:%d: Ignoring the mac. invalid ifindex!", __FUNCTION__, __LINE__);
             continue;
@@ -526,7 +528,10 @@ switch_api_mac_table_entry_add(switch_device_t device,
     switch(handle_type) {
         case SWITCH_HANDLE_TYPE_PORT:
         case SWITCH_HANDLE_TYPE_LAG:
-            status = switch_intf_handle_get(mac_entry->vlan_handle, mac_entry->handle, &intf_handle);
+            status = switch_interface_handle_get(
+                             mac_entry->handle,
+                             0x0,
+                             &intf_handle);
             if (status != SWITCH_STATUS_SUCCESS) {
                 goto cleanup;
             }
@@ -695,7 +700,10 @@ switch_api_mac_table_entry_update(switch_device_t device,
     switch(handle_type) {
         case SWITCH_HANDLE_TYPE_PORT:
         case SWITCH_HANDLE_TYPE_LAG:
-            status = switch_intf_handle_get(mac_entry->vlan_handle, mac_entry->handle, &intf_handle);
+            status = switch_interface_handle_get(
+                             mac_entry->handle,
+                             0x0,
+                             &intf_handle);
             if (status != SWITCH_STATUS_SUCCESS) {
                 goto cleanup;
             }
@@ -835,8 +843,10 @@ switch_api_mac_table_entry_delete(switch_device_t device,
     switch(handle_type) {
         case SWITCH_HANDLE_TYPE_PORT:
         case SWITCH_HANDLE_TYPE_LAG:
-            status = switch_intf_handle_get(mac_entry->vlan_handle, handle,
-                                            &intf_handle);
+            status = switch_interface_handle_get(
+                             handle,
+                             0x0,
+                             &intf_handle);
             if (status != SWITCH_STATUS_SUCCESS) {
                 goto cleanup;
             }
@@ -1006,8 +1016,6 @@ switch_api_mac_table_entries_delete_by_interface(switch_device_t device,
     void                              *temp = NULL;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
     switch_handle_t                    intf_handle = 0;
-    switch_port_info_t                *port_info = NULL;
-    switch_lag_info_t                 *lag_info = NULL;
     switch_handle_type_t               handle_type = 0;
 
     if (!SWITCH_PORT_HANDLE_VALID(handle) && 
@@ -1019,21 +1027,16 @@ switch_api_mac_table_entries_delete_by_interface(switch_device_t device,
 
     handle_type = switch_handle_get_type(handle);
     intf_handle = handle;
-    if (handle_type == SWITCH_HANDLE_TYPE_PORT) {
-       port_info = switch_api_port_get_internal((switch_port_t)handle); 
-       if (!port_info) {
-           status = SWITCH_STATUS_INVALID_PORT_NUMBER;
-           goto cleanup;
-       }
-       intf_handle = port_info->intf_handle;
-    }
-    if (handle_type == SWITCH_HANDLE_TYPE_LAG) {
-        lag_info = switch_api_lag_get_internal(handle);
-        if (!lag_info) {
-            status = SWITCH_STATUS_INVALID_HANDLE;
-            goto cleanup;
+    if (handle_type == SWITCH_HANDLE_TYPE_PORT ||
+        handle_type == SWITCH_HANDLE_TYPE_LAG) {
+        status = switch_interface_handle_get(
+                             handle,
+                             0x0,
+                             &intf_handle);
+        if (status != SWITCH_STATUS_SUCCESS) {
+            SWITCH_API_ERROR("mac table delete by interface failed");
+            return status;
         }
-        intf_handle = lag_info->intf_handle;
     }
 
     JLG(temp, intf_mac_hdl_array, intf_handle);
@@ -1072,8 +1075,6 @@ switch_api_mac_table_entries_delete_by_interface_vlan(switch_device_t device,
     void                              *temp = NULL;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
     switch_handle_t                    intf_handle = 0;
-    switch_port_info_t                *port_info = NULL;
-    switch_lag_info_t                 *lag_info = NULL;
     switch_handle_type_t               handle_type = 0;
 
     if (!SWITCH_PORT_HANDLE_VALID(handle) && 
@@ -1096,21 +1097,16 @@ switch_api_mac_table_entries_delete_by_interface_vlan(switch_device_t device,
 
     handle_type = switch_handle_get_type(handle);
     intf_handle = handle;
-    if (handle_type == SWITCH_HANDLE_TYPE_PORT) {
-       port_info = switch_api_port_get_internal((switch_port_t)handle); 
-       if (!port_info) {
-           status = SWITCH_STATUS_INVALID_PORT_NUMBER;
-           goto cleanup;
-       }
-       intf_handle = port_info->intf_handle;
-    }
-    if (handle_type == SWITCH_HANDLE_TYPE_LAG) {
-        lag_info = switch_api_lag_get_internal(handle);
-        if (!lag_info) {
-            status = SWITCH_STATUS_INVALID_HANDLE;
-            goto cleanup;
+    if (handle_type == SWITCH_HANDLE_TYPE_PORT ||
+        handle_type == SWITCH_HANDLE_TYPE_LAG) {
+        status = switch_interface_handle_get(
+                             handle,
+                             0x0,
+                             &intf_handle);
+        if (status != SWITCH_STATUS_SUCCESS) {
+            SWITCH_API_ERROR("mac table delete by vlan failed");
+            return status;
         }
-        intf_handle = lag_info->intf_handle;
     }
 
     mac_vlan_list = (switch_mac_vlan_list_t *) (*(unsigned long *)temp);

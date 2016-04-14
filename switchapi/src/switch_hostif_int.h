@@ -35,6 +35,7 @@ typedef struct switch_hostif_rcode_info_ {
 
 typedef struct switch_hostif_info_ {
     switch_hostif_t hostif;
+    switch_handle_t intf_handle;
     int intf_fd;
 } switch_hostif_info_t;
 
@@ -98,7 +99,11 @@ switch_api_hostif_rx_packet_from_host(switch_hostif_info_t *hostif_info, char *p
 switch_hostif_info_t *
 switch_hostif_get(switch_handle_t hostif_handle);
 void
-switch_packet_tx_to_host(switch_hostif_info_t *hostif_info, char *packet, int packet_size);
+switch_packet_tx_to_host(
+        switch_packet_header_t *packet_header,
+        char *packet,
+        int packet_size);
+
 switch_status_t
 switch_api_cpu_interface_create(switch_device_t device);
 

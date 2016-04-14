@@ -144,13 +144,14 @@ on_fdb_event(uint32_t count, sai_fdb_event_notification_data_t *data) {
     switchlink_handle_t bridge_h;
     switchlink_handle_t intf_h;
     bool create = false;
+    uint32_t i = 0;
 
     memcpy(mac_addr, data->fdb_entry.mac_address, ETH_ALEN);
     bridge_h = data->fdb_entry.vlan_id;
     intf_h = 0;
 
     if (data->event_type == SAI_FDB_EVENT_LEARNED) {
-        for(int i = 0; i < data->attr_count; i++) {
+        for(i = 0; i < data->attr_count; i++) {
             if (data->attr[i].id == SAI_FDB_ENTRY_ATTR_PORT_ID) {
                 intf_h = data->attr[i].value.oid;
                 break;
@@ -334,7 +335,7 @@ switchlink_interface_create(switchlink_db_interface_info_t *intf,
         attr_list[ac].value.oid = intf->vrf_h;
         ac++;
         attr_list[ac].id = SAI_ROUTER_INTERFACE_ATTR_TYPE;
-        attr_list[ac].value.u8 = SAI_ROUTER_INTERFACE_TYPE_PORT;
+        attr_list[ac].value.s32 = SAI_ROUTER_INTERFACE_TYPE_PORT;
         ac++;
         attr_list[ac].id = SAI_ROUTER_INTERFACE_ATTR_PORT_ID;
         attr_list[ac].value.oid = get_port_object(intf->port_id);
@@ -355,11 +356,11 @@ switchlink_interface_create(switchlink_db_interface_info_t *intf,
         attr_list[ac].value.booldata = intf->flags.ipv6_multicast_enabled;
         ac++;
         attr_list[ac].id = SAI_ROUTER_INTERFACE_ATTR_V4_URPF_MODE;
-        attr_list[ac].value.u8 =
+        attr_list[ac].value.s32 =
             switchlink_to_sai_urpf_mode(intf->flags.ipv4_urpf_mode);
         ac++;
         attr_list[ac].id = SAI_ROUTER_INTERFACE_ATTR_V6_URPF_MODE;
-        attr_list[ac].value.u8 =
+        attr_list[ac].value.s32 =
             switchlink_to_sai_urpf_mode(intf->flags.ipv6_urpf_mode);
         ac++;
 
@@ -372,7 +373,7 @@ switchlink_interface_create(switchlink_db_interface_info_t *intf,
         attr_list[ac].value.oid = intf->vrf_h;
         ac++;
         attr_list[ac].id = SAI_ROUTER_INTERFACE_ATTR_TYPE;
-        attr_list[ac].value.u8 = SAI_ROUTER_INTERFACE_TYPE_VLAN;
+        attr_list[ac].value.s32 = SAI_ROUTER_INTERFACE_TYPE_VLAN;
         ac++;
         attr_list[ac].id = SAI_ROUTER_INTERFACE_ATTR_VLAN_ID;
         attr_list[ac].value.oid = intf->bridge_h;
@@ -393,11 +394,11 @@ switchlink_interface_create(switchlink_db_interface_info_t *intf,
         attr_list[ac].value.booldata = intf->flags.ipv6_multicast_enabled;
         ac++;
         attr_list[ac].id = SAI_ROUTER_INTERFACE_ATTR_V4_URPF_MODE;
-        attr_list[ac].value.u8 =
+        attr_list[ac].value.s32 =
             switchlink_to_sai_urpf_mode(intf->flags.ipv4_urpf_mode);
         ac++;
         attr_list[ac].id = SAI_ROUTER_INTERFACE_ATTR_V6_URPF_MODE;
-        attr_list[ac].value.u8 =
+        attr_list[ac].value.s32 =
             switchlink_to_sai_urpf_mode(intf->flags.ipv6_urpf_mode);
         ac++;
 
@@ -453,7 +454,7 @@ switchlink_interface_urpf_mode_update(switchlink_handle_t intf_h, int af,
     } else {
         attr.id = SAI_ROUTER_INTERFACE_ATTR_V6_URPF_MODE;
     }
-    attr.value.u8 = value;
+    attr.value.s32 = value;
     status = rintf_api->set_router_interface_attribute(intf_h, &attr);
     return ((status == SAI_STATUS_SUCCESS) ? 0 : -1);
 }
@@ -587,11 +588,11 @@ switchlink_mac_create(switchlink_mac_addr_t mac_addr,
     sai_attribute_t attr_list[3];
     memset(&attr_list, 0, sizeof(attr_list));
     attr_list[0].id = SAI_FDB_ENTRY_ATTR_TYPE;
-    attr_list[0].value.u8 = SAI_FDB_ENTRY_STATIC;
+    attr_list[0].value.s32 = SAI_FDB_ENTRY_STATIC;
     attr_list[1].id = SAI_FDB_ENTRY_ATTR_PORT_ID;
     attr_list[1].value.oid = intf_h;
     attr_list[2].id = SAI_FDB_ENTRY_ATTR_PACKET_ACTION;
-    attr_list[2].value.u8 = SAI_PACKET_ACTION_FORWARD;
+    attr_list[2].value.s32 = SAI_PACKET_ACTION_FORWARD;
 
     status = fdb_api->create_fdb_entry(&fdb_entry, 3, attr_list);
     return ((status == SAI_STATUS_SUCCESS) ? 0 : -1);
@@ -636,7 +637,7 @@ switchlink_nexthop_create(switchlink_db_neigh_info_t *neigh_info) {
     sai_attribute_t attr_list[3];
     memset(attr_list, 0, sizeof(attr_list));
     attr_list[0].id = SAI_NEXT_HOP_ATTR_TYPE;
-    attr_list[0].value.u8 = SAI_NEXT_HOP_IP;
+    attr_list[0].value.s32 = SAI_NEXT_HOP_IP;
     attr_list[1].id = SAI_NEXT_HOP_ATTR_IP;
     if (neigh_info->ip_addr.family == AF_INET) {
         attr_list[1].value.ipaddr.addr_family = SAI_IP_ADDR_FAMILY_IPV4;
@@ -709,7 +710,7 @@ switchlink_ecmp_create(switchlink_db_ecmp_info_t *ecmp_info) {
     sai_attribute_t attr_list[3];
     memset(attr_list, 0, sizeof(attr_list));
     attr_list[0].id = SAI_NEXT_HOP_GROUP_ATTR_TYPE;
-    attr_list[0].value.u8 = SAI_NEXT_HOP_GROUP_ECMP;
+    attr_list[0].value.s32 = SAI_NEXT_HOP_GROUP_ECMP;
     attr_list[1].id = SAI_NEXT_HOP_GROUP_ATTR_NEXT_HOP_COUNT;
     attr_list[1].value.u32 = ecmp_info->num_nhops;
     attr_list[2].id = SAI_NEXT_HOP_GROUP_ATTR_NEXT_HOP_LIST;
@@ -933,7 +934,7 @@ switchlink_send_packet(char *buf, uint32_t buf_size, uint16_t port_id) {
     return ((status == SAI_STATUS_SUCCESS) ? 0 : -1);
 }
 
-static sai_status_t
+sai_status_t
 create_ip_acl(sai_object_id_t *table_id) {
     sai_status_t status = SAI_STATUS_SUCCESS;
     sai_attribute_t attr_list[2];

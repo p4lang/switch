@@ -719,14 +719,10 @@ switch_api_hostif_rx_packet_from_hw(switch_packet_header_t *packet_header, char 
 {
     switch_cpu_header_t               *cpu_header = NULL;
     switch_hostif_rcode_info_t        *rcode_info = NULL;
-    switch_interface_info_t           *intf_info = NULL;
     void                              *temp = NULL;
     switch_hostif_packet_t             hostif_packet;
-    switch_handle_t                    intf_handle = 0;
-    switch_handle_t                    hostif_handle = 0;
-    switch_hostif_info_t              *hostif_info = NULL;
-    switch_handle_t                    port_handle = 0;
-    switch_port_info_t                *port_info = NULL;
+    switch_handle_t                    bd_handle = 0;
+    switch_bd_info_t                  *bd_info = NULL;
 
     memset(&hostif_packet, 0, sizeof(switch_hostif_packet_t));
     cpu_header = &packet_header->cpu_header;
@@ -741,18 +737,22 @@ switch_api_hostif_rx_packet_from_hw(switch_packet_header_t *packet_header, char 
                      cpu_header->ingress_ifindex);
 
     rcode_info = (switch_hostif_rcode_info_t *) (*(unsigned long *)temp);
+    
+    bd_handle = id_to_handle(SWITCH_HANDLE_TYPE_BD, cpu_header->ingress_bd);
+    bd_info = switch_bd_get(bd_handle);
+    if (!bd_info) {
+        SWITCH_API_ERROR("received packet on invalid bd %x", cpu_header->ingress_bd);
+        return SWITCH_STATUS_INVALID_HANDLE;
+    }
+
     if ((rcode_info->rcode_api_info.reason_code == SWITCH_HOSTIF_REASON_CODE_NONE) ||
         (rcode_info->rcode_api_info.channel == SWITCH_HOSTIF_CHANNEL_CB)) {
         hostif_packet.reason_code = cpu_header->reason_code;
         hostif_packet.pkt = packet;
         hostif_packet.pkt_size = packet_size;
+        hostif_packet.handle = id_to_handle(SWITCH_HANDLE_TYPE_PORT,
+                                            cpu_header->ingress_port);
 
-        intf_handle = switch_api_interface_get_from_ifindex(cpu_header->ingress_ifindex);
-        intf_info = switch_api_interface_get(intf_handle);
-        if (!intf_info) {
-            return SWITCH_STATUS_INVALID_INTERFACE;
-        }
-        hostif_packet.handle = intf_info->api_intf_info.u.port_lag_handle;
         if (SWITCH_IS_LAG_IFINDEX(cpu_header->ingress_ifindex)) {
             hostif_packet.is_lag = TRUE;
         }
@@ -761,25 +761,11 @@ switch_api_hostif_rx_packet_from_hw(switch_packet_header_t *packet_header, char 
             rx_packet(&hostif_packet);
         }
     }
+
     if ((rcode_info->rcode_api_info.reason_code == SWITCH_HOSTIF_REASON_CODE_NONE) ||
        (rcode_info->rcode_api_info.channel == SWITCH_HOSTIF_CHANNEL_NETDEV)) {
-        intf_handle = switch_api_interface_get_from_ifindex(cpu_header->ingress_ifindex);
-        intf_info = switch_api_interface_get(intf_handle);
-        if (!intf_info) {
-            return SWITCH_STATUS_INVALID_INTERFACE;
-        }
-        port_handle = SWITCH_INTF_PORT_HANDLE(intf_info);
-        port_info = switch_api_port_get_internal(port_handle);
-        if (!port_info) {
-            return SWITCH_STATUS_INVALID_PORT_NUMBER;
-        }
-        hostif_handle = port_info->hostif_handle;
-        hostif_info = switch_hostif_get(hostif_handle);
-        if (!hostif_info) {
-            return SWITCH_STATUS_INVALID_INTERFACE;
-        }
         SWITCH_API_TRACE("Sending packet through netdev\n");
-        switch_packet_tx_to_host(hostif_info, packet, packet_size);
+        switch_packet_tx_to_host(packet_header, packet, packet_size);
     }
     return SWITCH_STATUS_SUCCESS;
 }
@@ -811,34 +797,8 @@ switch_api_hostif_tx_packet(switch_device_t device, switch_hostif_packet_t *host
     fabric_header->packet_type = SWITCH_FABRIC_HEADER_TYPE_CPU;
     fabric_header->ether_type = SWITCH_FABRIC_HEADER_ETHTYPE;
     cpu_header->tx_bypass = hostif_packet->tx_bypass;
+    cpu_header->reason_code = 0xFFFF;
     switch_packet_tx_to_hw(&packet_header, hostif_packet->pkt, hostif_packet->pkt_size);
-    return SWITCH_STATUS_SUCCESS;
-}
-
-switch_status_t
-switch_api_hostif_rx_packet_from_host(switch_hostif_info_t *hostif_info, char *packet, int packet_size)
-{
-    switch_packet_header_t             packet_header;
-    switch_fabric_header_t            *fabric_header = NULL;
-    switch_cpu_header_t               *cpu_header = NULL;
-    switch_device_t                    device = 0;
-    switch_port_info_t                *port_info = NULL;
-
-    SWITCH_API_TRACE("Received packet from host port %lx through netdev\n",
-                     hostif_info->hostif.handle);
-
-    fabric_header = &packet_header.fabric_header;
-    cpu_header = &packet_header.cpu_header;
-    fabric_header->dst_device = device;
-    port_info = switch_api_port_get_internal(hostif_info->hostif.handle);
-    if (!port_info) {
-        return SWITCH_STATUS_INVALID_PORT_NUMBER;
-    }
-    fabric_header->packet_type = SWITCH_FABRIC_HEADER_TYPE_CPU;
-    fabric_header->ether_type = SWITCH_FABRIC_HEADER_ETHTYPE;
-    fabric_header->dst_port_or_group = SWITCH_PORT_ID(port_info);
-    cpu_header->tx_bypass = TRUE;
-    switch_packet_tx_to_hw(&packet_header, packet, packet_size);
     return SWITCH_STATUS_SUCCESS;
 }
 
@@ -872,9 +832,6 @@ switch_api_hostif_create(switch_device_t device, switch_hostif_t *hostif)
     switch_handle_t                    hostif_handle = 0;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
     switch_hostif_info_t              *hostif_info = NULL;
-    switch_handle_type_t               handle_type = 0;
-    switch_port_info_t                *port_info = NULL;
-    switch_interface_info_t           *intf_info = NULL;
 
     hostif_handle = switch_hostif_create();
     hostif_info = switch_hostif_get(hostif_handle);
@@ -885,26 +842,7 @@ switch_api_hostif_create(switch_device_t device, switch_hostif_t *hostif)
         switch_hostif_delete(hostif_handle);
         return SWITCH_API_INVALID_HANDLE;
     }
-    handle_type = switch_handle_get_type(hostif->handle);
-    switch (handle_type) {
-        case SWITCH_HANDLE_TYPE_PORT:
-            port_info = switch_api_port_get_internal(hostif->handle);
-            if (!port_info) {
-                return SWITCH_STATUS_INVALID_PORT_NUMBER;
-            }
-            port_info->hostif_handle = hostif_handle;
-            break;
-        case SWITCH_HANDLE_TYPE_INTERFACE:
-            //TODO: Add support for RIF
-            intf_info = switch_api_interface_get(hostif->handle);
-            if (!intf_info) {
-                return SWITCH_STATUS_INVALID_INTERFACE;
-            }
-            intf_info->hostif_handle = hostif_handle;
-            break;
-        default:
-            break;
-    }
+
     SWITCH_API_TRACE("Host interface created %lu\n", hostif_handle);
     return hostif_handle;
 }
@@ -924,6 +862,7 @@ switch_api_hostif_delete(switch_device_t device, switch_handle_t hostif_handle)
     }
     switch_packet_hostif_delete(device, hostif_info);
     switch_hostif_delete(hostif_handle);
+
     SWITCH_API_TRACE("Host interface deleted %lu\n", hostif_handle);
     return SWITCH_STATUS_SUCCESS;
 }
@@ -982,11 +921,11 @@ switch_api_cpu_interface_create(switch_device_t device)
         return status;
     }
     intf_handle = hostif_nhop[SWITCH_HOSTIF_REASON_CODE_NONE].intf_handle;
+
     port_info = switch_api_port_get_internal(CPU_PORT_ID);
     if (!port_info) {
         return SWITCH_STATUS_INVALID_PORT_NUMBER;
     }
-    port_info->intf_handle = intf_handle;
     status = switch_pd_rewrite_table_fabric_add_entry(device,
                                          SWITCH_EGRESS_TUNNEL_TYPE_CPU,
                                          handle_to_id(intf_handle),

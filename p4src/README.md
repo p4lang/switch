@@ -11,7 +11,7 @@ Supported Features
 4. L3 Multicast
 5. LAG
 6. ECMP
-7. Tunneling: VXLAN and NVGRE (including L2/L3 Gateway), Geneve, and GRE
+7. Tunneling: VXLAN and NVGRE (including L2/L3 Gateway), Geneve, GRE and IPinIP
 8. Basic ACL: MAC and IP ACLs
 9. Unicast RPF check
 10. MPLS: LER, LSR, IPVPN, VPLS, L2VPN

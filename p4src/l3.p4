@@ -31,8 +31,8 @@ header_type l3_metadata_t {
         lkp_ip_ttl : 8;
         lkp_l4_sport : 16;
         lkp_l4_dport : 16;
-        lkp_inner_l4_sport : 16;
-        lkp_inner_l4_dport : 16;
+        lkp_outer_l4_sport : 16;
+        lkp_outer_l4_dport : 16;
 
         vrf : VRF_BIT_WIDTH;                   /* VRF */
         rmac_group : 10;                       /* Rmac group, for rmac indirection */
@@ -192,14 +192,14 @@ table l3_rewrite {
     actions {
         nop;
         ipv4_unicast_rewrite;
-#ifndef MULTICAST_DISABLE
+#ifndef L3_MULTICAST_DISABLE
         ipv4_multicast_rewrite;
-#endif /* MULTICAST_DISABLE */
+#endif /* L3_MULTICAST_DISABLE */
 #ifndef IPV6_DISABLE
         ipv6_unicast_rewrite;
-#ifndef MULTICAST_DISABLE
+#ifndef L3_MULTICAST_DISABLE
         ipv6_multicast_rewrite;
-#endif /* MULTICAST_DISABLE */
+#endif /* L3_MULTICAST_DISABLE */
 #endif /* IPV6_DISABLE */
 #ifndef MPLS_DISABLE
         mpls_rewrite;

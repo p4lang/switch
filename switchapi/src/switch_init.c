@@ -72,6 +72,7 @@ switch_api_lib_init(switch_device_t device)
     switch_hostif_init(device);
     switch_capability_init(device);
     switch_meter_init(device);
+    switch_packet_init(device);
 
     return SWITCH_STATUS_SUCCESS;
 }

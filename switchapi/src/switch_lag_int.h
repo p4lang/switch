@@ -48,7 +48,7 @@ typedef struct switch_lag_member_ {
 typedef struct {
     switch_lag_type_t type;             /**< weighted or otherwise */
     switch_ifindex_t  ifindex;          /**< LAG Ifindex */
-    switch_handle_t intf_handle;
+    void *intf_array;
     bool lacp;                          /**< LACP enabled? */
     lacp_key_t key;                     /**< LACP key */
     tommy_list ingress;                 /**< Ingress port list */

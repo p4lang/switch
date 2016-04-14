@@ -37,7 +37,8 @@ typedef enum switch_encap_type_ {
     SWITCH_API_ENCAP_TYPE_GRE=4,        /**< GRE encapsulation */
     SWITCH_API_ENCAP_TYPE_NVGRE=5,      /**< NVGRE encapsulation */
     SWITCH_API_ENCAP_TYPE_GENEVE=6,     /**< Geneve encapsulation */
-    SWITCH_API_ENCAP_TYPE_ERSPAN_T3=7   /**< ERSPAN type III encapsulation */
+    SWITCH_API_ENCAP_TYPE_ERSPAN_T3=7,  /**< ERSPAN type III encapsulation */
+    SWITCH_API_ENCAP_TYPE_IPIP=8,       /**< IP in IP encapsulation */
 } switch_encap_type_t;
 
 /** UDP fields that are relevant */
@@ -205,8 +206,8 @@ typedef struct switch_encap_info_ {
     } u;                                      /**< union */
 } switch_encap_info_t;
 
-/** @} */ // end of Protocol 
-    
+/** @} */ // end of Protocol
+
 #ifdef __cplusplus
 }
 #endif

@@ -23,7 +23,6 @@ AC_ARG_ENABLE([bmv2], \
 	esac], [])
 
 AM_CONDITIONAL(TARGET_BMV2, [test "x$p4target" =  "xbmv2"])
-AM_CONDITIONAL(TARGET_TOFINO, [test "x$p4target" =  "xtofino"])
 
 # Checks for programs.
 CFLAGS="-g -Wall -Wextra -Wno-unused-parameter"

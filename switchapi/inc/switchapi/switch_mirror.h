@@ -30,7 +30,7 @@ limitations under the License.
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-    
+
 /**
 *   @defgroup Mirror Mirroring API
 *  API functions define and manipulate Access lists
@@ -41,55 +41,58 @@ extern "C" {
 /** Mirror ID */
 typedef unsigned int switch_mirror_id_t;
 
-/** Mirror Session type */
+/** Mirror Session Type */
 typedef enum {
     SWITCH_MIRROR_SESSION_TYPE_SIMPLE,      /**< Simple Mirror session */
     SWITCH_MIRROR_SESSION_TYPE_TRUNCATE,    /**< Truncate packet in session */
     SWITCH_MIRROR_SESSION_TYPE_COALESCE     /**< Coalesce mirrorred packets */
 } switch_mirror_session_type_t;
 
+/** Mirror Type */
 typedef enum {
-    SWITCH_MIRROR_TYPE_NONE = 0,
-    SWITCH_MIRROR_TYPE_LOCAL = 1,
-    SWITCH_MIRROR_TYPE_REMOTE = 2,
-    SWITCH_MIRROR_TYPE_ENHANCED_REMOTE = 3
+    SWITCH_MIRROR_TYPE_NONE = 0,            /**< None */
+    SWITCH_MIRROR_TYPE_LOCAL = 1,           /**< Local */
+    SWITCH_MIRROR_TYPE_REMOTE = 2,          /**< RSPAN */
+    SWITCH_MIRROR_TYPE_ENHANCED_REMOTE = 3  /**< ERSPAN */
 } switch_mirror_type_t;
 
+/** Mirror Session Info */
 typedef struct switch_api_mirror_info_ {
-    switch_mirror_type_t mirror_type;
-    switch_mirror_id_t session_id;
-    switch_mirror_session_type_t session_type;
-    switch_handle_t egress_port;
-    switch_direction_t direction;
-    switch_cos_t cos;
-    switch_vlan_t vlan_id;
-    uint16_t vlan_tpid;
-    uint8_t vlan_priority;
-    bool tunnel_create;
-    bool vlan_create;
-    switch_encap_type_t encap_type;
-    switch_tunnel_info_t tunnel_info;
-    switch_mac_addr_t src_mac;
-    switch_mac_addr_t dst_mac;
-    uint32_t max_pkt_len;
-    switch_handle_t nhop_handle;
-    bool enable;
-    uint32_t extract_len;
-    uint32_t timeout_usec;
+    switch_mirror_type_t mirror_type;           /**< Mirror type */
+    switch_mirror_id_t session_id;              /**< Session id */
+    switch_mirror_session_type_t session_type;  /**< Session type */
+    switch_handle_t egress_port;                /**< Egress port */
+    switch_direction_t direction;               /**< Direction - tx/rx */
+    switch_cos_t cos;                           /**< VLAN CoS */
+    switch_vlan_t vlan_id;                      /**< VLAN ID */
+    uint16_t vlan_tpid;                         /**< VLAN Ethertype */
+    uint8_t vlan_priority;                      /**< VLAN priority */
+    bool tunnel_create;                         /**< Create tunnel? */
+    bool vlan_create;                           /**< Create VLAN? */
+    switch_encap_type_t encap_type;             /**< Encap type */
+    switch_tunnel_info_t tunnel_info;           /**< Tunnel info */
+    switch_mac_addr_t src_mac;                  /**< Source MAC */
+    switch_mac_addr_t dst_mac;                  /**< Destination MAC */
+    uint32_t max_pkt_len;                       /**< Max packet length */
+    switch_handle_t nhop_handle;                /**< Nexthop handle */
+    bool enable;                                /**< Enable? */
+    uint32_t extract_len;                       /**< Extract len */
+    uint32_t timeout_usec;                      /**< Timeout in micro secs */
 } switch_api_mirror_info_t;
 
-/*
+/**
  * MAX mirroring sessions supported
  */
 #define SWITCH_MAX_MIRROR_SESSIONS 1024
+
 /**
-* ID for cpu mirror session
-*/
+ * ID for cpu mirror session
+ */
 #define SWITCH_CPU_MIRROR_SESSION_ID 250
 
 /**
-* ID for negative mirror session
-*/
+ * ID for negative mirror session
+ */
 #define SWITCH_NEGATIVE_MIRROR_SESSION_ID  1015
 
 /**
@@ -111,21 +114,32 @@ switch_status_t switch_api_mirror_session_update(switch_device_t device,
                                                  switch_handle_t mirror_handle,
                                                  switch_api_mirror_info_t *api_mirror_info);
 /**
- delete the mirror session
+ Delete the mirror session
  @param device device
  @param mirror_handle mirror handle
 */
 switch_status_t switch_api_mirror_session_delete(switch_device_t device,
-                                             switch_handle_t mirror_handle);
+                                                 switch_handle_t mirror_handle);
 
+/**
+ Create nexthop for mirror session
+ @param device device
+ @param mirror_handle mirror handle
+ @param nhop_hdl nexthop handle
+*/
 switch_status_t switch_mirror_nhop_create(switch_device_t device,
                                           switch_handle_t mirror_handle,
                                           switch_handle_t nhop_hdl);
 
+/**
+ Delete nexthop for mirror session
+ @param device device
+ @param mirror_handle mirror handle
+*/
 switch_status_t switch_mirror_nhop_delete(switch_device_t device,
                                           switch_handle_t mirror_handle);
 
-/** @} */ // end of ACL API
+/** @} */ // end of Mirror API
 
 #ifdef __cplusplus
 }

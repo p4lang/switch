@@ -40,13 +40,13 @@ extern "C" {
 
 /**< LACP Key */
 typedef unsigned int lacp_key_t;
-    
+
 /** type of LAG */
 typedef enum switch_lag_type_ {
     SWITCH_API_LAG_SIMPLE,          /**< simple hash */
     SWITCH_API_LAG_RESILIENT        /**< weighted/resilient hash */
 } switch_lag_type_t;
-    
+
 
 // Simple LAG API
 /**
@@ -54,7 +54,7 @@ typedef enum switch_lag_type_ {
  @param device device to use
  */
 switch_handle_t switch_api_lag_create(switch_device_t device);
-    
+
 /**
  Link Aggregation Group deletion
  @param device device to use
@@ -81,12 +81,12 @@ switch_status_t switch_api_lag_member_add(switch_device_t device, switch_handle_
  */
 switch_status_t switch_api_lag_member_delete(switch_device_t device, switch_handle_t lag_handle,
                                      switch_direction_t side, switch_port_t port);
-    
+
 /**
  Link Aggregation Group member add by handle
  @param device device to use
  @param lag_handle handle of group returned on creation
- @param side allow rx and rx member add separately
+ @param direction allow rx and rx member add separately
  @param port port in the same device on which lag_handle was created
  */
 switch_handle_t

@@ -91,7 +91,7 @@ switch_status_t switch_api_multicast_member_get(switch_device_t device,
  Add a (S,G) or (*, G) entry to MFIB.
  @param device - device that programs the tree
  @param mgid_handle - Handle that uniquely identifies multicast tree
- @param vrf_handle - VRF handle
+ @param vlan_vrf_handle - VLAN/VRF handle
  @param src_ip - Source IP address
  @param grp_ip - Group IP address
  @param mc_mode - Multicast mode to indicate PIM SM/PIM BIDIR

@@ -428,10 +428,10 @@ typedef union switch_acl_action_params_ {
     } redirect;                                       /**< port redirect struct */
     struct {
         uint16_t reason_code;                         /**< cpu reason code */
-    } cpu_redirect;
+    } cpu_redirect;                                   /**< cpu redirect struct */
     struct {
         uint8_t reason_code;                          /**< drop reason code */
-    } drop;
+    } drop;                                           /**< drop action struct */
 } switch_acl_action_params_t;
 
 /** Acl optional action parameters */
@@ -443,7 +443,7 @@ typedef struct switch_acl_opt_action_params_ {
     switch_handle_t counter_handle;               /**< counter handle */
 } switch_acl_opt_action_params_t;
 
-/** Egress port ACL */
+/** Egress ACL field enum */
 typedef enum switch_acl_egr_field_ {
     SWITCH_ACL_EGR_DEST_PORT,
     SWITCH_ACL_EGR_DEFLECT,
@@ -451,20 +451,20 @@ typedef enum switch_acl_egr_field_ {
     SWITCH_ACL_EGR_FIELD_MAX
 } switch_acl_egr_field_t;
 
-/** Egress port value */
+/** Egress ACL match value */
 typedef union switch_acl_egr_value_ {
-    switch_handle_t  egr_port;
-    bool             deflection_flag;
-    unsigned short   l3_mtu_check;
+    switch_handle_t  egr_port;                        /**< egress port */
+    bool             deflection_flag;                 /**< deflection flag */
+    unsigned short   l3_mtu_check;                    /**< L3 MTU check */
 } switch_acl_egr_value_t;
 
-/** Egress acl port mask */
+/** Egress ACL match mask */
 typedef union switch_acl_egr_mask_ {
     unsigned type:1;                                  /**< acl mask type */
     union {
         uint64_t mask;                                /**< mask value */
         unsigned int start, end;                      /**< mask range */
-    } u;                                              /**< ip mask union */
+    } u;                                              /**< mask union */
 } switch_acl_egr_mask_t;
 
 /** Egress acl key value pair */
@@ -526,7 +526,8 @@ switch_status_t switch_api_acl_list_delete(switch_device_t device, switch_handle
  @param key_value_count - key value pair count
  @param acl_kvp - pointer to multiple key value pair
  @param action - Acl action (permit/drop/redirect to cpu)
- @param action_params - optional action parameters
+ @param action_params - action parameters
+ @param opt_action_params - optional action parameters
  @param ace_handle - returned handle for the rule
 */
 switch_status_t switch_api_acl_rule_create(switch_device_t device, switch_handle_t acl_handle,

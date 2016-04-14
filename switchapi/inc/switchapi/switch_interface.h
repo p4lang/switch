@@ -270,6 +270,24 @@ switch_status_t
 switch_api_interface_get_type(switch_handle_t intf_handle,
                               switch_interface_type_t *type);
 
+switch_status_t
+switch_api_l3_interface_bd_stats_enable(
+        switch_device_t device,
+        switch_handle_t intf_handle);
+
+switch_status_t
+switch_api_l3_interface_bd_stats_disable(
+        switch_device_t device,
+        switch_handle_t intf_handle);
+
+switch_status_t
+switch_api_l3_interface_stats_get(
+        switch_device_t device,
+        switch_handle_t intf_handle,
+        uint8_t count,
+        switch_bd_stats_id_t *counter_ids,
+        switch_counter_t *counters);
+
 /**
  Dump interface table
  */

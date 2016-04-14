@@ -75,12 +75,16 @@ table meter_index {
 
 control process_meter_index {
 #ifndef METER_DISABLE
-    apply(meter_index);
+    if (DO_LOOKUP(METER)) {
+        apply(meter_index);
+    }
 #endif /* METER_DISABLE */
 }
 
 control process_meter_action {
 #ifndef METER_DISABLE
-    apply(meter_action);
+    if (DO_LOOKUP(METER)) {
+        apply(meter_action);
+    }
 #endif /* METER_DISABLE */
 }

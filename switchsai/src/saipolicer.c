@@ -71,15 +71,15 @@ sai_status_t sai_policer_attr_parse(
         switch (attribute->id) {
             case SAI_POLICER_ATTR_METER_TYPE:
                 api_meter_info->meter_type = 
-                    sai_meter_type_to_switch_meter_type(attribute->value.u8);
+                    sai_meter_type_to_switch_meter_type(attribute->value.s32);
                 break;
             case SAI_POLICER_ATTR_MODE:
                 api_meter_info->meter_mode = 
-                    sai_meter_mode_to_switch_meter_mode(attribute->value.u8);
+                    sai_meter_mode_to_switch_meter_mode(attribute->value.s32);
                 break;
             case SAI_POLICER_ATTR_COLOR_SOURCE:
                 api_meter_info->color_source = 
-                    sai_color_source_to_switch_color_source(attribute->value.u8);
+                    sai_color_source_to_switch_color_source(attribute->value.s32);
                 break;
             case SAI_POLICER_ATTR_CBS:
                 api_meter_info->cbs = attribute->value.u64;
@@ -95,15 +95,15 @@ sai_status_t sai_policer_attr_parse(
                 break;
             case SAI_POLICER_ATTR_GREEN_PACKET_ACTION:
                 api_meter_info->action[SWITCH_METER_COLOR_GREEN] = 
-                    sai_packet_action_to_switch_packet_action(attribute->value.u8);
+                    sai_packet_action_to_switch_packet_action(attribute->value.s32);
                 break;
             case SAI_POLICER_ATTR_YELLOW_PACKET_ACTION:
                 api_meter_info->action[SWITCH_METER_COLOR_YELLOW] = 
-                    sai_packet_action_to_switch_packet_action(attribute->value.u8);
+                    sai_packet_action_to_switch_packet_action(attribute->value.s32);
                 break;
             case SAI_POLICER_ATTR_RED_PACKET_ACTION:
                 api_meter_info->action[SWITCH_METER_COLOR_RED] = 
-                    sai_packet_action_to_switch_packet_action(attribute->value.u8);
+                    sai_packet_action_to_switch_packet_action(attribute->value.s32);
                 break;
         }
     }
