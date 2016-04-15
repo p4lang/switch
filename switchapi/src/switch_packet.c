@@ -41,8 +41,8 @@ limitations under the License.
 #include "switchapi/switch_utils.h"
 
 pthread_t packet_driver_thread;
-static tommy_list packet_rx_list;
-static tommy_list packet_tx_list;
+static tommy_list packet_rx_filter_list;
+static tommy_list packet_tx_filter_list;
 
 static char *cpu_intf_name = "veth251";
 static uint32_t cpu_ifindex = 0;
@@ -55,8 +55,8 @@ switch_packet_init(
         switch_device_t device)
 {
     switch_status_t status = SWITCH_STATUS_SUCCESS;
-    tommy_list_init(&packet_rx_list);
-    tommy_list_init(&packet_tx_list);
+    tommy_list_init(&packet_rx_filter_list);
+    tommy_list_init(&packet_tx_filter_list);
     return status;
 }
 
@@ -215,7 +215,6 @@ switch_packet_rx_to_host(
     }
 
     if (rx_info->vlan_action == SWITCH_PACKET_VLAN_ADD) {
-        memcpy(in_packet, packet, packet_size);
         eth_header = (switch_ethernet_header_t *) packet;
         if (ntohs(eth_header->ether_type) != SWITCH_ETHERTYPE_DOT1Q && rx_info->vlan_id) {
             offset = 2 * ETH_LEN;
@@ -224,33 +223,31 @@ switch_packet_rx_to_host(
             vlan_header->tpid = htons(SWITCH_ETHERTYPE_DOT1Q);
             uint16_t *vlan_h = (uint16_t *) (vlan_header) + 1;
             *vlan_h = htons(rx_info->vlan_id);
-            /*
-            vlan_header->pcp = 0;
-            vlan_header->dei = 0;
-            vlan_header->vid = htons(vid);
-            */
-
             memcpy(in_packet + offset + sizeof(switch_vlan_header_t),
                    packet + offset,
                    packet_size - offset);
             packet_size += sizeof(switch_vlan_header_t);
+        } else {
+            memcpy(in_packet, packet, packet_size);
         }
     } else if (rx_info->vlan_action == SWITCH_PACKET_VLAN_REMOVE) {
-        memcpy(in_packet, packet, packet_size);
         eth_header = (switch_ethernet_header_t *) packet;
         if (ntohs(eth_header->ether_type) == SWITCH_ETHERTYPE_DOT1Q) {
             offset = 2 * ETH_LEN;
             memcpy(in_packet, packet, offset);
             memcpy(in_packet, packet + offset, packet_size - offset);
             packet_size -= sizeof(switch_vlan_header_t);
+        } else {
+            memcpy(in_packet, packet, packet_size);
         }
     } else if (rx_info->vlan_action == SWITCH_PACKET_VLAN_SWAP) {
-        memcpy(in_packet, packet, packet_size);
         eth_header = (switch_ethernet_header_t *) packet;
         if (ntohs(eth_header->ether_type) == SWITCH_ETHERTYPE_DOT1Q && rx_info->vlan_id) {
             offset = 2 * ETH_LEN;
             vlan_header = (switch_vlan_header_t *) (in_packet + offset);
             vlan_header->vid = htons(rx_info->vlan_id);
+        } else {
+            memcpy(in_packet, packet, packet_size);
         }
     } else {
         memcpy(in_packet, packet, packet_size);
@@ -332,6 +329,13 @@ switch_packet_tx_from_host(int intf_fd)
         } else {
             cpu_header->tx_bypass = FALSE;
             cpu_header->reason_code = tx_info->bypass_flags;
+            /*
+             * In order to perform a fastpath lookup, bd has to be 
+             * added as vlan tag(s) to the packet from host.
+             * bd is a 16 bit field whereas the vlan id is a 12 bit field.
+             * packets has to be double tagged when the bd value is more
+             * than 12 bits.
+             */
             vlan_id1 = tx_info->bd & 0xFFF;
             vlan_id2 = (tx_info->bd & 0xF000) >> 12;
 
@@ -596,7 +600,7 @@ int start_switch_api_packet_driver()
 }
 
 int32_t
-switch_packet_tx_compare(
+switch_packet_tx_filter_priority_compare(
         const void *key1,
         const void *key2)
 {
@@ -633,6 +637,11 @@ switch_api_packet_net_filter_tx_create(
     switch_handle_type_t               handle_type = 0;
     switch_bd_info_t                  *bd_info = NULL;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+
+    if (!tx_key || !tx_action) {
+        SWITCH_API_ERROR("filter tx create failed. invalid params");
+        return SWITCH_STATUS_INVALID_PARAMETER;
+    }
 
     hostif_info = switch_hostif_get(tx_key->hostif_handle);
     if (!hostif_info) {
@@ -685,8 +694,8 @@ switch_api_packet_net_filter_tx_create(
     tx_info->bypass_flags = tx_action->bypass_flags;
     tx_info->port = handle_to_id(tx_action->port_handle);
 
-    tommy_list_insert_head(&packet_tx_list, &(tx_info->node), tx_info);
-    tommy_list_sort(&packet_tx_list, switch_packet_tx_compare);
+    tommy_list_insert_head(&packet_tx_filter_list, &(tx_info->node), tx_info);
+    tommy_list_sort(&packet_tx_filter_list, switch_packet_tx_filter_priority_compare);
     return status;
 }
 
@@ -704,6 +713,11 @@ switch_api_packet_net_filter_tx_delete(
     bool                               node_found = FALSE;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
 
+    if (!tx_key) {
+        SWITCH_API_ERROR("filter tx delete failed. invalid params");
+        return SWITCH_STATUS_INVALID_PARAMETER;
+    }
+
     hostif_info = switch_hostif_get(tx_key->hostif_handle);
     if (!hostif_info) {
         SWITCH_API_ERROR("invalid hostif handle");
@@ -715,7 +729,7 @@ switch_api_packet_net_filter_tx_delete(
     tx_entry.vlan_id = tx_key->vlan_id;
     tx_entry.priority = tx_key->priority;
 
-    node = tommy_list_head(&packet_tx_list);
+    node = tommy_list_head(&packet_tx_filter_list);
     while (node) {
         tmp_tx_info = (switch_packet_tx_info_t *) node->data;
         tmp_tx_entry = &tmp_tx_info->tx_entry;
@@ -733,7 +747,7 @@ switch_api_packet_net_filter_tx_delete(
         return SWITCH_STATUS_ITEM_NOT_FOUND;
     }
 
-    tommy_list_remove_existing(&packet_tx_list, node);
+    tommy_list_remove_existing(&packet_tx_filter_list, node);
     switch_free(tx_info);
     return status;
 }
@@ -779,6 +793,11 @@ switch_api_packet_net_filter_rx_create(
     switch_bd_info_t                  *bd_info = NULL;
     switch_ifindex_t                   ifindex = 0;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+
+    if (!rx_key || !rx_action) {
+        SWITCH_API_ERROR("filter rx create failed. invalid params");
+        return SWITCH_STATUS_INVALID_PARAMETER;
+    }
 
     memset(&rx_entry, 0x0, sizeof(rx_entry));
 
@@ -855,8 +874,12 @@ switch_api_packet_net_filter_rx_create(
     rx_info->vlan_action = rx_action->vlan_action;
     rx_info->intf_fd = hostif_info->intf_fd;
 
-    tommy_list_insert_head(&packet_rx_list, &(rx_info->node), rx_info);
-    tommy_list_sort(&packet_rx_list, switch_packet_rx_compare);
+    /*
+     * Adding an element to the list results in sorting the list. 
+     * tommy does not have a way to compare and insert the elements
+     */
+    tommy_list_insert_head(&packet_rx_filter_list, &(rx_info->node), rx_info);
+    tommy_list_sort(&packet_rx_filter_list, switch_packet_rx_compare);
     return status;
 }
 
@@ -878,6 +901,11 @@ switch_api_packet_net_filter_rx_delete(
     tommy_node                        *node = NULL;
     bool                               node_found = FALSE;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+
+    if (!rx_key) {
+        SWITCH_API_ERROR("filter rx delete failed. invalid params");
+        return SWITCH_STATUS_INVALID_PARAMETER;
+    }
 
     handle_type = switch_handle_get_type(rx_key->port_lag_handle);
     if (handle_type == SWITCH_HANDLE_TYPE_LAG) {
@@ -917,7 +945,7 @@ switch_api_packet_net_filter_rx_delete(
         return SWITCH_STATUS_INVALID_HANDLE;
     }
 
-    node = tommy_list_head(&packet_rx_list);
+    node = tommy_list_head(&packet_rx_filter_list);
     while (node) {
         tmp_rx_info = (switch_packet_rx_info_t *) node->data;
         tmp_rx_entry = &tmp_rx_info->rx_entry;
@@ -937,7 +965,7 @@ switch_api_packet_net_filter_rx_delete(
         return SWITCH_STATUS_ITEM_NOT_FOUND;
     }
 
-    tommy_list_remove_existing(&packet_rx_list, node);
+    tommy_list_remove_existing(&packet_rx_filter_list, node);
 
     switch_free(rx_info);
     return status;
@@ -955,7 +983,7 @@ switch_packet_rx_info_get(
 
     *rx_info = NULL;
 
-    node = tommy_list_head(&packet_rx_list);
+    node = tommy_list_head(&packet_rx_filter_list);
     while (node) {
         tmp_rx_info = (switch_packet_rx_info_t *) node->data;
         tmp_rx_entry = &tmp_rx_info->rx_entry;
@@ -989,7 +1017,7 @@ switch_packet_tx_info_get(
 
     *tx_info = NULL;
 
-    node = tommy_list_head(&packet_tx_list);
+    node = tommy_list_head(&packet_tx_filter_list);
     while (node) {
         tmp_tx_info = (switch_packet_tx_info_t *) node->data;
         tmp_tx_entry = &tmp_tx_info->tx_entry;
