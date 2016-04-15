@@ -62,7 +62,7 @@ typedef struct switch_packet_tx_info_ {
     switch_packet_tx_entry_t tx_entry;
     tommy_node node;
     uint16_t bd;
-    bool tx_bypass;
+    switch_tx_bypass_flags_t bypass_flags;
     switch_port_t port;
 } switch_packet_tx_info_t;
 

@@ -205,6 +205,17 @@ typedef enum switch_packet_vlan_action {
     SWITCH_PACKET_VLAN_SWAP        = 0x3
 } switch_packet_vlan_action_t;
 
+typedef enum switch_tx_bypass_flags_ {
+    SWITCH_BYPASS_NONE             = 0x0,
+    SWITCH_BYPASS_L2               = 1 << 0,
+    SWITCH_BYPASS_L3               = 1 << 1,
+    SWITCH_BYPASS_ACL              = 1 << 2,
+    SWITCH_BYPASS_QOS              = 1 << 3,
+    SWITCH_BYPASS_METER            = 1 << 4, 
+    SWITCH_BYPASS_SYSTEM_ACL       = 1 << 5,
+    SWITCH_BYPASS_ALL              = 0xFFFF
+} switch_tx_bypass_flags_t;
+
 typedef struct switch_packet_rx_key_ {
     bool port_valid;
     switch_handle_t port_handle;                           /**< port handle */
@@ -233,7 +244,7 @@ typedef struct switch_packet_tx_key_ {
 
 typedef struct switch_packet_tx_action_ {
     switch_handle_t handle;                                /**< bd or interface handle */
-    bool tx_bypass;                                        /**< tx bypass */
+    switch_tx_bypass_flags_t bypass_flags;                 /**< bypass flags */
     switch_handle_t port_handle;                           /**< egress port */
 } switch_packet_tx_action_t;
 

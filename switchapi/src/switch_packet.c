@@ -122,10 +122,7 @@ switch_packet_tx_to_hw(switch_packet_header_t *packet_header, char *packet, int 
     fabric_header->ether_type = htons(fabric_header->ether_type);
     fabric_header->dst_port_or_group = htons(fabric_header->dst_port_or_group);
 
-    /*
-     * TODO: bypass system acl for all cpu packets
-     */
-    cpu_header->reason_code |= 0x20;
+    cpu_header->reason_code |= SWITCH_BYPASS_SYSTEM_ACL;
     cpu_header->reason_code = htons(cpu_header->reason_code);
 
     memcpy(out_packet, packet, SWITCH_PACKET_HEADER_OFFSET);
@@ -186,18 +183,18 @@ switch_packet_rx_from_hw()
 }
 
 void
-switch_packet_tx_to_host(
+switch_packet_rx_to_host(
         switch_packet_header_t *packet_header,
         char *packet,
         int packet_size)
 {
-    static char                       in_packet[SWITCH_PACKET_MAX_BUFFER_SIZE];
     switch_cpu_header_t               *cpu_header = NULL;
-    switch_packet_rx_entry_t          rx_entry;
     switch_packet_rx_info_t           *rx_info = NULL;
-    int                                intf_fd = 0;
     switch_ethernet_header_t          *eth_header = NULL;
     switch_vlan_header_t              *vlan_header = NULL;
+    static char                        in_packet[SWITCH_PACKET_MAX_BUFFER_SIZE];
+    switch_packet_rx_entry_t           rx_entry;
+    int                                intf_fd = 0;
     uint16_t                           offset = 0;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
 
@@ -268,7 +265,7 @@ switch_packet_tx_to_host(
 }
 
 void
-switch_packet_rx_from_host(int intf_fd)
+switch_packet_tx_from_host(int intf_fd)
 {
     switch_hostif_info_t              *hostif_info = NULL;
     int                                packet_size = 0;
@@ -326,15 +323,15 @@ switch_packet_rx_from_host(int intf_fd)
         cpu_header = &packet_header.cpu_header;
         fabric_header = &packet_header.fabric_header;
 
-        if (tx_info->tx_bypass) {
+        if (tx_info->bypass_flags == SWITCH_BYPASS_ALL) {
             cpu_header->tx_bypass = TRUE;
-            cpu_header->reason_code = 0xFFFF;
+            cpu_header->reason_code = tx_info->bypass_flags;
             fabric_header->dst_port_or_group = tx_info->port;
             memcpy(packet, in_packet, in_packet_size);
             packet_size = in_packet_size;
         } else {
             cpu_header->tx_bypass = FALSE;
-            cpu_header->reason_code = 0x0;
+            cpu_header->reason_code = tx_info->bypass_flags;
             vlan_id1 = tx_info->bd & 0xFFF;
             vlan_id2 = (tx_info->bd & 0xF000) >> 12;
 
@@ -541,7 +538,7 @@ switch_packet_select_fd_get(fd_set *read_fds)
 }
 
 static void
-switch_packet_rx_from_hosts(fd_set read_fds)
+switch_packet_tx_from_hosts(fd_set read_fds)
 {
     switch_hostif_info_t              *hostif_info = NULL;
     void                              *temp = NULL;
@@ -552,7 +549,7 @@ switch_packet_rx_from_hosts(fd_set read_fds)
         hostif_info =
             (switch_hostif_info_t *) (*(unsigned long *) temp);
         if (FD_ISSET(hostif_info->intf_fd, &read_fds)) {
-            switch_packet_rx_from_host(hostif_info->intf_fd);
+            switch_packet_tx_from_host(hostif_info->intf_fd);
         }
         JLN(temp, switch_intf_fd_array, index);
     }
@@ -585,7 +582,7 @@ switch_packet_driver_thread(void *args)
             } else if (FD_ISSET(pipe_fd[0], &read_fds)) {
                 switch_packet_read_from_pipe();
             } else {
-                switch_packet_rx_from_hosts(read_fds);
+                switch_packet_tx_from_hosts(read_fds);
             }
         }
     }
@@ -657,7 +654,7 @@ switch_api_packet_net_filter_tx_create(
         return SWITCH_STATUS_NO_MEMORY;
     }
 
-    if (!tx_action->tx_bypass) {
+    if (tx_action->bypass_flags != SWITCH_BYPASS_ALL) {
         bd_handle = tx_action->handle;
 
         handle_type = switch_handle_get_type(tx_action->handle);
@@ -685,7 +682,7 @@ switch_api_packet_net_filter_tx_create(
 
     memcpy(&tx_info->tx_entry, &tx_entry, sizeof(tx_entry));
     tx_info->bd = handle_to_id(bd_handle);
-    tx_info->tx_bypass = tx_action->tx_bypass;
+    tx_info->bypass_flags = tx_action->bypass_flags;
     tx_info->port = handle_to_id(tx_action->port_handle);
 
     tommy_list_insert_head(&packet_tx_list, &(tx_info->node), tx_info);

@@ -773,7 +773,7 @@ switch_api_hostif_rx_packet_from_hw(switch_packet_header_t *packet_header, char 
     if ((rcode_info->rcode_api_info.reason_code == SWITCH_HOSTIF_REASON_CODE_NONE) ||
        (rcode_info->rcode_api_info.channel == SWITCH_HOSTIF_CHANNEL_NETDEV)) {
         SWITCH_API_TRACE("Sending packet through netdev\n");
-        switch_packet_tx_to_host(packet_header, packet, packet_size);
+        switch_packet_rx_to_host(packet_header, packet, packet_size);
     }
     return SWITCH_STATUS_SUCCESS;
 }
