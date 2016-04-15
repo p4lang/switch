@@ -41,7 +41,6 @@ sai_status_t sai_set_port_attribute(
     sai_status_t status = SAI_STATUS_SUCCESS;
     switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
     switch_handle_t vlan_handle = SWITCH_API_INVALID_HANDLE;
-    switch_vlan_port_t switch_port;
 
     if (!attr) {
         status = SAI_STATUS_INVALID_PARAMETER;
@@ -59,15 +58,8 @@ sai_status_t sai_set_port_attribute(
                               sai_status_to_string(status));
                 return status;
             }
-            switch_port.handle = (switch_handle_t)port_id;
-            switch_port.tagging_mode = SWITCH_VLAN_PORT_UNTAGGED;
-            switch_status = switch_api_vlan_ports_add(device, vlan_handle, 1, &switch_port);
-            status = sai_switch_status_to_sai_status(switch_status);
-            if (status != SAI_STATUS_SUCCESS) {
-                SAI_LOG_ERROR("failed to add port %d to default vlan: %s",
-                              port_id, sai_status_to_string(status));
-                return status;
-            }
+            /* TBD: Default BD */
+
             break;
         default:
             break;

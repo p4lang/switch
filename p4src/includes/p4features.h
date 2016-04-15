@@ -22,6 +22,11 @@ limitations under the License.
 #define PIM_BIDIR_OPTIMIZATION
 #define SFLOW_ENABLE
 
+#ifdef MULTICAST_DISABLE
+#define L2_MULTICAST_DISABLE
+#define L3_MULTICAST_DISABLE
+#endif
+
 // Defines for switchapi library
 #ifdef URPF_DISABLE
 #define P4_URPF_DISABLE
@@ -37,6 +42,14 @@ limitations under the License.
 
 #ifdef MULTICAST_DISABLE
 #define P4_MULTICAST_DISABLE
+#endif
+
+#ifdef L2_MULTICAST_DISABLE
+#define P4_L2_MULTICAST_DISABLE
+#endif
+
+#ifdef L3_MULTICAST_DISABLE
+#define P4_L3_MULTICAST_DISABLE
 #endif
 
 #ifdef TUNNEL_DISABLE

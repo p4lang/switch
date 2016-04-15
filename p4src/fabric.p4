@@ -37,7 +37,7 @@ metadata fabric_metadata_t fabric_metadata;
 /* Fabric header - destination lookup                                        */
 /*****************************************************************************/
 action terminate_cpu_packet() {
-    modify_field(standard_metadata.egress_spec,
+    modify_field(ingress_egress_port,
                  fabric_header.dstPortOrGroup);
     modify_field(egress_metadata.bypass, fabric_header_cpu.txBypass);
 
@@ -49,7 +49,7 @@ action terminate_cpu_packet() {
 
 #ifdef FABRIC_ENABLE
 action terminate_fabric_unicast_packet() {
-    modify_field(standard_metadata.egress_spec,
+    modify_field(ingress_egress_port,
                  fabric_header.dstPortOrGroup);
 
     modify_field(tunnel_metadata.tunnel_terminate,
@@ -85,7 +85,7 @@ action terminate_fabric_multicast_packet() {
     modify_field(l3_metadata.outer_routed,
                  fabric_header_multicast.outerRouted);
 
-    modify_field(intrinsic_metadata.mcast_grp,
+    modify_field(intrinsic_mcast_grp,
                  fabric_header_multicast.mcastGrp);
 
     modify_field(ethernet.etherType, fabric_payload_header.etherType);
@@ -96,7 +96,7 @@ action terminate_fabric_multicast_packet() {
 
 action switch_fabric_multicast_packet() {
     modify_field(fabric_metadata.fabric_header_present, TRUE);
-    modify_field(intrinsic_metadata.mcast_grp, fabric_header.dstPortOrGroup);
+    modify_field(intrinsic_mcast_grp, fabric_header.dstPortOrGroup);
 }
 #endif /* MULTICAST_DISABLE */
 #endif /* FABRIC_ENABLE */
@@ -138,66 +138,42 @@ table fabric_ingress_src_lkp {
 }
 #endif /* FABRIC_ENABLE */
 
-action terminate_inner_ethernet_non_ip_over_fabric() {
-    modify_field(l2_metadata.lkp_mac_sa, inner_ethernet.srcAddr);
-    modify_field(l2_metadata.lkp_mac_da, inner_ethernet.dstAddr);
-    modify_field(l2_metadata.lkp_mac_type, inner_ethernet.etherType);
+action non_ip_over_fabric() {
+    modify_field(l2_metadata.lkp_mac_sa, ethernet.srcAddr);
+    modify_field(l2_metadata.lkp_mac_da, ethernet.dstAddr);
+    modify_field(l2_metadata.lkp_mac_type, ethernet.etherType);
 }
 
-action terminate_inner_ethernet_ipv4_over_fabric() {
-    modify_field(l2_metadata.lkp_mac_sa, inner_ethernet.srcAddr);
-    modify_field(l2_metadata.lkp_mac_da, inner_ethernet.dstAddr);
-    modify_field(l2_metadata.lkp_mac_type, inner_ethernet.etherType);
-    modify_field(ipv4_metadata.lkp_ipv4_sa, inner_ipv4.srcAddr);
-    modify_field(ipv4_metadata.lkp_ipv4_da, inner_ipv4.dstAddr);
-    modify_field(l3_metadata.lkp_ip_proto, inner_ipv4.protocol);
-    modify_field(l3_metadata.lkp_l4_sport, l3_metadata.lkp_inner_l4_sport);
-    modify_field(l3_metadata.lkp_l4_dport, l3_metadata.lkp_inner_l4_dport);
+action ipv4_over_fabric() {
+    modify_field(l2_metadata.lkp_mac_sa, ethernet.srcAddr);
+    modify_field(l2_metadata.lkp_mac_da, ethernet.dstAddr);
+    modify_field(ipv4_metadata.lkp_ipv4_sa, ipv4.srcAddr);
+    modify_field(ipv4_metadata.lkp_ipv4_da, ipv4.dstAddr);
+    modify_field(l3_metadata.lkp_ip_proto, ipv4.protocol);
+    modify_field(l3_metadata.lkp_l4_sport, l3_metadata.lkp_outer_l4_sport);
+    modify_field(l3_metadata.lkp_l4_dport, l3_metadata.lkp_outer_l4_dport);
 }
 
-action terminate_inner_ipv4_over_fabric() {
-    modify_field(ipv4_metadata.lkp_ipv4_sa, inner_ipv4.srcAddr);
-    modify_field(ipv4_metadata.lkp_ipv4_da, inner_ipv4.dstAddr);
-    modify_field(l3_metadata.lkp_ip_version, inner_ipv4.version);
-    modify_field(l3_metadata.lkp_ip_proto, inner_ipv4.protocol);
-    modify_field(l3_metadata.lkp_ip_ttl, inner_ipv4.ttl);
-    modify_field(l3_metadata.lkp_ip_tc, inner_ipv4.diffserv);
-    modify_field(l3_metadata.lkp_l4_sport, l3_metadata.lkp_inner_l4_sport);
-    modify_field(l3_metadata.lkp_l4_dport, l3_metadata.lkp_inner_l4_dport);
+action ipv6_over_fabric() {
+    modify_field(l2_metadata.lkp_mac_sa, ethernet.srcAddr);
+    modify_field(l2_metadata.lkp_mac_da, ethernet.dstAddr);
+    modify_field(ipv6_metadata.lkp_ipv6_sa, ipv6.srcAddr);
+    modify_field(ipv6_metadata.lkp_ipv6_da, ipv6.dstAddr);
+    modify_field(l3_metadata.lkp_ip_proto, ipv6.nextHdr);
+    modify_field(l3_metadata.lkp_l4_sport, l3_metadata.lkp_outer_l4_sport);
+    modify_field(l3_metadata.lkp_l4_dport, l3_metadata.lkp_outer_l4_dport);
 }
 
-action terminate_inner_ethernet_ipv6_over_fabric() {
-    modify_field(l2_metadata.lkp_mac_sa, inner_ethernet.srcAddr);
-    modify_field(l2_metadata.lkp_mac_da, inner_ethernet.dstAddr);
-    modify_field(l2_metadata.lkp_mac_type, inner_ethernet.etherType);
-    modify_field(ipv6_metadata.lkp_ipv6_sa, inner_ipv6.srcAddr);
-    modify_field(ipv6_metadata.lkp_ipv6_da, inner_ipv6.dstAddr);
-    modify_field(l3_metadata.lkp_ip_proto, inner_ipv6.nextHdr);
-    modify_field(l3_metadata.lkp_l4_sport, l3_metadata.lkp_inner_l4_sport);
-    modify_field(l3_metadata.lkp_l4_dport, l3_metadata.lkp_inner_l4_dport);
-}
-
-action terminate_inner_ipv6_over_fabric() {
-    modify_field(ipv6_metadata.lkp_ipv6_sa, inner_ipv6.srcAddr);
-    modify_field(ipv6_metadata.lkp_ipv6_da, inner_ipv6.dstAddr);
-    modify_field(l3_metadata.lkp_ip_proto, inner_ipv6.nextHdr);
-    modify_field(l3_metadata.lkp_l4_sport, l3_metadata.lkp_inner_l4_sport);
-    modify_field(l3_metadata.lkp_l4_dport, l3_metadata.lkp_inner_l4_dport);
-}
-
-table tunneled_packet_over_fabric {
+table native_packet_over_fabric {
     reads {
-        tunnel_metadata.ingress_tunnel_type : exact;
-        inner_ipv4 : valid;
-        inner_ipv6 : valid;
+        ipv4 : valid;
+        ipv6 : valid;
     }
     actions {
-        terminate_inner_ethernet_non_ip_over_fabric;
-        terminate_inner_ethernet_ipv4_over_fabric;
-        terminate_inner_ipv4_over_fabric;
+        non_ip_over_fabric;
+        ipv4_over_fabric;
 #ifndef IPV6_DISABLE
-        terminate_inner_ethernet_ipv6_over_fabric;
-        terminate_inner_ipv6_over_fabric;
+        ipv6_over_fabric;
 #endif /* IPV6_DISABLE */
     }
     size : 1024;
@@ -207,15 +183,19 @@ table tunneled_packet_over_fabric {
 /* Ingress fabric header processing                                          */
 /*****************************************************************************/
 control process_ingress_fabric {
-    apply(fabric_ingress_dst_lkp);
+    if (ingress_metadata.port_type != PORT_TYPE_NORMAL) {
+        apply(fabric_ingress_dst_lkp);
 #ifdef FABRIC_ENABLE
-    if (valid(fabric_header_multicast)) {
-        apply(fabric_ingress_src_lkp);
-    }
-    if (tunnel_metadata.tunnel_terminate == TRUE) {
-        apply(tunneled_packet_over_fabric);
-    }
+        if (ingress_metadata.port_type == PORT_TYPE_FABRIC) {
+            if (valid(fabric_header_multicast)) {
+                apply(fabric_ingress_src_lkp);
+            }
+            if (tunnel_metadata.tunnel_terminate == FALSE) {
+                apply(native_packet_over_fabric);
+            }
+        }
 #endif /* FABRIC_ENABLE */
+    }
 }
 
 /*****************************************************************************/
@@ -223,16 +203,16 @@ control process_ingress_fabric {
 /*****************************************************************************/
 #ifdef FABRIC_ENABLE
 action set_fabric_lag_port(port) {
-    modify_field(standard_metadata.egress_spec, port);
+    modify_field(ingress_egress_port, port);
 }
 
 #ifndef MULTICAST_DISABLE
 action set_fabric_multicast(fabric_mgid) {
-    modify_field(multicast_metadata.mcast_grp, intrinsic_metadata.mcast_grp);
+    modify_field(multicast_metadata.mcast_grp, intrinsic_mcast_grp);
 
 #ifdef FABRIC_NO_LOCAL_SWITCHING
     // no local switching, reset fields to send packet on fabric mgid
-    modify_field(intrinsic_metadata.mcast_grp, fabric_mgid);
+    modify_field(intrinsic_mcast_grp, fabric_mgid);
 #endif /* FABRIC_NO_LOCAL_SWITCHING */
 }
 #endif /* MULTICAST_DISABLE */

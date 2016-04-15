@@ -63,7 +63,7 @@ static void sai_mirror_session_attribute_parse(
         switch (attribute->id) {
             case SAI_MIRROR_SESSION_ATTR_TYPE:
                 api_mirror_info->mirror_type = 
-                            sai_session_to_switch_session(attribute->value.u8);
+                            sai_session_to_switch_session(attribute->value.s32);
                 break;
             case SAI_MIRROR_SESSION_ATTR_MONITOR_PORT:
                 api_mirror_info->egress_port = attribute->value.oid;
@@ -82,7 +82,7 @@ static void sai_mirror_session_attribute_parse(
                 break;
             case SAI_MIRROR_SESSION_ATTR_ENCAP_TYPE:
                 tunnel_info->encap_info.encap_type = 
-                             sai_erspan_encap_to_switch_erspan_encap(attribute->value.u8);
+                             sai_erspan_encap_to_switch_erspan_encap(attribute->value.s32);
                 break;
             case SAI_MIRROR_SESSION_ATTR_IPHDR_VERSION:
                 break;

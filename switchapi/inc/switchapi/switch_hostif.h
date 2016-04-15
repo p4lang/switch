@@ -110,7 +110,6 @@ typedef struct switch_hostif_packet_ {
 
 /** host interface */
 typedef struct switch_hostif_ {
-    switch_handle_t handle;                     /**< front panel port id */
     char intf_name[SWITCH_HOSTIF_NAME_SIZE];    /**< interface name */
 } switch_hostif_t;
 
@@ -198,6 +197,78 @@ switch_api_hostif_delete(switch_device_t device, switch_handle_t hostif_handle);
  */
 switch_handle_t
 switch_api_cpu_nhop_get(switch_hostif_reason_code_t rcode);
+
+typedef enum switch_packet_vlan_action {
+    SWITCH_PACKET_VLAN_NONE        = 0x0,
+    SWITCH_PACKET_VLAN_ADD         = 0x1,
+    SWITCH_PACKET_VLAN_REMOVE      = 0x2,
+    SWITCH_PACKET_VLAN_SWAP        = 0x3
+} switch_packet_vlan_action_t;
+
+typedef enum switch_tx_bypass_flags_ {
+    SWITCH_BYPASS_NONE             = 0x0,
+    SWITCH_BYPASS_L2               = 1 << 0,
+    SWITCH_BYPASS_L3               = 1 << 1,
+    SWITCH_BYPASS_ACL              = 1 << 2,
+    SWITCH_BYPASS_QOS              = 1 << 3,
+    SWITCH_BYPASS_METER            = 1 << 4, 
+    SWITCH_BYPASS_SYSTEM_ACL       = 1 << 5,
+    SWITCH_BYPASS_ALL              = 0xFFFF
+} switch_tx_bypass_flags_t;
+
+typedef struct switch_packet_rx_key_ {
+    bool port_valid;
+    switch_handle_t port_handle;                           /**< port handle */
+    bool port_lag_valid;
+    switch_handle_t port_lag_handle;                       /**< port or lag handle */
+    bool handle_valid;
+    switch_handle_t handle;                                /**< bd or interface handle */
+    bool reason_code_valid;
+    switch_hostif_reason_code_t reason_code;               /**< reason code */
+    uint32_t priority;
+} switch_packet_rx_key_t;
+
+typedef struct switch_packet_rx_action_ {
+    switch_handle_t hostif_handle;
+    switch_vlan_t vlan_id;
+    switch_packet_vlan_action_t vlan_action;
+} switch_packet_rx_action_t;
+
+typedef struct switch_packet_tx_key_ {
+    bool handle_valid;
+    switch_handle_t hostif_handle;
+    bool vlan_valid;
+    switch_vlan_t vlan_id;
+    uint32_t priority;
+} switch_packet_tx_key_t;
+
+typedef struct switch_packet_tx_action_ {
+    switch_handle_t handle;                                /**< bd or interface handle */
+    switch_tx_bypass_flags_t bypass_flags;                 /**< bypass flags */
+    switch_handle_t port_handle;                           /**< egress port */
+} switch_packet_tx_action_t;
+
+switch_status_t
+switch_api_packet_net_filter_tx_create(
+        switch_device_t device,
+        switch_packet_tx_key_t *tx_key,
+        switch_packet_tx_action_t *tx_action);
+
+switch_status_t
+switch_api_packet_net_filter_tx_delete(
+        switch_device_t device,
+        switch_packet_tx_key_t *tx_key);
+
+switch_status_t
+switch_api_packet_net_filter_rx_create(
+        switch_device_t device,
+        switch_packet_rx_key_t *rx_key,
+        switch_packet_rx_action_t *rx_action);
+
+switch_status_t
+switch_api_packet_net_filter_rx_delete(
+        switch_device_t device,
+        switch_packet_rx_key_t *rx_key);
 
 /** @} */ // end of Host Interface API
 

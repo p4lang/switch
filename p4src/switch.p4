@@ -21,6 +21,7 @@ limitations under the License.
 #include "includes/sizes.p4"
 #include "includes/defines.p4"
 #include "includes/intrinsic.p4"
+#include "archdeps.p4"
 
 /* METADATA */
 header_type ingress_metadata_t {
@@ -36,6 +37,7 @@ header_type ingress_metadata_t {
         drop_flag : 1;                         /* if set, drop the packet */
         drop_reason : 8;                       /* drop reason */
         control_frame: 1;                      /* control frame */
+        bypass_lookups : 16;                   /* list of lookups to skip */
         sflow_take_sample : 32 (saturating);
     }
 }
@@ -107,33 +109,37 @@ control ingress {
     /* read and apply system confuration parametes */
     process_global_params();
 
-    if (ingress_metadata.port_type == PORT_TYPE_NORMAL) {
+#ifdef OPENFLOW_ENABLE
+    if (ingress_metadata.port_type == PORT_TYPE_CPU) {
+        apply(packet_out);
+    }
+#endif /* OPENFLOW_ENABLE */
 
-        /* derive bd */
-        process_port_vlan_mapping();
+    /* derive bd and its properties  */
+    process_port_vlan_mapping();
 
-        /* spanning tree state checks */
-        process_spanning_tree();
+    /* spanning tree state checks */
+    process_spanning_tree();
 
-        /* IPSG */
-        process_ip_sourceguard();
+    /* IPSG */
+    process_ip_sourceguard();
 
-        /* INT src,sink determination */
-        process_int_endpoint();
+    /* INT src,sink determination */
+    process_int_endpoint();
 
-        /* ingress sflow determination */
-        process_ingress_sflow();
+    /* tunnel termination processing */
+    process_tunnel();
 
-        /* tunnel termination processing */
-        process_tunnel();
+    /* ingress sflow determination */
+    process_ingress_sflow();
 
-        /* storm control */
-        process_storm_control();
+    /* storm control */
+    process_storm_control();
 
-#ifndef TUNNEL_DISABLE
-        if ((not valid(mpls[0])) or
-             (valid(mpls[0]) and (tunnel_metadata.tunnel_terminate == TRUE))) {
-#endif /* TUNNEL_DISABLE */
+    if (ingress_metadata.port_type != PORT_TYPE_FABRIC) {
+#ifndef MPLS_DISABLE
+        if (not (valid(mpls[0]) and (l3_metadata.fib_hit == TRUE))) {
+#endif /* MPLS_DISABLE */
 
             /* validate packet */
             process_validate_packet();
@@ -155,52 +161,42 @@ control ingress {
                     process_multicast();
                 }
                 default {
-                    if ((l3_metadata.lkp_ip_type == IPTYPE_IPV4) and
-                        (ipv4_metadata.ipv4_unicast_enabled == TRUE)) {
-                        /* router ACL/PBR */
-                        process_ipv4_racl();
-
-                        process_ipv4_urpf();
-                        process_ipv4_fib();
-
-                    } else {
-                        if ((l3_metadata.lkp_ip_type == IPTYPE_IPV6) and
-                            (ipv6_metadata.ipv6_unicast_enabled == TRUE)) {
-
+                    if (DO_LOOKUP(L3)) {
+                        if ((l3_metadata.lkp_ip_type == IPTYPE_IPV4) and
+                            (ipv4_metadata.ipv4_unicast_enabled == TRUE)) {
                             /* router ACL/PBR */
-                            process_ipv6_racl();
-                            process_ipv6_urpf();
-                            process_ipv6_fib();
+                            process_ipv4_racl();
+
+                            process_ipv4_urpf();
+                            process_ipv4_fib();
+
+                        } else {
+                            if ((l3_metadata.lkp_ip_type == IPTYPE_IPV6) and
+                                (ipv6_metadata.ipv6_unicast_enabled == TRUE)) {
+
+                                /* router ACL/PBR */
+                                process_ipv6_racl();
+                                process_ipv6_urpf();
+                                process_ipv6_fib();
+                            }
                         }
+                        process_urpf_bd();
                     }
-                    process_urpf_bd();
                 }
             }
-#ifndef TUNNEL_DISABLE
+#ifndef MPLS_DISABLE
         }
-#endif /* TUNNEL_DISABLE */
-    } else {
-
-#ifdef OPENFLOW_ENABLE
-        apply(packet_out) {
-            nop {
-#endif /* OPENFLOW_ENABLE */
-                /* ingress fabric processing */
-                process_ingress_fabric();
-#ifdef OPENFLOW_ENABLE
-            }
-        }
-#endif /* OPENFLOW_ENABLE */
+#endif /* MPLS_DISABLE */
     }
 
     process_meter_index();
 
-    /* compute hashes based on packet type */
+    /* compute hashes based on packet type  */
     process_hashes();
 
     process_meter_action();
 
-    if (ingress_metadata.port_type == PORT_TYPE_NORMAL) {
+    if (ingress_metadata.port_type != PORT_TYPE_FABRIC) {
         /* update statistics */
         process_ingress_bd_stats();
         process_ingress_acl_stats();
@@ -232,7 +228,7 @@ control ingress {
     /* resolve fabric port to destination device */
     process_fabric_lag();
 
-    if (ingress_metadata.port_type == PORT_TYPE_NORMAL) {
+    if (ingress_metadata.port_type != PORT_TYPE_FABRIC) {
         /* system acls */
         process_system_acl();
     }

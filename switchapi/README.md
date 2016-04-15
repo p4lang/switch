@@ -29,7 +29,7 @@ Supported Features
 4. L3 Multicast (Sparse mode, SSM and Bidir)
 5. LAG
 6. ECMP
-7. Tunneling: VXLAN and NVGRE (including L2/L3 Gateway), Geneve, and GRE
+7. Tunneling: VXLAN and NVGRE (including L2/L3 Gateway), Geneve, GRE and IPinIP
 8. Basic ACL: MAC and IP ACLs
 9. Unicast RPF check
 10. MPLS: LER, LSR, IPVPN
@@ -48,8 +48,8 @@ Upcoming Features
 Documentation
 -------------
 
-To generate doxygen documentation for switchapi
+To generate doxygen documentation for switchapi (from switch directory)
 
-    make doc
+    make doxygen-doc
 
-or view a hosted version at http://p4lang.github.io/switchapi
+or view a hosted version at http://p4lang.github.io/switch/switchapi-doc/html/

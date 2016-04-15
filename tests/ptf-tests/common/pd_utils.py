@@ -123,7 +123,9 @@ def populate_default_fabric_entries(client, sess_hdl, dev_tgt, ipv6_enabled=0,
     #client.storm_control_set_default_action_nop(sess_hdl, dev_tgt)
     client.egress_vlan_xlate_set_default_action_set_egress_packet_vlan_untagged(
         sess_hdl, dev_tgt)
-    client.egress_filter_set_default_action_set_egress_filter_drop(
+    client.egress_filter_set_default_action_egress_filter_check(
+        sess_hdl, dev_tgt)
+    client.egress_filter_drop_set_default_action_set_egress_filter_drop(
         sess_hdl, dev_tgt)
     if stats_enabled:
         client.ingress_bd_stats_set_default_action_update_ingress_bd_stats(
@@ -163,7 +165,9 @@ def populate_default_entries(client, sess_hdl, dev_tgt, ipv6_enabled,
                                      sess_hdl, dev_tgt)
     client.egress_vlan_xlate_set_default_action_set_egress_packet_vlan_untagged(
                                      sess_hdl, dev_tgt)
-    client.egress_filter_set_default_action_set_egress_filter_drop(
+    client.egress_filter_set_default_action_egress_filter_check(
+                                     sess_hdl, dev_tgt)
+    client.egress_filter_drop_set_default_action_set_egress_filter_drop(
                                      sess_hdl, dev_tgt)
     client.validate_packet_set_default_action_nop(
                                      sess_hdl, dev_tgt)
@@ -188,8 +192,9 @@ def populate_default_entries(client, sess_hdl, dev_tgt, ipv6_enabled,
                                      sess_hdl, dev_tgt)
     client.rewrite_set_default_action_set_l2_rewrite(
                                      sess_hdl, dev_tgt)
+    action_spec = dc_egress_port_type_normal_action_spec_t(action_ifindex=0)
     client.egress_port_mapping_set_default_action_egress_port_type_normal(
-                                     sess_hdl, dev_tgt)
+                                     sess_hdl, dev_tgt, action_spec)
     client.mtu_set_default_action_mtu_miss(
                                      sess_hdl, dev_tgt)
 
@@ -567,6 +572,11 @@ def add_fabric_lag(client, sess_hdl, dev_tgt, src_device, port_list):
                                                              grp_hdl, mbr_hdl)
     return grp_hdl
 
+def enum(**enums):
+    return type('Enum', (), enums)
+
+PortType = enum(Normal=0, Fabric=1)
+
 def program_ports(client, sess_hdl, dev_tgt, port_count):
     count = 1
     ret = []
@@ -591,17 +601,17 @@ def program_ports(client, sess_hdl, dev_tgt, port_count):
         match_spec = dc_lag_group_match_spec_t(
                              ingress_metadata_egress_ifindex=count)
         lag_hdl = client.lag_group_add_entry(
-                              sess_hdl, dev_tgt,
-                              match_spec, mbr_hdl)
-        ret.append({ 'port': port_hdl, 'mbr' : mbr_hdl, 'lag' : lag_hdl})
-
-        match_spec = dc_egress_lag_match_spec_t(
-            standard_metadata_egress_port=count)
-        action_spec = dc_set_egress_ifindex_action_spec_t(
-            action_egress_ifindex=count)
-        client.egress_lag_table_add_with_set_egress_ifindex(
-            sess_hdl, dev_tgt, match_spec, action_spec)
-
+                             sess_hdl, dev_tgt,
+                             match_spec, mbr_hdl)
+        match_spec = dc_egress_port_mapping_match_spec_t(
+                             standard_metadata_egress_port=count)
+        action_spec = dc_egress_port_type_normal_action_spec_t(action_ifindex=count)
+        egress_hdl = client.egress_port_mapping_table_add_with_egress_port_type_normal(
+                             sess_hdl,
+                             dev_tgt,
+                             match_spec,
+                             action_spec)
+        ret.append({ 'port': port_hdl, 'mbr' : mbr_hdl, 'lag' : lag_hdl, 'egress' : egress_hdl})
         count = count + 1
     return ret
 
@@ -631,14 +641,18 @@ def program_emulation_ports(client, sess_hdl, dev_tgt, port_count):
         lag_hdl = client.lag_group_add_entry(
                               sess_hdl, dev_tgt,
                               match_spec, mbr_hdl)
-        ret.append({ 'port': port_hdl, 'mbr' : mbr_hdl, 'lag' : lag_hdl})
+        match_spec = dc_egress_port_mapping_match_spec_t(
+                             eg_intr_md_egress_port=count)
+        action_spec = dc_egress_port_type_normal_action_spec_t(action_ifindex=count)
+        egress_hdl = client.egress_port_mapping_table_add_with_egress_port_type_normal(
+                             sess_hdl,
+                             dev_tgt,
+                             match_spec,
+                             action_spec)
+        ret.append({ 'port': port_hdl, 'mbr' : mbr_hdl, 'lag' : lag_hdl, 'egress' : egress_hdl})
         count = count + 1
     return ret
 
-def enum(**enums):
-    return type('Enum', (), enums)
-
-PortType = enum(Normal=0, Fabric=1)
 
 def add_ports(client, sess_hdl, dev_tgt, port_list, port_type, l2xid):
     #print port_list
@@ -662,11 +676,14 @@ def add_ports(client, sess_hdl, dev_tgt, port_list, port_type, l2xid):
         match_spec = dc_egress_port_mapping_match_spec_t(
            standard_metadata_egress_port=i)
         if port_type == PortType.Normal:
+            action_spec = dc_egress_port_type_normal_action_spec_t(action_ifindex=ifindex)
             client.egress_port_mapping_table_add_with_egress_port_type_normal(
-                sess_hdl, dev_tgt, match_spec)
+                sess_hdl, dev_tgt, match_spec, action_spec)
         elif port_type == PortType.Fabric:
+            action_spec = dc_egress_port_type_fabric_action_spec_t(action_ifindex=ifindex)
             client.egress_port_mapping_table_add_with_egress_port_type_fabric(
-                sess_hdl, dev_tgt, match_spec)
+                sess_hdl, dev_tgt, match_spec, action_spec)
+
 
 def delete_ports(client, sess_hdl, dev, port_count, ret_list):
     count = 0
@@ -679,6 +696,9 @@ def delete_ports(client, sess_hdl, dev, port_count, ret_list):
                              ret_list[count]['mbr'])
         client.ingress_port_mapping_table_delete(
                              sess_hdl, dev, ret_list[count]['port'])
+        client.egress_port_mapping_table_delete(
+                             sess_hdl, dev, ret_list[count]['egress'])
+
         count = count + 1
 
 def program_bd(client, sess_hdl, dev_tgt, vlan, mc_index):
@@ -1107,11 +1127,12 @@ def enable_learning(client, sess_hdl, dev_tgt):
                              match_spec, 1000)
 
 def program_tunnel_ipv4_src_vtep(client, sess_hdl, dev_tgt, vrf, src_ip,
-                                 ifindex):
+                                 tunnel_type, ifindex):
     #Ingress Tunnel Decap - src vtep entry
     match_spec = dc_ipv4_src_vtep_match_spec_t(
                                   l3_metadata_vrf=vrf,
-                                  ipv4_metadata_lkp_ipv4_sa=src_ip)
+                                  ipv4_metadata_lkp_ipv4_sa=src_ip,
+                                  tunnel_metadata_ingress_tunnel_type=tunnel_type)
     action_spec = dc_src_vtep_hit_action_spec_t(
                                   action_ifindex=ifindex)
     hdl = client.ipv4_src_vtep_table_add_with_src_vtep_hit(
@@ -1299,10 +1320,10 @@ def delete_egress_vni(client, sess_hdl, dev, hdl):
                                   sess_hdl, dev,
                                   hdl)
 
-def program_egress_vlan_xlate(client, sess_hdl, dev_tgt, port, bd,
+def program_egress_vlan_xlate(client, sess_hdl, dev_tgt, ifindex, bd,
                               ctag=None, stag=None):
     match_spec = dc_egress_vlan_xlate_match_spec_t(
-                                standard_metadata_egress_port=port,
+                                egress_metadata_ifindex=ifindex,
                                 egress_metadata_bd=bd)
     if ((ctag is not None) and (stag is None)):
         action_spec = dc_set_egress_packet_vlan_tagged_action_spec_t(

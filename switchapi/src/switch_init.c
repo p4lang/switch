@@ -72,6 +72,7 @@ switch_api_lib_init(switch_device_t device)
     switch_hostif_init(device);
     switch_capability_init(device);
     switch_meter_init(device);
+    switch_packet_init(device);
     switch_sflow_init(device);
 
     return SWITCH_STATUS_SUCCESS;
@@ -143,6 +144,7 @@ switch_api_init_default_entries(switch_device_t device)
     // Setup INT tables
     switch_pd_int_tables_init(device);
 #endif
+    switch_pd_sflow_tables_init(device);
 
     return SWITCH_STATUS_SUCCESS;
 }

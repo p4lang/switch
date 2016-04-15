@@ -20,6 +20,7 @@ limitations under the License.
 #include "switchapi/switch_interface.h"
 #include "switch_stp_int.h"
 #include "switch_pd.h"
+#include "switch_log.h"
 #include <string.h>
 
 #ifdef __cplusplus
@@ -161,10 +162,8 @@ switch_api_stp_group_vlans_add(switch_device_t device,
         vlan_entry->bd_handle = bd_handle;
         bd_info->stp_handle = stg_handle;
 
-        switch_pd_bd_table_update_entry(device,
-                                   handle_to_id(bd_handle),
-                                   bd_info,
-                                   bd_info->bd_entry);
+        switch_pd_bd_table_update_entry(device, handle_to_id(bd_handle),
+                                        bd_info);
 
         tommy_list_insert_head(&(stp_info->vlan_list),
                         &(vlan_entry->node), vlan_entry);
@@ -215,10 +214,8 @@ switch_api_stp_group_vlans_remove(switch_device_t device,
         }
 
         bd_info->stp_handle = 0;
-        switch_pd_bd_table_update_entry(device,
-                               handle_to_id(bd_handle),
-                               bd_info,
-                               bd_info->bd_entry);
+        switch_pd_bd_table_update_entry(device, handle_to_id(bd_handle),
+                                        bd_info);
 
         vlan_entry = tommy_list_remove_existing(&(stp_info->vlan_list), node);
         switch_free(vlan_entry);
@@ -235,8 +232,6 @@ switch_api_stp_port_state_set(switch_device_t device, switch_handle_t stg_handle
     switch_stp_port_entry_t           *port_entry = NULL;
     tommy_node                        *node = NULL;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
-    switch_port_info_t                *port_info = NULL;
-    switch_lag_info_t                 *lag_info = NULL;
     switch_handle_t                    intf_handle; 
     switch_handle_type_t               handle_type = 0;
     bool                               new_entry = FALSE;
@@ -258,19 +253,16 @@ switch_api_stp_port_state_set(switch_device_t device, switch_handle_t stg_handle
 
     handle_type = switch_handle_get_type(handle);
     intf_handle = handle;
-    if (handle_type == SWITCH_HANDLE_TYPE_PORT) {
-       port_info = switch_api_port_get_internal((switch_port_t)handle); 
-       if (!port_info) {
-           return SWITCH_STATUS_INVALID_PORT_NUMBER;
-       }
-       intf_handle = port_info->intf_handle;
-    }
-    if (handle_type == SWITCH_HANDLE_TYPE_LAG) {
-        lag_info = switch_api_lag_get_internal(handle);
-        if (!lag_info) {
-            return SWITCH_STATUS_INVALID_HANDLE;
+    if (handle_type == SWITCH_HANDLE_TYPE_PORT ||
+        handle_type == SWITCH_HANDLE_TYPE_LAG) {
+        status = switch_interface_handle_get(
+                             handle,
+                             0x0,
+                             &intf_handle);
+        if (status != SWITCH_STATUS_SUCCESS) {
+            SWITCH_API_ERROR("stp port state set failed");
+            return status;
         }
-        intf_handle = lag_info->intf_handle;
     }
 
     intf_info = switch_api_interface_get(intf_handle);
@@ -341,10 +333,9 @@ switch_api_stp_port_state_get(switch_device_t device, switch_handle_t stg_handle
     switch_interface_info_t           *intf_info = NULL;
     switch_stp_port_entry_t           *port_entry = NULL;
     tommy_node                        *node = NULL;
-    switch_port_info_t                *port_info = NULL;
-    switch_lag_info_t                 *lag_info = NULL;
     switch_handle_t                    intf_handle = 0; 
     switch_handle_type_t               handle_type = 0;
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
 
     if (!SWITCH_STP_HANDLE_VALID(stg_handle)) {
         return SWITCH_STATUS_INVALID_HANDLE;
@@ -363,19 +354,16 @@ switch_api_stp_port_state_get(switch_device_t device, switch_handle_t stg_handle
 
     handle_type = switch_handle_get_type(handle);
     intf_handle = handle;
-    if (handle_type == SWITCH_HANDLE_TYPE_PORT) {
-       port_info = switch_api_port_get_internal((switch_port_t)handle); 
-       if (!port_info) {
-           return SWITCH_STATUS_INVALID_PORT_NUMBER;
-       }
-       intf_handle = port_info->intf_handle;
-    }
-    if (handle_type == SWITCH_HANDLE_TYPE_LAG) {
-        lag_info = switch_api_lag_get_internal(handle);
-        if (!lag_info) {
-            return SWITCH_STATUS_INVALID_HANDLE;
+    if (handle_type == SWITCH_HANDLE_TYPE_PORT ||
+        handle_type == SWITCH_HANDLE_TYPE_LAG) {
+        status = switch_interface_handle_get(
+                             handle,
+                             0x0,
+                             &intf_handle);
+        if (status != SWITCH_STATUS_SUCCESS) {
+            SWITCH_API_ERROR("stp port state get failed");
+            return status;
         }
-        intf_handle = lag_info->intf_handle;
     }
 
     intf_info = switch_api_interface_get(intf_handle);
@@ -413,8 +401,6 @@ switch_api_stp_port_state_clear(switch_device_t device, switch_handle_t stg_hand
     switch_stp_port_entry_t           *port_entry = NULL;
     tommy_node                        *node = NULL;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
-    switch_port_info_t                *port_info = NULL;
-    switch_lag_info_t                 *lag_info = NULL;
     switch_handle_t                    intf_handle = 0; 
     switch_handle_type_t               handle_type = 0;
 
@@ -435,19 +421,16 @@ switch_api_stp_port_state_clear(switch_device_t device, switch_handle_t stg_hand
 
     handle_type = switch_handle_get_type(handle);
     intf_handle = handle;
-    if (handle_type == SWITCH_HANDLE_TYPE_PORT) {
-       port_info = switch_api_port_get_internal((switch_port_t)handle); 
-       if (!port_info) {
-           return SWITCH_STATUS_INVALID_PORT_NUMBER;
-       }
-       intf_handle = port_info->intf_handle;
-    }
-    if (handle_type == SWITCH_HANDLE_TYPE_LAG) {
-        lag_info = switch_api_lag_get_internal(handle);
-        if (!lag_info) {
-            return SWITCH_STATUS_INVALID_HANDLE;
+    if (handle_type == SWITCH_HANDLE_TYPE_PORT ||
+        handle_type == SWITCH_HANDLE_TYPE_LAG) {
+        status = switch_interface_handle_get(
+                             handle,
+                             0x0,
+                             &intf_handle);
+        if (status != SWITCH_STATUS_SUCCESS) {
+            SWITCH_API_ERROR("stp port state clear failed");
+            return status;
         }
-        intf_handle = lag_info->intf_handle;
     }
 
     intf_info = switch_api_interface_get(intf_handle);

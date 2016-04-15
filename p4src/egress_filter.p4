@@ -36,13 +36,13 @@ action egress_filter_check() {
             egress_metadata.bd);
 }
 
-action egress_filter_drop() {
+action set_egress_filter_drop() {
     drop();
 }
 
 table egress_filter_drop {
     actions {
-        egress_filter_drop;
+        set_egress_filter_drop;
     }
 }
 

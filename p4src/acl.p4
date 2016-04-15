@@ -33,9 +33,8 @@ header_type acl_metadata_t {
         racl_nexthop_type : 1;                 /* ecmp or nexthop */
         acl_redirect :   1;                    /* ifacl/vacl redirect action */
         racl_redirect : 1;                     /* racl redirect action */
-        if_label : 15;                         /* if label for acls */
+        if_label : 16;                         /* if label for acls */
         bd_label : 16;                         /* bd label for acls */
-        mirror_session_id : 10;                /* mirror session id */
         acl_stats_index : 14;                  /* acl stats index */
     }
 }
@@ -154,7 +153,9 @@ table mac_acl {
 
 control process_mac_acl {
 #if !defined(ACL_DISABLE) && !defined(L2_DISABLE)
-    apply(mac_acl);
+    if (DO_LOOKUP(ACL)) {
+        apply(mac_acl);
+    }
 #endif /* !ACL_DISABLE && !L2_DISABLE */
 }
 
@@ -225,15 +226,17 @@ table ipv6_acl {
 /*****************************************************************************/
 control process_ip_acl {
 #ifndef ACL_DISABLE
-    if (l3_metadata.lkp_ip_type == IPTYPE_IPV4) {
+    if (DO_LOOKUP(ACL)) {
+        if (l3_metadata.lkp_ip_type == IPTYPE_IPV4) {
 #ifndef IPV4_DISABLE
-        apply(ip_acl);
+            apply(ip_acl);
 #endif /* IPV4_DISABLE */
-    } else {
-        if (l3_metadata.lkp_ip_type == IPTYPE_IPV6) {
+        } else {
+            if (l3_metadata.lkp_ip_type == IPTYPE_IPV6) {
 #ifndef IPV6_DISABLE
-            apply(ipv6_acl);
+                apply(ipv6_acl);
 #endif /* IPV6_DISABLE */
+            }
         }
     }
 #endif /* ACL_DISABLE */
@@ -474,9 +477,7 @@ action drop_packet() {
 }
 
 action drop_packet_with_reason(drop_reason) {
-#ifndef STATS_DISABLE
     count(drop_stats, drop_reason);
-#endif
     drop();
 }
 
@@ -550,9 +551,11 @@ table drop_stats {
 }
 
 control process_system_acl {
-    apply(system_acl);
-    if (ingress_metadata.drop_flag == TRUE) {
-        apply(drop_stats);
+    if (DO_LOOKUP(SYSTEM_ACL)) {
+        apply(system_acl);
+        if (ingress_metadata.drop_flag == TRUE) {
+            apply(drop_stats);
+        }
     }
 }
 

@@ -257,7 +257,8 @@ switch_api_lag_member_add(switch_device_t device, switch_handle_t lag_handle,
             status = switch_pd_ingress_port_mapping_table_add_entry(device, port,
                     lag_info->ifindex,
                     port_info->port_type,
-                    &port_info->hw_entry);
+                    port_info->hw_entry);
+            port_info->lag_handle = lag_handle;
             if (status != SWITCH_STATUS_SUCCESS) {
                 return status;
             }
@@ -358,7 +359,8 @@ switch_api_lag_member_delete(switch_device_t device, switch_handle_t lag_handle,
             status = switch_pd_ingress_port_mapping_table_add_entry(device, port,
                                      port_info->ifindex,
                                      port_info->port_type,
-                                     &port_info->hw_entry);
+                                     port_info->hw_entry);
+            port_info->lag_handle = 0;
             if (status != SWITCH_STATUS_SUCCESS) {
                 return status;
             }

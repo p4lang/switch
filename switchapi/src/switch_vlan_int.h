@@ -46,10 +46,10 @@ typedef struct {
 }  switch_ln_member_t;
 
 typedef struct switch_bd_stats_ {
-    uint16_t stats_idx[SWITCH_VLAN_STATS_MAX];
-    switch_counter_t counters[SWITCH_VLAN_STATS_MAX];
+    uint16_t stats_idx[SWITCH_BD_STATS_MAX];
+    switch_counter_t counters[SWITCH_BD_STATS_MAX];
 #ifdef SWITCH_PD
-    p4_pd_entry_hdl_t stats_hw_entry[SWITCH_VLAN_STATS_MAX];
+    p4_pd_entry_hdl_t stats_hw_entry[SWITCH_BD_STATS_MAX];
 #endif
 } switch_bd_stats_t;
 
@@ -69,12 +69,16 @@ typedef struct switch_bd_info_ {
     uint16_t bd_label;
     switch_bd_stats_t *ingress_bd_stats;
     switch_bd_stats_t *egress_bd_stats;
+
+    switch_handle_t l3_intf_handle;
+
 #ifdef SWITCH_PD
-    p4_pd_mbr_hdl_t bd_entry;                   /**< hw bd table entry */
-    p4_pd_entry_hdl_t egress_bd_entry;          /**< hw bd table entry */
+    p4_pd_mbr_hdl_t bd_entry;                   /**< hw bd mbr hdl entry */
+    p4_pd_entry_hdl_t egress_bd_entry;          /**< hw egress bd table entry */
     p4_pd_entry_hdl_t uuc_entry;                /**< hw uuc entry */
     p4_pd_entry_hdl_t umc_entry;                /**< hw umc entry */
     p4_pd_entry_hdl_t bcast_entry;              /**< hw bcast entry */
+    p4_pd_entry_hdl_t cpu_entry;                /**< hw cpu entry */
     switch_ip_encap_pd_hdl_t ip_encap_hdl;
 #endif
 } switch_bd_info_t;
@@ -153,8 +157,24 @@ switch_status_t switch_api_vlan_xlate_remove(switch_device_t device, switch_hand
                                              switch_handle_t intf_handle, switch_vlan_t vlan_id);
 switch_ln_member_t *
 switch_api_logical_network_search_member(switch_handle_t bd_handle, switch_handle_t intf_handle);
-switch_status_t switch_intf_handle_get(switch_handle_t vlan_handle, switch_handle_t port_lag_handle,
-                                       switch_handle_t *intf_handle);
+
+switch_status_t
+switch_api_bd_stats_enable(
+        switch_device_t device,
+        switch_handle_t bd_handle);
+
+switch_status_t
+switch_api_bd_stats_disable(
+        switch_device_t device,
+        switch_handle_t bd_handle);
+
+switch_status_t
+switch_api_bd_stats_get(
+        switch_device_t device,
+        switch_handle_t bd_handle,
+        uint8_t count,
+        switch_bd_stats_id_t *counter_ids,
+        switch_counter_t *counters);
 
 #ifdef __cplusplus
 }

@@ -404,8 +404,7 @@ struct switcht_api_hostif_rcode_info_t {
 }
 
 struct switcht_hostif_t {
-    1: switcht_handle_t handle;
-    2: string intf_name;
+    1: string intf_name;
 }
 
 struct switcht_acl_action_cpu_redirect {

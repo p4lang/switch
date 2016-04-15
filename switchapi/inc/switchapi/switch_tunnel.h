@@ -69,6 +69,8 @@ typedef enum switch_tunnel_type_egress_ {
     SWITCH_EGRESS_TUNNEL_TYPE_FABRIC         = 15,
     SWITCH_EGRESS_TUNNEL_TYPE_CPU            = 16,
     SWITCH_EGRESS_TUNNEL_TYPE_IPV4_VXLAN_GPE = 17,
+    SWITCH_EGRESS_TUNNEL_TYPE_IPV4_IP        = 18,
+    SWITCH_EGRESS_TUNNEL_TYPE_IPV6_IP        = 19,
 } switch_tunnel_type_egress_t;
 
 /** Tunnel Ingress type */
@@ -76,7 +78,7 @@ typedef enum switch_tunnel_type_ingress_ {
     SWITCH_INGRESS_TUNNEL_TYPE_NONE                    = 0,
     SWITCH_INGRESS_TUNNEL_TYPE_VXLAN                   = 1,
     SWITCH_INGRESS_TUNNEL_TYPE_GRE                     = 2,
-    SWITCH_INGRESS_TUNNEL_TYPE_IP_IN_IP                = 3,
+    SWITCH_INGRESS_TUNNEL_TYPE_IPIP                    = 3,
     SWITCH_INGRESS_TUNNEL_TYPE_GENEVE                  = 4,
     SWITCH_INGRESS_TUNNEL_TYPE_NVGRE                   = 5,
     SWITCH_INGRESS_TUNNEL_TYPE_MPLS_L2VPN_NUM_LABELS_1 = 6,
@@ -93,7 +95,7 @@ typedef enum switch_tunnel_type_ingress_ {
 
 /** Mpls ipv6 explicit null label */
 #define SWITCH_MPLS_IPV6_EXPLICIT_NULL 2
-    
+
 /**
  Tunnel creation
  After tunnel creation another interface need to be created to offer
@@ -105,7 +107,7 @@ typedef enum switch_tunnel_type_ingress_ {
 switch_handle_t switch_api_tunnel_interface_create(switch_device_t device,
                                                   switch_direction_t direction,
                                                   switch_tunnel_info_t *tunnel_info);
-    
+
 /**
  Tunnel deletion
  No services should be configured on the tunnel when the tunnel is
@@ -115,7 +117,7 @@ switch_handle_t switch_api_tunnel_interface_create(switch_device_t device,
 */
 switch_status_t switch_api_tunnel_interface_delete(switch_device_t device,
                                                    switch_handle_t tunnel_handle);
-    
+
 /**
  Add member to logical network
  @param device device
@@ -123,7 +125,7 @@ switch_status_t switch_api_tunnel_interface_delete(switch_device_t device,
  @param interface_handle Handle of access port ot Tunnel interface
 */
 switch_status_t switch_api_logical_network_member_add(switch_device_t device,
-                                                      switch_handle_t network_handle, 
+                                                      switch_handle_t network_handle,
                                                       switch_handle_t interface_handle);
 
 /**
@@ -150,7 +152,7 @@ switch_status_t switch_api_mpls_tunnel_transit_create(switch_device_t device, sw
 */
 switch_status_t switch_api_mpls_tunnel_transit_delete(switch_device_t device, switch_mpls_encap_t *mpls_encap);
 /** @} */ // end of Tunnel API
-    
+
 #ifdef __cplusplus
 }
 #endif
