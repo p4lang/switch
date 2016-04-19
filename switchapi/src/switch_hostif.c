@@ -557,6 +557,12 @@ switch_api_hostif_reason_code_create(switch_device_t device,
             rcode_info->acl_handle = SWITCH_API_INVALID_HANDLE;
             break;
         }
+        case SWITCH_HOSTIF_REASON_CODE_DHCP:
+            // TODO:
+            break;
+        case SWITCH_HOSTIF_REASON_CODE_L3_MTU_ERROR:
+            // TODO:
+            break;
         default:
             status = SWITCH_STATUS_NOT_SUPPORTED;
             break;

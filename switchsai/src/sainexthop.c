@@ -151,12 +151,44 @@ sai_status_t sai_set_next_hop_entry_attribute(
     SAI_LOG_ENTER();
 
     sai_status_t status = SAI_STATUS_SUCCESS;
+    switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
 
     if (!attr) {
         status = SAI_STATUS_INVALID_PARAMETER;
         SAI_LOG_ERROR("null attribute: %s",
                        sai_status_to_string(status));
         return status;
+    }
+
+    switch_nhop_key_t *key;
+    if ((switch_status = switch_api_nhop_get(
+            device,
+            (switch_handle_t) next_hop_id,
+            &key))
+        != SWITCH_STATUS_SUCCESS) {
+        return sai_switch_status_to_sai_status(switch_status);
+    }
+
+    switch (attr->id) {
+        case SAI_NEXT_HOP_ATTR_TYPE:
+            break;
+        case SAI_NEXT_HOP_ATTR_IP:
+            status = sai_ip_addr_to_switch_ip_addr(
+                &attr->value.ipaddr,
+                &key->ip_addr);
+            break;
+        case SAI_NEXT_HOP_ATTR_ROUTER_INTERFACE_ID:
+            key->intf_handle = attr->value.oid;
+            break;
+        default:
+            return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    if (switch_api_nhop_set(device, (switch_handle_t) next_hop_id, key)
+        == SWITCH_STATUS_SUCCESS) {
+        status = SAI_STATUS_SUCCESS;
+    } else {
+        status = SAI_STATUS_FAILURE;
     }
 
     SAI_ASSERT(sai_object_type_query(next_hop_id) == SAI_OBJECT_TYPE_NEXT_HOP);
@@ -187,12 +219,42 @@ sai_status_t sai_get_next_hop_entry_attribute(
     SAI_LOG_ENTER();
 
     sai_status_t status = SAI_STATUS_SUCCESS;
+    switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
 
     if (!attr_list) {
         status = SAI_STATUS_INVALID_PARAMETER;
         SAI_LOG_ERROR("null attribute list: %s",
                        sai_status_to_string(status));
         return status;
+    }
+
+    switch_nhop_key_t *key;
+    if ((switch_status = switch_api_nhop_get(
+            device,
+            (switch_handle_t) next_hop_id,
+            &key))
+        != SWITCH_STATUS_SUCCESS) {
+        return sai_switch_status_to_sai_status(switch_status);
+    }
+
+    int index;
+    sai_attribute_t *attribute;
+    for (index = 0; index < attr_count; index++) {
+        attribute = &attr_list[index];
+        switch (attribute->id) {
+            case SAI_NEXT_HOP_ATTR_TYPE:
+                break;
+            case SAI_NEXT_HOP_ATTR_IP:
+                status = sai_switch_ip_addr_to_sai_ip_addr(
+                    &attribute->value.ipaddr,
+                    &key->ip_addr);
+                break;
+            case SAI_NEXT_HOP_ATTR_ROUTER_INTERFACE_ID:
+                attribute->value.oid = key->intf_handle;
+                break;
+            default:
+                return SAI_STATUS_INVALID_PARAMETER;
+        }
     }
 
     SAI_ASSERT(sai_object_type_query(next_hop_id) == SAI_OBJECT_TYPE_NEXT_HOP);

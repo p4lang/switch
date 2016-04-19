@@ -41,26 +41,61 @@ sai_status_t sai_set_port_attribute(
     sai_status_t status = SAI_STATUS_SUCCESS;
     switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
     switch_handle_t vlan_handle = SWITCH_API_INVALID_HANDLE;
+    switch_vlan_port_t switch_port;
+    switch_port_speed_t port_speed;
 
     if (!attr) {
         status = SAI_STATUS_INVALID_PARAMETER;
         SAI_LOG_ERROR("null attribute: %s",
-                       sai_status_to_string(status));
+            sai_status_to_string(status));
         return status;
     }
 
     switch (attr->id) {
         case SAI_PORT_ATTR_PORT_VLAN_ID:
-            switch_status = switch_api_vlan_id_to_handle_get((switch_vlan_t) attr->value.u16, &vlan_handle);
+            switch_status = switch_api_vlan_id_to_handle_get(
+                (switch_vlan_t) attr->value.u16,
+                &vlan_handle);
             status = sai_switch_status_to_sai_status(switch_status);
             if (status != SAI_STATUS_SUCCESS) {
-                SAI_LOG_ERROR("failed to get vlan %d: %s",
-                              sai_status_to_string(status));
+                SAI_LOG_ERROR("failed to get vlan for port %d. Vlan %d",
+                  sai_status_to_string(status));
                 return status;
             }
+            switch_port.handle = (switch_handle_t) port_id;
+            switch_port.tagging_mode = SWITCH_VLAN_PORT_UNTAGGED;
+
             /* TBD: Default BD */
 
             break;
+        case SAI_PORT_ATTR_GLOBAL_FLOW_CONTROL:
+            // need for disabling ports on shutdown
+            break;
+        case SAI_PORT_ATTR_INGRESS_FILTERING:
+            // need to enable ingress filtering
+            break;
+        case SAI_PORT_ATTR_SPEED:
+            if ((status = sai_port_speed_to_switch_port_speed(
+                    attr->value.u32,
+                    &port_speed))
+                != SAI_STATUS_SUCCESS) {
+                SAI_LOG_ERROR("bad port speed for port %d speed: %s",
+                    port_id, sai_status_to_string(status));
+                return status;
+            }
+            switch_status = switch_api_port_speed_set(
+                device,
+                (switch_port_t) port_id,
+                (switch_port_speed_t) attr->value.u8);
+            if ((status = sai_switch_status_to_sai_status(switch_status))
+                != SAI_STATUS_SUCCESS) {
+                SAI_LOG_ERROR("failed to set port %d speed: %s",
+                    port_id, sai_status_to_string(status));
+                return status;
+            }
+            break;
+
+
         default:
             break;
     }
@@ -97,6 +132,50 @@ sai_status_t sai_get_port_attribute(
         SAI_LOG_ERROR("null attribute list: %s",
                        sai_status_to_string(status));
         return status;
+    }
+
+    // attribute value holders
+    int enable;
+    switch_port_speed_t speed;
+
+    int index;
+    sai_attribute_t *attribute;
+    switch_status_t switch_status;
+    for (index = 0; index < attr_count; index++) {
+        attribute = &attr_list[index];
+        switch(attribute->id) {
+            case SAI_PORT_ATTR_OPER_STATUS:
+                switch_status = switch_api_port_state_get(
+                    device,
+                    (switch_port_t) port_id,
+                    &attribute->value.booldata);
+                if ((status = sai_switch_status_to_sai_status(switch_status))
+                    != SAI_STATUS_SUCCESS) {
+                    SAI_LOG_ERROR("failed to get port %d oper state: %s",
+                        port_id, sai_status_to_string(status));
+                    return status;
+                }
+                status = sai_switch_port_enabled_to_sai_oper_status(attribute);
+                break;
+            case SAI_PORT_ATTR_SPEED:
+                switch_status = switch_api_port_speed_get(
+                    device,
+                    (switch_port_t) port_id,
+                    (switch_port_speed_t *) &attribute->value.u8);
+                if ((status = sai_switch_status_to_sai_status(switch_status))
+                    != SAI_STATUS_SUCCESS) {
+                    SAI_LOG_ERROR("failed to get port %d speed: %s",
+                        port_id, sai_status_to_string(status));
+                    return status;
+                }
+                break;
+            case SAI_PORT_ATTR_SUPPORTED_SPEED:
+                // TODO: implement this, should return list of supported port speeds
+                attribute->value.u32list.count = 0;
+                break;
+            default:
+                return SAI_STATUS_NOT_SUPPORTED;
+        }
     }
 
     SAI_LOG_EXIT();

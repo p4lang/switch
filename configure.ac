@@ -147,7 +147,7 @@ AC_WITH([p4thrift],
         AC_PATH_PROG([THRIFT], [p4thrift], [])
         AC_SUBST([THRIFT_LIB], ["-lp4thrift"])
         WITH_P4THRIFT="true"
-        AC_CHECK_HEADER([p4thrift/P4Thrift.h], [], [AC_MSG_ERROR([P4Thrift headers not found. Install P4Thrift from http://github.com/p4lang/thrift/])])
+        AC_CHECK_HEADER([p4thrift/P4Thrift.h], [], [AC_MSG_ERROR([P4Thrift headers not found. Install P4Thrift from http://github.com/p4lang/thrift])])
     ],
     [
         AC_PATH_PROG([THRIFT], [thrift], [])

@@ -123,6 +123,9 @@ sai_status_t sai_create_router_interface(
                 intf_info.ipv6_urpf_mode =
                     sai_to_switch_urpf_mode(attribute->value.s32);
                 break;
+            case SAI_ROUTER_INTERFACE_ATTR_MTU:
+                // TODO:
+                break;
             default:
                 return SAI_STATUS_INVALID_PARAMETER;
         }
@@ -205,6 +208,25 @@ sai_status_t sai_set_router_interface_attribute(
         return status;
     }
 
+    switch (attr->id) {
+        case SAI_ROUTER_INTERFACE_ATTR_SRC_MAC_ADDRESS:
+            break;
+        case SAI_ROUTER_INTERFACE_ATTR_ADMIN_V4_STATE:
+            switch_status = switch_api_interface_attribute_set(
+                (switch_handle_t) rif_id,
+                SWITCH_INTF_ATTR_V4_UNICAST,
+                attr->value.booldata);
+            break;
+        case SAI_ROUTER_INTERFACE_ATTR_ADMIN_V6_STATE:
+            switch_status = switch_api_interface_attribute_set(
+                (switch_handle_t) rif_id,
+                SWITCH_INTF_ATTR_V6_UNICAST,
+                attr->value.booldata);
+            break;
+        default:
+            return SAI_STATUS_INVALID_PARAMETER; 
+    }
+
     SAI_ASSERT(sai_object_type_query(rif_id) == SAI_OBJECT_TYPE_ROUTER_INTERFACE);
 
     switch (attr->id) {
@@ -269,6 +291,64 @@ sai_status_t sai_get_router_interface_attribute(
         SAI_LOG_ERROR("null attribute: %s",
                        sai_status_to_string(status));
         return status;
+    }
+
+    int index;
+    switch_status_t switch_status;
+    sai_attribute_t *attribute;
+    for (index = 0; index < attr_count; index++) {
+        attribute = &attr_list[index];
+        switch (attribute->id) {
+            case SAI_ROUTER_INTERFACE_ATTR_VIRTUAL_ROUTER_ID:
+                switch_status = switch_api_interface_attribute_get(
+                    (switch_handle_t) rif_id, 
+                    SWITCH_INTF_ATTR_VRF,
+                    (uint64_t*)&attribute->value.oid);
+                break;
+            case SAI_ROUTER_INTERFACE_ATTR_TYPE:
+                break;
+            case SAI_ROUTER_INTERFACE_ATTR_PORT_ID:
+                switch_status = switch_api_interface_attribute_get(
+                    (switch_handle_t) rif_id, 
+                    SWITCH_INTF_ATTR_PORT_ID,
+                    (uint64_t*)&attribute->value.oid);
+                break;
+            case SAI_ROUTER_INTERFACE_ATTR_VLAN_ID:
+                switch_status = switch_api_interface_attribute_get(
+                    (switch_handle_t) rif_id, 
+                    SWITCH_INTF_ATTR_VLAN_ID,
+                    (uint64_t*)&attribute->value.u16);
+                break;
+            case SAI_ROUTER_INTERFACE_ATTR_SRC_MAC_ADDRESS:
+                switch_status = switch_api_interface_attribute_get(
+                    (switch_handle_t) rif_id, 
+                    SWITCH_INTF_ATTR_RMAC_ADDR,
+                    (uint64_t*)attribute->value.mac);
+                break;
+            case SAI_ROUTER_INTERFACE_ATTR_ADMIN_V4_STATE:
+                switch_status = switch_api_interface_attribute_get(
+                    (switch_handle_t) rif_id, 
+                    SWITCH_INTF_ATTR_V4_UNICAST,
+                    (uint64_t*)&attribute->value.booldata);
+                break;
+            case SAI_ROUTER_INTERFACE_ATTR_ADMIN_V6_STATE:
+                switch_status = switch_api_interface_attribute_get(
+                    (switch_handle_t) rif_id, 
+                    SWITCH_INTF_ATTR_V6_UNICAST,
+                    (uint64_t*)&attribute->value.booldata);
+                break;
+            case SAI_ROUTER_INTERFACE_ATTR_MTU:
+                // return the default for now
+                attribute->value.u32 = 1514;
+                break;
+            default:
+                return SAI_STATUS_INVALID_PARAMETER; 
+        }
+
+        if ((status = sai_switch_status_to_sai_status(switch_status))
+            != SAI_STATUS_SUCCESS) {
+            return status;
+        }
     }
 
     SAI_ASSERT(sai_object_type_query(rif_id) == SAI_OBJECT_TYPE_ROUTER_INTERFACE);

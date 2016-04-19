@@ -130,7 +130,7 @@ sai_status_t sai_get_switch_attribute(
     uint32_t index1 = 0, index2 = 0;
     sai_object_list_t *objlist = NULL;
     switch_api_capability_t api_switch_info;
-    sai_attribute_t attribute;
+    sai_attribute_t *attribute;
 
     if (!attr_list) {
         status = SAI_STATUS_INVALID_PARAMETER;
@@ -141,8 +141,8 @@ sai_status_t sai_get_switch_attribute(
 
     switch_api_capability_get(device, &api_switch_info);
     for (index1 = 0; index1 < attr_count; index1++) {
-        attribute = attr_list[index1];
-        switch (attribute.id) {
+        attribute = &attr_list[index1];
+        switch (attribute->id) {
             case SAI_SWITCH_ATTR_PORT_NUMBER:
                 attr_list->value.u32 = api_switch_info.max_ports;
                 break;
@@ -168,7 +168,7 @@ sai_status_t sai_get_switch_attribute(
             case SAI_SWITCH_ATTR_DEFAULT_STP_INST_ID:
                 break;
             case SAI_SWITCH_ATTR_SRC_MAC_ADDRESS:
-                memcpy(attribute.value.mac, &api_switch_info.switch_mac, 6);
+                memcpy(attribute->value.mac, &api_switch_info.switch_mac, 6);
                 if(!mac_set)
                     return SAI_STATUS_FAILURE;
                 break;

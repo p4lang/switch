@@ -158,7 +158,9 @@ sai_status_t sai_get_vlan_entry_attribute(
 
     SAI_LOG_ENTER();
 
-    sai_status_t status = SAI_STATUS_SUCCESS;
+    sai_status_t         status = SAI_STATUS_SUCCESS;
+    switch_status_t      switch_status;
+    switch_vlan_port_t   *switch_vlan_port_list = NULL;
 
     if (!attr_list) {
         status = SAI_STATUS_INVALID_PARAMETER;

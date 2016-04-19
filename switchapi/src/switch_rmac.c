@@ -290,7 +290,7 @@ switch_api_router_mac_group_print_all(void)
 
 /*
  * Internal Router MAC API's
- * These API's will be used intenrally in SDK to manage
+ * These API's will be used internally in SDK to manage
  * the rmac groups
  */
 switch_status_t

@@ -122,6 +122,45 @@ switch_api_port_delete(switch_device_t device, uint16_t port_number)
     return SWITCH_STATUS_FAILURE;
 }
 
+// stubs for linking, fill in when functionality is present in p4
+
+switch_status_t
+switch_api_port_state_get(switch_device_t device, switch_port_t port, bool *up)
+{
+    return SWITCH_STATUS_SUCCESS;
+}
+
+
+switch_status_t
+switch_api_port_enable_set(switch_device_t device, switch_port_t port,
+                           bool enable)
+{
+    return SWITCH_STATUS_SUCCESS;
+}
+
+switch_status_t
+switch_api_port_enable_get(switch_device_t device, switch_port_t port,
+                           bool *enable)
+{
+    return SWITCH_STATUS_SUCCESS;
+}
+
+switch_status_t
+switch_api_port_speed_set(switch_device_t device, switch_port_t port,
+                          switch_port_speed_t speed)
+{
+    return SWITCH_STATUS_SUCCESS;
+}
+
+switch_status_t
+switch_api_port_speed_get(switch_device_t device, switch_port_t port,
+                          switch_port_speed_t *speed)
+{
+    return SWITCH_STATUS_SUCCESS;
+}
+
+// end of stubs for linking
+
 switch_status_t
 switch_api_port_print_entry(switch_port_t port)
 {

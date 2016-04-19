@@ -598,7 +598,6 @@ sai_status_t sai_create_acl_entry(
                     opt_action_params.counter_handle = handle;
                 }
                 break;
-
         }
     }
 

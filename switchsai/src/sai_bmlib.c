@@ -25,7 +25,6 @@ sai_profile_get_value(_In_ sai_switch_profile_id_t profile_id,
     return NULL;
 }
 
-
 /*
  * Enumerate all the K/V pairs in a profile.
  * Pointer to NULL passed as variable restarts enumeration.

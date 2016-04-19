@@ -67,10 +67,10 @@ $(thrift_cpp_sources) $(thrift_py_sources) : switchsai.ts
 
 switchsai_sources = \
 $(thrift_cpp_sources) \
-src/saiacl.c \
-src/saibuffer.c \
 src/sai.c \
 src/sai_bmlib.c \
+src/saiacl.c \
+src/saibuffer.c \
 src/saifdb.c \
 src/saihash.c \
 src/saihostintf.c \

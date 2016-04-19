@@ -58,7 +58,12 @@ switch_handle_t
 switch_nhop_create()
 {
     switch_handle_t nhop_handle;
-    _switch_handle_create(SWITCH_HANDLE_TYPE_NHOP, switch_nhop_info_t, switch_nhop_array, NULL, nhop_handle);
+    _switch_handle_create(
+        SWITCH_HANDLE_TYPE_NHOP,
+        switch_nhop_info_t,
+        switch_nhop_array,
+        NULL,
+        nhop_handle);
     return nhop_handle;
 }
 
@@ -66,8 +71,47 @@ switch_nhop_info_t *
 switch_nhop_get(switch_handle_t nhop_handle)
 {
     switch_nhop_info_t *nhop_info = NULL;
-    _switch_handle_get(switch_nhop_info_t, switch_nhop_array, nhop_handle, nhop_info);
+    _switch_handle_get(
+        switch_nhop_info_t,
+        switch_nhop_array,
+        nhop_handle,
+        nhop_info);
     return nhop_info;
+}
+
+switch_status_t
+switch_api_nhop_set(switch_device_t device, switch_handle_t handle,
+                    switch_nhop_key_t *nhop_key)
+{
+    switch_nhop_info_t *info = switch_nhop_get(handle);
+    switch (info->type) {
+        case SWITCH_NHOP_INDEX_TYPE_ONE_PATH:
+            // need to check each field in key diff?
+            memcpy(&info->u.spath.nhop_key, nhop_key, sizeof(switch_nhop_key_t));
+            break;
+        case SWITCH_NHOP_INDEX_TYPE_ECMP:
+        case SWITCH_NHOP_INDEX_TYPE_NONE:
+            return SWITCH_STATUS_NOT_SUPPORTED;
+    }
+
+    return switch_api_nhop_update(device, handle);
+}
+
+switch_status_t
+switch_api_nhop_get(switch_device_t device, switch_handle_t handle,
+                    switch_nhop_key_t **nhop_key)
+{
+    switch_nhop_info_t *info = switch_nhop_get(handle);
+    switch (info->type) {
+        case SWITCH_NHOP_INDEX_TYPE_ONE_PATH:
+            *nhop_key = &info->u.spath.nhop_key;
+            break;
+        case SWITCH_NHOP_INDEX_TYPE_ECMP:
+        case SWITCH_NHOP_INDEX_TYPE_NONE:
+            return SWITCH_STATUS_NOT_SUPPORTED;
+    }
+
+    return SWITCH_STATUS_SUCCESS;
 }
 
 switch_status_t
@@ -79,7 +123,7 @@ switch_nhop_delete(switch_handle_t handle)
 
 static inline void
 switch_nhop_hash_key_init(uchar *key, switch_nhop_key_t *nhop_key,
-                             uint32_t *len, uint32_t *hash)
+                          uint32_t *len, uint32_t *hash)
 {
     *len=0;
     memset(key, 0, SWITCH_NHOP_HASH_KEY_SIZE);
