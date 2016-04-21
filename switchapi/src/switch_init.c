@@ -446,12 +446,13 @@ switch_api_init_default_acl_entries(switch_device_t device)
     acl_kvp[1].mask.u.mask = 0xFFFFFFFF;
     memset(&action_params, 0, sizeof(switch_acl_action_params_t));
     action_params.cpu_redirect.reason_code = 0;
-    switch_api_acl_rule_create(device, acl_handle, priority++, 2,
+    switch_api_acl_rule_create(device, acl_handle, 
+                               2000, /* keep priority lower than reason-codes */
+                               2,
                                acl_kvp, SWITCH_ACL_ACTION_COPY_TO_CPU,
                                &action_params,
                                &opt_action_params,
                                &handle);
-
     // egress l3_mtu_check
     acl_handle = switch_api_acl_list_create(device,
                                             SWITCH_ACL_TYPE_EGRESS_SYSTEM);

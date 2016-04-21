@@ -614,13 +614,7 @@ switch_packet_tx_filter_priority_compare(
     tx_entry1 = (switch_packet_tx_entry_t *) key1;
     tx_entry2 = (switch_packet_tx_entry_t *) key2;
 
-    if (tx_entry1->priority == tx_entry2->priority) {
-        return 0;
-    } else if (tx_entry1->priority > tx_entry2->priority) {
-        return 1;
-    } else {
-        return -1;
-    }
+    return (int32_t)tx_entry1->priority - (int32_t)tx_entry2->priority;
 }
 
 switch_status_t
@@ -767,13 +761,7 @@ switch_packet_rx_compare(
     rx_entry1 = (switch_packet_rx_entry_t *) key1;
     rx_entry2 = (switch_packet_rx_entry_t *) key2;
 
-    if (rx_entry1->priority == rx_entry2->priority) {
-        return 0;
-    } else if (rx_entry1->priority > rx_entry2->priority) {
-        return 1;
-    } else {
-        return -1;
-    }
+    return (int32_t)rx_entry1->priority - (int32_t)rx_entry2->priority;
 }
 
 switch_status_t
@@ -987,14 +975,14 @@ switch_packet_rx_info_get(
     while (node) {
         tmp_rx_info = (switch_packet_rx_info_t *) node->data;
         tmp_rx_entry = &tmp_rx_info->rx_entry;
-        if (((tmp_rx_entry->port_valid && tmp_rx_entry->port == rx_entry->port) ||
-             !tmp_rx_entry->port_valid) && 
-             ((tmp_rx_entry->ifindex_valid && tmp_rx_entry->ifindex == rx_entry->ifindex) ||
-              !tmp_rx_entry->ifindex_valid) && 
-             ((tmp_rx_entry->bd_valid && tmp_rx_entry->bd == rx_entry->bd) ||
-              !tmp_rx_entry->bd_valid) && 
-             ((tmp_rx_entry->reason_code_valid && tmp_rx_entry->reason_code == rx_entry->reason_code) ||
-              !tmp_rx_entry->reason_code_valid)) {
+
+        if ((!tmp_rx_entry->port_valid || tmp_rx_entry->port == rx_entry->port) &&
+            (!tmp_rx_entry->ifindex_valid || tmp_rx_entry->ifindex == rx_entry->ifindex) &&
+            (!tmp_rx_entry->bd_valid || tmp_rx_entry->bd == rx_entry->bd) &&
+            (!tmp_rx_entry->reason_code_valid || 
+             (tmp_rx_entry->reason_code & tmp_rx_entry->reason_code_mask) ==
+             (rx_entry->reason_code & tmp_rx_entry->reason_code_mask))) {
+
             *rx_info = tmp_rx_info;
             status = SWITCH_STATUS_SUCCESS;
             break;
@@ -1021,10 +1009,9 @@ switch_packet_tx_info_get(
     while (node) {
         tmp_tx_info = (switch_packet_tx_info_t *) node->data;
         tmp_tx_entry = &tmp_tx_info->tx_entry;
-        if (((tmp_tx_entry->fd_valid && tmp_tx_entry->intf_fd == tx_entry->intf_fd) ||
-             !tmp_tx_entry->fd_valid) &&
-            ((tmp_tx_entry->vlan_valid && tmp_tx_entry->vlan_id == tx_entry->vlan_id) ||
-             !tmp_tx_entry->vlan_valid)) {
+        if ((!tmp_tx_entry->fd_valid || tmp_tx_entry->intf_fd == tx_entry->intf_fd) &&
+            (!tmp_tx_entry->vlan_valid || tmp_tx_entry->vlan_id == tx_entry->vlan_id)) {
+
             *tx_info = tmp_tx_info;
             status = SWITCH_STATUS_SUCCESS;
             break;

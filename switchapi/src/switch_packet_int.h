@@ -38,6 +38,7 @@ typedef struct switch_packet_rx_entry_ {
     uint16_t bd;
     bool bd_valid;
     switch_hostif_reason_code_t reason_code;
+    uint32_t reason_code_mask;
     bool reason_code_valid;
     uint32_t priority;
 } switch_packet_rx_entry_t;
