@@ -59,6 +59,14 @@ typedef struct switch_port_vlan_ {
 
 /** Interface attributes */
 typedef enum switch_intf_attr_ {
+    // READ ONLY
+    SWITCH_INTF_ATTR_VRF,
+    SWITCH_INTF_ATTR_TYPE,
+    SWITCH_INTF_ATTR_PORT_ID,
+    SWITCH_INTF_ATTR_VLAN_ID,
+
+    // READ-WRITE
+    SWITCH_INTF_ATTR_RMAC_ADDR,
     SWITCH_INTF_ATTR_V4_UNICAST,                      /**< IPv4 Unicast */
     SWITCH_INTF_ATTR_V6_UNICAST,                      /**< IPv6 Unicast */
     SWITCH_INTF_ATTR_V4_URPF_MODE,                    /**< IPv4 Urpf mode */
@@ -132,6 +140,39 @@ switch_status_t switch_api_interface_attribute_set(switch_handle_t intf_handle,
 switch_status_t switch_api_interface_attribute_get(switch_handle_t intf_handle, 
                                            switch_intf_attr_t attr_type,
                                            uint64_t *value);
+
+// read only
+
+/**
+ Get the interface's port id
+ @param intf_handle - Handle that uniquely identifies interface
+ @param value - Address of vrf destination 
+ */
+switch_status_t switch_api_interface_vrf_get(switch_handle_t intf_handle, uint64_t *value);
+
+/**
+ Get the interface's port id
+ @param intf_handle - Handle that uniquely identifies interface
+ @param value - Address of port id destination 
+ */
+switch_status_t switch_api_interface_port_id_get(switch_handle_t intf_handle, uint64_t *value);
+
+/**
+ Get the interface's vlan id
+ @param intf_handle - Handle that uniquely identifies interface
+ @param value - Address of vlan id destination 
+ */
+switch_status_t switch_api_interface_vlan_id_get(switch_handle_t intf_handle, uint64_t *value);
+
+/**
+ Get the interface's mac address
+ @param intf_handle - Handle that uniquely identifies interface
+ @param value - Address of destination mac container 
+ */
+switch_status_t
+switch_api_interface_rmac_addr_get(switch_handle_t intf_handle, uint64_t *value);
+
+// read-write
 
 /**
  Set IPv4 enable interface attribute

@@ -21,6 +21,7 @@ limitations under the License.
 #include <switchapi/switch_status.h>
 #include <switchapi/switch_handle.h>
 #include <switchapi/switch_acl.h>
+#include <switchapi/switch_port.h>
 
 #include <assert.h>
 #include <stdio.h>
@@ -120,18 +121,20 @@ sai_status_t sai_neighbor_initialize(sai_api_service_t *sai_api_service);
 sai_status_t sai_hostif_initialize(sai_api_service_t *sai_api_service);
 sai_status_t sai_acl_initialize(sai_api_service_t *sai_api_service);
 sai_status_t sai_mirror_initialize(sai_api_service_t *sai_api_service);
+sai_status_t sai_hash_initialize(sai_api_service_t *sai_api_service);
+sai_status_t sai_udf_initialize(sai_api_service_t *sai_api_service);
+sai_status_t sai_buffer_initialize(sai_api_service_t *sai_api_service);
 sai_status_t sai_policer_initialize(sai_api_service_t *sai_api_service);
 sai_status_t sai_ipmc_initialize(sai_api_service_t *sai_api_service);
 sai_status_t sai_l2mc_initialize(sai_api_service_t *sai_api_service);
+
+// maps SAI types to switchapi types
 
 char *sai_status_to_string(
         _In_ const sai_status_t status);
 
 char * sai_object_type_to_string(
         _In_ sai_object_type_t object_type);
-
-sai_status_t sai_switch_status_to_sai_status(
-        _In_ const switch_status_t status);
 
 sai_status_t sai_ipv4_prefix_length(
         _In_ sai_ip4_t ip4,
@@ -173,8 +176,24 @@ sai_status_t sai_ip_addr_to_switch_ip_addr(
         const _In_ sai_ip_address_t *sai_ip_addr,
         _Out_ switch_ip_addr_t *ip_addr);
 
+sai_status_t sai_port_speed_to_switch_port_speed(
+        uint32_t sai_port_speed,
+        _Out_ switch_port_speed_t *switch_port_speed);
+
 switch_acl_action_t
 sai_packet_action_to_switch_packet_action(
         _In_ sai_packet_action_t action);
+
+// maps switchapi types to SAI types
+
+sai_status_t sai_switch_status_to_sai_status(
+        _In_ const switch_status_t status);
+
+sai_status_t sai_switch_ip_addr_to_sai_ip_addr(
+        _Out_ sai_ip_address_t *sai_ip_addr,
+        const _In_ switch_ip_addr_t *ip_addr);
+
+sai_status_t sai_switch_port_enabled_to_sai_oper_status(
+        _In_ _Out_ sai_attribute_t *attr);
 
 #endif  // __SAIINTERNAL_H_

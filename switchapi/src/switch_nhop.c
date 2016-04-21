@@ -71,6 +71,41 @@ switch_nhop_get(switch_handle_t nhop_handle)
 }
 
 switch_status_t
+switch_api_nhop_set(switch_device_t device, switch_handle_t handle,
+                    switch_nhop_key_t *nhop_key)
+{
+    switch_nhop_info_t *info = switch_nhop_get(handle);
+    switch (info->type) {
+        case SWITCH_NHOP_INDEX_TYPE_ONE_PATH:
+            // need to check each field in key diff?
+            memcpy(&info->u.spath.nhop_key, nhop_key, sizeof(switch_nhop_key_t));
+            break;
+        case SWITCH_NHOP_INDEX_TYPE_ECMP:
+        case SWITCH_NHOP_INDEX_TYPE_NONE:
+            return SWITCH_STATUS_NOT_SUPPORTED;
+    }
+
+    return switch_api_nhop_update(device, handle);
+}
+
+switch_status_t
+switch_api_nhop_get(switch_device_t device, switch_handle_t handle,
+                    switch_nhop_key_t **nhop_key)
+{
+    switch_nhop_info_t *info = switch_nhop_get(handle);
+    switch (info->type) {
+        case SWITCH_NHOP_INDEX_TYPE_ONE_PATH:
+            *nhop_key = &info->u.spath.nhop_key;
+            break;
+        case SWITCH_NHOP_INDEX_TYPE_ECMP:
+        case SWITCH_NHOP_INDEX_TYPE_NONE:
+            return SWITCH_STATUS_NOT_SUPPORTED;
+    }
+
+    return SWITCH_STATUS_SUCCESS;
+}
+
+switch_status_t
 switch_nhop_delete(switch_handle_t handle)
 {
     _switch_handle_delete(switch_nhop_info_t, switch_nhop_array, handle);
