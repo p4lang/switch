@@ -67,6 +67,11 @@ struct sai_thrift_vlan_list_t {
     2: list<sai_thrift_vlan_id_t> vlan_list;
 }
 
+struct sai_thrift_vlan_port_list_t {
+    1: i32 count;
+    2: list<sai_thrift_vlan_port_t> port_list;
+}
+
 union sai_thrift_acl_mask_t {
     1: byte u8;
     2: byte s8;
@@ -136,13 +141,19 @@ union sai_thrift_attribute_value_t {
     15: sai_thrift_ip_address_t ipaddr;
     16: sai_thrift_object_list_t objlist;
     17: sai_thrift_vlan_list_t vlanlist;
-    18: sai_thrift_acl_field_data_t aclfield;
-    19: sai_thrift_acl_action_data_t aclaction;
+    18: sai_thrift_vlan_port_list_t vlanportlist;
+    19: sai_thrift_acl_field_data_t aclfield;
+    20: sai_thrift_acl_action_data_t aclaction;
 }
 
 struct sai_thrift_attribute_t {
     1: i32 id;
     2: sai_thrift_attribute_value_t value;
+}
+
+struct sai_thrift_get_response_t {
+    1: sai_thrift_status_t status;
+    2: list<sai_thrift_attribute_t> attributes;
 }
 
 struct sai_thrift_unicast_route_entry_t {
@@ -190,10 +201,14 @@ service switch_sai_rpc {
     //router interface API
     sai_thrift_object_id_t sai_thrift_create_router_interface(1: list<sai_thrift_attribute_t> thrift_attr_list);
     sai_thrift_status_t sai_thrift_remove_router_interface(1: sai_thrift_object_id_t rif_id);
+    sai_thrift_get_response_t sai_thrift_get_router_interface_attribute(1: sai_thrift_object_id_t rif_id,
+        2: i32 attr_count, 3: list<sai_thrift_attribute_t> thrift_attr_list);
 
     //next hop API
     sai_thrift_object_id_t sai_thrift_create_next_hop(1: list<sai_thrift_attribute_t> thrift_attr_list);
     sai_thrift_status_t sai_thrift_remove_next_hop(1: sai_thrift_object_id_t next_hop_id);
+    sai_thrift_get_response_t sai_thrift_get_next_hop_attribute(1: sai_thrift_object_id_t next_hop_id, 2: i32 attr_count, 3: list<sai_thrift_attribute_t> thrift_attr_list);
+    sai_thrift_status_t sai_thrift_set_next_hop_attribute(1: sai_thrift_object_id_t next_hop_id, 2: list<sai_thrift_attribute_t> single_attribute);
 
     //next hop group API
     sai_thrift_object_id_t sai_thrift_create_next_hop_group(1: list<sai_thrift_attribute_t> thrift_attr_list);

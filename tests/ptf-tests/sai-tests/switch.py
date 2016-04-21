@@ -2288,3 +2288,96 @@ class IPAclStatsTest(sai_base_test.ThriftInterfaceDataPlane):
             self.client.sai_thrift_remove_router_interface(rif_id2)
 
             self.client.sai_thrift_remove_virtual_router(vr_id)
+
+class NexthopGetSetTest(sai_base_test.ThriftInterfaceDataPlane):
+    def runTest(self):
+        switch_init(self.client)
+        port1 = port_list[1]
+        port2 = port_list[2]
+        v4_enabled = 1
+        v6_enabled = 1
+        v6_disabled = 0
+        mac_valid = 0
+        mac = ''
+
+        vr_id = sai_thrift_create_virtual_router(self.client, v4_enabled, v6_enabled)
+        rif_id = sai_thrift_create_router_interface(self.client, vr_id, 1, port1, 0, v4_enabled, v6_enabled, mac)
+
+        addr_family = SAI_IP_ADDR_FAMILY_IPV4
+        ip_addr = '10.10.10.1'
+        ip_mask = '255.255.255.255'
+        nhop = sai_thrift_create_nhop(self.client, addr_family, ip_addr, rif_id)
+
+        # check get returns correct value
+        rif_attribute = sai_thrift_attribute_t(id=SAI_NEXT_HOP_ATTR_ROUTER_INTERFACE_ID)
+        resp = self.client.sai_thrift_get_next_hop_attribute(nhop, 1, [rif_attribute])
+        assert(resp.status == 0)
+        assert(resp.attributes[0].value.oid == rif_id)
+
+        # create a new vr_id, rif_id pair for set
+        rif_id2 = sai_thrift_create_router_interface(self.client, vr_id, 1, port2, 0, v4_enabled, v6_disabled, mac)
+        rif_attribute2 = sai_thrift_attribute_t(id=SAI_NEXT_HOP_ATTR_ROUTER_INTERFACE_ID,
+                             value=sai_thrift_attribute_value_t(oid=rif_id2))
+        status = self.client.sai_thrift_set_next_hop_attribute(nhop, [rif_attribute2])
+        assert(status == 0)
+
+        # get the new value to check if it's right
+        resp = self.client.sai_thrift_get_next_hop_attribute(nhop, 1, [rif_attribute])
+        assert(resp.status == 0)
+        assert(resp.attributes[0].value.oid == rif_id2)
+
+# TODO: ip get/set
+
+        self.client.sai_thrift_remove_next_hop(nhop)
+        self.client.sai_thrift_remove_router_interface(rif_id)
+        self.client.sai_thrift_remove_router_interface(rif_id2)
+        self.client.sai_thrift_remove_virtual_router(vr_id)
+
+class InterfaceGetSetTest(sai_base_test.ThriftInterfaceDataPlane):
+    def runTest(self):
+        switch_init(self.client)
+        port1 = port_list[1]
+        v4_enabled = 1
+        v6_enabled = 1
+        v6_disabled = 0
+        mac_valid = 0
+        mac = '00:11:22:33:44:55'
+
+        vr_id = sai_thrift_create_virtual_router(self.client, v4_enabled, v6_enabled)
+        port_rif_id = sai_thrift_create_router_interface(self.client, vr_id, 1, port1, 0, v4_enabled, v6_enabled, mac)
+
+        # test gets -- these fields are read only
+        # vr_id
+        vr_id_attribute = sai_thrift_attribute_t(id=SAI_ROUTER_INTERFACE_ATTR_VIRTUAL_ROUTER_ID)
+        resp = self.client.sai_thrift_get_router_interface_attribute(port_rif_id, 1, [vr_id_attribute])
+        assert(resp.status == 0)
+        assert(resp.attributes[0].value.oid == vr_id)
+
+        # port_id
+        port_id_attribute = sai_thrift_attribute_t(id=SAI_ROUTER_INTERFACE_ATTR_PORT_ID)
+        resp = self.client.sai_thrift_get_router_interface_attribute(port_rif_id, 1, [port_id_attribute])
+        assert(resp.status == 0)
+        assert(resp.attributes[0].value.oid == port1)
+
+        # need to create a new interface of type vlan to test vlan id get
+        # first delete the old interface
+        self.client.sai_thrift_remove_router_interface(port_rif_id)
+
+        vlan_id = 10
+        self.client.sai_thrift_create_vlan(vlan_id)
+        vlan_rif_id = sai_thrift_create_router_interface(self.client, vr_id, 0, 0, vlan_id, v4_enabled, v6_enabled, mac)
+
+        vlan_id_attribute = sai_thrift_attribute_t(id=SAI_ROUTER_INTERFACE_ATTR_VLAN_ID)
+        resp = self.client.sai_thrift_get_router_interface_attribute(vlan_rif_id, 1, [vlan_id_attribute])
+        assert(resp.status == 0)
+        assert(resp.attributes[0].value.u16 == vlan_id)
+
+# TODO: mac get/set
+
+        self.client.sai_thrift_remove_router_interface(vlan_rif_id)
+        self.client.sai_thrift_remove_virtual_router(vr_id)
+
+class PortGetSetTest(sai_base_test.ThriftInterfaceDataPlane):
+    def runTest(self):
+        pass
+
