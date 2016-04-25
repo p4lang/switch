@@ -80,6 +80,7 @@ typedef enum switch_hostif_reason_code_ {
     SWITCH_HOSTIF_REASON_CODE_MYIP, /* 0x214 */
     SWITCH_HOSTIF_REASON_CODE_ICMP_REDIRECT,    /* 0x215 */
     SWITCH_HOSTIF_REASON_CODE_SRC_IS_LINK_LOCAL,    /* 0x216 */
+    SWITCH_HOSTIF_REASON_CODE_L3_REDIRECT,    /* 0x217 */
 
     SWITCH_HOSTIF_REASON_CODE_MAX,
 } switch_hostif_reason_code_t;

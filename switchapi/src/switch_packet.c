@@ -599,6 +599,21 @@ int start_switch_api_packet_driver()
     return SWITCH_STATUS_SUCCESS;
 }
 
+static bool
+switch_packet_tx_filter_match(switch_packet_tx_entry_t *tx_entry1,
+                              switch_packet_tx_entry_t *tx_entry2)
+{
+    // entry1 is the one stored in the filter list
+    // entry2 represents incoming packet, therefore all the valid
+    // bits and masks are used from entry1
+    if ((!tx_entry1->fd_valid || (tx_entry1->intf_fd == tx_entry2->intf_fd)) &&
+        (!tx_entry1->vlan_valid || (tx_entry1->vlan_id == tx_entry2->vlan_id))){ 
+        // priority is not be compared so matching entry can be found
+        return TRUE;
+    }
+    return FALSE;
+}
+
 int32_t
 switch_packet_tx_filter_priority_compare(
         const void *key1,
@@ -648,6 +663,7 @@ switch_api_packet_net_filter_tx_create(
     tx_entry.fd_valid = tx_key->handle_valid;
     tx_entry.vlan_id = tx_key->vlan_id;
     tx_entry.vlan_valid = tx_key->vlan_valid;
+    tx_entry.priority = tx_key->priority;
 
     tx_info = switch_malloc(sizeof(switch_packet_tx_info_t), 0x1);
     if (!tx_info) {
@@ -694,14 +710,12 @@ switch_api_packet_net_filter_tx_create(
 }
 
 switch_status_t
-switch_api_packet_net_filter_tx_delete(
-        switch_device_t device,
-        switch_packet_tx_key_t *tx_key)
+switch_api_packet_net_filter_tx_delete(switch_device_t device,
+                                       switch_packet_tx_key_t *tx_key)
 {
     switch_packet_tx_entry_t          *tmp_tx_entry = NULL;
     switch_packet_tx_info_t           *tmp_tx_info = NULL;
     switch_packet_tx_entry_t           tx_entry;
-    switch_packet_tx_info_t           *tx_info = NULL;
     tommy_node                        *node = NULL;
     switch_hostif_info_t              *hostif_info = NULL;
     bool                               node_found = FALSE;
@@ -712,24 +726,26 @@ switch_api_packet_net_filter_tx_delete(
         return SWITCH_STATUS_INVALID_PARAMETER;
     }
 
-    hostif_info = switch_hostif_get(tx_key->hostif_handle);
-    if (!hostif_info) {
-        SWITCH_API_ERROR("invalid hostif handle");
-        return SWITCH_STATUS_INVALID_HANDLE;
+    memset(&tx_entry, 0x0, sizeof(tx_entry));
+    if (tx_key->handle_valid) {
+        hostif_info = switch_hostif_get(tx_key->hostif_handle);
+        if (!hostif_info) {
+            SWITCH_API_ERROR("invalid hostif handle");
+            return SWITCH_STATUS_INVALID_HANDLE;
+        }
+        tx_entry.intf_fd = hostif_info->intf_fd;
     }
 
-    memset(&tx_entry, 0x0, sizeof(tx_entry));
-    tx_entry.intf_fd = hostif_info->intf_fd;
-    tx_entry.vlan_id = tx_key->vlan_id;
-    tx_entry.priority = tx_key->priority;
+    if (tx_key->vlan_valid) {
+        tx_entry.vlan_id = tx_key->vlan_id;
+    }
 
     node = tommy_list_head(&packet_tx_filter_list);
     while (node) {
         tmp_tx_info = (switch_packet_tx_info_t *) node->data;
         tmp_tx_entry = &tmp_tx_info->tx_entry;
-        if (tmp_tx_entry->intf_fd == tx_key->vlan_id &&
-            tmp_tx_entry->vlan_id == hostif_info->intf_fd &&
-            tmp_tx_entry->priority == tx_key->priority) {
+
+        if (switch_packet_tx_filter_match(tmp_tx_entry, &tx_entry)) {
             node_found = TRUE;
             break;
         }
@@ -742,12 +758,12 @@ switch_api_packet_net_filter_tx_delete(
     }
 
     tommy_list_remove_existing(&packet_tx_filter_list, node);
-    switch_free(tx_info);
+    switch_free(tmp_tx_info);
     return status;
 }
 
 int32_t
-switch_packet_rx_compare(
+switch_packet_rx_filter_priority_compare(
         const void *key1,
         const void *key2)
 {
@@ -762,6 +778,27 @@ switch_packet_rx_compare(
     rx_entry2 = (switch_packet_rx_entry_t *) key2;
 
     return (int32_t)rx_entry1->priority - (int32_t)rx_entry2->priority;
+}
+
+static bool
+switch_packet_rx_filter_match(switch_packet_rx_entry_t *rx_entry1,
+                              switch_packet_rx_entry_t *rx_entry2)
+{
+    // entry1 is the one stored in the filter list
+    // entry2 represents incoming packet, therefore all the valid
+    // bits and masks are used from entry1
+    if ((!rx_entry1->port_valid || rx_entry1->port == rx_entry2->port) &&
+        (!rx_entry1->ifindex_valid || rx_entry1->ifindex == rx_entry2->ifindex) &&
+        (!rx_entry1->bd_valid || rx_entry1->bd == rx_entry2->bd) &&
+        (!rx_entry1->reason_code_valid || 
+         (rx_entry1->reason_code & rx_entry1->reason_code_mask) ==
+         (rx_entry2->reason_code & rx_entry1->reason_code_mask))) {
+        // priority is not be compared so matching entry can be found
+        // use reason_code mask from entry1
+        return TRUE;
+    }
+    return FALSE;
+
 }
 
 switch_status_t
@@ -841,10 +878,11 @@ switch_api_packet_net_filter_rx_create(
 
     rx_entry.bd = handle_to_id(bd_handle);
     rx_entry.ifindex = ifindex;
-    rx_entry.port = handle_to_id(rx_key->port_handle);
     rx_entry.port_valid = rx_key->port_valid;
-    rx_entry.reason_code = rx_key->reason_code;
+    rx_entry.port = handle_to_id(rx_key->port_handle);
     rx_entry.reason_code_valid = rx_key->reason_code_valid;
+    rx_entry.reason_code = rx_key->reason_code;
+    rx_entry.reason_code_mask = rx_key->reason_code_mask;
     rx_entry.priority = rx_key->priority;
 
     rx_info = switch_malloc(sizeof(switch_packet_rx_info_t), 0x1);
@@ -867,7 +905,7 @@ switch_api_packet_net_filter_rx_create(
      * tommy does not have a way to compare and insert the elements
      */
     tommy_list_insert_head(&packet_rx_filter_list, &(rx_info->node), rx_info);
-    tommy_list_sort(&packet_rx_filter_list, switch_packet_rx_compare);
+    tommy_list_sort(&packet_rx_filter_list, switch_packet_rx_filter_priority_compare);
     return status;
 }
 
@@ -879,8 +917,8 @@ switch_api_packet_net_filter_rx_delete(
     switch_lag_info_t                 *lag_info = NULL;
     switch_port_info_t                *port_info = NULL;
     switch_packet_rx_entry_t          *tmp_rx_entry = NULL;
+    switch_packet_rx_entry_t           rx_entry;
     switch_packet_rx_info_t           *tmp_rx_info = NULL;
-    switch_packet_rx_info_t           *rx_info = NULL;
     switch_handle_type_t               handle_type = 0;
     switch_interface_info_t           *intf_info = NULL;
     switch_handle_t                    bd_handle = 0;
@@ -895,53 +933,61 @@ switch_api_packet_net_filter_rx_delete(
         return SWITCH_STATUS_INVALID_PARAMETER;
     }
 
-    handle_type = switch_handle_get_type(rx_key->port_lag_handle);
-    if (handle_type == SWITCH_HANDLE_TYPE_LAG) {
-        lag_info = switch_api_lag_get_internal(rx_key->port_lag_handle);
-        if (!lag_info) {
-            SWITCH_API_ERROR("invalid lag handle");
-            return SWITCH_STATUS_INVALID_HANDLE;
+    memset(&rx_entry, 0, sizeof(switch_packet_rx_entry_t));
+
+    if (rx_key->port_lag_valid && rx_key->port_lag_handle) {
+        handle_type = switch_handle_get_type(rx_key->port_lag_handle);
+        if (handle_type == SWITCH_HANDLE_TYPE_LAG) {
+            lag_info = switch_api_lag_get_internal(rx_key->port_lag_handle);
+            if (!lag_info) {
+                SWITCH_API_ERROR("invalid lag handle");
+                return SWITCH_STATUS_INVALID_HANDLE;
+            }
+            rx_entry.ifindex = lag_info->ifindex;
+        } else {
+            port_info = switch_api_port_get_internal(rx_key->port_lag_handle);
+            if (!port_info) {
+                SWITCH_API_ERROR("invalid port handle");
+                return SWITCH_STATUS_INVALID_HANDLE;
+            }
+            rx_entry.ifindex = port_info->ifindex;
         }
-        ifindex = lag_info->ifindex;
-    } else {
-        port_info = switch_api_port_get_internal(rx_key->port_lag_handle);
-        if (!port_info) {
-            SWITCH_API_ERROR("invalid port handle");
-            return SWITCH_STATUS_INVALID_HANDLE;
-        }
-        ifindex = port_info->ifindex;
     }
 
-    bd_handle = rx_key->handle;
-    handle_type = switch_handle_get_type(rx_key->handle);
-    if (handle_type == SWITCH_HANDLE_TYPE_INTERFACE) {
-        intf_info = switch_api_interface_get(rx_key->handle);
-        if (!intf_info) {
-            SWITCH_API_ERROR("intf_handle %lx is invalid", rx_key->handle);
+    if (rx_key->handle_valid) {
+        bd_handle = rx_key->handle;
+        handle_type = switch_handle_get_type(rx_key->handle);
+        if (handle_type == SWITCH_HANDLE_TYPE_INTERFACE) {
+            intf_info = switch_api_interface_get(rx_key->handle);
+            if (!intf_info) {
+                SWITCH_API_ERROR("intf_handle %lx is invalid", rx_key->handle);
+                return SWITCH_STATUS_INVALID_HANDLE;
+            }
+            if (!SWITCH_INTF_IS_PORT_L3(intf_info)) {
+                SWITCH_API_ERROR("intf_handle %lx is not l3", rx_key->handle);
+                return SWITCH_STATUS_INVALID_HANDLE;
+            }
+            bd_handle = intf_info->bd_handle;
+        }
+        bd_info = switch_bd_get(bd_handle);
+        if (!bd_info) {
+            SWITCH_API_ERROR("bd derivation failed %lx", rx_key->handle);
             return SWITCH_STATUS_INVALID_HANDLE;
         }
-        if (!SWITCH_INTF_IS_PORT_L3(intf_info)) {
-            SWITCH_API_ERROR("intf_handle %lx is not l3", rx_key->handle);
-            return SWITCH_STATUS_INVALID_HANDLE;
-        }
-        bd_handle = intf_info->bd_handle;
+        rx_entry.bd = handle_to_id(bd_handle);
     }
 
-    bd_info = switch_bd_get(bd_handle);
-    if (!bd_info) {
-        SWITCH_API_ERROR("bd derivation failed %lx", rx_key->handle);
-        return SWITCH_STATUS_INVALID_HANDLE;
+    if (rx_entry.port_valid) {
+        rx_entry.port == handle_to_id(rx_key->port_handle);
     }
+    rx_entry.bd_valid = rx_key->handle_valid;
+    rx_entry.reason_code = rx_key->reason_code;
 
     node = tommy_list_head(&packet_rx_filter_list);
     while (node) {
         tmp_rx_info = (switch_packet_rx_info_t *) node->data;
         tmp_rx_entry = &tmp_rx_info->rx_entry;
-        if (tmp_rx_entry->bd == handle_to_id(bd_handle) &&
-            tmp_rx_entry->ifindex == ifindex &&
-            tmp_rx_entry->port == handle_to_id(rx_key->port_handle) &&
-            tmp_rx_entry->reason_code == rx_key->reason_code &&
-            tmp_rx_entry->priority == rx_key->priority) {
+        if (switch_packet_rx_filter_match(tmp_rx_entry, &rx_entry)) {
             node_found = TRUE;
             break;
         }
@@ -955,7 +1001,7 @@ switch_api_packet_net_filter_rx_delete(
 
     tommy_list_remove_existing(&packet_rx_filter_list, node);
 
-    switch_free(rx_info);
+    switch_free(tmp_rx_info);
     return status;
 }
 
@@ -976,13 +1022,7 @@ switch_packet_rx_info_get(
         tmp_rx_info = (switch_packet_rx_info_t *) node->data;
         tmp_rx_entry = &tmp_rx_info->rx_entry;
 
-        if ((!tmp_rx_entry->port_valid || tmp_rx_entry->port == rx_entry->port) &&
-            (!tmp_rx_entry->ifindex_valid || tmp_rx_entry->ifindex == rx_entry->ifindex) &&
-            (!tmp_rx_entry->bd_valid || tmp_rx_entry->bd == rx_entry->bd) &&
-            (!tmp_rx_entry->reason_code_valid || 
-             (tmp_rx_entry->reason_code & tmp_rx_entry->reason_code_mask) ==
-             (rx_entry->reason_code & tmp_rx_entry->reason_code_mask))) {
-
+        if (switch_packet_rx_filter_match(tmp_rx_entry, rx_entry)) {
             *rx_info = tmp_rx_info;
             status = SWITCH_STATUS_SUCCESS;
             break;
@@ -1009,9 +1049,7 @@ switch_packet_tx_info_get(
     while (node) {
         tmp_tx_info = (switch_packet_tx_info_t *) node->data;
         tmp_tx_entry = &tmp_tx_info->tx_entry;
-        if ((!tmp_tx_entry->fd_valid || tmp_tx_entry->intf_fd == tx_entry->intf_fd) &&
-            (!tmp_tx_entry->vlan_valid || tmp_tx_entry->vlan_id == tx_entry->vlan_id)) {
-
+        if (switch_packet_tx_filter_match(tmp_tx_entry, tx_entry)) {
             *tx_info = tmp_tx_info;
             status = SWITCH_STATUS_SUCCESS;
             break;
