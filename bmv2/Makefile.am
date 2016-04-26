@@ -150,6 +150,10 @@ AM_CPPFLAGS += -I$(builddir)/p4_pd/
 AM_CPPFLAGS += -I$(builddir)/pd_thrift_gen/gen-cpp/
 AM_CPPFLAGS += -DHOST_BYTE_ORDER_CALLER
 
+if P4THRIFT
+    AM_CPPFLAGS += -DP4THRIFT
+endif
+
 AM_CXXFLAGS = --std=c++11
 
 CLEANFILES = $(BUILT_SOURCES) \
