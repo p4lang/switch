@@ -19,7 +19,7 @@ limitations under the License.
 #include "switchapi/switch_port.h"
 #include "switch_lag_int.h"
 #include "switch_pd.h"
-#include "switch_log.h"
+#include "switch_log_int.h"
 #include <string.h>
 
 #ifdef __cplusplus

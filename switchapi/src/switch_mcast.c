@@ -25,7 +25,7 @@ limitations under the License.
 #include "switch_lag_int.h"
 #include "switch_tunnel_int.h"
 #include "switch_pd.h"
-#include "switch_log.h"
+#include "switch_log_int.h"
 #include <string.h>
 
 #define SWITCH_MGID_TABLE_SIZE 16 * 1024

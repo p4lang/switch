@@ -21,7 +21,7 @@ limitations under the License.
 #include "switchapi/switch_nhop.h"
 #include "switchapi/switch_mirror.h"
 #include "switch_pd.h"
-#include "switch_log.h"
+#include "switch_log_int.h"
 #include "switch_hostif_int.h"
 #include "switch_packet_int.h"
 #include "switch_nhop_int.h"
@@ -741,6 +741,8 @@ switch_api_hostif_rx_packet_from_hw(switch_packet_header_t *packet_header, char 
 
     JLG(temp, switch_hostif_rcode_array, cpu_header->reason_code);
     if (!temp) {
+        SWITCH_API_ERROR("rx_packet w/ un-handled reason_code 0x%x\n",
+                            cpu_header->reason_code);
         return SWITCH_STATUS_ITEM_NOT_FOUND;
     }
 
@@ -749,13 +751,15 @@ switch_api_hostif_rx_packet_from_hw(switch_packet_header_t *packet_header, char 
                      cpu_header->ingress_ifindex);
 
     rcode_info = (switch_hostif_rcode_info_t *) (*(unsigned long *)temp);
-    
+
+#if 0 /* seems un-necessary check and failing for vlan 0 - checking it */
     bd_handle = id_to_handle(SWITCH_HANDLE_TYPE_BD, cpu_header->ingress_bd);
     bd_info = switch_bd_get(bd_handle);
     if (!bd_info) {
         SWITCH_API_ERROR("received packet on invalid bd %x", cpu_header->ingress_bd);
         return SWITCH_STATUS_INVALID_HANDLE;
     }
+#endif
 
     if ((rcode_info->rcode_api_info.reason_code == SWITCH_HOSTIF_REASON_CODE_NONE) ||
         (rcode_info->rcode_api_info.channel == SWITCH_HOSTIF_CHANNEL_CB)) {

@@ -18,7 +18,7 @@ limitations under the License.
 #include "switchapi/switch_status.h"
 #include "switch_meter_int.h"
 #include "switch_pd.h"
-#include "switch_log.h"
+#include "switch_log_int.h"
 
 static void *switch_meter_array = NULL;
 

@@ -26,7 +26,7 @@ limitations under the License.
 #include "switch_neighbor_int.h"
 #include "switch_lag_int.h"
 #include "switch_stp_int.h"
-#include "switch_log.h"
+#include "switch_log_int.h"
 #include "switch_port_int.h"
 #include "switch_tunnel_int.h"
 #include "switch_acl_int.h"
@@ -52,6 +52,7 @@ static pthread_t stats_thread;
 switch_status_t
 switch_api_lib_init(switch_device_t device)
 {
+    switch_log_init();
     SWITCH_API_TRACE("Initializing switch api!!");
     switch_pd_client_init(device);
     switch_router_mac_init(device);

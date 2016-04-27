@@ -20,7 +20,7 @@ limitations under the License.
 #include "switch_mirror_int.h"
 #include "switch_nhop_int.h"
 #include "switch_pd.h"
-#include "switch_log.h"
+#include "switch_log_int.h"
 #include "switch_capability_int.h"
 
 static void *switch_mirror_array = NULL;
