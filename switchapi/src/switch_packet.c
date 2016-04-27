@@ -35,7 +35,7 @@ limitations under the License.
 #include "switch_vlan_int.h"
 #include "switch_port_int.h"
 #include "switch_lag_int.h"
-#include "switch_log.h"
+#include "switch_log_int.h"
 #include <switchapi/switch_status.h>
 #include <switchapi/switch_capability.h>
 #include "switchapi/switch_utils.h"
@@ -214,6 +214,8 @@ switch_packet_rx_to_host(
         return;
     }
 
+    SWITCH_API_INFO("Rx packet reason_code 0x%x - send to fd %d, action %d\n",
+                    rx_entry.reason_code, rx_info->intf_fd, rx_info->vlan_action);
     if (rx_info->vlan_action == SWITCH_PACKET_VLAN_ADD) {
         eth_header = (switch_ethernet_header_t *) packet;
         if (ntohs(eth_header->ether_type) != SWITCH_ETHERTYPE_DOT1Q && rx_info->vlan_id) {
@@ -431,8 +433,8 @@ switch_packet_hostif_create(switch_device_t device, switch_hostif_info_t *hostif
     int                               sock_flags = 0;
     char                             *intf_name = NULL;
     void                             *temp = NULL;
-    switch_api_capability_t api_switch_info;
-    switch_mac_addr_t mac;
+    switch_api_capability_t           api_switch_info;
+    switch_mac_addr_t                 mac;
 
     switch_api_capability_get(device, &api_switch_info);
 
@@ -704,6 +706,10 @@ switch_api_packet_net_filter_tx_create(
     tx_info->bypass_flags = tx_action->bypass_flags;
     tx_info->port = handle_to_id(tx_action->port_handle);
 
+    SWITCH_API_INFO("net_filter_tx_create: hostif 0x%x, vlan_id = %d, fd 0x%x, bypass 0x%x\n",
+                tx_key->hostif_handle, tx_key->vlan_valid ? tx_key->vlan_id : 0xFFF,
+                tx_entry.intf_fd, tx_info->bypass_flags);
+
     tommy_list_insert_head(&packet_tx_filter_list, &(tx_info->node), tx_info);
     tommy_list_sort(&packet_tx_filter_list, switch_packet_tx_filter_priority_compare);
     return status;
@@ -900,6 +906,15 @@ switch_api_packet_net_filter_rx_create(
     rx_info->vlan_action = rx_action->vlan_action;
     rx_info->intf_fd = hostif_info->intf_fd;
 
+    SWITCH_API_INFO("net_filter_rx_create: port 0x%x, port_lag_hdl = 0x%x, "
+                    "if_bd_hdl 0x%x, rcode 0x%x, rcode_mask 0x%x "
+                    "vlan_id %d, fd %d, action %d\n",
+                    rx_key->port_valid ? rx_key->port_handle : 0,
+                    rx_key->port_lag_valid ? rx_key->port_lag_handle : 0,
+                    rx_key->handle_valid ? rx_key->handle : 0,
+                    rx_key->reason_code_valid ? rx_key->reason_code : 0,
+                    rx_key->reason_code_mask,
+                    rx_info->vlan_id, rx_info->vlan_action, rx_info->intf_fd);
     /*
      * Adding an element to the list results in sorting the list. 
      * tommy does not have a way to compare and insert the elements

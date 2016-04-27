@@ -24,7 +24,7 @@ limitations under the License.
 #include "switch_nhop_int.h"
 #include "switch_l3_int.h"
 #include "switch_hostif_int.h"
-#include "switch_log.h"
+#include "switch_log_int.h"
 #include "arpa/inet.h"
 #include <string.h>
 #include <assert.h>

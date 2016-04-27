@@ -25,7 +25,7 @@ limitations under the License.
 #include "switch_neighbor_int.h"
 #include "switch_hostif_int.h"
 #include "switch_pd.h"
-#include "switch_log.h"
+#include "switch_log_int.h"
 
 #ifdef __cplusplus
 extern "C" {
