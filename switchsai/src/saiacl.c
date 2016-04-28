@@ -41,10 +41,10 @@ static sai_acl_table_match_qualifiers ip_acl = {
         -1, -1,   // v6
         -1, -1, // MAC
         SWITCH_ACL_IP_FIELD_IPV4_SRC, SWITCH_ACL_IP_FIELD_IPV4_DEST, // v4
-        -2, -2, -2, -1, // ports
+        -2, -2, -2, -1, -1, // ports
         -1, -1, -1, -1, -1, -1, // VLAN outer and inner
         SWITCH_ACL_IP_FIELD_L4_SOURCE_PORT, SWITCH_ACL_IP_FIELD_L4_DEST_PORT, // l4 ports
-        -1,
+        -1, // ethertype
         SWITCH_ACL_IP_FIELD_IP_PROTO,
         SWITCH_ACL_IP_FIELD_DSCP,
         -1, // ecn
@@ -62,10 +62,10 @@ static sai_acl_table_match_qualifiers ipv6_acl = {
         SWITCH_ACL_IPV6_FIELD_IPV6_SRC, SWITCH_ACL_IPV6_FIELD_IPV6_DEST,
         -1, -1, // MAC
         -1, -1, // v4
-        -2, -2, -1, -1, // ports
+        -2, -2, -1, -1, -1, // ports
         -1, -1, -1, -1, -1, -1, // VLAN outer and inner
         SWITCH_ACL_IPV6_FIELD_L4_SOURCE_PORT, SWITCH_ACL_IPV6_FIELD_L4_DEST_PORT, // l4 ports
-        -1,
+        -1, // ethertype
         SWITCH_ACL_IPV6_FIELD_IP_PROTO,
         -1, // dscp
         -1, // ecn
@@ -83,7 +83,7 @@ static sai_acl_table_match_qualifiers mac_acl = {
         -1, -1,   // v6
         SWITCH_ACL_MAC_FIELD_SOURCE_MAC, SWITCH_ACL_MAC_FIELD_DEST_MAC, // MAC
         -1, -1, // v4
-        -2, -2, -1, -1, // ports
+        -2, -2, -1, -1, -1, // ports
         -1, SWITCH_ACL_MAC_FIELD_VLAN_PRI, SWITCH_ACL_MAC_FIELD_VLAN_CFI, -1, -1, -1, // VLAN outer and inner
         -1, -1, // l4 ports
         SWITCH_ACL_MAC_FIELD_ETH_TYPE,
@@ -104,7 +104,7 @@ static sai_acl_table_match_qualifiers egress_acl = {
         -1, -1, // v6
         -1, -1, // MAC
         -1, -1, // v4
-        -2, -2, -1, SWITCH_ACL_EGR_DEST_PORT, // ports
+        -2, -2, -1, SWITCH_ACL_EGR_DEST_PORT, -1 // ports
         -1, -1, -1, -1, -1, -1, // VLAN outer and inner
         -1, -1, // l4 ports
         -1,
