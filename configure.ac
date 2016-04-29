@@ -122,10 +122,10 @@ AS_IF([test "$want_bmv2" = yes], [
     pdfixed_path=`AS_DIRNAME(["$pdfixed_path"])`
     AC_SUBST([BM_PDFIXED_PATH], ["$pdfixed_path"])
 
-    AC_CHECK_HEADER([bm_sim/Standard.h], [],
+    AC_CHECK_HEADER([bm/Standard.h], [],
       [AC_MSG_ERROR([bmv2 Thrift headers not found])])
 
-    ab_FIND_HEADER_PATH(["bm_sim/Standard.h"], [bm_thrift_path])
+    ab_FIND_HEADER_PATH(["bm/Standard.h"], [bm_thrift_path])
     AC_SUBST([BM_THRIFT_PATH], ["$bm_thrift_path"])
 
     # A little extra: check for simple_switch target; of course it is not
