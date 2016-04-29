@@ -21,7 +21,7 @@ limitations under the License.
 #include "switch_handle.h"
 #include "switch_tunnel.h"
 #ifdef BMV2
-#include "pd/pd_mirroring.h"
+#include <bmpd/switch/pd/pd_mirroring.h>
 #else
 #include "p4_sim/mirroring.h"
 #endif

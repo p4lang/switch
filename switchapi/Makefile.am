@@ -4,11 +4,10 @@ SUBDIRS = third-party/tommyds
 
 # using AM_CPPFLAGS so it applies to all libraries
 
-AM_CPPFLAGS = -I$(srcdir)/inc
+AM_CPPFLAGS += -I$(srcdir)/inc
 AM_CPPFLAGS += -I$(builddir)/src/gen-cpp
 AM_CPPFLAGS += -I$(srcdir)/third-party/tommyds/include
 AM_CPPFLAGS += -I$(top_srcdir)/p4src/includes
-AM_CPPFLAGS += -I$(includedir)
 
 if P4THRIFT
     AM_CPPFLAGS += -DP4THRIFT
@@ -144,8 +143,8 @@ lib_LTLIBRARIES =
 if WITH_BMV2
 libbmswitchapi_la_CPPFLAGS = $(AM_CPPFLAGS)
 libbmswitchapi_la_CPPFLAGS += -DBMV2
-libbmswitchapi_la_CPPFLAGS += -I$(top_builddir)/bmv2/p4_pd
-libbmswitchapi_la_CPPFLAGS += -I$(BM_PDFIXED_PATH)/
+libbmswitchapi_la_CPPFLAGS += -I$(top_builddir)/p4-build
+libbmswitchapi_la_CPPFLAGS += -isystem$(includedir)
 noinst_LTLIBRARIES += libbmswitchapi.la
 libbmswitchapi_la_SOURCES = $(switchapi_sources)
 libbmswitchapi_la_LIBADD = third-party/tommyds/libtommyds.la

@@ -105,29 +105,6 @@ adl_RECURSIVE_EVAL([$pythondir], [PYTHON_DIR])
 adl_RECURSIVE_EVAL([$libdir], [LIB_DIR])
 
 AS_IF([test "$want_bmv2" = yes], [
-    # enforce -std=c++11
-    AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
-
-    AC_PATH_PROG([P4C_BM], [p4c-bmv2], [], [$PATH$PATH_SEPARATOR$BIN_DIR])
-    AS_IF([test x"$P4C_BM" = x], AC_MSG_ERROR([cannot find p4c-bmv2 compiler]))
-
-    CPPFLAGS="$CPPFLAGS -I$INCLUDE_DIR"
-    AC_CHECK_HEADER([p4c_bm/pdfixed/pd/pd_common.h], [],
-      [AC_MSG_ERROR([bmv2 pdfixed headers not found])])
-
-    # TODO(antonin): this is quite nasty, and in the long term I should probably
-    # adjust the installation path of the p4c_bm products instead, but I don't
-    # want to break too many things at once
-    ab_FIND_HEADER_PATH(["p4c_bm/pdfixed/thrift/res.thrift"], [pdfixed_path])
-    pdfixed_path=`AS_DIRNAME(["$pdfixed_path"])`
-    AC_SUBST([BM_PDFIXED_PATH], ["$pdfixed_path"])
-
-    AC_CHECK_HEADER([bm_sim/Standard.h], [],
-      [AC_MSG_ERROR([bmv2 Thrift headers not found])])
-
-    ab_FIND_HEADER_PATH(["bm_sim/Standard.h"], [bm_thrift_path])
-    AC_SUBST([BM_THRIFT_PATH], ["$bm_thrift_path"])
-
     # A little extra: check for simple_switch target; of course it is not
     # critical if we cannot find it
     AC_PATH_PROG([BM_SIMPLE_SWITCH], [simple_switch], [],
@@ -197,7 +174,6 @@ AC_TYPE_UINT32_T
 AC_TYPE_UINT64_T
 AC_TYPE_UINT8_T
 
-MY_CPPFLAGS="$MY_CPPFLAGS -I$INCLUDE_DIR"
 AC_SUBST([AM_CPPFLAGS], ["$MY_CPPFLAGS"])
 AC_SUBST([AM_LDFLAGS], ["-L$LIB_DIR"])
 AC_SUBST([MY_PYTHONPATH], ["$PYTHON_DIR"])
@@ -215,8 +191,8 @@ AC_CONFIG_FILES([switchapi/third-party/tommyds/Makefile
                  switchsai/Makefile
                  switchlink/third-party/xxhash/Makefile
                  switchlink/Makefile
-                 Makefile
-                 bmv2/Makefile])
+                 bmv2/Makefile
+                 Makefile])
 
 AS_IF([test "$want_bmv2" = yes], [
   AC_CONFIG_FILES([bmv2/run_bm.sh], [chmod +x bmv2/run_bm.sh])
@@ -225,6 +201,11 @@ AS_IF([test "$want_bmv2" = yes], [
 ])
 
 AC_CONFIG_FILES([tests/run_tests.py])
+
+export P4_NAME=switch
+export P4_PATH=$ac_abs_confdir/p4src/switch.p4
+export P4_PREFIX=dc
+AC_CONFIG_SUBDIRS([p4-build])
 
 AC_OUTPUT
 

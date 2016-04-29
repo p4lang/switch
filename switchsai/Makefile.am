@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS} -I m4
 
-AM_CPPFLAGS = -I$(srcdir)/submodules/SAI/inc
+AM_CPPFLAGS += -I$(srcdir)/submodules/SAI/inc
 AM_CPPFLAGS += -I$(top_srcdir)/switchapi/inc
 AM_CPPFLAGS += -I$(builddir)/src/gen-cpp
 AM_CPPFLAGS += -I$(top_srcdir)/switchapi/third-party/tommyds/include
@@ -102,8 +102,8 @@ lib_LTLIBRARIES =
 if WITH_BMV2
 libbmswitchsai_la_CPPFLAGS = $(AM_CPPFLAGS)
 libbmswitchsai_la_CPPFLAGS += -DBMV2
-libbmswitchsai_la_CPPFLAGS += -I$(top_builddir)/bmv2/p4_pd
-libbmswitchsai_la_CPPFLAGS += -I$(BM_PDFIXED_PATH)
+libbmswitchsai_la_CPPFLAGS += -I$(top_builddir)/p4-build/
+libbmswitchsai_la_CPPFLAGS += -isystem$(includedir)
 noinst_LTLIBRARIES += libbmswitchsai.la
 libbmswitchsai_la_SOURCES = $(switchsai_sources)
 endif

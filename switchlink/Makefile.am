@@ -2,7 +2,7 @@ ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS} -I m4
 
 SUBDIRS = third-party/xxhash
 
-AM_CPPFLAGS = -I$(srcdir)/third-party/xxhash/include
+AM_CPPFLAGS += -I$(srcdir)/third-party/xxhash/include
 AM_CPPFLAGS += -I$(top_srcdir)/switchsai/submodules/SAI/inc
 AM_CPPFLAGS += -I$(top_srcdir)/switchapi/third-party/tommyds/include
 # TODO: could this be done in configure?
