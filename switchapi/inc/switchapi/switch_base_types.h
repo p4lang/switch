@@ -24,8 +24,8 @@ limitations under the License.
 #include "drop_reasons.h"
 #include "p4features.h"
 #ifdef BMV2
-#include "pd/pd.h"
-#include "pd/pd_pre.h"
+#include <bmpd/switch/pd/pd.h>
+#include <bm/pdfixed/pd_pre.h>
 #else
 #include "p4_sim/pd.h"
 #include "p4_sim/pd_pre.h"

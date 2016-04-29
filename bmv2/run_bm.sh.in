@@ -8,7 +8,7 @@ if [ x@BM_SIMPLE_SWITCH@ = x ]; then
     echo "have you installed bmv2 since? if yes, you need to run configure again"
     exit 1
 fi
-JSON_FILE=@abs_builddir@/switch.json
+JSON_FILE=@abs_top_builddir@/p4-build/bmpd/switch.json
 if [ ! -f $JSON_FILE ]; then
     echo "switch.json not found; did you run 'make'?"
     exit 1

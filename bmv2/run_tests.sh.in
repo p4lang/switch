@@ -3,11 +3,8 @@ if [[ $EUID -ne 0 ]]; then
     echo "This script should be run using sudo or as the root user"
     exit 1
 fi
-PD_THRIFT_PY=@abs_builddir@/pd_thrift_gen/gen-py/
-PDFIXED_THRIFT_PY=$(PYTHONPATH=$PYTHONPATH:@MY_PYTHONPATH@ @P4C_BM@ --pkgdatadir @abs_srcdir@/dummy.p4)
-PDFIXED_THRIFT_PY=$PDFIXED_THRIFT_PY/pdfixed/gen-py/
-echo "Using pdfixed Thrift bindings in $PDFIXED_THRIFT_PY"
+PD_THRIFT_PY=@abs_top_builddir@/p4-build/bmv2/pd_thrift_gen/gen-py
 @PYTHON@ @abs_top_builddir@/tests/run_tests.py \
     --pd-thrift $PD_THRIFT_PY \
-    --pd-thrift $PDFIXED_THRIFT_PY \
+    --pd-thrift @MY_PYTHONPATH@/bm/pdfixed \
     $*

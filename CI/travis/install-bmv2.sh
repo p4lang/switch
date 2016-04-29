@@ -6,7 +6,7 @@ bash build/travis/install-nanomsg.sh
 sudo ldconfig
 bash build/travis/install-nnpy.sh
 ./autogen.sh
-./configure 'CXXFLAGS=-O0'
+./configure 'CXXFLAGS=-O0' --with-pdfixed
 make -j2 && sudo make install
 cd ..
 rm -rf bmv2_tmp
