@@ -304,7 +304,7 @@ sai_switch_ip_addr_to_sai_ip_addr(
         _Out_ sai_ip_address_t *sai_ip_addr,
         const _In_ switch_ip_addr_t *ip_addr) {
     if (ip_addr->type == SWITCH_API_IP_ADDR_V4) {
-        sai_ip_addr->addr_family == SAI_IP_ADDR_FAMILY_IPV4;
+        sai_ip_addr->addr_family = SAI_IP_ADDR_FAMILY_IPV4;
         sai_ip_addr->addr.ip4 = htonl(ip_addr->ip.v4addr);
     } else if (ip_addr->type == SWITCH_API_IP_ADDR_V6) {
         sai_ip_addr->addr_family = SAI_IP_ADDR_FAMILY_IPV6;

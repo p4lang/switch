@@ -4,7 +4,8 @@
 
 #include "saiinternal.h"
 
-static sai_api_t api_id = SAI_API_UDF;
+// Unused for now
+/* static sai_api_t api_id = SAI_API_UDF; */
 
 sai_status_t sai_create_udf(
     _Out_ sai_object_id_t* udf_id,

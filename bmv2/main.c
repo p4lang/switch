@@ -32,8 +32,6 @@ extern int bmv2_model_init();
 static void
 parse_options(int argc, char **argv)
 {
-  struct entry *np = NULL;
-
   while (1) {
     int option_index = 0;
     /* Options without short equivalents */

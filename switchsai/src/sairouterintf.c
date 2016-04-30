@@ -54,14 +54,14 @@ sai_to_switch_urpf_mode(uint8_t sai_urpf_mode) {
 sai_status_t sai_create_router_interface(
         _Out_ sai_object_id_t* rif_id,
         _In_ uint32_t attr_count,
-        _In_ sai_attribute_t *attr_list) {
+        _In_ const sai_attribute_t *attr_list) {
 
     SAI_LOG_ENTER();
 
     sai_status_t status = SAI_STATUS_SUCCESS;
     switch_api_interface_info_t intf_info;
     const sai_attribute_t *attribute;
-    sai_router_interface_type_t sai_intf_type;
+    sai_router_interface_type_t sai_intf_type = -1;
     uint32_t index = 0;
 
     if (!attr_list) {
@@ -276,7 +276,7 @@ sai_status_t sai_get_router_interface_attribute(
 
     int index;
     uint64_t value;
-    switch_status_t switch_status;
+    switch_status_t switch_status = -1;
     sai_attribute_t *attribute;
     for (index = 0; index < attr_count; index++) {
         attribute = &attr_list[index];

@@ -103,8 +103,8 @@ typedef struct switch_interface_info_ {
     (info->api_intf_info.type == SWITCH_API_INTERFACE_TUNNEL))
 
 #define SWITCH_INTF_IS_PORT_L2(info) \
-    (info->api_intf_info.type == SWITCH_API_INTERFACE_L2_VLAN_ACCESS) || \
-    (info->api_intf_info.type == SWITCH_API_INTERFACE_L2_VLAN_TRUNK)
+    ((info->api_intf_info.type == SWITCH_API_INTERFACE_L2_VLAN_ACCESS) || \
+    (info->api_intf_info.type == SWITCH_API_INTERFACE_L2_VLAN_TRUNK))
 
 #define SWITCH_INTF_NATIVE_VLAN_HANDLE(info) \
     info->api_intf_info.native_vlan
