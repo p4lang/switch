@@ -3,7 +3,8 @@
 
 #include "saiinternal.h"
 
-static sai_api_t api_id = SAI_API_HASH;
+// Unused for now
+/* static sai_api_t api_id = SAI_API_HASH; */
 
 sai_status_t sai_create_hash(
     _Out_ sai_object_id_t* hash_id,

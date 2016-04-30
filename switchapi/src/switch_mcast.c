@@ -105,84 +105,86 @@ switch_mcast_rid_hash_cmp(const void *key1, const void *key2)
     return memcmp(key1, key2, SWITCH_MCAST_RID_HASH_KEY_SIZE);
 }
 
-static switch_mcast_rid_t *
-switch_mcast_rid_insert_hash(switch_mcast_rid_key_t *rid_key)
-{
-    switch_mcast_rid_t                *rid_info = NULL;
-    unsigned char                      key[SWITCH_MCAST_RID_HASH_KEY_SIZE];
-    uint32_t                           len = 0;
-    uint32_t                           hash = 0;
+// These functions are unused for now
 
-    switch_mcast_rid_hash_key_init(key, rid_key, &len, &hash);
-    rid_info = switch_malloc(sizeof(switch_mcast_rid_t), 1);
-    if (!rid_info) {
-        return NULL;
-    }
-    memcpy(&rid_info->rid_key, rid_key, sizeof(switch_mcast_rid_key_t));
-    tommy_hashtable_insert(&switch_rid_hash_table,
-                            &(rid_info->node),
-                            rid_info, hash);
-    return rid_info;
-}
+/* static switch_mcast_rid_t * */
+/* switch_mcast_rid_insert_hash(switch_mcast_rid_key_t *rid_key) */
+/* { */
+/*     switch_mcast_rid_t                *rid_info = NULL; */
+/*     unsigned char                      key[SWITCH_MCAST_RID_HASH_KEY_SIZE]; */
+/*     uint32_t                           len = 0; */
+/*     uint32_t                           hash = 0; */
 
-static switch_status_t
-switch_mcast_rid_delete_hash(switch_mcast_rid_key_t *rid_key)
-{
-    switch_mcast_rid_t                *rid_info = NULL;
-    unsigned char                      key[SWITCH_MCAST_RID_HASH_KEY_SIZE];
-    uint32_t                           len = 0;
-    uint32_t                           hash = 0;
+/*     switch_mcast_rid_hash_key_init(key, rid_key, &len, &hash); */
+/*     rid_info = switch_malloc(sizeof(switch_mcast_rid_t), 1); */
+/*     if (!rid_info) { */
+/*         return NULL; */
+/*     } */
+/*     memcpy(&rid_info->rid_key, rid_key, sizeof(switch_mcast_rid_key_t)); */
+/*     tommy_hashtable_insert(&switch_rid_hash_table, */
+/*                             &(rid_info->node), */
+/*                             rid_info, hash); */
+/*     return rid_info; */
+/* } */
 
-    switch_mcast_rid_hash_key_init(key, rid_key, &len, &hash);
-    rid_info = tommy_hashtable_remove(&switch_rid_hash_table,
-                                      switch_mcast_rid_hash_cmp,
-                                      key, hash);
-    if (!rid_info) {
-        return SWITCH_STATUS_ITEM_NOT_FOUND;
-    }
-    switch_free(rid_info);
-    return SWITCH_STATUS_SUCCESS;
-}
+/* static switch_status_t */
+/* switch_mcast_rid_delete_hash(switch_mcast_rid_key_t *rid_key) */
+/* { */
+/*     switch_mcast_rid_t                *rid_info = NULL; */
+/*     unsigned char                      key[SWITCH_MCAST_RID_HASH_KEY_SIZE]; */
+/*     uint32_t                           len = 0; */
+/*     uint32_t                           hash = 0; */
 
-static switch_mcast_rid_t *
-switch_mcast_rid_search_hash(switch_mcast_rid_key_t *rid_key, bool *inner_replica)
-{
-    switch_mcast_rid_t                *rid_info = NULL;
-    switch_bd_info_t                  *bd_info = NULL;
-    switch_interface_info_t           *intf_info = NULL;
-    unsigned char                      key[SWITCH_MCAST_RID_HASH_KEY_SIZE];
-    uint32_t                           len = 0;
-    uint32_t                           hash = 0;
+/*     switch_mcast_rid_hash_key_init(key, rid_key, &len, &hash); */
+/*     rid_info = tommy_hashtable_remove(&switch_rid_hash_table, */
+/*                                       switch_mcast_rid_hash_cmp, */
+/*                                       key, hash); */
+/*     if (!rid_info) { */
+/*         return SWITCH_STATUS_ITEM_NOT_FOUND; */
+/*     } */
+/*     switch_free(rid_info); */
+/*     return SWITCH_STATUS_SUCCESS; */
+/* } */
 
-    //TODO: Return appropriate error code during failure
-    intf_info = switch_api_interface_get(rid_key->intf_handle);
-    if (!intf_info) {
-        return NULL;
-    }
-    bd_info = switch_bd_get(rid_key->bd_handle);
-    if (!bd_info) {
-        return NULL;
-    }
+/* static switch_mcast_rid_t * */
+/* switch_mcast_rid_search_hash(switch_mcast_rid_key_t *rid_key, bool *inner_replica) */
+/* { */
+/*     switch_mcast_rid_t                *rid_info = NULL; */
+/*     switch_bd_info_t                  *bd_info = NULL; */
+/*     switch_interface_info_t           *intf_info = NULL; */
+/*     unsigned char                      key[SWITCH_MCAST_RID_HASH_KEY_SIZE]; */
+/*     uint32_t                           len = 0; */
+/*     uint32_t                           hash = 0; */
 
-    *inner_replica = TRUE;
-    if (SWITCH_INTF_TYPE(intf_info) == SWITCH_API_INTERFACE_TUNNEL) {
-        *inner_replica = FALSE;
-    }
+/*     //TODO: Return appropriate error code during failure */
+/*     intf_info = switch_api_interface_get(rid_key->intf_handle); */
+/*     if (!intf_info) { */
+/*         return NULL; */
+/*     } */
+/*     bd_info = switch_bd_get(rid_key->bd_handle); */
+/*     if (!bd_info) { */
+/*         return NULL; */
+/*     } */
 
-    if (SWITCH_LN_NETWORK_TYPE(bd_info) == SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_BASIC ||
-        SWITCH_LN_NETWORK_TYPE(bd_info) == SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_ENHANCED) {
-        if (SWITCH_INTF_TYPE(intf_info) == SWITCH_API_INTERFACE_L2_VLAN_ACCESS) {
-            rid_key->intf_handle = 0;
-        }
-    } else if (SWITCH_LN_NETWORK_TYPE(bd_info) == SWITCH_LOGICAL_NETWORK_TYPE_VLAN) {
-        rid_key->intf_handle = 0;
-    }
-    switch_mcast_rid_hash_key_init(key, rid_key, &len, &hash);
-    rid_info = tommy_hashtable_search(&switch_rid_hash_table,
-                                      switch_mcast_rid_hash_cmp,
-                                      key, hash);
-    return rid_info;
-}
+/*     *inner_replica = TRUE; */
+/*     if (SWITCH_INTF_TYPE(intf_info) == SWITCH_API_INTERFACE_TUNNEL) { */
+/*         *inner_replica = FALSE; */
+/*     } */
+
+/*     if (SWITCH_LN_NETWORK_TYPE(bd_info) == SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_BASIC || */
+/*         SWITCH_LN_NETWORK_TYPE(bd_info) == SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_ENHANCED) { */
+/*         if (SWITCH_INTF_TYPE(intf_info) == SWITCH_API_INTERFACE_L2_VLAN_ACCESS) { */
+/*             rid_key->intf_handle = 0; */
+/*         } */
+/*     } else if (SWITCH_LN_NETWORK_TYPE(bd_info) == SWITCH_LOGICAL_NETWORK_TYPE_VLAN) { */
+/*         rid_key->intf_handle = 0; */
+/*     } */
+/*     switch_mcast_rid_hash_key_init(key, rid_key, &len, &hash); */
+/*     rid_info = tommy_hashtable_search(&switch_rid_hash_table, */
+/*                                       switch_mcast_rid_hash_cmp, */
+/*                                       key, hash); */
+/*     return rid_info; */
+/* } */
 
 static inline void
 switch_mcast_group_hash_key_init(uchar *key, switch_mcast_group_key_t *group_key,

@@ -104,14 +104,17 @@ switch_l3_hash_key_decode(switch_l3_hash_t *hash_entry, switch_handle_t *vrf_han
     uint8_t len = 0;
 
     memset(ip_addr, 0, sizeof(switch_ip_addr_t));
-    *vrf_handle = id_to_handle(SWITCH_HANDLE_TYPE_VRF, *(unsigned int *)(&hash_entry->key[len]));
+    unsigned int key_tmp;
+    memcpy(&key_tmp, &hash_entry->key[len], sizeof(key_tmp));
+    *vrf_handle = id_to_handle(SWITCH_HANDLE_TYPE_VRF, key_tmp);
     len += 4;
 
     ip_addr->type = hash_entry->key[len];
     len += 1;
 
     if (ip_addr->type == SWITCH_API_IP_ADDR_V4) {
-        ip_addr->ip.v4addr = *(unsigned int *)(&hash_entry->key[len]);
+        memcpy(&key_tmp, &hash_entry->key[len], sizeof(key_tmp));
+        ip_addr->ip.v4addr = key_tmp;
         len += 4;
     } else {
         memcpy(ip_addr->ip.v6addr, &hash_entry->key[len], 16);

@@ -382,6 +382,11 @@ switch_vlan_counters_to_sai_vlan_counters(
             case SAI_VLAN_STAT_OUT_QLEN:
                 counters[index] = 0;
                 break;
+            // TODO(unknow)
+            case SAI_VLAN_STAT_IN_PACKETS:
+            case SAI_VLAN_STAT_OUT_PACKETS:
+                SAI_LOG_WARN("Unsupported attribute");
+                break;
         }
     }
     return SAI_STATUS_SUCCESS;

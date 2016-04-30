@@ -129,8 +129,9 @@ sai_status_t sai_get_port_attribute(
     }
 
     // attribute value holders
-    int enable;
-    switch_port_speed_t speed;
+    // Unused for now
+    /* int enable; */
+    /* switch_port_speed_t speed; */
 
     int index;
     sai_attribute_t *attribute;

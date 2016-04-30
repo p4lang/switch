@@ -68,8 +68,8 @@ sai_status_t sai_create_next_hop_group_entry(
 
     sai_status_t status = SAI_STATUS_SUCCESS;
     sai_attribute_t attribute;
-    sai_object_id_t *nhop_list;
-    sai_next_hop_group_type_t nhgroup_type;
+    sai_object_id_t *nhop_list = NULL;
+    sai_next_hop_group_type_t nhgroup_type = -1;
     uint32_t nhop_count = 0;
     uint32_t index = 0;
 

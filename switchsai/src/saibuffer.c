@@ -2,7 +2,8 @@
 #include <saistatus.h>
 #include "saiinternal.h"
 
-static sai_api_t api_id = SAI_API_BUFFERS;
+// Unused for now
+/* static sai_api_t api_id = SAI_API_BUFFERS; */
 
 sai_status_t sai_create_buffer_pool(
     _Out_ sai_object_id_t* pool_id,
