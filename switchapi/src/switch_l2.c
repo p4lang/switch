@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 #include <assert.h>
+#include <inttypes.h>
 #include "switchapi/switch_vlan.h"
 #include "switchapi/switch_l2.h"
 #include "switchapi/switch_l3.h"
@@ -361,8 +362,8 @@ switch_mac_aging_notify_cb(p4_pd_entry_hdl_t entry_hdl, void *client_data)
 
     mac_info = (switch_mac_info_t *) (*(unsigned long *)temp);
     mac_entry = &(mac_info->mac_entry);
-    SWITCH_API_TRACE("%s:%d: Received aging notification %lx - (%lx, 0x%02x:%02x:%02x:%02x:%02x:%02x) -> %lx)",
-                 __FUNCTION__, __LINE__, entry_hdl,
+    SWITCH_API_TRACE("%s:%d: Received aging notification %" PRIx64 " - (%lx, 0x%02x:%02x:%02x:%02x:%02x:%02x) -> %lx)",
+                     __FUNCTION__, __LINE__, (uint64_t) entry_hdl,
                  mac_entry->vlan_handle,
                  mac_entry->mac.mac_addr[0],
                  mac_entry->mac.mac_addr[1],
@@ -400,8 +401,8 @@ switch_mac_aging_poll_entries(switch_device_t device)
         status = p4_pd_dc_dmac_get_hit_state(sess_hdl, entry_hdl, &hit_state);
 #endif /* P4_L2_DISABLE */
         if (!status) {
-            SWITCH_API_ERROR("%s:%d: failed to get hit state for entry %lx",
-                         __FUNCTION__, __LINE__, entry_hdl);
+            SWITCH_API_ERROR("%s:%d: failed to get hit state for entry %" PRIx64,
+                             __FUNCTION__, __LINE__, (uint64_t) entry_hdl);
         }
         JLN(temp, dmac_entry_hdl_array, *((Word_t *)&entry_hdl));
         mac_info = (switch_mac_info_t *) (*(unsigned long *) temp);
