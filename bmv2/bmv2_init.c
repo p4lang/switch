@@ -23,6 +23,7 @@ limitations under the License.
 #include <assert.h>
 
 #include <bmpd/switch/pd/pd.h>
+#include <bm/pdfixed/pd_static.h>
 #include <bm/pdfixed/thrift-src/pdfixed_rpc_server.h>
 #include <bmpd/switch/thrift-src/pd_rpc_server.h>
 
