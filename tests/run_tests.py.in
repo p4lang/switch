@@ -55,6 +55,7 @@ if __name__ == "__main__":
     for port in xrange(max_ports):
         new_args += ["--interface", "%d@veth%d" % (port, 2 * port + 1)]
     new_args += ["--interface", "%s@veth%s" % (cpu_port, cpu_veth)]
+    new_args += unknown_args
     child = Popen(["@PTF@"] + new_args)
     child.wait()
     sys.exit(child.returncode)

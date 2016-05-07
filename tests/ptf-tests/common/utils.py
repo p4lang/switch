@@ -314,6 +314,7 @@ def entropy_hash(pkt, layer='ipv4'):
         buf = ''
     else:
         buf = ''
-    h = socket.htons(crc16_regular(buff.decode('hex')))
+    # h = socket.htons(crc16_regular(buff.decode('hex')))
+    h = crc16_regular(buff.decode('hex'))
     return h
 

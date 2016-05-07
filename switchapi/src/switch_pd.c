@@ -7845,19 +7845,20 @@ switch_pd_mirror_session_update(switch_device_t device,
     switch_api_mirror_info_t *api_mirror_info = NULL;
 
     api_mirror_info = &mirror_info->api_mirror_info;
-    status = p4_pd_dc_mirror_session_update(g_sess_hdl, p4_pd_device,
-                                switch_pd_p4_pd_mirror_type(api_mirror_info->session_type),
-                                switch_pd_p4_pd_direction(api_mirror_info->direction),
-                                handle_to_id(mirror_handle),
-                                handle_to_id(api_mirror_info->egress_port),
-                                api_mirror_info->max_pkt_len,
-                                api_mirror_info->cos,
-                                false, /*c2c*/
-                                api_mirror_info->extract_len,
-                                api_mirror_info->timeout_usec,
-                                (uint32_t *)&mirror_info->pkt_hdr,
-                                mirror_info->hdr_len,
-                                api_mirror_info->enable);
+    status = p4_pd_mirror_session_update(
+        g_sess_hdl, p4_pd_device,
+        switch_pd_p4_pd_mirror_type(api_mirror_info->session_type),
+        switch_pd_p4_pd_direction(api_mirror_info->direction),
+        handle_to_id(mirror_handle),
+        handle_to_id(api_mirror_info->egress_port),
+        api_mirror_info->max_pkt_len,
+        api_mirror_info->cos,
+        false, /*c2c*/
+        api_mirror_info->extract_len,
+        api_mirror_info->timeout_usec,
+        (uint32_t *)&mirror_info->pkt_hdr,
+        mirror_info->hdr_len,
+        api_mirror_info->enable);
 
     p4_pd_complete_operations(g_sess_hdl);
     return status;
@@ -7872,9 +7873,9 @@ switch_pd_mirror_session_delete(switch_device_t device,
     p4_pd_device.device_id = device;
     p4_pd_device.dev_pipe_id = PD_DEV_PIPE_ALL;
 
-    status = p4_pd_dc_mirror_session_delete(g_sess_hdl,
-                                            p4_pd_device,
-                                            handle_to_id(mirror_handle));
+    status = p4_pd_mirror_session_delete(g_sess_hdl,
+                                         p4_pd_device,
+                                         handle_to_id(mirror_handle));
 
     p4_pd_complete_operations(g_sess_hdl);
     return status;

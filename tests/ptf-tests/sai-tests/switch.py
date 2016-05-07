@@ -929,7 +929,7 @@ class L3IPv6EcmpLpmTest(sai_base_test.ThriftInterfaceDataPlane):
 
             print "Count = %s" % str(count)
             for i in range(0, 4):
-                self.assertTrue((count[i] >= ((max_itrs / 4) * 0.75)),
+                self.assertTrue((count[i] >= ((max_itrs / 4) * 0.50)),
                         "Not all paths are equally balanced")
         finally:
             sai_thrift_remove_neighbor(self.client, addr_family, rif_id1, nhop_ip1, dmac1)
