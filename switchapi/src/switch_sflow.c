@@ -208,14 +208,13 @@ switch_api_sflow_session_delete (switch_device_t device,
     }
     if (all_cleanup) {
         switch_sflow_match_entry_t* entry;
-        tommy_node *node = tommy_list_head(&sflow_info->match_list);
-        while (node) {
+        tommy_node *node = NULL;
+        while ((node = tommy_list_head(&sflow_info->match_list)) && node) {
             entry = (switch_sflow_match_entry_t *) node->data;
             // could be ingress or egress match entry 
             switch_pd_sflow_match_table_delete(device, entry);
             tommy_list_remove_existing(&sflow_info->match_list, node);
             switch_sflow_ace_handle_delete(entry->sflow_ace_hdl);
-            node = node->next;
         }
     }
 
