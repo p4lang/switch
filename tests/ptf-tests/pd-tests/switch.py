@@ -497,7 +497,7 @@ class L2VxlanTunnelTest(pd_base_tests.ThriftInterfaceDataPlane):
                                 ip_src='192.168.10.1',
                                 ip_id=101,
                                 ip_ttl=64)
-        udp_sport = socket.htons(entropy_hash(pkt1))
+        udp_sport = entropy_hash(pkt1)
         vxlan_pkt1 = simple_vxlan_packet(
                                 eth_dst='00:55:55:55:55:55',
                                 eth_src='00:33:33:33:33:33',
@@ -694,7 +694,7 @@ class L3VxlanTunnelTest(pd_base_tests.ThriftInterfaceDataPlane):
                                 ip_id=101,
                                 ip_ttl=63)
 
-        udp_sport = socket.htons(entropy_hash(pkt1))
+        udp_sport = entropy_hash(pkt1)
         vxlan_pkt1 = simple_vxlan_packet(
                                 eth_dst='00:55:55:55:55:55',
                                 eth_src='00:33:33:33:33:33',
