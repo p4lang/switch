@@ -211,7 +211,7 @@ AC_CONFIG_SUBDIRS([p4-build])
 AC_OUTPUT
 
 AS_ECHO("")
-AS_ECHO("Features recap ......................")
+AS_ECHO("switch features recap ......................")
 AS_ECHO("Coverage enabled .............. : $coverage_enabled")
 AS_ECHO("With switchlink ............... : $want_switchlink")
 AS_ECHO("With switchsai ................ : $want_switchsai")

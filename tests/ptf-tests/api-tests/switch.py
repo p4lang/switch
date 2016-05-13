@@ -1899,7 +1899,7 @@ class L3IPv6LpmEcmpTest(api_base_tests.ThriftInterfaceDataPlane):
 
 	    print "Count = %s" % str(count)
             for i in range(0, 4):
-                self.assertTrue((count[i] >= ((max_itrs / 4) * 0.75)),
+                self.assertTrue((count[i] >= ((max_itrs / 4) * 0.50)),
                         "Not all paths are equally balanced")
         finally:
             self.client.switcht_api_l3_route_delete(device, vrf, r_ip, ecmp)
@@ -2829,7 +2829,7 @@ class L2IPv6InIPv6VxlanUnicastBasicTest(api_base_tests.ThriftInterfaceDataPlane)
                                 ipv6_dst=ipv6_dst_addr,
                                 ipv6_src=ipv6_src_addr,
                                 ipv6_hlim=64,
-                                udp_sport=46064,
+                                udp_sport=0xf0b3,
                                 with_udp_chksum=False,
                                 vxlan_vni=0x1234,
                                 inner_frame=pkt)

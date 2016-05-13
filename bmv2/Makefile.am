@@ -21,11 +21,11 @@ libbmswitchp4_la_LIBADD += \
 @top_builddir@/p4-build/bmv2/libpdthrift.la \
 -lbmpdfixed -lbmpdfixedthrift $(THRIFT_LIB) 
 libbmswitchp4_la_SOURCES = \
-@srcdir@/bmv2_init.c
+bmv2_init.c
 
 bin_PROGRAMS = bmswitchp4_drivers
 bmswitchp4_drivers_CPPFLAGS = $(AM_CPPFLAGS)
 bmswitchp4_drivers_LDADD = \
 libbmswitchp4.la
 bmswitchp4_drivers_SOURCES = \
-@srcdir@/main.c
+main.c
