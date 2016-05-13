@@ -18,7 +18,7 @@ limitations under the License.
 #include "switchapi/switch_status.h"
 #include "switch_meter_int.h"
 #include "switch_pd.h"
-#include "switch_log.h"
+#include "switch_log_int.h"
 
 static void *switch_meter_array = NULL;
 
@@ -89,7 +89,7 @@ switch_api_meter_create(
     if (api_meter_info->meter_mode == SWITCH_METER_MODE_STORM_CONTROL) {
         meter_info->api_meter_info.pbs = meter_info->api_meter_info.cbs;
         meter_info->api_meter_info.pir = meter_info->api_meter_info.cir;
-        meter_info->api_meter_info.action[SWITCH_METER_COLOR_YELLOW] = 
+        meter_info->api_meter_info.action[SWITCH_METER_COLOR_YELLOW] =
             meter_info->api_meter_info.action[SWITCH_METER_COLOR_GREEN];
         status = switch_pd_storm_control_meter_add_entry(
                              device,
@@ -122,7 +122,7 @@ switch_api_meter_create(
 
 switch_status_t
 switch_api_meter_update(
-        switch_device_t device, 
+        switch_device_t device,
         switch_handle_t meter_handle,
         switch_api_meter_t *api_meter_info)
 {
@@ -138,7 +138,7 @@ switch_api_meter_update(
     if (api_meter_info->meter_mode == SWITCH_METER_MODE_STORM_CONTROL) {
         meter_info->api_meter_info.pbs = meter_info->api_meter_info.cbs;
         meter_info->api_meter_info.pir = meter_info->api_meter_info.cir;
-        meter_info->api_meter_info.action[SWITCH_METER_COLOR_YELLOW] = 
+        meter_info->api_meter_info.action[SWITCH_METER_COLOR_YELLOW] =
             meter_info->api_meter_info.action[SWITCH_METER_COLOR_GREEN];
         status = switch_pd_storm_control_meter_add_entry(
                              device,
@@ -200,7 +200,7 @@ switch_api_meter_stats_get(switch_device_t device,
     switch_meter_info_t               *meter_info = NULL;
     switch_meter_stats_info_t         *stats_info = NULL;
     int                                index = 0;
-    switch_vlan_stats_t                counter_id = 0;
+    switch_bd_stats_id_t               counter_id = 0;
 
     meter_info = switch_meter_info_get(meter_handle);
     if (!meter_info) {

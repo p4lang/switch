@@ -25,7 +25,7 @@ limitations under the License.
 #include "switch_lag_int.h"
 #include "switch_tunnel_int.h"
 #include "switch_pd.h"
-#include "switch_log.h"
+#include "switch_log_int.h"
 #include <string.h>
 
 #define SWITCH_MGID_TABLE_SIZE 16 * 1024
@@ -41,11 +41,13 @@ static void *switch_mcast_array;
 static tommy_hashtable switch_rid_hash_table;
 static tommy_hashtable switch_mcast_group_hash_table;
 static switch_api_id_allocator *switch_rid_allocator;
+static void *rid_array;
 
 switch_status_t
 switch_mcast_init(switch_device_t device)
 {
     switch_mcast_array = NULL;
+    rid_array = NULL;
     switch_handle_type_init(SWITCH_HANDLE_TYPE_MGID, SWITCH_MGID_TABLE_SIZE);
     tommy_hashtable_init(&switch_rid_hash_table, SWITCH_RID_HASH_TABLE_SIZE);
     tommy_hashtable_init(&switch_mcast_group_hash_table, SWTICH_MCAST_GROUP_HASH_TABLE_SIZE);
@@ -104,87 +106,6 @@ switch_mcast_rid_hash_cmp(const void *key1, const void *key2)
 {
     return memcmp(key1, key2, SWITCH_MCAST_RID_HASH_KEY_SIZE);
 }
-
-// These functions are unused for now
-
-/* static switch_mcast_rid_t * */
-/* switch_mcast_rid_insert_hash(switch_mcast_rid_key_t *rid_key) */
-/* { */
-/*     switch_mcast_rid_t                *rid_info = NULL; */
-/*     unsigned char                      key[SWITCH_MCAST_RID_HASH_KEY_SIZE]; */
-/*     uint32_t                           len = 0; */
-/*     uint32_t                           hash = 0; */
-
-/*     switch_mcast_rid_hash_key_init(key, rid_key, &len, &hash); */
-/*     rid_info = switch_malloc(sizeof(switch_mcast_rid_t), 1); */
-/*     if (!rid_info) { */
-/*         return NULL; */
-/*     } */
-/*     memcpy(&rid_info->rid_key, rid_key, sizeof(switch_mcast_rid_key_t)); */
-/*     tommy_hashtable_insert(&switch_rid_hash_table, */
-/*                             &(rid_info->node), */
-/*                             rid_info, hash); */
-/*     return rid_info; */
-/* } */
-
-/* static switch_status_t */
-/* switch_mcast_rid_delete_hash(switch_mcast_rid_key_t *rid_key) */
-/* { */
-/*     switch_mcast_rid_t                *rid_info = NULL; */
-/*     unsigned char                      key[SWITCH_MCAST_RID_HASH_KEY_SIZE]; */
-/*     uint32_t                           len = 0; */
-/*     uint32_t                           hash = 0; */
-
-/*     switch_mcast_rid_hash_key_init(key, rid_key, &len, &hash); */
-/*     rid_info = tommy_hashtable_remove(&switch_rid_hash_table, */
-/*                                       switch_mcast_rid_hash_cmp, */
-/*                                       key, hash); */
-/*     if (!rid_info) { */
-/*         return SWITCH_STATUS_ITEM_NOT_FOUND; */
-/*     } */
-/*     switch_free(rid_info); */
-/*     return SWITCH_STATUS_SUCCESS; */
-/* } */
-
-/* static switch_mcast_rid_t * */
-/* switch_mcast_rid_search_hash(switch_mcast_rid_key_t *rid_key, bool *inner_replica) */
-/* { */
-/*     switch_mcast_rid_t                *rid_info = NULL; */
-/*     switch_bd_info_t                  *bd_info = NULL; */
-/*     switch_interface_info_t           *intf_info = NULL; */
-/*     unsigned char                      key[SWITCH_MCAST_RID_HASH_KEY_SIZE]; */
-/*     uint32_t                           len = 0; */
-/*     uint32_t                           hash = 0; */
-
-/*     //TODO: Return appropriate error code during failure */
-/*     intf_info = switch_api_interface_get(rid_key->intf_handle); */
-/*     if (!intf_info) { */
-/*         return NULL; */
-/*     } */
-/*     bd_info = switch_bd_get(rid_key->bd_handle); */
-/*     if (!bd_info) { */
-/*         return NULL; */
-/*     } */
-
-/*     *inner_replica = TRUE; */
-/*     if (SWITCH_INTF_TYPE(intf_info) == SWITCH_API_INTERFACE_TUNNEL) { */
-/*         *inner_replica = FALSE; */
-/*     } */
-
-/*     if (SWITCH_LN_NETWORK_TYPE(bd_info) == SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_BASIC || */
-/*         SWITCH_LN_NETWORK_TYPE(bd_info) == SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_ENHANCED) { */
-/*         if (SWITCH_INTF_TYPE(intf_info) == SWITCH_API_INTERFACE_L2_VLAN_ACCESS) { */
-/*             rid_key->intf_handle = 0; */
-/*         } */
-/*     } else if (SWITCH_LN_NETWORK_TYPE(bd_info) == SWITCH_LOGICAL_NETWORK_TYPE_VLAN) { */
-/*         rid_key->intf_handle = 0; */
-/*     } */
-/*     switch_mcast_rid_hash_key_init(key, rid_key, &len, &hash); */
-/*     rid_info = tommy_hashtable_search(&switch_rid_hash_table, */
-/*                                       switch_mcast_rid_hash_cmp, */
-/*                                       key, hash); */
-/*     return rid_info; */
-/* } */
 
 static inline void
 switch_mcast_group_hash_key_init(uchar *key, switch_mcast_group_key_t *group_key,
@@ -506,13 +427,15 @@ switch_mcast_update_mcast_info(switch_mcast_info_t *mcast_info,
                                uint16_t mbr_count,
                                switch_vlan_interface_t *mbrs, bool add)
 {
-    for (int i = 0; i < mbr_count; i++) {
+    int i = 0, j = 0;
+
+    for (i = 0; i < mbr_count; i++) {
         switch_vlan_interface_t *mbr = &mbrs[i];
         int found = -1;
-        for (int i = 0; i < mcast_info->mbr_count; i++) {
-            if (memcmp(&(mcast_info->mbrs[i]), mbr,
+        for (j = 0; j < mcast_info->mbr_count; j++) {
+            if (memcmp(&(mcast_info->mbrs[j]), mbr,
                        sizeof(switch_vlan_interface_t)) == 0) {
-                found = i;
+                found = j;
                 break;
             }
         }
@@ -592,8 +515,14 @@ switch_api_multicast_member_add(switch_device_t device,
     switch_handle_type_t               handle_type;
     uint16_t                           rid = 0;
     bool                               inner_replica = TRUE;
-    bool                               new_rid_node = FALSE;
+    bool                               new_node = FALSE;
     int                                index = 0;
+    switch_ip_encap_t                 *ip_encap = NULL;
+    switch_encap_type_t                encap_type = SWITCH_API_ENCAP_TYPE_NONE;
+    uint8_t                            tunnel_type = 0;
+    uint16_t                           tunnel_index = 0;
+    void                              *temp = NULL;
+    switch_rid_info_t                 *rid_info = NULL;
 
     mcast_info = switch_mcast_tree_get(mgid_handle);
     if (!mcast_info) {
@@ -619,8 +548,10 @@ switch_api_multicast_member_add(switch_device_t device,
         handle_type = switch_handle_get_type(intf_handle);
         if ((handle_type == SWITCH_HANDLE_TYPE_PORT) ||
             (handle_type == SWITCH_HANDLE_TYPE_LAG)) {
-            status = switch_interface_handle_get(handle,
-                                            &intf_handle);
+            status = switch_interface_handle_get(
+                             handle,
+                             bd_handle,
+                             &intf_handle);
             if (status != SWITCH_STATUS_SUCCESS) {
                 SWITCH_API_ERROR("%s:%d: invalid interface %lx",
                                  __FUNCTION__, __LINE__,
@@ -651,7 +582,37 @@ switch_api_multicast_member_add(switch_device_t device,
             continue;
         }
 
-        new_rid_node = FALSE;
+        JLG(temp, rid_array, rid);
+        if (!temp) {
+            rid_info = switch_malloc(sizeof(switch_rid_info_t), 1);
+            rid_info->ref_count = 0;
+
+            if (SWITCH_INTF_TYPE(intf_info) == SWITCH_API_INTERFACE_TUNNEL) {
+                encap_type = SWITCH_INTF_TUNNEL_ENCAP_TYPE(intf_info);
+                ip_encap = &(SWITCH_INTF_TUNNEL_IP_ENCAP(intf_info));
+                tunnel_type = switch_tunnel_get_egress_tunnel_type(
+                             encap_type,
+                             ip_encap);
+                tunnel_index = handle_to_id(intf_handle);
+            }
+            status = switch_pd_rid_table_add_entry(
+                             device,
+                             rid,
+                             handle_to_id(bd_handle),
+                             inner_replica,
+                             tunnel_type,
+                             tunnel_index,
+                             &rid_info->rid_hw_entry);
+            JLI(temp, rid_array, rid);
+            *(unsigned long *) temp = (unsigned long) rid_info;
+            SWITCH_API_TRACE("%s:%d: new l1 node allocated with rid %x", 
+                         __FUNCTION__, __LINE__, rid);
+        }
+
+        rid_info = (switch_rid_info_t *) (*(unsigned long *)temp);
+        rid_info->ref_count++;
+
+        new_node = FALSE;
         mcast_node = switch_mcast_find_node(mcast_info,
                                             SWITCH_NODE_TYPE_SINGLE,
                                             rid);
@@ -662,7 +623,7 @@ switch_api_multicast_member_add(switch_device_t device,
             }
             memset(mcast_node, 0, sizeof(switch_mcast_node_t));
             SWITCH_MCAST_NODE_RID(mcast_node) = rid;
-            new_rid_node = TRUE;
+            new_node = TRUE;
             tommy_list_insert_head(&mcast_info->node_list,
                                &(mcast_node->node), mcast_node);
         }
@@ -670,29 +631,12 @@ switch_api_multicast_member_add(switch_device_t device,
         status = switch_mcast_update_port_map(mcast_node, intf_handle, TRUE);
 
         // Create a L1 Node
-        if (new_rid_node) {
-            switch_ip_encap_t *ip_encap = NULL;
-            switch_encap_type_t encap_type = SWITCH_API_ENCAP_TYPE_NONE;
-            uint8_t tunnel_type = 0;
-            uint16_t tunnel_index = 0;
+        if (new_node) {
 
             status = switch_pd_mcast_add_entry(device, mcast_node);
             //Associate L1 Node to multicast tree
             status = switch_pd_mcast_mgid_table_add_entry(device,
                                               mcast_info->mgrp_hdl, mcast_node);
-            if (SWITCH_INTF_TYPE(intf_info) == SWITCH_API_INTERFACE_TUNNEL) {
-                encap_type = SWITCH_INTF_TUNNEL_ENCAP_TYPE(intf_info);
-                ip_encap = &(SWITCH_INTF_TUNNEL_IP_ENCAP(intf_info));
-                tunnel_type = switch_tunnel_get_egress_tunnel_type(encap_type,
-                                                                   ip_encap);
-                tunnel_index = handle_to_id(intf_handle);
-            }
-            status = switch_pd_rid_table_add_entry(device, rid,
-                         handle_to_id(bd_handle),
-                         inner_replica, tunnel_type, tunnel_index,
-                         &(SWITCH_MCAST_NODE_RID_HW_ENTRY(mcast_node)));
-            SWITCH_API_TRACE("%s:%d: new l1 node allocated with rid %x", 
-                         __FUNCTION__, __LINE__, rid);
         } else {
             status = switch_pd_mcast_update_entry(device, mcast_node);
         }
@@ -720,6 +664,8 @@ switch_api_multicast_member_delete(switch_device_t device,
     uint16_t                           rid = 0;
     int                                index = 0;
     bool                               delete_mcast_node = FALSE;
+    void                              *temp = NULL;
+    switch_rid_info_t                 *rid_info = NULL;
 
     mcast_info = switch_mcast_tree_get(mgid_handle);
     if (!mcast_info) {
@@ -743,8 +689,10 @@ switch_api_multicast_member_delete(switch_device_t device,
         handle_type = switch_handle_get_type(intf_handle);
         if ((handle_type == SWITCH_HANDLE_TYPE_PORT) ||
             (handle_type == SWITCH_HANDLE_TYPE_LAG)) {
-            status = switch_interface_handle_get(handle,
-                                            &intf_handle);
+            status = switch_interface_handle_get(
+                             handle,
+                             bd_handle,
+                             &intf_handle);
             if (status != SWITCH_STATUS_SUCCESS) {
                 SWITCH_API_ERROR("%s:%d: invalid interface %lx",
                                  __FUNCTION__, __LINE__,
@@ -782,6 +730,30 @@ switch_api_multicast_member_delete(switch_device_t device,
             return SWITCH_STATUS_ITEM_NOT_FOUND;
         }
 
+        JLG(temp, rid_array, rid);
+        if (!temp) {
+            SWITCH_API_ERROR("mcast member delete failed. "
+                             "rid not found for bd %lx intf %lx\n",
+                              bd_handle,
+                              intf_handle);
+            return SWITCH_STATUS_ITEM_NOT_FOUND;
+        }
+
+        rid_info = (switch_rid_info_t *) (*(unsigned long *)temp);
+        rid_info->ref_count--;
+        if (rid_info->ref_count == 0) {
+            status = switch_pd_rid_table_delete_entry(
+                             device,
+                             rid_info->rid_hw_entry);
+            if (status != SWITCH_STATUS_SUCCESS) {
+                SWITCH_API_ERROR("rid entry delete failed for bd %lx intf %lx",
+                                  bd_handle,
+                                  intf_handle);
+            }
+            JLD(status, rid_array, rid);
+            switch_free(rid_info);
+        }
+
         status = switch_mcast_update_port_map(mcast_node,
                                              intf_handle, FALSE);
         delete_mcast_node = switch_mcast_node_empty(mcast_node);
@@ -789,8 +761,6 @@ switch_api_multicast_member_delete(switch_device_t device,
             status = switch_pd_mcast_mgid_table_delete_entry(
                 device, mcast_info->mgrp_hdl, mcast_node);
             status = switch_pd_mcast_delete_entry(device, mcast_node);
-            status = switch_pd_rid_table_delete_entry(device,
-                         SWITCH_MCAST_NODE_RID_HW_ENTRY(mcast_node));
             mcast_node = tommy_list_remove_existing(&mcast_info->node_list,
                                                     &(mcast_node->node));
             switch_free(mcast_node);

@@ -85,7 +85,9 @@ table storm_control {
 
 control process_storm_control {
 #ifndef STORM_CONTROL_DISABLE
-    apply(storm_control);
+    if (ingress_metadata.port_type == PORT_TYPE_NORMAL) {
+        apply(storm_control);
+    }
 #endif /* STORM_CONTROL_DISABLE */
 }
 
@@ -135,7 +137,8 @@ table ipsg {
 control process_ip_sourceguard {
 #ifndef IPSG_DISABLE
     /* l2 security features */
-    if (security_metadata.ipsg_enabled == TRUE) {
+    if ((ingress_metadata.port_type == PORT_TYPE_NORMAL) and
+        (security_metadata.ipsg_enabled == TRUE)) {
         apply(ipsg) {
             on_miss {
                 apply(ipsg_permit_special);

@@ -40,7 +40,7 @@ metadata ipv6_metadata_t ipv6_metadata;
 action set_valid_outer_ipv6_packet() {
     modify_field(l3_metadata.lkp_ip_type, IPTYPE_IPV6);
     modify_field(l3_metadata.lkp_ip_tc, ipv6.trafficClass);
-    modify_field(l3_metadata.lkp_ip_version, 6);
+    modify_field(l3_metadata.lkp_ip_version, ipv6.version);
 }
 
 action set_malformed_outer_ipv6_packet(drop_reason) {
@@ -56,8 +56,8 @@ action set_malformed_outer_ipv6_packet(drop_reason) {
 table validate_outer_ipv6_packet {
     reads {
         ipv6.version : ternary;
-        l3_metadata.lkp_ip_ttl : ternary;
-        ipv6_metadata.lkp_ipv6_sa mask 0xFFFF0000000000000000000000000000 : ternary;
+        ipv6.hopLimit : ternary;
+        ipv6.srcAddr mask 0xFFFF0000000000000000000000000000 : ternary;
     }
     actions {
         set_valid_outer_ipv6_packet;

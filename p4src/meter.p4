@@ -1,5 +1,5 @@
 /*
-Copyright 2013-present Barefoot Networks, Inc. 
+Copyright 2013-present Barefoot Networks, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -75,12 +75,16 @@ table meter_index {
 
 control process_meter_index {
 #ifndef METER_DISABLE
-    apply(meter_index);
+    if (DO_LOOKUP(METER)) {
+        apply(meter_index);
+    }
 #endif /* METER_DISABLE */
 }
 
 control process_meter_action {
 #ifndef METER_DISABLE
-    apply(meter_action);
+    if (DO_LOOKUP(METER)) {
+        apply(meter_action);
+    }
 #endif /* METER_DISABLE */
 }

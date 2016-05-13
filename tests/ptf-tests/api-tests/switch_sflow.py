@@ -62,7 +62,7 @@ class TestSflow_session(api_base_tests.ThriftInterfaceDataPlane):
                                             collector_type = 0, #CPU
                                             egress_port_hdl = cpu_port);
         sf_hdl = self.client.switcht_api_sflow_session_create(device, sflow_info1)
-        print "hdl = ",  sf_hdl
+        print "hdl = ", sf_hdl
         assert(sf_hdl == invalid_hdl)
 
         # delete 2 sessions, create 2 sessions
@@ -175,8 +175,8 @@ class TestSflow_ingress_port(api_base_tests.ThriftInterfaceDataPlane):
                                           ingress_ifindex = 2,
                                           ingress_bd = 2,
                                           ingress_port = 1,
-                                          reason_code=0x106, 
-                                          sflow_sid=sflow_sid, 
+                                          reason_code=0x217,
+                                          sflow_sid=sflow_sid,
                                           inner_pkt=pkt)
 
         for i in range(0,1):

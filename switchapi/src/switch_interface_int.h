@@ -49,6 +49,7 @@ typedef struct switch_interface_info_ {
     switch_handle_t ln_bd_handle;                    /**< Logical network BD Handle */
     switch_handle_t nhop_handle;
     switch_handle_t hostif_handle;
+    void *vlan_array;
     uint16_t vlan_count;
 #ifdef SWITCH_PD
     p4_pd_entry_hdl_t nhop_type_entry;
@@ -103,8 +104,8 @@ typedef struct switch_interface_info_ {
     (info->api_intf_info.type == SWITCH_API_INTERFACE_TUNNEL))
 
 #define SWITCH_INTF_IS_PORT_L2(info) \
-    ((info->api_intf_info.type == SWITCH_API_INTERFACE_L2_VLAN_ACCESS) || \
-    (info->api_intf_info.type == SWITCH_API_INTERFACE_L2_VLAN_TRUNK))
+    (info->api_intf_info.type == SWITCH_API_INTERFACE_L2_VLAN_ACCESS) || \
+    (info->api_intf_info.type == SWITCH_API_INTERFACE_L2_VLAN_TRUNK)
 
 #define SWITCH_INTF_NATIVE_VLAN_HANDLE(info) \
     info->api_intf_info.native_vlan
@@ -137,7 +138,12 @@ typedef struct switch_interface_info_ {
 
 // Internal Interface API's
 switch_interface_info_t *switch_api_interface_get(switch_handle_t handle);
-switch_handle_t switch_api_interface_get_from_ifindex(switch_ifindex_t ifindex);
+
+switch_handle_t
+switch_api_interface_get_from_ifindex(
+        switch_ifindex_t ifindex,
+        switch_handle_t bd_handle);
+
 switch_status_t switch_interface_init(switch_device_t device);
 switch_status_t switch_interface_free(switch_device_t device);
 switch_status_t switch_api_interface_create_l2(switch_device_t device, switch_handle_t intf_handle,
@@ -145,7 +151,21 @@ switch_status_t switch_api_interface_create_l2(switch_device_t device, switch_ha
 switch_status_t switch_api_interface_create_l3(switch_device_t device, switch_handle_t intf_handle,
                                                switch_interface_info_t *intf_info);
 
-switch_status_t switch_interface_handle_get(switch_handle_t port_lag_handle, switch_handle_t *intf_handle);
+switch_status_t
+switch_interface_array_insert(
+        switch_handle_t port_lag_handle,
+        switch_handle_t intf_handle);
+
+switch_status_t
+switch_interface_array_delete(
+        switch_handle_t port_lag_handle,
+        switch_handle_t intf_handle);
+
+switch_status_t
+switch_interface_handle_get(
+        switch_handle_t port_lag_handle,
+        switch_handle_t bd_handle,
+        switch_handle_t *intf_handle);
 
 #ifdef __cplusplus
 }

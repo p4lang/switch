@@ -136,7 +136,7 @@ switch_api_meter_stats_get(switch_device_t device,
                           switch_counter_t *counters);
 
 /** @} */ // end of meter
-    
+
 #ifdef __cplusplus
 }
 #endif

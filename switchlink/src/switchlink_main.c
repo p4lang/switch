@@ -56,7 +56,7 @@ nl_sync_state() {
         .rtgen_family = AF_UNSPEC,
     };
 
-    int msg_type = -1;
+    int msg_type;
     switch (msg_idx) {
         case SWITCHLINK_MSG_LINK:
             msg_type = RTM_GETLINK;

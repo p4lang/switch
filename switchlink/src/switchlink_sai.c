@@ -534,8 +534,8 @@ switchlink_bridge_create(switchlink_db_bridge_info_t *bridge_db_info) {
     sai_attribute_t attr_list[1];
     memset(attr_list, 0, sizeof(attr_list));
     attr_list[0].id = SAI_STP_ATTR_VLAN_LIST;
-    attr_list[0].value.vlanlist.count = 1;
-    attr_list[0].value.vlanlist.list = (sai_vlan_id_t *)&vlan_id;
+    attr_list[0].value.vlanlist.vlan_count = 1;
+    attr_list[0].value.vlanlist.vlan_list = (sai_vlan_id_t *)&vlan_id;
     status = stp_api->create_stp(&(bridge_db_info->stp_h), 1, attr_list);
     if (status != SAI_STATUS_SUCCESS) {
         return -1;

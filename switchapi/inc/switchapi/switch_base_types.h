@@ -24,8 +24,8 @@ limitations under the License.
 #include "drop_reasons.h"
 #include "p4features.h"
 #ifdef BMV2
-#include <bmpd/switch/pd/pd.h>
-#include <bm/pdfixed/pd_pre.h>
+#include "pd/pd.h"
+#include "pd/pd_pre.h"
 #else
 #include "p4_sim/pd.h"
 #include "p4_sim/pd_pre.h"
@@ -91,6 +91,7 @@ typedef struct switch_mac_addr {
 
 /* init */
 switch_status_t switch_api_init(switch_device_t device, unsigned int num_ports);
+int start_switch_api_packet_driver(void);
 
 /** IP address type v4 or v6 */
 typedef enum {

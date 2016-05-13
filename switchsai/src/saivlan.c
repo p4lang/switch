@@ -344,18 +344,18 @@ switch_vlan_counters_to_sai_vlan_counters(
         switch (counter_ids[index]) {
             case SAI_VLAN_STAT_IN_OCTETS:
                 counters[index] =
-                    switch_counters[SWITCH_VLAN_STATS_IN_UCAST].num_bytes +
-                    switch_counters[SWITCH_VLAN_STATS_IN_MCAST].num_bytes +
-                    switch_counters[SWITCH_VLAN_STATS_IN_BCAST].num_bytes;
+                    switch_counters[SWITCH_BD_STATS_IN_UCAST].num_bytes +
+                    switch_counters[SWITCH_BD_STATS_IN_MCAST].num_bytes +
+                    switch_counters[SWITCH_BD_STATS_IN_BCAST].num_bytes;
                 break;
             case SAI_VLAN_STAT_IN_UCAST_PKTS:
                 counters[index] =
-                    switch_counters[SWITCH_VLAN_STATS_IN_UCAST].num_packets;
+                    switch_counters[SWITCH_BD_STATS_IN_UCAST].num_packets;
                 break;
             case SAI_VLAN_STAT_IN_NON_UCAST_PKTS:
                 counters[index] =
-                    switch_counters[SWITCH_VLAN_STATS_IN_MCAST].num_packets +
-                    switch_counters[SWITCH_VLAN_STATS_IN_BCAST].num_packets;
+                    switch_counters[SWITCH_BD_STATS_IN_MCAST].num_packets +
+                    switch_counters[SWITCH_BD_STATS_IN_BCAST].num_packets;
                 break;
             case SAI_VLAN_STAT_IN_DISCARDS:
             case SAI_VLAN_STAT_IN_ERRORS:
@@ -364,18 +364,18 @@ switch_vlan_counters_to_sai_vlan_counters(
                 break;
             case SAI_VLAN_STAT_OUT_OCTETS:
                 counters[index] =
-                    switch_counters[SWITCH_VLAN_STATS_OUT_UCAST].num_bytes +
-                    switch_counters[SWITCH_VLAN_STATS_OUT_MCAST].num_bytes +
-                    switch_counters[SWITCH_VLAN_STATS_OUT_BCAST].num_bytes;
+                    switch_counters[SWITCH_BD_STATS_OUT_UCAST].num_bytes +
+                    switch_counters[SWITCH_BD_STATS_OUT_MCAST].num_bytes +
+                    switch_counters[SWITCH_BD_STATS_OUT_BCAST].num_bytes;
                 break;
             case SAI_VLAN_STAT_OUT_UCAST_PKTS:
                 counters[index] =
-                    switch_counters[SWITCH_VLAN_STATS_OUT_UCAST].num_packets;
+                    switch_counters[SWITCH_BD_STATS_OUT_UCAST].num_packets;
                 break;
             case SAI_VLAN_STAT_OUT_NON_UCAST_PKTS:
                 counters[index] =
-                    switch_counters[SWITCH_VLAN_STATS_OUT_MCAST].num_packets +
-                    switch_counters[SWITCH_VLAN_STATS_OUT_BCAST].num_packets;
+                    switch_counters[SWITCH_BD_STATS_OUT_MCAST].num_packets +
+                    switch_counters[SWITCH_BD_STATS_OUT_BCAST].num_packets;
                 break;
             case SAI_VLAN_STAT_OUT_DISCARDS:
             case SAI_VLAN_STAT_OUT_ERRORS:
@@ -416,7 +416,7 @@ sai_status_t sai_get_vlan_stats(
 
     sai_status_t status = SAI_STATUS_SUCCESS;
     switch_counter_t *switch_counters = NULL;
-    switch_vlan_stats_t *vlan_stat_ids = NULL;
+    switch_bd_stats_id_t *vlan_stat_ids = NULL;
     switch_handle_t vlan_handle = 0;
     switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
     uint32_t index = 0;
@@ -429,7 +429,7 @@ sai_status_t sai_get_vlan_stats(
         return status;
     }
 
-    switch_counters = SAI_MALLOC(sizeof(switch_counter_t) * SWITCH_VLAN_STATS_MAX);
+    switch_counters = SAI_MALLOC(sizeof(switch_counter_t) * SWITCH_BD_STATS_MAX);
     if (!switch_counters) {
         status = SAI_STATUS_NO_MEMORY;
         SAI_LOG_ERROR("failed to get vlan stats %d: %s",
@@ -437,7 +437,7 @@ sai_status_t sai_get_vlan_stats(
         return status;
     }
 
-    vlan_stat_ids = SAI_MALLOC(sizeof(switch_vlan_stats_t) * SWITCH_VLAN_STATS_MAX);
+    vlan_stat_ids = SAI_MALLOC(sizeof(switch_bd_stats_id_t) * SWITCH_BD_STATS_MAX);
     if (!vlan_stat_ids) {
         status = SAI_STATUS_NO_MEMORY;
         SAI_LOG_ERROR("failed to get vlan stats %d: %s",
@@ -446,14 +446,14 @@ sai_status_t sai_get_vlan_stats(
         return status;
     }
 
-    for (index = 0; index < SWITCH_VLAN_STATS_MAX; index++) {
+    for (index = 0; index < SWITCH_BD_STATS_MAX; index++) {
         vlan_stat_ids[index] = index;
     }
 
     switch_status = switch_api_vlan_stats_get(
                              device,
                              vlan_handle,
-                             SWITCH_VLAN_STATS_MAX,
+                             SWITCH_BD_STATS_MAX,
                              vlan_stat_ids,
                              switch_counters);
     status = sai_switch_status_to_sai_status(switch_status);

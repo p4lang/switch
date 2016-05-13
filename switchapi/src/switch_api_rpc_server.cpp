@@ -403,10 +403,10 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     printf("switcht_api_vlan_ingress_stats_get\n");
     std::vector<int16_t>::const_iterator it = counter_ids.begin();
     switcht_counter_t _counter;
-    switch_vlan_stats_t *counter_id_list = (switch_vlan_stats_t *) malloc(sizeof(switch_vlan_stats_t) * counter_ids.size());
+    switch_bd_stats_id_t *counter_id_list = (switch_bd_stats_id_t *) malloc(sizeof(switch_bd_stats_id_t) * counter_ids.size());
     switch_counter_t *counters = (switch_counter_t *) malloc(sizeof(switch_counter_t) * counter_ids.size());
     for(uint32_t i = 0; i < counter_ids.size(); i++, it++) {
-        counter_id_list[i] = (switch_vlan_stats_t) *it;
+        counter_id_list[i] = (switch_bd_stats_id_t) *it;
     }
     printf("\nnumber of counterids %d\n", (int)(counter_ids.size()));
     switch_api_vlan_stats_get(device, vlan_handle, counter_ids.size(), counter_id_list, counters);
@@ -1568,7 +1568,6 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   switcht_handle_t switcht_api_hostif_create(const switcht_device_t device, const switcht_hostif_t& hostif) {
     printf("switcht_api_hostif_create\n");
     switch_hostif_t lhostif;
-    lhostif.handle = hostif.handle;
     memcpy(lhostif.intf_name, hostif.intf_name.c_str(), SWITCH_HOSTIF_NAME_SIZE);
     return switch_api_hostif_create(device, &lhostif);
   }

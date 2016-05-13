@@ -1,5 +1,5 @@
 /*
-Copyright 2013-present Barefoot Networks, Inc. 
+Copyright 2013-present Barefoot Networks, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -110,8 +110,6 @@ header ethernet_t ethernet;
 
 parser parse_ethernet {
     extract(ethernet);
-    set_metadata(l2_metadata.lkp_mac_sa, ethernet.srcAddr);
-    set_metadata(l2_metadata.lkp_mac_da, ethernet.dstAddr);
     return select(latest.etherType) {
         0 mask 0xfe00: parse_llc_header;
         0 mask 0xfa00: parse_llc_header;
@@ -288,17 +286,15 @@ calculated_field ipv4.hdrChecksum  {
 
 parser parse_ipv4 {
     extract(ipv4);
-    set_metadata(ipv4_metadata.lkp_ipv4_sa, ipv4.srcAddr);
-    set_metadata(ipv4_metadata.lkp_ipv4_da, ipv4.dstAddr);
-    set_metadata(l3_metadata.lkp_ip_proto, ipv4.protocol);
-    set_metadata(l3_metadata.lkp_ip_ttl, ipv4.ttl);
     return select(latest.fragOffset, latest.ihl, latest.protocol) {
         IP_PROTOCOLS_IPHL_ICMP : parse_icmp;
         IP_PROTOCOLS_IPHL_TCP : parse_tcp;
         IP_PROTOCOLS_IPHL_UDP : parse_udp;
+#ifndef TUNNEL_DISABLE
         IP_PROTOCOLS_IPHL_GRE : parse_gre;
         IP_PROTOCOLS_IPHL_IPV4 : parse_ipv4_in_ip;
         IP_PROTOCOLS_IPHL_IPV6 : parse_ipv6_in_ip;
+#endif /* TUNNEL_DISABLE */
         IP_PROTOCOLS_IGMP : parse_set_prio_med;
         IP_PROTOCOLS_EIGRP : parse_set_prio_med;
         IP_PROTOCOLS_OSPF : parse_set_prio_med;
@@ -339,8 +335,8 @@ header ipv6_t ipv6;
 
 parser parse_udp_v6 {
     extract(udp);
-    set_metadata(l3_metadata.lkp_l4_sport, latest.srcPort);
-    set_metadata(l3_metadata.lkp_l4_dport, latest.dstPort);
+    set_metadata(l3_metadata.lkp_outer_l4_sport, latest.srcPort);
+    set_metadata(l3_metadata.lkp_outer_l4_dport, latest.dstPort);
     return select(latest.dstPort) {
         UDP_PORT_BOOTPS : parse_set_prio_med;
         UDP_PORT_BOOTPC : parse_set_prio_med;
@@ -364,16 +360,11 @@ parser parse_gre_v6 {
 
 parser parse_ipv6 {
     extract(ipv6);
-#if !defined(IPV6_DISABLE)
-    set_metadata(ipv6_metadata.lkp_ipv6_sa, latest.srcAddr);
-    set_metadata(ipv6_metadata.lkp_ipv6_da, latest.dstAddr);
-    set_metadata(l3_metadata.lkp_ip_proto, ipv6.nextHdr);
-    set_metadata(l3_metadata.lkp_ip_ttl, ipv6.hopLimit);
-#endif /* !defined(IPV6_DISABLE) */
     return select(latest.nextHdr) {
         IP_PROTOCOLS_ICMPV6 : parse_icmp;
         IP_PROTOCOLS_TCP : parse_tcp;
         IP_PROTOCOLS_IPV4 : parse_ipv4_in_ip;
+#ifndef TUNNEL_DISABLE
 #ifndef TUNNEL_OVER_IPV6_DISABLE
         IP_PROTOCOLS_UDP : parse_udp;
         IP_PROTOCOLS_GRE : parse_gre;
@@ -382,6 +373,7 @@ parser parse_ipv6 {
         IP_PROTOCOLS_UDP : parse_udp_v6;
         IP_PROTOCOLS_GRE : parse_gre_v6;
 #endif
+#endif /* TUNNEL_DISABLE */
         IP_PROTOCOLS_EIGRP : parse_set_prio_med;
         IP_PROTOCOLS_OSPF : parse_set_prio_med;
         IP_PROTOCOLS_PIM : parse_set_prio_med;
@@ -395,7 +387,7 @@ header icmp_t icmp;
 
 parser parse_icmp {
     extract(icmp);
-    set_metadata(l3_metadata.lkp_l4_sport, latest.typeCode);
+    set_metadata(l3_metadata.lkp_outer_l4_sport, latest.typeCode);
     return select(latest.typeCode) {
         /* MLD and ND, 130-136 */
         0x8200 mask 0xfe00 : parse_set_prio_med;
@@ -412,8 +404,8 @@ header tcp_t tcp;
 
 parser parse_tcp {
     extract(tcp);
-    set_metadata(l3_metadata.lkp_l4_sport, latest.srcPort);
-    set_metadata(l3_metadata.lkp_l4_dport, latest.dstPort);
+    set_metadata(l3_metadata.lkp_outer_l4_sport, latest.srcPort);
+    set_metadata(l3_metadata.lkp_outer_l4_dport, latest.dstPort);
     return select(latest.dstPort) {
         TCP_PORT_BGP : parse_set_prio_med;
         TCP_PORT_MSDP : parse_set_prio_med;
@@ -432,11 +424,13 @@ parser parse_roce_v2 {
 
 parser parse_udp {
     extract(udp);
-    set_metadata(l3_metadata.lkp_l4_sport, latest.srcPort);
-    set_metadata(l3_metadata.lkp_l4_dport, latest.dstPort);
+    set_metadata(l3_metadata.lkp_outer_l4_sport, latest.srcPort);
+    set_metadata(l3_metadata.lkp_outer_l4_dport, latest.dstPort);
     return select(latest.dstPort) {
+#ifndef TUNNEL_DISABLE
         UDP_PORT_VXLAN : parse_vxlan;
         UDP_PORT_GENV: parse_geneve;
+#endif /* TUNNEL_DISABLE */
 #ifdef INT_ENABLE
         // vxlan-gpe is only supported in the context of INT at this time
         UDP_PORT_VXLAN_GPE : parse_vxlan_gpe;
@@ -480,7 +474,7 @@ parser parse_int_header {
     extract(int_header);
     set_metadata(int_metadata.instruction_cnt, latest.ins_cnt);
     return select (latest.rsvd1, latest.total_hop_cnt) {
-        // reserved bits = 0 and total_hop_cnt == 0 
+        // reserved bits = 0 and total_hop_cnt == 0
         // no int_values are added by upstream
         0x000: ingress;
 #ifdef INT_EP_ENABLE
@@ -508,8 +502,8 @@ parser parse_int_val {
 #endif // INT_EP_ENABLE
 
 parser parse_all_int_meta_value_heders {
-    // bogus state.. just extract all possible int headers in the 
-    // correct order to build 
+    // bogus state.. just extract all possible int headers in the
+    // correct order to build
     // the correct parse graph for deparser (while adding headers)
     extract(int_switch_id_header);
     extract(int_ingress_port_id_header);
@@ -715,6 +709,10 @@ parser parse_lisp {
 
 parser parse_inner_ipv4 {
     extract(inner_ipv4);
+    set_metadata(ipv4_metadata.lkp_ipv4_sa, latest.srcAddr);
+    set_metadata(ipv4_metadata.lkp_ipv4_da, latest.dstAddr);
+    set_metadata(l3_metadata.lkp_ip_proto, latest.protocol);
+    set_metadata(l3_metadata.lkp_ip_ttl, latest.ttl);
     return select(latest.fragOffset, latest.ihl, latest.protocol) {
         IP_PROTOCOLS_IPHL_ICMP : parse_inner_icmp;
         IP_PROTOCOLS_IPHL_TCP : parse_inner_tcp;
@@ -727,7 +725,7 @@ header icmp_t inner_icmp;
 
 parser parse_inner_icmp {
     extract(inner_icmp);
-    set_metadata(l3_metadata.lkp_inner_l4_sport, latest.typeCode);
+    set_metadata(l3_metadata.lkp_l4_sport, latest.typeCode);
     return ingress;
 }
 
@@ -736,8 +734,8 @@ header tcp_t inner_tcp;
 
 parser parse_inner_tcp {
     extract(inner_tcp);
-    set_metadata(l3_metadata.lkp_inner_l4_sport, latest.srcPort);
-    set_metadata(l3_metadata.lkp_inner_l4_dport, latest.dstPort);
+    set_metadata(l3_metadata.lkp_l4_sport, latest.srcPort);
+    set_metadata(l3_metadata.lkp_l4_dport, latest.dstPort);
     return ingress;
 }
 
@@ -745,8 +743,8 @@ header udp_t inner_udp;
 
 parser parse_inner_udp {
     extract(inner_udp);
-    set_metadata(l3_metadata.lkp_inner_l4_sport, latest.srcPort);
-    set_metadata(l3_metadata.lkp_inner_l4_dport, latest.dstPort);
+    set_metadata(l3_metadata.lkp_l4_sport, latest.srcPort);
+    set_metadata(l3_metadata.lkp_l4_dport, latest.dstPort);
     return ingress;
 }
 
@@ -759,6 +757,12 @@ parser parse_inner_sctp {
 
 parser parse_inner_ipv6 {
     extract(inner_ipv6);
+#if !defined(IPV6_DISABLE)
+    set_metadata(ipv6_metadata.lkp_ipv6_sa, latest.srcAddr);
+    set_metadata(ipv6_metadata.lkp_ipv6_da, latest.dstAddr);
+    set_metadata(l3_metadata.lkp_ip_proto, latest.nextHdr);
+    set_metadata(l3_metadata.lkp_ip_ttl, latest.hopLimit);
+#endif /* !defined(IPV6_DISABLE) */
     return select(latest.nextHdr) {
         IP_PROTOCOLS_ICMPV6 : parse_inner_icmp;
         IP_PROTOCOLS_TCP : parse_inner_tcp;
@@ -769,9 +773,13 @@ parser parse_inner_ipv6 {
 
 parser parse_inner_ethernet {
     extract(inner_ethernet);
+    set_metadata(l2_metadata.lkp_mac_sa, latest.srcAddr);
+    set_metadata(l2_metadata.lkp_mac_da, latest.dstAddr);
     return select(latest.etherType) {
         ETHERTYPE_IPV4 : parse_inner_ipv4;
+#ifndef TUNNEL_OVER_IPV6_DISABLE
         ETHERTYPE_IPV6 : parse_inner_ipv6;
+#endif
         default: ingress;
     }
 }
@@ -848,6 +856,7 @@ parser parse_fabric_header_mirror {
 
 parser parse_fabric_header_cpu {
     extract(fabric_header_cpu);
+    set_metadata(ingress_metadata.bypass_lookups, latest.reasonCode);
 #ifdef SFLOW_ENABLE
     return select(latest.reasonCode) {
         CPU_REASON_CODE_SFLOW: parse_fabric_sflow_header;

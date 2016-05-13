@@ -53,8 +53,8 @@ switch_pd_mcast_table_add_entry(switch_device_t device,
 
                     match_spec.multicast_metadata_ipv4_mcast_key_type = SWITCH_MCAST_KEY_TYPE_VRF;
                     match_spec.multicast_metadata_ipv4_mcast_key = handle_to_id(group_key->bd_vrf_handle);
-                    match_spec.ipv4_metadata_lkp_ipv4_sa = SWITCH_MCAST_GROUP_IPV4_SRC_IP(group_key);
-                    match_spec.ipv4_metadata_lkp_ipv4_da = SWITCH_MCAST_GROUP_IPV4_GRP_IP(group_key);
+                    match_spec.ipv4_srcAddr = SWITCH_MCAST_GROUP_IPV4_SRC_IP(group_key);
+                    match_spec.ipv4_dstAddr = SWITCH_MCAST_GROUP_IPV4_GRP_IP(group_key);
 
 #ifdef OUTER_MULTICAST_TREE_ENABLED
                     action_spec.action_mc_index = mgid_index;
@@ -73,8 +73,8 @@ switch_pd_mcast_table_add_entry(switch_device_t device,
 
                     match_spec.multicast_metadata_ipv4_mcast_key_type = SWITCH_MCAST_KEY_TYPE_BD;
                     match_spec.multicast_metadata_ipv4_mcast_key = handle_to_id(group_key->bd_vrf_handle);
-                    match_spec.ipv4_metadata_lkp_ipv4_sa = SWITCH_MCAST_GROUP_IPV4_SRC_IP(group_key);
-                    match_spec.ipv4_metadata_lkp_ipv4_da = SWITCH_MCAST_GROUP_IPV4_GRP_IP(group_key);
+                    match_spec.ipv4_srcAddr = SWITCH_MCAST_GROUP_IPV4_SRC_IP(group_key);
+                    match_spec.ipv4_dstAddr = SWITCH_MCAST_GROUP_IPV4_GRP_IP(group_key);
 
 #ifdef OUTER_MULTICAST_TREE_ENABLED
                     action_spec.action_mc_index = mgid_index;
@@ -96,9 +96,9 @@ switch_pd_mcast_table_add_entry(switch_device_t device,
 
                     match_spec.multicast_metadata_ipv6_mcast_key_type = SWITCH_MCAST_KEY_TYPE_VRF;
                     match_spec.multicast_metadata_ipv6_mcast_key = handle_to_id(group_key->bd_vrf_handle);
-                    memcpy(&(match_spec.ipv6_metadata_lkp_ipv6_sa),
+                    memcpy(&(match_spec.ipv6_srcAddr),
                            &(SWITCH_MCAST_GROUP_IPV6_SRC_IP(group_key)), 16);
-                    memcpy(&(match_spec.ipv6_metadata_lkp_ipv6_da),
+                    memcpy(&(match_spec.ipv6_dstAddr),
                            &(SWITCH_MCAST_GROUP_IPV6_GRP_IP(group_key)), 16);
 
 #ifdef OUTER_MULTICAST_TREE_ENABLED
@@ -118,9 +118,9 @@ switch_pd_mcast_table_add_entry(switch_device_t device,
 
                     match_spec.multicast_metadata_ipv6_mcast_key_type = SWITCH_MCAST_KEY_TYPE_BD;
                     match_spec.multicast_metadata_ipv6_mcast_key = handle_to_id(group_key->bd_vrf_handle);
-                    memcpy(&(match_spec.ipv6_metadata_lkp_ipv6_sa),
+                    memcpy(&(match_spec.ipv6_srcAddr),
                            &(SWITCH_MCAST_GROUP_IPV6_SRC_IP(group_key)), 16);
-                    memcpy(&(match_spec.ipv6_metadata_lkp_ipv6_da),
+                    memcpy(&(match_spec.ipv6_dstAddr),
                            &(SWITCH_MCAST_GROUP_IPV6_GRP_IP(group_key)), 16);
 
 #ifdef OUTER_MULTICAST_TREE_ENABLED
@@ -146,8 +146,8 @@ switch_pd_mcast_table_add_entry(switch_device_t device,
 
                         match_spec.multicast_metadata_ipv4_mcast_key_type = SWITCH_MCAST_KEY_TYPE_VRF;
                         match_spec.multicast_metadata_ipv4_mcast_key = handle_to_id(group_key->bd_vrf_handle);
-                        match_spec.ipv4_metadata_lkp_ipv4_da = SWITCH_MCAST_GROUP_IPV4_GRP_IP(group_key);
-                        match_spec.ipv4_metadata_lkp_ipv4_da_mask = 0xffffffff;
+                        match_spec.ipv4_dstAddr = SWITCH_MCAST_GROUP_IPV4_GRP_IP(group_key);
+                        match_spec.ipv4_dstAddr_mask = 0xffffffff;
 
 #ifdef OUTER_MULTICAST_TREE_ENABLED
                         action_spec.action_mc_index = mgid_index;
@@ -166,8 +166,8 @@ switch_pd_mcast_table_add_entry(switch_device_t device,
 
                         match_spec.multicast_metadata_ipv4_mcast_key_type = SWITCH_MCAST_KEY_TYPE_VRF;
                         match_spec.multicast_metadata_ipv4_mcast_key = handle_to_id(group_key->bd_vrf_handle);
-                        match_spec.ipv4_metadata_lkp_ipv4_da = SWITCH_MCAST_GROUP_IPV4_GRP_IP(group_key);
-                        match_spec.ipv4_metadata_lkp_ipv4_da_mask = 0xffffffff;
+                        match_spec.ipv4_dstAddr = SWITCH_MCAST_GROUP_IPV4_GRP_IP(group_key);
+                        match_spec.ipv4_dstAddr_mask = 0xffffffff;
 
 #ifdef OUTER_MULTICAST_TREE_ENABLED
                         action_spec.action_mc_index = mgid_index;
@@ -187,8 +187,8 @@ switch_pd_mcast_table_add_entry(switch_device_t device,
 
                     match_spec.multicast_metadata_ipv4_mcast_key_type = SWITCH_MCAST_KEY_TYPE_BD;
                     match_spec.multicast_metadata_ipv4_mcast_key = handle_to_id(group_key->bd_vrf_handle);
-                    match_spec.ipv4_metadata_lkp_ipv4_da = SWITCH_MCAST_GROUP_IPV4_GRP_IP(group_key);
-                    match_spec.ipv4_metadata_lkp_ipv4_da_mask = 0xffffffff;
+                    match_spec.ipv4_dstAddr = SWITCH_MCAST_GROUP_IPV4_GRP_IP(group_key);
+                    match_spec.ipv4_dstAddr_mask = 0xffffffff;
 
 #ifdef OUTER_MULTICAST_TREE_ENABLED
                     action_spec.action_mc_index = mgid_index;
@@ -211,9 +211,9 @@ switch_pd_mcast_table_add_entry(switch_device_t device,
 
                         match_spec.multicast_metadata_ipv6_mcast_key_type = SWITCH_MCAST_KEY_TYPE_VRF;
                         match_spec.multicast_metadata_ipv6_mcast_key = handle_to_id(group_key->bd_vrf_handle);
-                        memcpy(&(match_spec.ipv6_metadata_lkp_ipv6_da),
+                        memcpy(&(match_spec.ipv6_dstAddr),
                                &(SWITCH_MCAST_GROUP_IPV6_GRP_IP(group_key)), 16);
-                        memset(&(match_spec.ipv6_metadata_lkp_ipv6_da_mask), 0xff, 16);
+                        memset(&(match_spec.ipv6_dstAddr_mask), 0xff, 16);
 
 #ifdef OUTER_MULTICAST_TREE_ENABLED
                         action_spec.action_mc_index = mgid_index;
@@ -232,9 +232,9 @@ switch_pd_mcast_table_add_entry(switch_device_t device,
 
                         match_spec.multicast_metadata_ipv6_mcast_key_type = SWITCH_MCAST_KEY_TYPE_VRF;
                         match_spec.multicast_metadata_ipv6_mcast_key = handle_to_id(group_key->bd_vrf_handle);
-                        memcpy(&(match_spec.ipv6_metadata_lkp_ipv6_da),
+                        memcpy(&(match_spec.ipv6_dstAddr),
                                &(SWITCH_MCAST_GROUP_IPV6_GRP_IP(group_key)), 16);
-                        memset(&(match_spec.ipv6_metadata_lkp_ipv6_da_mask), 0xff, 16);
+                        memset(&(match_spec.ipv6_dstAddr_mask), 0xff, 16);
 
 #ifdef OUTER_MULTICAST_TREE_ENABLED
                         action_spec.action_mc_index = mgid_index;
@@ -254,9 +254,9 @@ switch_pd_mcast_table_add_entry(switch_device_t device,
 
                     match_spec.multicast_metadata_ipv6_mcast_key_type = SWITCH_MCAST_KEY_TYPE_BD;
                     match_spec.multicast_metadata_ipv6_mcast_key = handle_to_id(group_key->bd_vrf_handle);
-                    memcpy(&(match_spec.ipv6_metadata_lkp_ipv6_da),
+                    memcpy(&(match_spec.ipv6_dstAddr),
                            &(SWITCH_MCAST_GROUP_IPV6_GRP_IP(group_key)), 16);
-                    memset(&(match_spec.ipv6_metadata_lkp_ipv6_da_mask), 0xff, 16);
+                    memset(&(match_spec.ipv6_dstAddr_mask), 0xff, 16);
 
 #ifdef OUTER_MULTICAST_TREE_ENABLED
                     action_spec.action_mc_index = mgid_index;

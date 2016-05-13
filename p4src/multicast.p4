@@ -145,7 +145,7 @@ table outer_ipv4_multicast_star_g {
     reads {
         multicast_metadata.ipv4_mcast_key_type : exact;
         multicast_metadata.ipv4_mcast_key : exact;
-        ipv4_metadata.lkp_ipv4_da : ternary;
+        ipv4.dstAddr : ternary;
     }
     actions {
         nop;
@@ -160,8 +160,8 @@ table outer_ipv4_multicast {
     reads {
         multicast_metadata.ipv4_mcast_key_type : exact;
         multicast_metadata.ipv4_mcast_key : exact;
-        ipv4_metadata.lkp_ipv4_sa : exact;
-        ipv4_metadata.lkp_ipv4_da : exact;
+        ipv4.srcAddr : exact;
+        ipv4.dstAddr : exact;
     }
     actions {
         nop;
@@ -193,7 +193,7 @@ table outer_ipv6_multicast_star_g {
     reads {
         multicast_metadata.ipv6_mcast_key_type : exact;
         multicast_metadata.ipv6_mcast_key : exact;
-        ipv6_metadata.lkp_ipv6_da : ternary;
+        ipv6.dstAddr : ternary;
     }
     actions {
         nop;
@@ -208,8 +208,8 @@ table outer_ipv6_multicast {
     reads {
         multicast_metadata.ipv6_mcast_key_type : exact;
         multicast_metadata.ipv6_mcast_key : exact;
-        ipv6_metadata.lkp_ipv6_sa : exact;
-        ipv6_metadata.lkp_ipv6_da : exact;
+        ipv6.srcAddr : exact;
+        ipv6.dstAddr : exact;
     }
     actions {
         nop;
@@ -407,15 +407,18 @@ table ipv4_multicast_route {
 control process_ipv4_multicast {
 #if !defined(L2_MULTICAST_DISABLE) && !defined(IPV4_DISABLE)
     /* ipv4 multicast lookup */
-    apply(ipv4_multicast_bridge) {
-        on_miss {
-            apply(ipv4_multicast_bridge_star_g);
+    if (DO_LOOKUP(L2)) {
+        apply(ipv4_multicast_bridge) {
+            on_miss {
+                apply(ipv4_multicast_bridge_star_g);
+            }
         }
     }
 #endif /* !L2_MULTICAST_DISABLE && !IPV4_DISABLE */
 
 #if !defined(L3_MULTICAST_DISABLE) && !defined(IPV4_DISABLE)
-    if (multicast_metadata.ipv4_multicast_enabled == TRUE) {
+    if (DO_LOOKUP(L3) and
+        (multicast_metadata.ipv4_multicast_enabled == TRUE)) {
         apply(ipv4_multicast_route) {
             on_miss {
                 apply(ipv4_multicast_route_star_g);
@@ -496,15 +499,18 @@ table ipv6_multicast_route {
 
 control process_ipv6_multicast {
 #if !defined(L2_MULTICAST_DISABLE) && !defined(IPV6_DISABLE)
-    apply(ipv6_multicast_bridge) {
-        on_miss {
-            apply(ipv6_multicast_bridge_star_g);
+    if (DO_LOOKUP(L2)) {
+        apply(ipv6_multicast_bridge) {
+            on_miss {
+                apply(ipv6_multicast_bridge_star_g);
+            }
         }
     }
 #endif /* !L2_MULTICAST_DISABLE && !IPV6_DISABLE */
 
 #if !defined(L3_MULTICAST_DISABLE) && !defined(IPV6_DISABLE)
-    if (multicast_metadata.ipv6_multicast_enabled == TRUE) {
+    if (DO_LOOKUP(L3) and
+        (multicast_metadata.ipv6_multicast_enabled == TRUE)) {
         apply(ipv6_multicast_route) {
             on_miss {
                 apply(ipv6_multicast_route_star_g);

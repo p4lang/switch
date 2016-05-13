@@ -63,7 +63,8 @@ table spanning_tree {
 
 control process_spanning_tree {
 #ifndef L2_DISABLE
-    if (l2_metadata.stp_group != STP_GROUP_NONE) {
+    if ((ingress_metadata.port_type == PORT_TYPE_NORMAL) and
+        (l2_metadata.stp_group != STP_GROUP_NONE)) {
         apply(spanning_tree);
     }
 #endif /* L2_DISABLE */
@@ -157,8 +158,12 @@ table dmac {
 
 control process_mac {
 #ifndef L2_DISABLE
-    apply(smac);
-    apply(dmac);
+    if (ingress_metadata.port_type == PORT_TYPE_NORMAL) {
+        apply(smac);
+    }
+    if (DO_LOOKUP(L2)) {
+        apply(dmac);
+    }
 #endif /* L2_DISABLE */
 }
 
@@ -295,7 +300,6 @@ action set_egress_bd_properties(smac_idx) {
     modify_field(egress_metadata.smac_idx, smac_idx);
 }
 
-@pragma ternary 1
 table egress_bd_map {
     reads {
         egress_metadata.bd : exact;

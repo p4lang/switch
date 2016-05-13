@@ -23,7 +23,7 @@ limitations under the License.
 #include "switch_pd.h"
 #include "switch_interface_int.h"
 #include "switch_tunnel_int.h"
-#include "switch_log.h"
+#include "switch_log_int.h"
 #include <string.h>
 #include <netinet/in.h>
 
