@@ -858,10 +858,10 @@ sai_status_t sai_send_hostif_packet(
     for (index = 0; index < attr_count; index++) {
         attribute = &attr_list[index];
         switch (attribute->id) {
-            case SAI_HOSTIF_PACKET_TX_TYPE:
+            case SAI_HOSTIF_PACKET_ATTR_TX_TYPE:
                 hostif_packet.tx_bypass = switch_sai_tx_type_to_switch_api_tx_type(attribute->value.u32);
                 break;
-            case SAI_HOSTIF_PACKET_EGRESS_PORT_OR_LAG:
+            case SAI_HOSTIF_PACKET_ATTR_EGRESS_PORT_OR_LAG:
                 hostif_packet.handle = attribute->value.oid;
                 //Set is_lag flag if oid is lag
                 break;
@@ -912,11 +912,11 @@ void sai_recv_hostif_packet_cb(
     sai_attribute_t attr_list[max_attr_count];
     sai_attribute_t *attribute;
     attribute = &attr_list[attr_count];
-    attribute->id = SAI_HOSTIF_PACKET_TRAP_ID;
+    attribute->id = SAI_HOSTIF_PACKET_ATTR_TRAP_ID;
     attribute->value.u32 = hostif_packet->reason_code;
     attr_count++;
     attribute = &attr_list[attr_count];
-    attribute->id = SAI_HOSTIF_PACKET_INGRESS_PORT;
+    attribute->id = SAI_HOSTIF_PACKET_ATTR_INGRESS_PORT;
     attribute->value.oid = hostif_packet->handle;
     attr_count++;
 
