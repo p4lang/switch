@@ -404,8 +404,7 @@ struct switcht_api_hostif_rcode_info_t {
 }
 
 struct switcht_hostif_t {
-    1: switcht_handle_t handle;
-    2: string intf_name;
+    1: string intf_name;
 }
 
 struct switcht_acl_action_cpu_redirect {
@@ -759,7 +758,7 @@ service switch_api_rpc {
     switcht_status_t switcht_api_meter_delete(
                              1: switcht_device_t device,
                              2: switcht_handle_t meter_handle);
-    
+
     list<switcht_counter_t> switcht_api_meter_stats_get(
                              1: switcht_device_t device,
                              2: switcht_handle_t meter_handle,

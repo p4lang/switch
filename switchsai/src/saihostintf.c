@@ -61,7 +61,6 @@ sai_status_t sai_create_hostif(
                 }
                 break;
             case SAI_HOSTIF_ATTR_RIF_OR_PORT_ID:
-                hostif.handle = attribute->value.oid;
                 break;
             case SAI_HOSTIF_ATTR_NAME:
                 memcpy(hostif.intf_name, attribute->value.chardata, HOSTIF_NAME_SIZE);

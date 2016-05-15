@@ -45,3 +45,11 @@ limitations under the License.
 #define DROP_URPF_CHECK_FAIL               62
 #define DROP_IPSG_MISS                     63
 #define DROP_IFINDEX                       64
+
+/* 
+ * other reason codes shared between P4 program and APIs 
+ * Must match the definitions in switch_hostif.h file
+ */
+
+#define CPU_REASON_CODE_SFLOW   0x4
+#define CPU_REASON_CODE_L3_REDIRECT   0x217

@@ -24,7 +24,7 @@ limitations under the License.
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-    
+
 typedef enum {
     SWITCH_HANDLE_TYPE_NONE,
     SWITCH_HANDLE_TYPE_PORT,
@@ -60,7 +60,7 @@ typedef enum {
  handle impicitly encodes the device, type and type specific
  */
  typedef unsigned long switch_handle_t;
-    
+
  /** Handle related information */
 typedef struct {
     switch_handle_type_t type;             /**< type of handle */
@@ -71,11 +71,11 @@ typedef struct {
     bool grow_on_demand;                   /**< allocate new handles as needed */
     bool zero_based;                       /**< 0 is a valid id */
 } switch_handle_info_t;
-    
+
 // Protoypes
 int switch_handle_type_init(switch_handle_type_t type, unsigned int size);
-int switch_handle_type_allocator_init(switch_handle_type_t type, 
-                                      unsigned int num_handles, 
+int switch_handle_type_allocator_init(switch_handle_type_t type,
+                                      unsigned int num_handles,
                                       bool grow_on_demand, bool zero_based);
 void switch_handle_type_free(switch_handle_type_t type);
 switch_handle_t switch_handle_allocate(switch_handle_type_t type);
@@ -135,7 +135,7 @@ switch_handle_type_t switch_handle_get_type(switch_handle_t handle);
 // Easy use macros
 #define SWITCH_API_INVALID_HANDLE 0xFFFFFFFF
 #define SWITCH_HW_INVALID_HANDLE 0xFFFFFFFF
-    
+
 #define _switch_handle_create(_type, _info, _judy, _init, _handle)      \
     _handle = switch_handle_allocate(_type);                            \
     if(_handle) {                                                       \
@@ -156,7 +156,7 @@ switch_handle_type_t switch_handle_get_type(switch_handle_t handle);
             _handle = 0;                                                \
         }                                                               \
     }                                                                   \
- 
+
 #define _switch_handle_set_and_create(                                  \
         _type, _info, _judy, _init, _id, _handle)                       \
     _handle = switch_handle_set_and_allocate(_type, _id);               \
@@ -213,7 +213,7 @@ switch_handle_type_t switch_handle_get_type(switch_handle_t handle);
 
 #define SWITCH_HANDLE_IS_LAG(handle) \
     switch_handle_get_type(handle) == SWITCH_HANDLE_TYPE_LAG
-    
+
 #define SWITCH_HANDLE_IS_VRF(handle) \
     switch_handle_get_type(handle) == SWITCH_HANDLE_TYPE_VRF
 

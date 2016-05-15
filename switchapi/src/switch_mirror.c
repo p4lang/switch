@@ -20,7 +20,7 @@ limitations under the License.
 #include "switch_mirror_int.h"
 #include "switch_nhop_int.h"
 #include "switch_pd.h"
-#include "switch_log.h"
+#include "switch_log_int.h"
 #include "switch_capability_int.h"
 
 static void *switch_mirror_array = NULL;
@@ -32,7 +32,7 @@ switch_status_t
 switch_mirror_init(switch_device_t device)
 {
     switch_mirror_array = NULL;
-    switch_handle_type_init(SWITCH_HANDLE_TYPE_MIRROR, 
+    switch_handle_type_init(SWITCH_HANDLE_TYPE_MIRROR,
                                         SWITCH_MAX_MIRROR_SESSIONS);
     session_id_allocator = switch_api_id_allocator_new(
                                         SWITCH_MAX_MIRROR_SESSIONS/32,
@@ -173,7 +173,7 @@ switch_api_mirror_session_create(switch_device_t device,
                                      __FUNCTION__, __LINE__);
                     return SWITCH_API_INVALID_HANDLE;
                 }
-        
+
                 tunnel_info = &api_mirror_info->tunnel_info;
                 tunnel_info->u.ip_encap.vrf_handle = switch_api_default_vrf_internal();
                 tunnel_info->encap_mode = SWITCH_API_TUNNEL_ENCAP_MODE_IP;
@@ -185,7 +185,7 @@ switch_api_mirror_session_create(switch_device_t device,
                                      __FUNCTION__, __LINE__);
                     return SWITCH_API_INVALID_HANDLE;
                 }
-        
+
                 memset(&nhop_key, 0, sizeof(switch_nhop_key_t));
                 nhop_key.intf_handle = tunnel_intf_handle;
                 nhop_handle = switch_api_nhop_create(device, &nhop_key);
@@ -194,7 +194,7 @@ switch_api_mirror_session_create(switch_device_t device,
                                      __FUNCTION__, __LINE__);
                     return SWITCH_API_INVALID_HANDLE;
                 }
-        
+
                 ip_encap = &tunnel_info->u.ip_encap;
                 memset(&api_neighbor, 0, sizeof(switch_api_neighbor_t));
                 api_neighbor.vrf_handle = switch_api_default_vrf_internal();
@@ -212,7 +212,7 @@ switch_api_mirror_session_create(switch_device_t device,
                                      __FUNCTION__, __LINE__);
                     return SWITCH_API_INVALID_HANDLE;
                 }
-        
+
                 memset(&api_neighbor, 0, sizeof(switch_api_neighbor_t));
                 api_neighbor.vrf_handle = switch_api_default_vrf_internal();
                 api_neighbor.interface = tunnel_intf_handle;
@@ -224,13 +224,13 @@ switch_api_mirror_session_create(switch_device_t device,
                                      __FUNCTION__, __LINE__);
                     return SWITCH_API_INVALID_HANDLE;
                 }
-        
+
                 mirror_info->intf_handle = intf_handle;
                 mirror_info->tunnel_intf_handle = tunnel_intf_handle;
                 mirror_info->inner_neigh_handle = inner_neigh_handle;
                 mirror_info->outer_neigh_handle = outer_neigh_handle;
                 mirror_info->api_mirror_info.nhop_handle = nhop_handle;
-        
+
                 status = switch_pd_mirror_table_entry_add(device,
                                                 mirror_handle,
                                                 mirror_info);
@@ -250,7 +250,7 @@ switch_api_mirror_session_create(switch_device_t device,
 }
 
 switch_status_t
-switch_api_mirror_session_update(switch_device_t device, 
+switch_api_mirror_session_update(switch_device_t device,
                                  switch_handle_t mirror_handle,
                                  switch_api_mirror_info_t *api_mirror_info)
 {
@@ -316,7 +316,7 @@ switch_api_mirror_session_delete(switch_device_t device, switch_handle_t mirror_
             case SWITCH_MIRROR_TYPE_REMOTE:
                 vlan_port.tagging_mode = 0;
                 vlan_port.handle = mirror_info->intf_handle;
-                status = switch_api_vlan_ports_remove(device, 
+                status = switch_api_vlan_ports_remove(device,
                                                       mirror_info->vlan_handle,
                                                       1, &vlan_port);
                 status = switch_api_interface_delete(device, mirror_info->intf_handle);

@@ -26,7 +26,7 @@ limitations under the License.
 #include "switch_neighbor_int.h"
 #include "switch_lag_int.h"
 #include "switch_stp_int.h"
-#include "switch_log.h"
+#include "switch_log_int.h"
 #include "switch_port_int.h"
 #include "switch_tunnel_int.h"
 #include "switch_acl_int.h"
@@ -52,6 +52,7 @@ static pthread_t stats_thread;
 switch_status_t
 switch_api_lib_init(switch_device_t device)
 {
+    switch_log_init();
     SWITCH_API_TRACE("Initializing switch api!!");
     switch_pd_client_init(device);
     switch_router_mac_init(device);
@@ -72,6 +73,7 @@ switch_api_lib_init(switch_device_t device)
     switch_hostif_init(device);
     switch_capability_init(device);
     switch_meter_init(device);
+    switch_packet_init(device);
     switch_sflow_init(device);
 
     return SWITCH_STATUS_SUCCESS;
@@ -445,12 +447,13 @@ switch_api_init_default_acl_entries(switch_device_t device)
     acl_kvp[1].mask.u.mask = 0xFFFFFFFF;
     memset(&action_params, 0, sizeof(switch_acl_action_params_t));
     action_params.cpu_redirect.reason_code = 0;
-    switch_api_acl_rule_create(device, acl_handle, priority++, 2,
+    switch_api_acl_rule_create(device, acl_handle, 
+                               2000, /* keep priority lower than reason-codes */
+                               2,
                                acl_kvp, SWITCH_ACL_ACTION_COPY_TO_CPU,
                                &action_params,
                                &opt_action_params,
                                &handle);
-
     // egress l3_mtu_check
     acl_handle = switch_api_acl_list_create(device,
                                             SWITCH_ACL_TYPE_EGRESS_SYSTEM);

@@ -508,8 +508,6 @@ header_type fabric_header_mirror_t {
     }
 }
 
-#define CPU_REASON_CODE_SFLOW   0x106 // must match switch_hostif.h reson_code
-
 header_type fabric_header_cpu_t {
     fields {
         egressQueue : 5;

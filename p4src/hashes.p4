@@ -9,10 +9,6 @@ header_type hash_metadata_t {
     }
 }
 
-@pragma pa_atomic ingress hash_metadata.hash1
-@pragma pa_solitary ingress hash_metadata.hash1
-@pragma pa_atomic ingress hash_metadata.hash2
-@pragma pa_solitary ingress hash_metadata.hash2
 metadata hash_metadata_t hash_metadata;
 
 field_list lkp_ipv4_hash1_fields {

@@ -99,3 +99,18 @@ limitations under the License.
 #define PORT_TYPE_NORMAL                       0
 #define PORT_TYPE_FABRIC                       1
 #define PORT_TYPE_CPU                          2
+
+/* BYPASS LOOKUP */
+#define BYPASS_L2                              0x0001
+#define BYPASS_L3                              0x0002
+#define BYPASS_ACL                             0x0004
+#define BYPASS_QOS                             0x0008
+#define BYPASS_METER                           0x0010
+#define BYPASS_SYSTEM_ACL                      0x0020
+#define BYPASS_ALL                             0xFFFF
+
+#define DO_LOOKUP(l) \
+    ((ingress_metadata.bypass_lookups & BYPASS_##l) == 0)
+
+#define BYPASS_ALL_LOOKUPS \
+    (ingress_metadata.bypass_lookups == BYPASS_ALL)

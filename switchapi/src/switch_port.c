@@ -46,12 +46,13 @@ switch_port_init(switch_device_t device)
                                      SWITCH_PORT_ID(port_info),
                                      &(port_info->mbr_hdl),
                                      &(port_info->lg_entry));
-        port_info->hw_entry = SWITCH_HW_INVALID_HANDLE;
+        port_info->hw_entry[0] = SWITCH_HW_INVALID_HANDLE;
+        port_info->hw_entry[1] = SWITCH_HW_INVALID_HANDLE;
         switch_pd_ingress_port_mapping_table_add_entry(device,
                                      SWITCH_PORT_ID(port_info),
                                      port_info->ifindex,
                                      port_info->port_type,
-                                     &(port_info->hw_entry));
+                                     port_info->hw_entry);
         port_info->eg_port_entry = SWITCH_HW_INVALID_HANDLE;
         switch_pd_egress_port_mapping_table_add_entry(device,
                                      SWITCH_PORT_ID(port_info),
@@ -61,13 +62,6 @@ switch_port_init(switch_device_t device)
         port_info->port_handle = id_to_handle(SWITCH_HANDLE_TYPE_PORT, index);
 #endif
     }
-    memset(&dummy_port_info, 0, sizeof(dummy_port_info));
-    dummy_port_info.port_type = SWITCH_PORT_TYPE_NORMAL;
-
-    memset(&null_port_info, 0, sizeof(null_port_info));
-    null_port_info.ifindex =  NULL_PORT_ID;
-    null_port_info.port_type = SWITCH_PORT_TYPE_NORMAL;
-
     return SWITCH_STATUS_SUCCESS;
 }
 
@@ -115,11 +109,11 @@ switch_api_port_delete(switch_device_t device, uint16_t port_number)
 {
     switch_status_t status = SWITCH_STATUS_SUCCESS;
     switch_port_info_t *port_info = switch_api_port_get_internal(port_number);
-    if(port_info) {
-        status = switch_pd_lag_group_table_delete_entry(device, port_info->hw_entry);
-        return status;
-    }
-    return SWITCH_STATUS_FAILURE;
+    status = switch_pd_lag_group_table_delete_entry(
+        device, port_info->lg_entry);
+    status = switch_pd_ingress_port_mapping_table_delete_entry(
+        device, port_info->hw_entry);
+    return status;
 }
 
 // stubs for linking, fill in when functionality is present in p4
@@ -248,7 +242,7 @@ switch_api_storm_control_stats_get(switch_device_t device,
     switch_meter_info_t               *meter_info = NULL;
     switch_meter_stats_info_t         *stats_info = NULL;
     int                                index = 0;
-    switch_vlan_stats_t                counter_id = 0;
+    switch_bd_stats_id_t               counter_id = 0;
 
     meter_info = switch_meter_info_get(meter_handle);
     if (!meter_info) {

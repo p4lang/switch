@@ -1,5 +1,5 @@
 /*
-Copyright 2013-present Barefoot Networks, Inc. 
+Copyright 2013-present Barefoot Networks, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,6 +24,11 @@ action set_config_parameters(enable_dod) {
      */
     deflect_on_drop(enable_dod);
 
+    /* initialization */
+    modify_field(i2e_metadata.ingress_tstamp, _ingress_global_tstamp_);
+    modify_field(ingress_metadata.ingress_port, ingress_input_port);
+    modify_field(l2_metadata.same_if_check, ingress_metadata.ifindex);
+    modify_field(ingress_egress_port, INVALID_PORT_ID);
 #ifdef SFLOW_ENABLE
     /* use 31 bit random number generator and detect overflow into upper half
      * to decide to take a sample
@@ -31,12 +36,6 @@ action set_config_parameters(enable_dod) {
     modify_field_rng_uniform(ingress_metadata.sflow_take_sample,
                                 0, 0x7FFFFFFF);
 #endif
-
-    /* initialization */
-    modify_field(i2e_metadata.ingress_tstamp, _ingress_global_tstamp_);
-    modify_field(ingress_metadata.ingress_port, ingress_input_port);
-    modify_field(l2_metadata.same_if_check, ingress_metadata.ifindex);
-    modify_field(ingress_egress_port, INVALID_PORT_ID);
 }
 
 table switch_config_params {

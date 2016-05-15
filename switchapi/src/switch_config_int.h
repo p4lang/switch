@@ -28,6 +28,6 @@ switch_config_params_get (switch_device_t device);
 void
 switch_config_params_init (switch_device_t device);
 void
-switch_config_action_populate(switch_device_t device, 
+switch_config_action_populate(switch_device_t device,
                     p4_pd_dc_set_config_parameters_action_spec_t *action_sw_cfg);
 #endif // _switch_config_int_

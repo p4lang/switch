@@ -31,8 +31,8 @@ header_type l3_metadata_t {
         lkp_ip_ttl : 8;
         lkp_l4_sport : 16;
         lkp_l4_dport : 16;
-        lkp_inner_l4_sport : 16;
-        lkp_inner_l4_dport : 16;
+        lkp_outer_l4_sport : 16;
+        lkp_outer_l4_dport : 16;
 
         vrf : VRF_BIT_WIDTH;                   /* VRF */
         rmac_group : 10;                       /* Rmac group, for rmac indirection */

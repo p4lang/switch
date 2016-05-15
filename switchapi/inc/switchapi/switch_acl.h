@@ -586,7 +586,7 @@ switch_status_t switch_api_drop_stats_get(switch_device_t device,
                                           uint64_t **counters);
 
 /**
- create acl counter handle 
+ create acl counter handle
  @param device device
 */
 switch_handle_t
