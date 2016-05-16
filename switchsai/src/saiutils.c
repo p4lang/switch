@@ -316,7 +316,7 @@ sai_switch_ip_addr_to_sai_ip_addr(
 sai_status_t
 sai_switch_port_enabled_to_sai_oper_status(
         _In_ _Out_ sai_attribute_t *attr) {
-    switch (attr->value.booldata) {
+    switch ((int)attr->value.booldata) {
         case 1:
             attr->value.u8 = SAI_PORT_OPER_STATUS_UP;
             break;
