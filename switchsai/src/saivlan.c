@@ -195,6 +195,117 @@ sai_status_t sai_remove_all_vlans(void) {
 }
 
 /*
+    \brief Create VLAN Member
+    \param[out] vlan_member_id VLAN member ID
+    \param[in] attr_count number of attributes
+    \param[in] attr_list array of attributes
+    \return Success: SAI_STATUS_SUCCESS
+            Failure: failure status code on error
+*/
+sai_status_t sai_create_vlan_member(
+    _Out_ sai_object_id_t* vlan_member_id,
+    _In_ uint32_t attr_count,
+    _In_ const sai_attribute_t *attr_list
+    )
+{
+    sai_status_t status = SAI_STATUS_SUCCESS;
+    SAI_LOG_ENTER();
+
+    SAI_LOG_EXIT();
+
+    return (sai_status_t) status;
+}
+
+
+/*
+    \brief Remove VLAN Member
+    \param[in] vlan_member_id VLAN member ID
+    \return Success: SAI_STATUS_SUCCESS
+            Failure: failure status code on error
+*/
+sai_status_t sai_remove_vlan_member(
+    _In_ sai_object_id_t vlan_member_id
+    )
+{
+    sai_status_t status = SAI_STATUS_SUCCESS;
+    SAI_LOG_ENTER();
+
+    SAI_LOG_EXIT();
+
+    return (sai_status_t) status;
+}
+
+/*
+    \brief Set VLAN Member Attribute
+    \param[in] vlan_member_id VLAN member ID
+    \param[in] attr attribute structure containing ID and value
+    \return Success: SAI_STATUS_SUCCESS
+            Failure: failure status code on error
+*/
+sai_status_t sai_set_vlan_member_attribute(
+    _In_ sai_object_id_t vlan_member_id,
+    _In_ const sai_attribute_t *attr
+    )
+{
+    sai_status_t status = SAI_STATUS_SUCCESS;
+    SAI_LOG_ENTER();
+
+    SAI_LOG_EXIT();
+
+    return (sai_status_t) status;
+}
+
+/*
+    \brief Get VLAN Member Attribute
+    \param[in] vlan_member_id VLAN member ID
+    \param[in] attr_count number of attributes
+    \param[in,out] attr_list list of attribute structures containing ID and value
+    \return Success: SAI_STATUS_SUCCESS
+            Failure: failure status code on error
+*/
+sai_status_t sai_get_vlan_member_attribute(
+    _In_ sai_object_id_t vlan_member_id,
+    _In_ const uint32_t attr_count,
+    _Inout_ sai_attribute_t *attr_list
+    )
+{
+    sai_status_t status = SAI_STATUS_SUCCESS;
+    SAI_LOG_ENTER();
+
+    SAI_LOG_EXIT();
+
+    return (sai_status_t) status;
+}
+
+/**
+ * Routine Description:
+ *   @brief Clear vlan statistics counters.
+ *
+ * Arguments:
+ *    @param[in] vlan_id - vlan id
+ *    @param[in] counter_ids - specifies the array of counter ids
+ *    @param[in] number_of_counters - number of counters in the array
+ *
+ * Return Values:
+ *    @return SAI_STATUS_SUCCESS on success
+ *            Failure status code on error
+ */
+sai_status_t sai_clear_vlan_stats(
+    _In_ sai_vlan_id_t vlan_id,
+    _In_ const sai_vlan_stat_counter_t *counter_ids,
+    _In_ uint32_t number_of_counters
+    )
+{
+    sai_status_t status = SAI_STATUS_SUCCESS;
+    SAI_LOG_ENTER();
+
+    SAI_LOG_EXIT();
+
+    return (sai_status_t) status;
+}
+
+#if 0
+/*
 * Routine Description:
 *    Add Port to VLAN
 *
@@ -332,6 +443,8 @@ sai_status_t sai_remove_ports_from_vlan(
 
     return (sai_status_t) status;
 }
+
+#endif
 
 static sai_status_t
 switch_vlan_counters_to_sai_vlan_counters(
@@ -489,10 +602,19 @@ sai_vlan_api_t vlan_api = {
     .remove_vlan                       =             sai_remove_vlan_entry,
     .set_vlan_attribute                =             sai_set_vlan_entry_attribute,
     .get_vlan_attribute                =             sai_get_vlan_entry_attribute,
+    .create_vlan_member                =             sai_create_vlan_member,
+    .remove_vlan_member                =             sai_remove_vlan_member,
+    .set_vlan_member_attribute         =             sai_set_vlan_member_attribute,
+    .get_vlan_member_attribute         =             sai_get_vlan_member_attribute,
+
+#if 0
     .add_ports_to_vlan                 =             sai_add_ports_to_vlan,
     .remove_ports_from_vlan            =             sai_remove_ports_from_vlan,
     .remove_all_vlans                  =             sai_remove_all_vlans,
-    .get_vlan_stats                    =             sai_get_vlan_stats
+#else
+#endif
+    .get_vlan_stats                    =             sai_get_vlan_stats,
+    .clear_vlan_stats                  =             sai_clear_vlan_stats
 };
 
 sai_status_t sai_vlan_initialize(sai_api_service_t *sai_api_service) {
