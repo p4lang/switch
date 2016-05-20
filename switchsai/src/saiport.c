@@ -75,17 +75,17 @@ sai_status_t sai_set_port_attribute(
                     &port_speed))
                 != SAI_STATUS_SUCCESS) {
                 SAI_LOG_ERROR("bad port speed for port %d speed: %s",
-                    port_id, sai_status_to_string(status));
+                    (port_id & 0xFFFF), sai_status_to_string(status));
                 return status;
             }
             switch_status = switch_api_port_speed_set(
                 device,
-                (switch_port_t) port_id,
+                (switch_port_t) (port_id & 0xFFFF),
                 (switch_port_speed_t) attr->value.u8);
             if ((status = sai_switch_status_to_sai_status(switch_status))
                 != SAI_STATUS_SUCCESS) {
                 SAI_LOG_ERROR("failed to set port %d speed: %s",
-                    port_id, sai_status_to_string(status));
+                    (port_id & 0xFFFF), sai_status_to_string(status));
                 return status;
             }
             break;
@@ -165,12 +165,12 @@ sai_status_t sai_get_port_attribute(
            case SAI_PORT_ATTR_OPER_STATUS:
                switch_status = switch_api_port_state_get(
                    device,
-                   (switch_port_t) port_id,
+                   (switch_port_t) (port_id & 0xFFFF),
                    &(attr->value.booldata));
                if ((status = sai_switch_status_to_sai_status(switch_status))
                    != SAI_STATUS_SUCCESS) {
                    SAI_LOG_ERROR("failed to get port %d oper state: %s",
-                       port_id, sai_status_to_string(status));
+                       (port_id & 0xFFFF), sai_status_to_string(status));
                    return status;
                }
                status = sai_switch_port_enabled_to_sai_oper_status(attr);
@@ -180,12 +180,12 @@ sai_status_t sai_get_port_attribute(
            case SAI_PORT_ATTR_SPEED:
                switch_status = switch_api_port_speed_get(
                    device,
-                   (switch_port_t) port_id,
+                   (switch_port_t) (port_id & 0xFFFF),
                    (switch_port_speed_t *) &attr->value.u8);
                if ((status = sai_switch_status_to_sai_status(switch_status))
                    != SAI_STATUS_SUCCESS) {
                    SAI_LOG_ERROR("failed to get port %d speed: %s",
-                       port_id, sai_status_to_string(status));
+                       (port_id & 0xFFFF), sai_status_to_string(status));
                    return status;
                }
                attr->value.u32 = 40000; // SAI_PORT_SPEED_FORTY_GIG;
