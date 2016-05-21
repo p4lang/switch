@@ -17,6 +17,7 @@ limitations under the License.
 #include <saivlan.h>
 #include "saiinternal.h"
 #include <switchapi/switch_vlan.h>
+#include <switchapi/switch_handle.h>
 
 static sai_api_t api_id = SAI_API_VLAN;
 
@@ -210,6 +211,53 @@ sai_status_t sai_create_vlan_member(
 {
     sai_status_t status = SAI_STATUS_SUCCESS;
     SAI_LOG_ENTER();
+    switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
+    switch_handle_t vlan_handle = 0;
+    switch_vlan_port_t switch_port;
+    unsigned int index=0;
+    sai_vlan_tagging_mode_t tag_mode=SAI_VLAN_PORT_UNTAGGED;
+    unsigned short vlan_id;
+    switch_handle_t port_id;
+
+    memset(vlan_member_id, sizeof(sai_object_id_t), 0);
+    memset(&switch_port, sizeof(switch_port), 0);
+    for(index=0;index<attr_count;index++) {
+        switch(attr_list[index].id) {
+            case SAI_VLAN_MEMBER_ATTR_VLAN_ID:
+                vlan_id = attr_list[index].value.s32;
+                break;
+            case SAI_VLAN_MEMBER_ATTR_PORT_ID:
+                port_id = (switch_handle_t)attr_list[index].value.oid;
+                break;
+            case SAI_VLAN_MEMBER_ATTR_TAGGING_MODE:
+                tag_mode = attr_list[index].value.s32;
+                break;
+            default:
+                // NEED error checking here!
+                break;
+        }
+    }
+
+    switch_status = switch_api_vlan_id_to_handle_get((switch_vlan_t) vlan_id, &vlan_handle);
+    status = sai_switch_status_to_sai_status(switch_status);
+    if (status != SAI_STATUS_SUCCESS) {
+        SAI_LOG_ERROR("failed to add ports to vlan %d: %s",
+                      vlan_id, sai_status_to_string(status));
+        return status;
+    }
+
+    switch_port.handle = port_id;
+    switch_port.tagging_mode = tag_mode;
+    switch_status = switch_api_vlan_ports_add(device, vlan_handle, 1, &switch_port);
+    status = sai_switch_status_to_sai_status(switch_status);
+    if (status != SAI_STATUS_SUCCESS) {
+        SAI_LOG_ERROR("failed to add ports to vlan %d: %s",
+                      vlan_id, sai_status_to_string(status));
+        return status;
+    }
+
+    // make it from port and vlan (no storage of handle)
+    *vlan_member_id =  (port_id & 0xFFFF) | (vlan_id << 16) | (SWITCH_HANDLE_TYPE_VLAN_MEMBER << HANDLE_TYPE_SHIFT);
 
     SAI_LOG_EXIT();
 
@@ -229,6 +277,31 @@ sai_status_t sai_remove_vlan_member(
 {
     sai_status_t status = SAI_STATUS_SUCCESS;
     SAI_LOG_ENTER();
+    switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
+    switch_handle_t vlan_handle = 0;
+    switch_vlan_port_t switch_port;
+    // sai_vlan_tagging_mode_t tag_mode=SAI_VLAN_PORT_UNTAGGED;
+    unsigned short vlan_id;
+
+    memset(&switch_port, sizeof(switch_port), 0);
+    // check the OID for handle type?
+    switch_port.handle = id_to_handle(SWITCH_HANDLE_TYPE_INTERFACE, (vlan_member_id & 0xFFFF));
+    vlan_id =  (vlan_member_id >> 16)  & 0xFFF;
+    switch_status = switch_api_vlan_id_to_handle_get((switch_vlan_t) vlan_id, &vlan_handle);
+    status = sai_switch_status_to_sai_status(switch_status);
+    if (status != SAI_STATUS_SUCCESS) {
+        SAI_LOG_ERROR("failed to del port from vlan (no VLAN) %d: %s",
+                      vlan_id, sai_status_to_string(status));
+        return status;
+    }
+
+    switch_status = switch_api_vlan_ports_remove(device, vlan_handle, 1, &switch_port);
+    status = sai_switch_status_to_sai_status(switch_status);
+    if (status != SAI_STATUS_SUCCESS) {
+        SAI_LOG_ERROR("failed to del ports from vlan %d: %s",
+                      vlan_id, sai_status_to_string(status));
+        return status;
+    }
 
     SAI_LOG_EXIT();
 
