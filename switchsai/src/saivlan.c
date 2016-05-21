@@ -257,7 +257,7 @@ sai_status_t sai_create_vlan_member(
     }
 
     // make it from port and vlan (no storage of handle)
-    *vlan_member_id =  (port_id & 0xFFFF) | (vlan_id << 16) | (SWITCH_HANDLE_TYPE_VLAN_MEMBER << HANDLE_TYPE_SHIFT);
+    *vlan_member_id =  (port_id & 0xFFF) | (vlan_id << 12) | (SWITCH_HANDLE_TYPE_VLAN_MEMBER << HANDLE_TYPE_SHIFT);
 
     SAI_LOG_EXIT();
 
@@ -285,8 +285,8 @@ sai_status_t sai_remove_vlan_member(
 
     memset(&switch_port, sizeof(switch_port), 0);
     // check the OID for handle type?
-    switch_port.handle = id_to_handle(SWITCH_HANDLE_TYPE_INTERFACE, (vlan_member_id & 0xFFFF));
-    vlan_id =  (vlan_member_id >> 16)  & 0xFFF;
+    switch_port.handle = id_to_handle(SWITCH_HANDLE_TYPE_INTERFACE, (vlan_member_id & 0xFFF));
+    vlan_id =  (vlan_member_id >> 12)  & 0xFFF;
     switch_status = switch_api_vlan_id_to_handle_get((switch_vlan_t) vlan_id, &vlan_handle);
     status = sai_switch_status_to_sai_status(switch_status);
     if (status != SAI_STATUS_SUCCESS) {
