@@ -219,8 +219,8 @@ sai_status_t sai_create_vlan_member(
     unsigned short vlan_id;
     switch_handle_t port_id;
 
-    memset(vlan_member_id, sizeof(sai_object_id_t), 0);
-    memset(&switch_port, sizeof(switch_port), 0);
+    memset(vlan_member_id, 0, sizeof(sai_object_id_t));
+    memset(&switch_port, 0, sizeof(switch_port));
     for(index=0;index<attr_count;index++) {
         switch(attr_list[index].id) {
             case SAI_VLAN_MEMBER_ATTR_VLAN_ID:
@@ -257,7 +257,7 @@ sai_status_t sai_create_vlan_member(
     }
 
     // make it from port and vlan (no storage of handle)
-    *vlan_member_id =  (port_id & 0xFFF) | (vlan_id << 12) | (SWITCH_HANDLE_TYPE_VLAN_MEMBER << HANDLE_TYPE_SHIFT);
+    *vlan_member_id =  0 | (port_id & 0xFFF) | (vlan_id << 12) | (SWITCH_HANDLE_TYPE_VLAN_MEMBER << HANDLE_TYPE_SHIFT);
 
     SAI_LOG_EXIT();
 
@@ -283,7 +283,7 @@ sai_status_t sai_remove_vlan_member(
     // sai_vlan_tagging_mode_t tag_mode=SAI_VLAN_PORT_UNTAGGED;
     unsigned short vlan_id;
 
-    memset(&switch_port, sizeof(switch_port), 0);
+    memset(&switch_port, 0, sizeof(switch_port));
     // check the OID for handle type?
     switch_port.handle = id_to_handle(SWITCH_HANDLE_TYPE_INTERFACE, (vlan_member_id & 0xFFF));
     vlan_id =  (vlan_member_id >> 12)  & 0xFFF;
