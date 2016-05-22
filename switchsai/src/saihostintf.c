@@ -858,7 +858,7 @@ sai_status_t sai_send_hostif_packet(
         attribute = &attr_list[index];
         switch (attribute->id) {
             case SAI_HOSTIF_PACKET_TX_TYPE:
-                hostif_packet.tx_bypass = switch_sai_tx_type_to_switch_api_tx_type(attribute->value.u32);
+                hostif_packet.tx_bypass = switch_sai_tx_type_to_switch_api_tx_type(attribute->value.s32);
                 break;
             case SAI_HOSTIF_PACKET_EGRESS_PORT_OR_LAG:
                 hostif_packet.handle = attribute->value.oid;

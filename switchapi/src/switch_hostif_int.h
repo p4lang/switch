@@ -89,6 +89,14 @@ typedef struct switch_hostif_nhop_ {
 /*
  * Internal API's
  */
+
+void
+switch_packet_rx_transform(
+        switch_packet_header_t *packet_header,
+        char *transformed_packet,
+        char *packet,
+        int packet_size);
+
 switch_status_t switch_hostif_init(switch_device_t device);
 switch_status_t switch_hostif_free(switch_device_t device);
 switch_status_t switch_packet_init(switch_device_t device);

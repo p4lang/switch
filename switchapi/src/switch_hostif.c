@@ -561,6 +561,10 @@ switch_api_hostif_reason_code_create(switch_device_t device,
             rcode_info->acl_handle = SWITCH_API_INVALID_HANDLE;
             break;
         }
+        case SWITCH_HOSTIF_REASON_CODE_DHCP:
+            break;
+        case SWITCH_HOSTIF_REASON_CODE_L3_MTU_ERROR:
+            break;
         default:
             status = SWITCH_STATUS_NOT_SUPPORTED;
             break;
@@ -739,9 +743,10 @@ switch_api_hostif_rx_packet_from_hw(switch_packet_header_t *packet_header, char 
 
     JLG(temp, switch_hostif_rcode_array, cpu_header->reason_code);
     if (!temp) {
-        SWITCH_API_ERROR("rx_packet w/ un-handled reason_code 0x%x\n",
-                            cpu_header->reason_code);
-        return SWITCH_STATUS_ITEM_NOT_FOUND;
+        JLG(temp, switch_hostif_rcode_array, SWITCH_HOSTIF_REASON_CODE_NONE);
+       // SWITCH_API_ERROR("rx_packet w/ un-handled reason_code 0x%x\n",
+       //                     cpu_header->reason_code);
+       // return SWITCH_STATUS_ITEM_NOT_FOUND;
     }
 
     SWITCH_API_TRACE("Received packet with %s trap on ifindex %x\n",
@@ -762,6 +767,11 @@ switch_api_hostif_rx_packet_from_hw(switch_packet_header_t *packet_header, char 
         }
         if (rx_callback_set) {
             SWITCH_API_TRACE("Sending packet through cb\n");
+
+            static char in_packet[SWITCH_PACKET_MAX_BUFFER_SIZE];
+            switch_packet_rx_transform(packet_header, in_packet,
+                                       packet, packet_size);
+            hostif_packet.pkt = in_packet;
             rx_packet(&hostif_packet);
         }
     }
@@ -801,8 +811,15 @@ switch_api_hostif_tx_packet(switch_device_t device, switch_hostif_packet_t *host
     fabric_header->packet_type = SWITCH_FABRIC_HEADER_TYPE_CPU;
     fabric_header->ether_type = SWITCH_FABRIC_HEADER_ETHTYPE;
     cpu_header->tx_bypass = hostif_packet->tx_bypass;
-    cpu_header->reason_code = 0xFFFF;
-    switch_packet_tx_to_hw(&packet_header, hostif_packet->pkt, hostif_packet->pkt_size);
+    if (cpu_header->tx_bypass) {
+        cpu_header->reason_code = 0xFFFF;
+        switch_packet_tx_to_hw(&packet_header, hostif_packet->pkt,
+            hostif_packet->pkt_size);
+    } else {
+        cpu_header->reason_code = 0;
+        switch_packet_tx_switched(&packet_header,
+            hostif_packet->pkt, hostif_packet->pkt_size);
+    }
     return SWITCH_STATUS_SUCCESS;
 }
 
