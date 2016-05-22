@@ -920,12 +920,14 @@ void sai_recv_hostif_packet_cb(
     attribute->value.oid = hostif_packet->handle;
     attr_count++;
 
+#if 0
     if (sai_switch_notifications.on_packet_event) {
         sai_switch_notifications.on_packet_event(hostif_packet->pkt,
                                              hostif_packet->pkt_size,
                                              attr_count,
                                              attr_list);
     }
+#endif
 
     SAI_LOG_EXIT();
 

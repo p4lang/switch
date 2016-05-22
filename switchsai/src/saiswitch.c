@@ -169,11 +169,11 @@ sai_status_t sai_get_switch_attribute(
             case SAI_SWITCH_ATTR_DEFAULT_STP_INST_ID:
                 break;
             case SAI_SWITCH_ATTR_SRC_MAC_ADDRESS:
-                memcpy(attribute->value.mac, &api_switch_info.switch_mac, 6);
                 if(!mac_set) {
                     memcpy(&api_switch_info.switch_mac, def_mac, 6);
-                    memcpy(attribute->value.mac, &api_switch_info.switch_mac, 6);
+                    mac_set = 1;
                 }
+                memcpy(attribute->value.mac, &api_switch_info.switch_mac, 6);
 //                    return SAI_STATUS_FAILURE;
                 break;
             case SAI_SWITCH_ATTR_CPU_PORT:
