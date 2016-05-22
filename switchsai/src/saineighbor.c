@@ -18,6 +18,8 @@ limitations under the License.
 #include "saiinternal.h"
 #include <switchapi/switch_neighbor.h>
 #include <switchapi/switch_nhop.h>
+#include <switchapi/switch_l3.h>
+#include <../switchapi/src/switch_interface_int.h>
 #include <arpa/inet.h>
 
 static sai_api_t api_id = SAI_API_NEIGHBOR;
@@ -45,17 +47,22 @@ static void sai_neighbor_entry_parse(
     SAI_ASSERT(sai_object_type_query(neighbor_entry->rif_id) == 
                SAI_OBJECT_TYPE_ROUTER_INTERFACE);
 
+    uint64_t value;
+    switch_api_interface_vrf_get((switch_handle_t) neighbor_entry->rif_id, &value);
     api_neighbor->interface = (switch_handle_t) neighbor_entry->rif_id;
     api_neighbor->rw_type = SWITCH_API_NEIGHBOR_RW_TYPE_L3;
+    api_neighbor->vrf_handle = (switch_handle_t) value;
     sai_ip_addr_to_switch_ip_addr(&neighbor_entry->ip_address, &api_neighbor->ip_addr);
 }
 
 static void sai_neighbor_entry_attribute_parse(
         uint32_t attr_count,
         const sai_attribute_t *attr_list,
-        switch_api_neighbor_t *api_neighbor) {
+        switch_api_neighbor_t *api_neighbor,
+        int *set_host_route) {
     const sai_attribute_t *attribute;
     uint32_t index = 0;
+    *set_host_route = 1;
     for (index = 0; index < attr_count; index++) {
         attribute = &attr_list[index];
         switch (attribute->id) {
@@ -64,15 +71,16 @@ static void sai_neighbor_entry_attribute_parse(
                 break;
             case SAI_NEIGHBOR_ATTR_PACKET_ACTION:
                 break;
+            case SAI_NEIGHBOR_ATTR_NO_HOST_ROUTE:
+                *set_host_route = 0;
+                break;
         }
     }
 }
 
 static void sai_neighbor_entry_nexthop_get(
         switch_api_neighbor_t *api_neighbor) {
-    switch_ip_addr_t ip_addr;
     switch_nhop_key_t nhop_key;
-    memset(&ip_addr, 0, sizeof(switch_ip_addr_t));
     memset(&nhop_key, 0, sizeof(switch_nhop_key_t));
     nhop_key.intf_handle = api_neighbor->interface;
     memcpy(&nhop_key.ip_addr, &api_neighbor->ip_addr, sizeof(switch_ip_addr_t));
@@ -106,6 +114,7 @@ sai_status_t sai_create_neighbor_entry(
     switch_handle_t neighbor_handle = SWITCH_API_INVALID_HANDLE;
     char entry_string[SAI_MAX_ENTRY_STRING_LEN];
     switch_api_neighbor_t api_neighbor;
+    int set_host_route = 1;
 
     if (!neighbor_entry) {
         status = SAI_STATUS_INVALID_PARAMETER;
@@ -123,18 +132,30 @@ sai_status_t sai_create_neighbor_entry(
 
     memset(&api_neighbor, 0, sizeof(switch_api_neighbor_t));
     sai_neighbor_entry_parse(neighbor_entry, &api_neighbor);
-    sai_neighbor_entry_attribute_parse(attr_count, attr_list, &api_neighbor);
+    sai_neighbor_entry_attribute_parse(attr_count, attr_list, &api_neighbor, &set_host_route);
     sai_neighbor_entry_nexthop_get(&api_neighbor);
 
     sai_neighbor_entry_to_string(neighbor_entry, entry_string);
 
     neighbor_handle = switch_api_neighbor_entry_add(device, &api_neighbor);
-    status = neighbor_handle == SWITCH_API_INVALID_HANDLE ?
+    status = (neighbor_handle == SWITCH_API_INVALID_HANDLE) ?
              SAI_STATUS_FAILURE :
              SAI_STATUS_SUCCESS;
     if (status != SAI_STATUS_SUCCESS) {
         SAI_LOG_ERROR("failed to create neighbor entry: %s",
                        sai_status_to_string(status));
+    }
+
+    if(set_host_route && (status == SAI_STATUS_SUCCESS)) {
+        // insert the /32 route using the nexthop
+        switch_handle_t nhop_handle = api_neighbor.nhop_handle;
+        if(nhop_handle != SWITCH_API_INVALID_HANDLE) {
+            switch_status_t switch_status = switch_api_l3_route_add(device,
+                                api_neighbor.vrf_handle,
+                                &(api_neighbor.ip_addr),
+                                nhop_handle);
+            status = sai_switch_status_to_sai_status(switch_status);
+        }
     }
 
     SAI_LOG_EXIT();
@@ -176,6 +197,12 @@ sai_status_t sai_remove_neighbor_entry(
     sai_neighbor_entry_parse(neighbor_entry, &api_neighbor);
     sai_neighbor_entry_nexthop_get(&api_neighbor);
 
+    /*
+        remove the /32 route w/o checking for SET_NO_HOST_ROUTE
+            ignore error!
+    */
+    switch_api_l3_route_delete(device, api_neighbor.vrf_handle, &(api_neighbor.ip_addr), api_neighbor.nhop_handle);
+    
     neighbor_handle = switch_api_neighbor_handle_get(api_neighbor.nhop_handle);
     switch_status = switch_api_neighbor_entry_remove(device, neighbor_handle);
     status = sai_switch_status_to_sai_status(switch_status);
