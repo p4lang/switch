@@ -216,8 +216,8 @@ sai_status_t sai_create_vlan_member(
     switch_vlan_port_t switch_port;
     unsigned int index=0;
     sai_vlan_tagging_mode_t tag_mode=SAI_VLAN_PORT_UNTAGGED;
-    unsigned short vlan_id;
-    switch_handle_t port_id;
+    unsigned short vlan_id = 0;
+    switch_handle_t port_id = 0;
 
     memset(vlan_member_id, 0, sizeof(sai_object_id_t));
     memset(&switch_port, 0, sizeof(switch_port));
