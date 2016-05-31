@@ -7827,7 +7827,11 @@ switch_pd_mirror_session_update(switch_device_t device,
     switch_api_mirror_info_t *api_mirror_info = NULL;
 
     api_mirror_info = &mirror_info->api_mirror_info;
+#ifndef BMV2
+    status = p4_pd_dc_mirror_session_update(
+#else
     status = p4_pd_mirror_session_update(
+#endif /* BMV2 */
         g_sess_hdl, p4_pd_device,
         switch_pd_p4_pd_mirror_type(api_mirror_info->session_type),
         switch_pd_p4_pd_direction(api_mirror_info->direction),
@@ -7855,9 +7859,14 @@ switch_pd_mirror_session_delete(switch_device_t device,
     p4_pd_device.device_id = device;
     p4_pd_device.dev_pipe_id = PD_DEV_PIPE_ALL;
 
-    status = p4_pd_mirror_session_delete(g_sess_hdl,
-                                         p4_pd_device,
-                                         handle_to_id(mirror_handle));
+#ifndef BMV2
+    status = p4_pd_dc_mirror_session_delete(
+#else
+    status = p4_pd_mirror_session_delete(
+#endif /* BMV2 */
+                             g_sess_hdl,
+                             p4_pd_device,
+                             handle_to_id(mirror_handle));
 
     p4_pd_complete_operations(g_sess_hdl);
     return status;
