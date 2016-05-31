@@ -607,7 +607,8 @@ switch_api_hostif_reason_code_update(switch_device_t device, switch_api_hostif_r
         rcode_api_info_temp->priority = priority;
     }
 
-    if (rcode_api_info->channel) {
+    if (rcode_api_info->channel >= SWITCH_HOSTIF_CHANNEL_CB
+        && rcode_api_info->channel <= SWITCH_HOSTIF_CHANNEL_NETDEV) {
         rcode_api_info_temp->channel = rcode_api_info->channel;
     }
 
