@@ -771,7 +771,9 @@ switch_api_hostif_rx_packet_from_hw(switch_packet_header_t *packet_header, char 
 
             static char in_packet[SWITCH_PACKET_MAX_BUFFER_SIZE];
             switch_packet_rx_transform(packet_header, in_packet,
-                                       packet, packet_size);
+                                       packet, &packet_size);
+
+            hostif_packet.pkt_size = packet_size;
             hostif_packet.pkt = in_packet;
             rx_packet(&hostif_packet);
         }

@@ -187,7 +187,7 @@ switch_packet_rx_transform(
         switch_packet_header_t *packet_header,
         char *transformed_packet,
         char *packet,
-        int packet_size) {
+        int *packet_size) {
     switch_cpu_header_t               *cpu_header = NULL;
     switch_packet_rx_info_t           *rx_info = NULL;
     switch_ethernet_header_t          *eth_header = NULL;
@@ -223,20 +223,20 @@ switch_packet_rx_transform(
             *vlan_h = htons(rx_info->vlan_id);
             memcpy(transformed_packet + offset + sizeof(switch_vlan_header_t),
                    packet + offset,
-                   packet_size - offset);
-            packet_size += sizeof(switch_vlan_header_t);
+                   *packet_size - offset);
+            *packet_size += sizeof(switch_vlan_header_t);
         } else {
-            memcpy(transformed_packet, packet, packet_size);
+            memcpy(transformed_packet, packet, *packet_size);
         }
     } else if (rx_info->vlan_action == SWITCH_PACKET_VLAN_REMOVE) {
         eth_header = (switch_ethernet_header_t *) packet;
         if (ntohs(eth_header->ether_type) == SWITCH_ETHERTYPE_DOT1Q) {
             offset = 2 * ETH_LEN;
             memcpy(transformed_packet, packet, offset);
-            memcpy(transformed_packet, packet + offset, packet_size - offset);
-            packet_size -= sizeof(switch_vlan_header_t);
+            memcpy(transformed_packet, packet + offset, *packet_size - offset);
+            *packet_size -= sizeof(switch_vlan_header_t);
         } else {
-            memcpy(transformed_packet, packet, packet_size);
+            memcpy(transformed_packet, packet, *packet_size);
         }
     } else if (rx_info->vlan_action == SWITCH_PACKET_VLAN_SWAP) {
         eth_header = (switch_ethernet_header_t *) packet;
@@ -245,10 +245,10 @@ switch_packet_rx_transform(
             vlan_header = (switch_vlan_header_t *) (transformed_packet + offset);
             vlan_header->vid = htons(rx_info->vlan_id);
         } else {
-            memcpy(transformed_packet, packet, packet_size);
+            memcpy(transformed_packet, packet, *packet_size);
         }
     } else {
-        memcpy(transformed_packet, packet, packet_size);
+        memcpy(transformed_packet, packet, *packet_size);
     }
 }
 
@@ -284,7 +284,7 @@ switch_packet_rx_to_host(
     SWITCH_API_INFO("Rx packet reason_code 0x%x - send to fd %d, action %d\n",
                     rx_entry.reason_code, rx_info->intf_fd, rx_info->vlan_action);
 
-    switch_packet_rx_transform(packet_header, in_packet, packet, packet_size);
+    switch_packet_rx_transform(packet_header, in_packet, packet, &packet_size);
 
     intf_fd = rx_info->intf_fd;
 
