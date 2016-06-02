@@ -56,7 +56,7 @@ nl_sync_state() {
         .rtgen_family = AF_UNSPEC,
     };
 
-    int msg_type;
+    int msg_type = -1;
     switch (msg_idx) {
         case SWITCHLINK_MSG_LINK:
             msg_type = RTM_GETLINK;
@@ -117,8 +117,10 @@ nl_sync_state() {
             break;
     }
 
-    nl_send_simple(g_nlsk, msg_type, NLM_F_DUMP, &rt_hdr, sizeof(rt_hdr));
-    msg_idx++;
+    if (msg_type != -1) {
+        nl_send_simple(g_nlsk, msg_type, NLM_F_DUMP, &rt_hdr, sizeof(rt_hdr));
+        msg_idx++;
+    }
 }
 
 static void

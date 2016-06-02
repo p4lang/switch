@@ -322,9 +322,9 @@ process_link_msg(struct nlmsghdr *nlmsg, int type) {
     int nest_attr_type;
     switchlink_db_interface_info_t intf_info;
     switchlink_link_type_t link_type = SWITCHLINK_LINK_TYPE_NONE;
-    switchlink_stp_state_t stp_state;
-    switchlink_handle_t bridge_h;
-    switchlink_handle_t stp_h;
+    switchlink_stp_state_t stp_state = SWITCHLINK_STP_STATE_NONE;
+    switchlink_handle_t bridge_h = 0;
+    switchlink_handle_t stp_h = 0;
 
     assert((type == RTM_NEWLINK) || (type == RTM_DELLINK));
     ifmsg = nlmsg_data(nlmsg);
