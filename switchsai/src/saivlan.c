@@ -58,38 +58,6 @@ sai_status_t sai_create_vlan_entry(
         switch_status = switch_api_vlan_mld_snooping_enabled_set(
             vlan_handle, true);
         assert(switch_status == SWITCH_STATUS_SUCCESS);
-
-        /* register rx net filter for this vlan */
-        switch_packet_rx_key_t rx_key;
-        switch_packet_rx_action_t rx_action;
-        memset(&rx_key, 0, sizeof(rx_key));
-        memset(&rx_action, 0, sizeof(rx_action));
-        rx_key.port_valid = 0;
-        rx_key.port_lag_valid = 0;
-        rx_key.handle_valid = 1;
-        rx_key.handle = vlan_handle;
-        rx_key.reason_code_valid = 0;
-        rx_key.priority = 900;
-
-        rx_action.hostif_handle = 0;
-        rx_action.vlan_id = vlan_id;
-        rx_action.vlan_action = SWITCH_PACKET_VLAN_ADD;
-        switch_status = switch_api_packet_net_filter_rx_create(0, &rx_key, &rx_action);
-
-        /* register tx net filter for this vlan */
-        switch_packet_tx_key_t tx_key;
-        switch_packet_tx_action_t tx_action;
-        memset(&tx_key, 0, sizeof(tx_key));
-        memset(&tx_action, 0, sizeof(tx_action));
-        tx_key.handle_valid = 0;
-        tx_key.hostif_handle = 0;
-        tx_key.vlan_valid = 1;
-        tx_key.vlan_id = vlan_id;
-        tx_key.priority = 900;
-
-        tx_action.handle = vlan_handle;
-        switch_status = switch_api_packet_net_filter_tx_create(0, &tx_key, &tx_action);
-
     }
 
     SAI_LOG_EXIT();
