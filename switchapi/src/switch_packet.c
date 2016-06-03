@@ -183,6 +183,76 @@ switch_packet_rx_from_hw()
 }
 
 void
+switch_packet_rx_transform(
+        switch_packet_header_t *packet_header,
+        char *transformed_packet,
+        char *packet,
+        int *packet_size) {
+    switch_cpu_header_t               *cpu_header = NULL;
+    switch_packet_rx_info_t           *rx_info = NULL;
+    switch_ethernet_header_t          *eth_header = NULL;
+    switch_vlan_header_t              *vlan_header = NULL;
+    switch_packet_rx_entry_t           rx_entry;
+    uint16_t                           offset = 0;
+    switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+
+    cpu_header = &packet_header->cpu_header;
+
+    memset(&rx_entry, 0x0, sizeof(rx_entry));
+    rx_entry.port = cpu_header->ingress_port;
+    rx_entry.ifindex = cpu_header->ingress_ifindex;
+    rx_entry.bd = cpu_header->ingress_bd;
+    rx_entry.reason_code = cpu_header->reason_code;
+
+    status = switch_packet_rx_info_get(
+                             &rx_entry,
+                             &rx_info);
+    if (status != SWITCH_STATUS_SUCCESS) {
+        SWITCH_API_ERROR("failed to find fd. dropping packet");
+        return;
+    }
+
+    if (rx_info->vlan_action == SWITCH_PACKET_VLAN_ADD) {
+        eth_header = (switch_ethernet_header_t *) packet;
+        if (ntohs(eth_header->ether_type) != SWITCH_ETHERTYPE_DOT1Q && rx_info->vlan_id) {
+            offset = 2 * ETH_LEN;
+            memcpy(transformed_packet, packet, offset);
+            vlan_header = (switch_vlan_header_t *) (transformed_packet + offset);
+            vlan_header->tpid = htons(SWITCH_ETHERTYPE_DOT1Q);
+            uint16_t *vlan_h = (uint16_t *) (vlan_header) + 1;
+            *vlan_h = htons(rx_info->vlan_id);
+            memcpy(transformed_packet + offset + sizeof(switch_vlan_header_t),
+                   packet + offset,
+                   *packet_size - offset);
+            *packet_size += sizeof(switch_vlan_header_t);
+        } else {
+            memcpy(transformed_packet, packet, *packet_size);
+        }
+    } else if (rx_info->vlan_action == SWITCH_PACKET_VLAN_REMOVE) {
+        eth_header = (switch_ethernet_header_t *) packet;
+        if (ntohs(eth_header->ether_type) == SWITCH_ETHERTYPE_DOT1Q) {
+            offset = 2 * ETH_LEN;
+            memcpy(transformed_packet, packet, offset);
+            memcpy(transformed_packet, packet + offset, *packet_size - offset);
+            *packet_size -= sizeof(switch_vlan_header_t);
+        } else {
+            memcpy(transformed_packet, packet, *packet_size);
+        }
+    } else if (rx_info->vlan_action == SWITCH_PACKET_VLAN_SWAP) {
+        eth_header = (switch_ethernet_header_t *) packet;
+        if (ntohs(eth_header->ether_type) == SWITCH_ETHERTYPE_DOT1Q && rx_info->vlan_id) {
+            offset = 2 * ETH_LEN;
+            vlan_header = (switch_vlan_header_t *) (transformed_packet + offset);
+            vlan_header->vid = htons(rx_info->vlan_id);
+        } else {
+            memcpy(transformed_packet, packet, *packet_size);
+        }
+    } else {
+        memcpy(transformed_packet, packet, *packet_size);
+    }
+}
+
+void
 switch_packet_rx_to_host(
         switch_packet_header_t *packet_header,
         char *packet,
@@ -190,12 +260,9 @@ switch_packet_rx_to_host(
 {
     switch_cpu_header_t               *cpu_header = NULL;
     switch_packet_rx_info_t           *rx_info = NULL;
-    switch_ethernet_header_t          *eth_header = NULL;
-    switch_vlan_header_t              *vlan_header = NULL;
     static char                        in_packet[SWITCH_PACKET_MAX_BUFFER_SIZE];
     switch_packet_rx_entry_t           rx_entry;
     int                                intf_fd = 0;
-    uint16_t                           offset = 0;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
 
     cpu_header = &packet_header->cpu_header;
@@ -216,44 +283,9 @@ switch_packet_rx_to_host(
 
     SWITCH_API_INFO("Rx packet reason_code 0x%x - send to fd %d, action %d\n",
                     rx_entry.reason_code, rx_info->intf_fd, rx_info->vlan_action);
-    if (rx_info->vlan_action == SWITCH_PACKET_VLAN_ADD) {
-        eth_header = (switch_ethernet_header_t *) packet;
-        if (ntohs(eth_header->ether_type) != SWITCH_ETHERTYPE_DOT1Q && rx_info->vlan_id) {
-            offset = 2 * ETH_LEN;
-            memcpy(in_packet, packet, offset);
-            vlan_header = (switch_vlan_header_t *) (in_packet + offset);
-            vlan_header->tpid = htons(SWITCH_ETHERTYPE_DOT1Q);
-            uint16_t *vlan_h = (uint16_t *) (vlan_header) + 1;
-            *vlan_h = htons(rx_info->vlan_id);
-            memcpy(in_packet + offset + sizeof(switch_vlan_header_t),
-                   packet + offset,
-                   packet_size - offset);
-            packet_size += sizeof(switch_vlan_header_t);
-        } else {
-            memcpy(in_packet, packet, packet_size);
-        }
-    } else if (rx_info->vlan_action == SWITCH_PACKET_VLAN_REMOVE) {
-        eth_header = (switch_ethernet_header_t *) packet;
-        if (ntohs(eth_header->ether_type) == SWITCH_ETHERTYPE_DOT1Q) {
-            offset = 2 * ETH_LEN;
-            memcpy(in_packet, packet, offset);
-            memcpy(in_packet, packet + offset, packet_size - offset);
-            packet_size -= sizeof(switch_vlan_header_t);
-        } else {
-            memcpy(in_packet, packet, packet_size);
-        }
-    } else if (rx_info->vlan_action == SWITCH_PACKET_VLAN_SWAP) {
-        eth_header = (switch_ethernet_header_t *) packet;
-        if (ntohs(eth_header->ether_type) == SWITCH_ETHERTYPE_DOT1Q && rx_info->vlan_id) {
-            offset = 2 * ETH_LEN;
-            vlan_header = (switch_vlan_header_t *) (in_packet + offset);
-            vlan_header->vid = htons(rx_info->vlan_id);
-        } else {
-            memcpy(in_packet, packet, packet_size);
-        }
-    } else {
-        memcpy(in_packet, packet, packet_size);
-    }
+
+    switch_packet_rx_transform(packet_header, in_packet, packet, &packet_size);
+
     intf_fd = rx_info->intf_fd;
 
     if (write(intf_fd, in_packet, packet_size) < 0) {
@@ -262,6 +294,106 @@ switch_packet_rx_to_host(
     }
     return;
 }
+
+void
+switch_packet_tx_bd_transform(
+    char *in_packet, 
+    int in_packet_size,
+    char *out_packet,
+    int *out_packet_size,
+    switch_packet_tx_info_t *tx_info)
+{
+    switch_ethernet_header_t          *eth_header = NULL;
+    switch_vlan_header_t              *vlan_header = NULL;
+    switch_vlan_t                      vlan_id1 = 0;
+    switch_vlan_t                      vlan_id2 = 0;
+    uint16_t                           ether_type = 0;
+    uint16_t                           offset = 0;
+    uint16_t                           vlan_offset = 0;
+
+    /*
+     * In order to perform a fastpath lookup, bd has to be 
+     * added as vlan tag(s) to the packet from host.
+     * bd is a 16 bit field whereas the vlan id is a 12 bit field.
+     * packets has to be double tagged when the bd value is more
+     * than 12 bits.
+     */
+    vlan_id1 = tx_info->bd & 0xFFF;
+    vlan_id2 = (tx_info->bd & 0xF000) >> 12;
+
+    eth_header = (switch_ethernet_header_t *) in_packet;
+    ether_type = htons(eth_header->ether_type);
+
+    if (ether_type != SWITCH_ETHERTYPE_DOT1Q) {
+        vlan_offset += sizeof(switch_vlan_header_t);
+    }
+
+    if (vlan_id2) {
+        vlan_offset += sizeof(switch_vlan_header_t);
+    }
+
+    memcpy(out_packet, in_packet, 2 * ETH_LEN);
+    memcpy(out_packet + 2 * ETH_LEN + vlan_offset,
+           in_packet + 2 * ETH_LEN,
+           (in_packet_size - 2 * ETH_LEN));
+    *out_packet_size = in_packet_size;
+    *out_packet_size += vlan_offset;
+
+    vlan_header = (switch_vlan_header_t *) (out_packet + 2 * ETH_LEN);
+    vlan_header->vid = ntohs(vlan_id1);
+    vlan_header->tpid = ntohs(SWITCH_ETHERTYPE_DOT1Q);
+    vlan_header->dei = 0;
+    vlan_header->pcp = 0;
+
+    if (vlan_id2) {
+        offset = 2 * ETH_LEN + sizeof(switch_vlan_header_t);
+        vlan_header = (switch_vlan_header_t *) (out_packet + offset);
+        vlan_header->vid = ntohs(vlan_id2);
+        vlan_header->tpid = ntohs(SWITCH_ETHERTYPE_DOT1Q);
+        vlan_header->dei = 0;
+        vlan_header->pcp = 0;
+    }
+
+}
+
+void
+switch_packet_tx_switched(
+    switch_packet_header_t *packet_header,
+    char *in_packet, 
+    int in_packet_size)
+{
+    int                                packet_size = 0;
+    static char                        packet[SWITCH_PACKET_MAX_BUFFER_SIZE];
+    switch_ethernet_header_t          *eth_header = NULL;
+    switch_vlan_header_t              *vlan_header = NULL;
+    switch_vlan_t                      vlan_id1 = 0;
+    switch_packet_tx_entry_t           tx_entry;
+    switch_packet_tx_info_t           *tx_info = NULL;
+    switch_status_t                    status;
+
+    eth_header = (switch_ethernet_header_t *) in_packet;
+    if (ntohs(eth_header->ether_type) == SWITCH_ETHERTYPE_DOT1Q) {
+        vlan_header = (switch_vlan_header_t *) (in_packet + 2 * ETH_LEN);
+        uint16_t *vlan_h = (uint16_t *) (vlan_header) + 1;
+        vlan_id1 = ntohs(*vlan_h);
+    }
+
+    tx_entry.fd_valid = false;
+    tx_entry.vlan_id = vlan_id1;
+    status = switch_packet_tx_info_get(
+                         &tx_entry,
+                         &tx_info);
+    if (status != SWITCH_STATUS_SUCCESS) {
+        SWITCH_API_ERROR("net filter tx not found. dropping packet");
+        return;
+    }
+
+    memset(packet, 0x0, SWITCH_PACKET_MAX_BUFFER_SIZE);
+    switch_packet_tx_bd_transform(in_packet, in_packet_size,
+        packet, &packet_size, tx_info);
+    switch_packet_tx_to_hw(packet_header, packet, packet_size);
+}
+
 
 void
 switch_packet_tx_from_host(int intf_fd)
@@ -275,16 +407,12 @@ switch_packet_tx_from_host(int intf_fd)
     switch_packet_header_t             packet_header;
     switch_fabric_header_t            *fabric_header = NULL;
     switch_cpu_header_t               *cpu_header = NULL;
-    switch_device_t                    device = 0;
     switch_ethernet_header_t          *eth_header = NULL;
     switch_vlan_header_t              *vlan_header = NULL;
     switch_vlan_t                      vlan_id1 = 0;
-    switch_vlan_t                      vlan_id2 = 0;
     switch_packet_tx_entry_t           tx_entry;
     switch_packet_tx_info_t           *tx_info = NULL;
-    uint16_t                           ether_type = 0;
-    uint16_t                           offset = 0;
-    uint16_t                           vlan_offset = 0;
+    switch_device_t                    device = 0;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
 
     memset(in_packet, 0x0, SWITCH_PACKET_MAX_BUFFER_SIZE);
@@ -331,48 +459,8 @@ switch_packet_tx_from_host(int intf_fd)
         } else {
             cpu_header->tx_bypass = FALSE;
             cpu_header->reason_code = tx_info->bypass_flags;
-            /*
-             * In order to perform a fastpath lookup, bd has to be 
-             * added as vlan tag(s) to the packet from host.
-             * bd is a 16 bit field whereas the vlan id is a 12 bit field.
-             * packets has to be double tagged when the bd value is more
-             * than 12 bits.
-             */
-            vlan_id1 = tx_info->bd & 0xFFF;
-            vlan_id2 = (tx_info->bd & 0xF000) >> 12;
-
-            eth_header = (switch_ethernet_header_t *) in_packet;
-            ether_type = htons(eth_header->ether_type);
-
-            if (ether_type != SWITCH_ETHERTYPE_DOT1Q) {
-                vlan_offset += sizeof(switch_vlan_header_t);
-            }
-
-            if (vlan_id2) {
-                vlan_offset += sizeof(switch_vlan_header_t);
-            }
-
-            memcpy(packet, in_packet, 2 * ETH_LEN);
-            memcpy(packet + 2 * ETH_LEN + vlan_offset,
-                   in_packet + 2 * ETH_LEN,
-                   (in_packet_size - 2 * ETH_LEN));
-            packet_size = in_packet_size;
-            packet_size += vlan_offset;
-
-            vlan_header = (switch_vlan_header_t *) (packet + 2 * ETH_LEN);
-            vlan_header->vid = ntohs(vlan_id1);
-            vlan_header->tpid = ntohs(SWITCH_ETHERTYPE_DOT1Q);
-            vlan_header->dei = 0;
-            vlan_header->pcp = 0;
-
-            if (vlan_id2) {
-                offset = 2 * ETH_LEN + sizeof(switch_vlan_header_t);
-                vlan_header = (switch_vlan_header_t *) (packet + offset);
-                vlan_header->vid = ntohs(vlan_id2);
-                vlan_header->tpid = ntohs(SWITCH_ETHERTYPE_DOT1Q);
-                vlan_header->dei = 0;
-                vlan_header->pcp = 0;
-            }
+            switch_packet_tx_bd_transform(in_packet, in_packet_size,
+                packet, &packet_size, tx_info);
         }
 
         fabric_header = &packet_header.fabric_header;
@@ -380,6 +468,7 @@ switch_packet_tx_from_host(int intf_fd)
         fabric_header->dst_device = device;
         fabric_header->packet_type = SWITCH_FABRIC_HEADER_TYPE_CPU;
         fabric_header->ether_type = SWITCH_FABRIC_HEADER_ETHTYPE;
+
         switch_packet_tx_to_hw(&packet_header, packet, packet_size);
     }
 }
@@ -654,14 +743,18 @@ switch_api_packet_net_filter_tx_create(
         return SWITCH_STATUS_INVALID_PARAMETER;
     }
 
-    hostif_info = switch_hostif_get(tx_key->hostif_handle);
-    if (!hostif_info) {
-        SWITCH_API_ERROR("invalid hostif handle");
-        return SWITCH_STATUS_INVALID_HANDLE;
+    if (tx_key->handle_valid) {
+        hostif_info = switch_hostif_get(tx_key->hostif_handle);
+        if (!hostif_info) {
+            SWITCH_API_ERROR("invalid hostif handle");
+            return SWITCH_STATUS_INVALID_HANDLE;
+        }
     }
 
     memset(&tx_entry, 0x0, sizeof(tx_entry));
-    tx_entry.intf_fd = hostif_info->intf_fd;
+    if (tx_key->handle_valid) {
+        tx_entry.intf_fd = hostif_info->intf_fd;
+    }
     tx_entry.fd_valid = tx_key->handle_valid;
     tx_entry.vlan_id = tx_key->vlan_id;
     tx_entry.vlan_valid = tx_key->vlan_valid;
@@ -876,10 +969,12 @@ switch_api_packet_net_filter_rx_create(
         rx_entry.bd_valid = TRUE;
     }
 
-    hostif_info = switch_hostif_get(rx_action->hostif_handle);
-    if (!hostif_info) {
-        SWITCH_API_ERROR("invalid hostif handle");
-        return SWITCH_STATUS_INVALID_HANDLE;
+    if (rx_action->hostif_handle) {
+        hostif_info = switch_hostif_get(rx_action->hostif_handle);
+        if (!hostif_info) {
+            SWITCH_API_ERROR("invalid hostif handle");
+            return SWITCH_STATUS_INVALID_HANDLE;
+        }
     }
 
     rx_entry.bd = handle_to_id(bd_handle);
@@ -904,7 +999,9 @@ switch_api_packet_net_filter_rx_create(
     memcpy(&rx_info->rx_entry, &rx_entry, sizeof(rx_entry));
     rx_info->vlan_id = rx_action->vlan_id;
     rx_info->vlan_action = rx_action->vlan_action;
-    rx_info->intf_fd = hostif_info->intf_fd;
+    if (hostif_info) {
+        rx_info->intf_fd = hostif_info->intf_fd;
+    }
 
     SWITCH_API_INFO("net_filter_rx_create: port 0x%x, port_lag_hdl = 0x%x, "
                     "if_bd_hdl 0x%x, rcode 0x%x, rcode_mask 0x%x "

@@ -17,6 +17,7 @@ limitations under the License.
 #include <saivlan.h>
 #include "saiinternal.h"
 #include <switchapi/switch_vlan.h>
+#include <switchapi/switch_hostif.h>
 
 static sai_api_t api_id = SAI_API_VLAN;
 
