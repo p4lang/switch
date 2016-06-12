@@ -68,6 +68,8 @@ action set_fib_redirect_action() {
     modify_field(nexthop_metadata.nexthop_type, l3_metadata.fib_nexthop_type);
     modify_field(l3_metadata.routed, TRUE);
     modify_field(intrinsic_mcast_grp, 0);
+    /* set the reason code incase packet is redirected to cpu */
+    modify_field(fabric_metadata.reason_code, CPU_REASON_CODE_L3_REDIRECT);
 #ifdef FABRIC_ENABLE
     modify_field(fabric_metadata.dst_device, 0);
 #endif /* FABRIC_ENABLE */
@@ -151,7 +153,9 @@ table fwd_result {
 }
 
 control process_fwd_results {
-    apply(fwd_result);
+    if (not (BYPASS_ALL_LOOKUPS)) {
+        apply(fwd_result);
+    }
 }
 
 

@@ -39,14 +39,13 @@ typedef enum switch_port_type_ {
 typedef struct switch_port_info_ {
     switch_api_port_info_t api_port_info;
     switch_ifindex_t ifindex;
-    switch_handle_t intf_handle;
+    void *intf_array;
     switch_handle_t port_handle;
-    switch_handle_t hostif_handle;
     switch_port_type_t port_type;
     switch_handle_t meter_handle[SWITCH_PACKET_TYPE_MAX];
     switch_handle_t lag_handle;
 #ifdef SWITCH_PD
-    p4_pd_entry_hdl_t hw_entry;             /* port mapping entry */
+    p4_pd_entry_hdl_t hw_entry[2];          /* port mapping entry */
     p4_pd_entry_hdl_t lg_entry;             /* Lag group entry */
     p4_pd_entry_hdl_t ls_entry;             /* Lag select entry */
     p4_pd_mbr_hdl_t mbr_hdl;                /* Lag action profile entry */

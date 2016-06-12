@@ -19,19 +19,19 @@ limitations under the License.
 #include "switchapi/switch_port.h"
 #include "switch_lag_int.h"
 #include "switch_pd.h"
-#include "switch_log.h"
+#include "switch_log_int.h"
 #include <string.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-    
+
 static void *switch_lag_array;
 static void *switch_lag_member_array;
 static switch_api_id_allocator *lag_select;
-    
+
 #define SWITCH_INITIAL_LAG_SIZE 16
-    
+
 switch_status_t
 switch_lag_init(switch_device_t device)
 {
@@ -42,7 +42,7 @@ switch_lag_init(switch_device_t device)
     switch_handle_type_init(SWITCH_HANDLE_TYPE_LAG_MEMBER, (1*1024));
     return SWITCH_STATUS_SUCCESS;
 }
-    
+
 switch_status_t
 switch_lag_free(switch_device_t device)
 {
@@ -50,7 +50,7 @@ switch_lag_free(switch_device_t device)
     switch_handle_type_free(SWITCH_HANDLE_TYPE_LAG);
     return SWITCH_STATUS_SUCCESS;
 }
-    
+
 switch_handle_t
 switch_lag_handle_create()
 {
@@ -134,7 +134,7 @@ switch_api_lag_create(switch_device_t device)
 #endif
     return lag_handle;
 }
-    
+
 switch_status_t
 switch_api_lag_delete(switch_device_t device, switch_handle_t lag_handle)
 {
@@ -161,7 +161,7 @@ switch_api_lag_delete(switch_device_t device, switch_handle_t lag_handle)
     switch_lag_handle_delete(lag_handle);
     return SWITCH_STATUS_SUCCESS;
 }
- 
+
 switch_status_t
 switch_api_lag_member_add(switch_device_t device, switch_handle_t lag_handle,
                           switch_direction_t direction, switch_port_t port)
@@ -204,13 +204,13 @@ switch_api_lag_member_add(switch_device_t device, switch_handle_t lag_handle,
         case SWITCH_API_DIRECTION_BOTH:
         case SWITCH_API_DIRECTION_EGRESS:
             tommy_list_insert_head(&lag_info->egress,
-                    &(lag_member->egress_node), 
+                    &(lag_member->egress_node),
                     lag_member);
             port_info = switch_api_port_get_internal(port);
             if (!port_info) {
                 return SWITCH_STATUS_INVALID_PORT_NUMBER;
             }
-            status = switch_pd_lag_member_add(device, lag_info->pd_group_hdl, 
+            status = switch_pd_lag_member_add(device, lag_info->pd_group_hdl,
                                               SWITCH_PORT_ID(port_info),
                                               &(lag_member->mbr_hdl));
             if (status != SWITCH_STATUS_SUCCESS) {
@@ -247,7 +247,7 @@ switch_api_lag_member_add(switch_device_t device, switch_handle_t lag_handle,
                 break;
         case SWITCH_API_DIRECTION_INGRESS:
             tommy_list_insert_head(&lag_info->ingress,
-                    &(lag_member->ingress_node), 
+                    &(lag_member->ingress_node),
                     lag_member);
             // lookup port table
             port_info = switch_api_port_get_internal(port);
@@ -257,7 +257,7 @@ switch_api_lag_member_add(switch_device_t device, switch_handle_t lag_handle,
             status = switch_pd_ingress_port_mapping_table_add_entry(device, port,
                     lag_info->ifindex,
                     port_info->port_type,
-                    &port_info->hw_entry);
+                    port_info->hw_entry);
             port_info->lag_handle = lag_handle;
             if (status != SWITCH_STATUS_SUCCESS) {
                 return status;
@@ -268,7 +268,7 @@ switch_api_lag_member_add(switch_device_t device, switch_handle_t lag_handle,
     }
     return status;
 }
-    
+
 switch_status_t
 switch_api_lag_member_delete(switch_device_t device, switch_handle_t lag_handle,
                              switch_direction_t direction, switch_port_t port)
@@ -359,7 +359,7 @@ switch_api_lag_member_delete(switch_device_t device, switch_handle_t lag_handle,
             status = switch_pd_ingress_port_mapping_table_add_entry(device, port,
                                      port_info->ifindex,
                                      port_info->port_type,
-                                     &port_info->hw_entry);
+                                     port_info->hw_entry);
             port_info->lag_handle = 0;
             if (status != SWITCH_STATUS_SUCCESS) {
                 return status;
@@ -452,7 +452,7 @@ switch_api_lag_member_remove(
                              lag_member->port);
     return status;
 }
- 
+
 unsigned int
 switch_lag_get_count(switch_handle_t lag_handle)
 {
@@ -506,14 +506,14 @@ switch_api_lag_print_all(void)
     }
     return SWITCH_STATUS_SUCCESS;
 }
-    
+
 #ifdef SWITCH_LAG_TEST
 int lag_main (int argc, char **argv)
 {
     return 0;
 }
 #endif
-    
+
 #ifdef __cplusplus
 }
 #endif

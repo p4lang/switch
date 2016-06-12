@@ -39,7 +39,7 @@ metadata ipv4_metadata_t ipv4_metadata;
 action set_valid_outer_ipv4_packet() {
     modify_field(l3_metadata.lkp_ip_type, IPTYPE_IPV4);
     modify_field(l3_metadata.lkp_ip_tc, ipv4.diffserv);
-    modify_field(l3_metadata.lkp_ip_version, 4);
+    modify_field(l3_metadata.lkp_ip_version, ipv4.version);
 }
 
 action set_malformed_outer_ipv4_packet(drop_reason) {
@@ -50,8 +50,8 @@ action set_malformed_outer_ipv4_packet(drop_reason) {
 table validate_outer_ipv4_packet {
     reads {
         ipv4.version : ternary;
-        l3_metadata.lkp_ip_ttl : ternary;
-        ipv4_metadata.lkp_ipv4_sa mask 0xFF000000 : ternary;
+        ipv4.ttl : ternary;
+        ipv4.srcAddr mask 0xFF000000 : ternary;
     }
     actions {
         set_valid_outer_ipv4_packet;

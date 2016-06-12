@@ -31,46 +31,58 @@ extern "C" {
 
 /** switch hostif reason code */
 typedef enum switch_hostif_reason_code_ {
+    /*
+     * Reason code groups must start on power of 2 boundary since
+     * rx_net_filters are setup to use masks
+     */
+    /* generic reason codes 0x0-0x0FF */
     SWITCH_HOSTIF_REASON_CODE_NONE = 0x0,
-    SWITCH_HOSTIF_REASON_CODE_STP = 0x1,
-    SWITCH_HOSTIF_REASON_CODE_LACP = 0x2,
-    SWITCH_HOSTIF_REASON_CODE_EAPOL = 0x3,
-    SWITCH_HOSTIF_REASON_CODE_LLDP = 0x4,
-    SWITCH_HOSTIF_REASON_CODE_PVRST = 0x5,
-    SWITCH_HOSTIF_REASON_CODE_IGMP_TYPE_QUERY = 0x6,
-    SWITCH_HOSTIF_REASON_CODE_IGMP_TYPE_LEAVE = 0x7,
-    SWITCH_HOSTIF_REASON_CODE_IGMP_TYPE_V1_REPORT = 0x8,
-    SWITCH_HOSTIF_REASON_CODE_IGMP_TYPE_V2_REPORT = 0x9,
-    SWITCH_HOSTIF_REASON_CODE_IGMP_TYPE_V3_REPORT = 0xa,
-    SWITCH_HOSTIF_REASON_CODE_SAMPLEPACKET = 0xb,
-    SWITCH_HOSTIF_REASON_CODE_ARP_REQUEST = 0xc,
-    SWITCH_HOSTIF_REASON_CODE_ARP_RESPONSE = 0xd,
-    SWITCH_HOSTIF_REASON_CODE_DHCP = 0xe,
-    SWITCH_HOSTIF_REASON_CODE_OSPF = 0xf,
-    SWITCH_HOSTIF_REASON_CODE_PIM = 0x10,
-    SWITCH_HOSTIF_REASON_CODE_VRRP = 0x11,
-    SWITCH_HOSTIF_REASON_CODE_BGP = 0x12,
-    SWITCH_HOSTIF_REASON_CODE_DHCPV6 = 0x13,
-    SWITCH_HOSTIF_REASON_CODE_OSPFV6 = 0x14,
-    SWITCH_HOSTIF_REASON_CODE_VRRPV6 = 0x15,
-    SWITCH_HOSTIF_REASON_CODE_BGPV6 = 0x16,
-    SWITCH_HOSTIF_REASON_CODE_IPV6_NEIGHBOR_DISCOVERY = 0x17,
-    SWITCH_HOSTIF_REASON_CODE_IPV6_MLD_V1_V2 = 0x18,
-    SWITCH_HOSTIF_REASON_CODE_IPV6_MLD_V1_REPORT = 0x19,
-    SWITCH_HOSTIF_REASON_CODE_IPV6_MLD_V1_DONE = 0x1a,
-    SWITCH_HOSTIF_REASON_CODE_MLD_V2_REPORT = 0x1b,
-    SWITCH_HOSTIF_REASON_CODE_L3_MTU_ERROR = 0x1c,
-    SWITCH_HOSTIF_REASON_CODE_TTL_ERROR = 0x1d,
+    SWITCH_HOSTIF_REASON_CODE_CUSTOM = 0x1,
+    SWITCH_HOSTIF_REASON_CODE_DROP = 0x2,
+    SWITCH_HOSTIF_REASON_CODE_NULL_DROP = 0x3,
+    SWITCH_HOSTIF_REASON_CODE_SFLOW_SAMPLE = 0x4, /* must match the value in headers.p4 */
 
-    SWITCH_HOSTIF_REASON_CODE_CUSTOM = 0x100,
-    SWITCH_HOSTIF_REASON_CODE_GLEAN = 0x101,
-    SWITCH_HOSTIF_REASON_CODE_MYIP = 0x102,
-    SWITCH_HOSTIF_REASON_CODE_DROP = 0x103,
-    SWITCH_HOSTIF_REASON_CODE_NULL_DROP = 0x103,
-    SWITCH_HOSTIF_REASON_CODE_ICMP_REDIRECT = 0x104,
-    SWITCH_HOSTIF_REASON_CODE_SRC_IS_LINK_LOCAL = 0x105,
-    SWITCH_HOSTIF_REASON_CODE_SFLOW_SAMPLE = 0x106, /* must match the value in headers.p4 */
-    SWITCH_HOSTIF_REASON_CODE_MAX = 0x200,
+    /* L2 reason codes 0x100 - 0x1FF */
+    SWITCH_HOSTIF_REASON_CODE_L2_START = 0x100,
+    SWITCH_HOSTIF_REASON_CODE_STP = SWITCH_HOSTIF_REASON_CODE_L2_START,
+    SWITCH_HOSTIF_REASON_CODE_LACP, /* 0x101 */
+    SWITCH_HOSTIF_REASON_CODE_EAPOL, /* 0x102 */
+    SWITCH_HOSTIF_REASON_CODE_LLDP, /* 0x103 */
+    SWITCH_HOSTIF_REASON_CODE_PVRST, /* 0x104 */
+    SWITCH_HOSTIF_REASON_CODE_IGMP_TYPE_QUERY, /* 0x105 */
+    SWITCH_HOSTIF_REASON_CODE_IGMP_TYPE_LEAVE, /* 0x106 */
+    SWITCH_HOSTIF_REASON_CODE_IGMP_TYPE_V1_REPORT, /* 0x107 */
+    SWITCH_HOSTIF_REASON_CODE_IGMP_TYPE_V2_REPORT, /* 0x108 */
+    SWITCH_HOSTIF_REASON_CODE_IGMP_TYPE_V3_REPORT, /* 0x109 */
+
+    /* L3 reason codes 0x200-0x2FF */
+    SWITCH_HOSTIF_REASON_CODE_L3_START = 0x200,
+    SWITCH_HOSTIF_REASON_CODE_SAMPLEPACKET = SWITCH_HOSTIF_REASON_CODE_L3_START,
+    SWITCH_HOSTIF_REASON_CODE_ARP_REQUEST,  /* 0x201 */
+    SWITCH_HOSTIF_REASON_CODE_ARP_RESPONSE, /* 0x202 */
+    SWITCH_HOSTIF_REASON_CODE_DHCP, /* 0x203 */
+    SWITCH_HOSTIF_REASON_CODE_OSPF, /* 0x204 */
+    SWITCH_HOSTIF_REASON_CODE_PIM,  /* 0x205 */
+    SWITCH_HOSTIF_REASON_CODE_VRRP, /* 0x206 */
+    SWITCH_HOSTIF_REASON_CODE_BGP,  /* 0x207 */
+    SWITCH_HOSTIF_REASON_CODE_DHCPV6,   /* 0x208 */
+    SWITCH_HOSTIF_REASON_CODE_OSPFV6,   /* 0x209 */
+    SWITCH_HOSTIF_REASON_CODE_VRRPV6,   /* 0x20a */
+    SWITCH_HOSTIF_REASON_CODE_BGPV6,    /* 0x20b */
+    SWITCH_HOSTIF_REASON_CODE_IPV6_NEIGHBOR_DISCOVERY,  /* 0x20c */
+    SWITCH_HOSTIF_REASON_CODE_IPV6_MLD_V1_V2,   /* 0x20d */
+    SWITCH_HOSTIF_REASON_CODE_IPV6_MLD_V1_REPORT,   /* 0x20e */
+    SWITCH_HOSTIF_REASON_CODE_IPV6_MLD_V1_DONE, /* 0x20f */
+    SWITCH_HOSTIF_REASON_CODE_MLD_V2_REPORT,    /* 0x210 */
+    SWITCH_HOSTIF_REASON_CODE_L3_MTU_ERROR, /* 0x211 */
+    SWITCH_HOSTIF_REASON_CODE_TTL_ERROR,    /* 0x212 */
+    SWITCH_HOSTIF_REASON_CODE_GLEAN,    /* 0x213 */
+    SWITCH_HOSTIF_REASON_CODE_MYIP, /* 0x214 */
+    SWITCH_HOSTIF_REASON_CODE_ICMP_REDIRECT,    /* 0x215 */
+    SWITCH_HOSTIF_REASON_CODE_SRC_IS_LINK_LOCAL,    /* 0x216 */
+    SWITCH_HOSTIF_REASON_CODE_L3_REDIRECT,    /* 0x217 */
+
+    SWITCH_HOSTIF_REASON_CODE_MAX,
 } switch_hostif_reason_code_t;
 
 /** switch channel */
@@ -110,7 +122,6 @@ typedef struct switch_hostif_packet_ {
 
 /** host interface */
 typedef struct switch_hostif_ {
-    switch_handle_t handle;                     /**< front panel port id */
     char intf_name[SWITCH_HOSTIF_NAME_SIZE];    /**< interface name */
 } switch_hostif_t;
 
@@ -198,6 +209,79 @@ switch_api_hostif_delete(switch_device_t device, switch_handle_t hostif_handle);
  */
 switch_handle_t
 switch_api_cpu_nhop_get(switch_hostif_reason_code_t rcode);
+
+typedef enum switch_packet_vlan_action {
+    SWITCH_PACKET_VLAN_NONE        = 0x0,
+    SWITCH_PACKET_VLAN_ADD         = 0x1,
+    SWITCH_PACKET_VLAN_REMOVE      = 0x2,
+    SWITCH_PACKET_VLAN_SWAP        = 0x3
+} switch_packet_vlan_action_t;
+
+typedef enum switch_tx_bypass_flags_ {
+    SWITCH_BYPASS_NONE             = 0x0,
+    SWITCH_BYPASS_L2               = 1 << 0,
+    SWITCH_BYPASS_L3               = 1 << 1,
+    SWITCH_BYPASS_ACL              = 1 << 2,
+    SWITCH_BYPASS_QOS              = 1 << 3,
+    SWITCH_BYPASS_METER            = 1 << 4, 
+    SWITCH_BYPASS_SYSTEM_ACL       = 1 << 5,
+    SWITCH_BYPASS_ALL              = 0xFFFF
+} switch_tx_bypass_flags_t;
+
+typedef struct switch_packet_rx_key_ {
+    bool port_valid;
+    switch_handle_t port_handle;                           /**< port handle */
+    bool port_lag_valid;
+    switch_handle_t port_lag_handle;                       /**< port or lag handle */
+    bool handle_valid;
+    switch_handle_t handle;                                /**< bd or interface handle */
+    bool reason_code_valid;
+    switch_hostif_reason_code_t reason_code;               /**< reason code */
+    uint32_t reason_code_mask;                             /**< reason code mask */
+    uint32_t priority;
+} switch_packet_rx_key_t;
+
+typedef struct switch_packet_rx_action_ {
+    switch_handle_t hostif_handle;
+    switch_vlan_t vlan_id;
+    switch_packet_vlan_action_t vlan_action;
+} switch_packet_rx_action_t;
+
+typedef struct switch_packet_tx_key_ {
+    bool handle_valid;
+    switch_handle_t hostif_handle;
+    bool vlan_valid;
+    switch_vlan_t vlan_id;
+    uint32_t priority;
+} switch_packet_tx_key_t;
+
+typedef struct switch_packet_tx_action_ {
+    switch_handle_t handle;                                /**< bd or interface handle */
+    switch_tx_bypass_flags_t bypass_flags;                 /**< bypass flags */
+    switch_handle_t port_handle;                           /**< egress port */
+} switch_packet_tx_action_t;
+
+switch_status_t
+switch_api_packet_net_filter_tx_create(
+        switch_device_t device,
+        switch_packet_tx_key_t *tx_key,
+        switch_packet_tx_action_t *tx_action);
+
+switch_status_t
+switch_api_packet_net_filter_tx_delete(
+        switch_device_t device,
+        switch_packet_tx_key_t *tx_key);
+
+switch_status_t
+switch_api_packet_net_filter_rx_create(
+        switch_device_t device,
+        switch_packet_rx_key_t *rx_key,
+        switch_packet_rx_action_t *rx_action);
+
+switch_status_t
+switch_api_packet_net_filter_rx_delete(
+        switch_device_t device,
+        switch_packet_rx_key_t *rx_key);
 
 /** @} */ // end of Host Interface API
 

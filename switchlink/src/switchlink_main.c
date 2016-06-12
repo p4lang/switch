@@ -117,8 +117,10 @@ nl_sync_state() {
             break;
     }
 
-    nl_send_simple(g_nlsk, msg_type, NLM_F_DUMP, &rt_hdr, sizeof(rt_hdr));
-    msg_idx++;
+    if (msg_type != -1) {
+        nl_send_simple(g_nlsk, msg_type, NLM_F_DUMP, &rt_hdr, sizeof(rt_hdr));
+        msg_idx++;
+    }
 }
 
 static void

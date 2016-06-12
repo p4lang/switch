@@ -90,6 +90,11 @@ typedef struct switch_mcast_node_info_ {
     p4_pd_entry_hdl_t rid_hw_entry;
 } switch_mcast_node_info_t;
 
+typedef struct switch_rid_info_ {
+    p4_pd_entry_hdl_t rid_hw_entry;
+    uint16_t ref_count;
+} switch_rid_info_t;
+
 typedef struct switch_mcast_node_ {
     tommy_node node;
     switch_mcast_node_type_t node_type;

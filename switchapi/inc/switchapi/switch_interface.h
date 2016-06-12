@@ -59,14 +59,12 @@ typedef struct switch_port_vlan_ {
 
 /** Interface attributes */
 typedef enum switch_intf_attr_ {
-    // READ ONLY
-    SWITCH_INTF_ATTR_VRF,
-    SWITCH_INTF_ATTR_TYPE,
-    SWITCH_INTF_ATTR_PORT_ID,
-    SWITCH_INTF_ATTR_VLAN_ID,
+    SWITCH_INTF_ATTR_VRF,                             /**< Vrf interface */
+    SWITCH_INTF_ATTR_TYPE,                            /**< interface attribute */
+    SWITCH_INTF_ATTR_PORT_ID,                         /**< port id */
+    SWITCH_INTF_ATTR_VLAN_ID,                         /**< vlan id */
 
-    // READ-WRITE
-    SWITCH_INTF_ATTR_RMAC_ADDR,
+    SWITCH_INTF_ATTR_RMAC_ADDR,                       /**< rmac address */
     SWITCH_INTF_ATTR_V4_UNICAST,                      /**< IPv4 Unicast */
     SWITCH_INTF_ATTR_V6_UNICAST,                      /**< IPv6 Unicast */
     SWITCH_INTF_ATTR_V4_URPF_MODE,                    /**< IPv4 Urpf mode */
@@ -141,8 +139,6 @@ switch_status_t switch_api_interface_attribute_get(switch_handle_t intf_handle,
                                            switch_intf_attr_t attr_type,
                                            uint64_t *value);
 
-// read only
-
 /**
  Get the interface's port id
  @param intf_handle - Handle that uniquely identifies interface
@@ -171,8 +167,6 @@ switch_status_t switch_api_interface_vlan_id_get(switch_handle_t intf_handle, ui
  */
 switch_status_t
 switch_api_interface_rmac_addr_get(switch_handle_t intf_handle, uint64_t *value);
-
-// read-write
 
 /**
  Set IPv4 enable interface attribute
@@ -310,6 +304,24 @@ switch_api_interface_get_vlan_handle(switch_handle_t intf_handle,
 switch_status_t
 switch_api_interface_get_type(switch_handle_t intf_handle,
                               switch_interface_type_t *type);
+
+switch_status_t
+switch_api_l3_interface_bd_stats_enable(
+        switch_device_t device,
+        switch_handle_t intf_handle);
+
+switch_status_t
+switch_api_l3_interface_bd_stats_disable(
+        switch_device_t device,
+        switch_handle_t intf_handle);
+
+switch_status_t
+switch_api_l3_interface_stats_get(
+        switch_device_t device,
+        switch_handle_t intf_handle,
+        uint8_t count,
+        switch_bd_stats_id_t *counter_ids,
+        switch_counter_t *counters);
 
 /**
  Dump interface table

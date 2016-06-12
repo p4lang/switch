@@ -37,6 +37,8 @@ Supported Features
 12. Mirroring: Ingress and egress mirroring with ERSPAN
 13. Counters/Statistics
 14. Ingress Policers
+15. Lookup bypass in Cpu Tx path
+16. Netfilter Rx/Tx support
 
 Upcoming Features
 -----------------

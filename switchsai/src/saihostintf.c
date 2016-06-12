@@ -61,7 +61,6 @@ sai_status_t sai_create_hostif(
                 }
                 break;
             case SAI_HOSTIF_ATTR_RIF_OR_PORT_ID:
-                hostif.handle = attribute->value.oid;
                 break;
             case SAI_HOSTIF_ATTR_NAME:
                 memcpy(hostif.intf_name, attribute->value.chardata, HOSTIF_NAME_SIZE);
@@ -620,13 +619,13 @@ sai_status_t sai_set_hostif_trap_attribute(
     rcode_api_info.priority = 1000;
     switch (attr->id) {
         case SAI_HOSTIF_TRAP_ATTR_PACKET_ACTION:
-            rcode_api_info.action = switch_sai_action_to_switch_api_action(attr->value.u32);
+            rcode_api_info.action = switch_sai_action_to_switch_api_action(attr->value.s32);
             break;
         case SAI_HOSTIF_TRAP_ATTR_TRAP_PRIORITY:
-            rcode_api_info.priority = attr->value.u32;
+            rcode_api_info.priority = attr->value.s32;
             break;
         case SAI_HOSTIF_TRAP_ATTR_TRAP_CHANNEL:
-            rcode_api_info.channel = switch_sai_channel_to_switch_api_channel(attr->value.u32);
+            rcode_api_info.channel = switch_sai_channel_to_switch_api_channel(attr->value.s32);
             break;
         case SAI_HOSTIF_TRAP_ATTR_TRAP_GROUP:
             rcode_api_info.hostif_group_id = attr->value.oid;

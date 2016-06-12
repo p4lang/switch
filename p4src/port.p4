@@ -88,8 +88,8 @@ action malformed_outer_ethernet_packet(drop_reason) {
 
 table validate_outer_ethernet {
     reads {
-        l2_metadata.lkp_mac_sa : ternary;
-        l2_metadata.lkp_mac_da : ternary;
+        ethernet.srcAddr : ternary;
+        ethernet.dstAddr : ternary;
         vlan_tag_[0] : valid;
         vlan_tag_[1] : valid;
     }
@@ -138,9 +138,8 @@ control process_validate_outer_header {
 /*****************************************************************************/
 /* Ingress port lookup                                                       */
 /*****************************************************************************/
-action set_ifindex(ifindex, if_label, port_type) {
+action set_ifindex(ifindex, port_type) {
     modify_field(ingress_metadata.ifindex, ifindex);
-    modify_field(acl_metadata.if_label, if_label);
     modify_field(ingress_metadata.port_type, port_type);
 }
 
@@ -154,8 +153,23 @@ table ingress_port_mapping {
     size : PORTMAP_TABLE_SIZE;
 }
 
+action set_ingress_port_properties(if_label) {
+    modify_field(acl_metadata.if_label, if_label);
+}
+
+table ingress_port_properties {
+    reads {
+        ingress_input_port : exact;
+    }
+    actions {
+        set_ingress_port_properties;
+    }
+    size : PORTMAP_TABLE_SIZE;
+}
+
 control process_ingress_port_mapping {
     apply(ingress_port_mapping);
+    apply(ingress_port_properties);
 }
 
 
@@ -329,12 +343,14 @@ action egress_port_type_fabric(ifindex) {
     modify_field(egress_metadata.port_type, PORT_TYPE_FABRIC);
     modify_field(egress_metadata.ifindex, ifindex);
     modify_field(tunnel_metadata.egress_tunnel_type, EGRESS_TUNNEL_TYPE_FABRIC);
+    modify_field(egress_metadata.ifindex, ifindex);
 }
 
 action egress_port_type_cpu(ifindex) {
     modify_field(egress_metadata.port_type, PORT_TYPE_CPU);
     modify_field(egress_metadata.ifindex, ifindex);
     modify_field(tunnel_metadata.egress_tunnel_type, EGRESS_TUNNEL_TYPE_CPU);
+    modify_field(egress_metadata.ifindex, ifindex);
 }
 
 table egress_port_mapping {

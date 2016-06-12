@@ -25,7 +25,7 @@ limitations under the License.
 #include "switch_interface_int.h"
 #include "switch_nhop_int.h"
 #include "switch_pd.h"
-#include "switch_log.h"
+#include "switch_log_int.h"
 #include "switch_defines.h"
 #include <string.h>
 
@@ -37,7 +37,7 @@ static void *switch_neighbor_array=NULL;
 static tommy_hashtable switch_dmac_rewrite_table;
 static tommy_hashtable switch_neighbor_dmac_table;
 switch_api_id_allocator *dmac_rewrite_index_allocator = NULL;
-    
+
 switch_status_t
 switch_neighbor_init(switch_device_t device)
 {
