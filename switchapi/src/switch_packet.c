@@ -208,7 +208,8 @@ switch_packet_rx_transform(
                              &rx_entry,
                              &rx_info);
     if (status != SWITCH_STATUS_SUCCESS) {
-        SWITCH_API_ERROR("failed to find fd. dropping packet");
+        SWITCH_API_ERROR("failed to find filter. packet not transformed");
+        memcpy(transformed_packet, packet, *packet_size);
         return;
     }
 
