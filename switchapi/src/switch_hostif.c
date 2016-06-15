@@ -855,6 +855,9 @@ switch_api_hostif_create(switch_device_t device, switch_hostif_t *hostif)
     switch_handle_t                    hostif_handle = 0;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
     switch_hostif_info_t              *hostif_info = NULL;
+    switch_handle_type_t               handle_type = 0;
+    switch_port_info_t                *port_info = NULL;
+    switch_interface_info_t           *intf_info = NULL;
 
     hostif_handle = switch_hostif_create();
     hostif_info = switch_hostif_get(hostif_handle);
@@ -866,6 +869,26 @@ switch_api_hostif_create(switch_device_t device, switch_hostif_t *hostif)
         return SWITCH_API_INVALID_HANDLE;
     }
 
+    handle_type = switch_handle_get_type(hostif->handle);
+    switch (handle_type) {
+        case SWITCH_HANDLE_TYPE_PORT:
+            port_info = switch_api_port_get_internal(hostif->handle);
+            if (!port_info) {
+                return SWITCH_STATUS_INVALID_PORT_NUMBER;
+            }
+            port_info->hostif_handle = hostif_handle;
+            break;
+        case SWITCH_HANDLE_TYPE_INTERFACE:
+            //TODO: Add support for RIF
+            intf_info = switch_api_interface_get(hostif->handle);
+            if (!intf_info) {
+                return SWITCH_STATUS_INVALID_INTERFACE;
+            }
+            intf_info->hostif_handle = hostif_handle;
+            break;
+        default:
+            break;
+    }
     SWITCH_API_TRACE("Host interface created %lu\n", hostif_handle);
     return hostif_handle;
 }

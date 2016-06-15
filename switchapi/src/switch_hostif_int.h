@@ -50,7 +50,7 @@ typedef enum switch_fabric_header_type_ {
 
 typedef struct __attribute__((__packed__)) switch_fabric_header_ {
     uint16_t ether_type;
-    uint8_t pad1 : 1;
+    uint8_t filter_mode : 1;
     uint8_t packet_version : 2;
     uint8_t header_version : 2;
     uint8_t packet_type : 3;
