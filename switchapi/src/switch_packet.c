@@ -264,6 +264,7 @@ switch_packet_rx_to_host(
     switch_packet_rx_entry_t           rx_entry;
     int                                intf_fd = 0;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+    char                                *xform_packet = in_packet;
 
     cpu_header = &packet_header->cpu_header;
 
@@ -283,34 +284,26 @@ switch_packet_rx_to_host(
         intf_fd = rx_info->intf_fd;
     }
     else {
-        switch_handle_t                    intf_handle = 0;		
         switch_handle_t                    hostif_handle = 0;		
         switch_hostif_info_t              *hostif_info = NULL;		
         switch_handle_t                    port_handle = 0;		
         switch_port_info_t                *port_info = NULL;
-        switch_handle_t                    bd_handle = 0;
-        switch_interface_info_t           *intf_info = NULL;
 
-        bd_handle = id_to_handle(SWITCH_HANDLE_TYPE_BD, rx_entry.bd);
         // Find the host interface from the ifIndex, by default
-        intf_handle = switch_api_interface_get_from_ifindex(cpu_header->ingress_ifindex, bd_handle);
-       intf_info = switch_api_interface_get(intf_handle);		
-       if (!intf_info) {		
+        port_handle = id_to_handle(SWITCH_HANDLE_TYPE_PORT, cpu_header->ingress_ifindex);
+        port_info = switch_api_port_get_internal(port_handle);		
+        if (!port_info) {		
            return;		
-       }		
-       port_handle = SWITCH_INTF_PORT_HANDLE(intf_info);		
-       port_info = switch_api_port_get_internal(port_handle);		
-       if (!port_info) {		
-           return;		
-       }		
-       hostif_handle = port_info->hostif_handle;		
-       hostif_info = switch_hostif_get(hostif_handle);		
-       if (!hostif_info) {		
-           return;		
-       }
-       intf_fd = hostif_info->intf_fd;
+        }		
+        hostif_handle = port_info->hostif_handle;		
+        hostif_info = switch_hostif_get(hostif_handle);		
+        if (!hostif_info) {		
+            return;		
+        }
+        intf_fd = hostif_info->intf_fd;
+        xform_packet = packet;
     }
-    if (write(intf_fd, in_packet, packet_size) < 0) {
+    if (write(intf_fd, xform_packet, packet_size) < 0) {
         perror("sendto host interface failed");
         return;
     }

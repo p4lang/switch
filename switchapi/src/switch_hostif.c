@@ -858,6 +858,7 @@ switch_api_hostif_create(switch_device_t device, switch_hostif_t *hostif)
     switch_handle_type_t               handle_type = 0;
     switch_port_info_t                *port_info = NULL;
     switch_interface_info_t           *intf_info = NULL;
+    switch_handle_t                    port_handle = 0;
 
     hostif_handle = switch_hostif_create();
     hostif_info = switch_hostif_get(hostif_handle);
@@ -884,7 +885,13 @@ switch_api_hostif_create(switch_device_t device, switch_hostif_t *hostif)
             if (!intf_info) {
                 return SWITCH_STATUS_INVALID_INTERFACE;
             }
-            intf_info->hostif_handle = hostif_handle;
+            port_handle = SWITCH_INTF_PORT_HANDLE(intf_info);
+            port_info = switch_api_port_get_internal(port_handle);
+            if (!port_info) {
+                return SWITCH_STATUS_INVALID_PORT_NUMBER;
+            }
+            port_info->hostif_handle = hostif_handle;
+//            intf_info->hostif_handle = hostif_handle;
             break;
         default:
             break;
