@@ -290,7 +290,7 @@ switch_packet_rx_to_host(
         switch_port_info_t                *port_info = NULL;
 
         // Find the host interface from the ifIndex, by default
-        port_handle = id_to_handle(SWITCH_HANDLE_TYPE_PORT, cpu_header->ingress_ifindex);
+        port_handle = id_to_handle(SWITCH_HANDLE_TYPE_PORT, cpu_header->ingress_ifindex-1);
         port_info = switch_api_port_get_internal(port_handle);		
         if (!port_info) {		
            return;		
@@ -456,29 +456,35 @@ switch_packet_tx_from_host(int intf_fd)
 
         tx_entry.intf_fd = intf_fd;
         tx_entry.vlan_id = vlan_id1;
-        status = switch_packet_tx_info_get(
-                             &tx_entry,
-                             &tx_info);
-        if (status != SWITCH_STATUS_SUCCESS) {
-            SWITCH_API_ERROR("net filter tx not found. dropping packet");
-            continue;
-        }
 
         memset(&packet_header, 0x0, sizeof(packet_header));
         cpu_header = &packet_header.cpu_header;
         fabric_header = &packet_header.fabric_header;
 
-        if (tx_info->bypass_flags == SWITCH_BYPASS_ALL) {
+        status = switch_packet_tx_info_get(
+                             &tx_entry,
+                             &tx_info);
+        if (status != SWITCH_STATUS_SUCCESS) {
+//            SWITCH_API_ERROR("net filter tx not found. dropping packet");
+//            continue;
             cpu_header->tx_bypass = TRUE;
-            cpu_header->reason_code = tx_info->bypass_flags;
-            fabric_header->dst_port_or_group = tx_info->port;
+            fabric_header->dst_port_or_group = handle_to_id(hostif_info->hostif.handle);
             memcpy(packet, in_packet, in_packet_size);
             packet_size = in_packet_size;
-        } else {
-            cpu_header->tx_bypass = FALSE;
-            cpu_header->reason_code = tx_info->bypass_flags;
-            switch_packet_tx_bd_transform(in_packet, in_packet_size,
-                packet, &packet_size, tx_info);
+        }
+        else {
+            if (tx_info->bypass_flags == SWITCH_BYPASS_ALL) {
+                cpu_header->tx_bypass = TRUE;
+                cpu_header->reason_code = tx_info->bypass_flags;
+                fabric_header->dst_port_or_group = tx_info->port;
+                memcpy(packet, in_packet, in_packet_size);
+                packet_size = in_packet_size;
+            } else {
+                cpu_header->tx_bypass = FALSE;
+                cpu_header->reason_code = tx_info->bypass_flags;
+                switch_packet_tx_bd_transform(in_packet, in_packet_size,
+                    packet, &packet_size, tx_info);
+            }
         }
 
         fabric_header = &packet_header.fabric_header;
