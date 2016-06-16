@@ -385,6 +385,7 @@ switch_packet_tx_switched(
     switch_packet_tx_entry_t           tx_entry;
     switch_packet_tx_info_t           *tx_info = NULL;
     switch_status_t                    status;
+    char                                *xform_packet = packet;
 
     eth_header = (switch_ethernet_header_t *) in_packet;
     if (ntohs(eth_header->ether_type) == SWITCH_ETHERTYPE_DOT1Q) {
@@ -399,14 +400,16 @@ switch_packet_tx_switched(
                          &tx_entry,
                          &tx_info);
     if (status != SWITCH_STATUS_SUCCESS) {
-        SWITCH_API_ERROR("net filter tx not found. dropping packet");
-        return;
+//        SWITCH_API_ERROR("net filter tx not found. dropping packet");
+//        return;
+        xform_packet = in_packet;
     }
-
-    memset(packet, 0x0, SWITCH_PACKET_MAX_BUFFER_SIZE);
-    switch_packet_tx_bd_transform(in_packet, in_packet_size,
-        packet, &packet_size, tx_info);
-    switch_packet_tx_to_hw(packet_header, packet, packet_size);
+    else {
+        memset(packet, 0x0, SWITCH_PACKET_MAX_BUFFER_SIZE);
+        switch_packet_tx_bd_transform(in_packet, in_packet_size,
+                packet, &packet_size, tx_info);
+    }
+    switch_packet_tx_to_hw(packet_header, xform_packet, packet_size);
 }
 
 
