@@ -744,9 +744,11 @@ switch_api_hostif_rx_packet_from_hw(switch_packet_header_t *packet_header, char 
 
     JLG(temp, switch_hostif_rcode_array, cpu_header->reason_code);
     if (!temp) {
-        SWITCH_API_ERROR("rx_packet w/ un-handled reason_code 0x%x\n",
-                         cpu_header->reason_code);
-        return SWITCH_STATUS_ITEM_NOT_FOUND;
+//        SWITCH_API_ERROR("rx_packet w/ un-handled reason_code 0x%x\n",
+//                         cpu_header->reason_code);
+        SWITCH_API_TRACE("Sending packet through netdev\n");
+        switch_packet_rx_to_host(packet_header, packet, packet_size);
+        return SWITCH_STATUS_SUCCESS;
     }
 
     SWITCH_API_TRACE("Received packet with %s trap on ifindex %x\n",
