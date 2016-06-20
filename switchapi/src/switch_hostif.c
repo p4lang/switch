@@ -742,16 +742,16 @@ switch_api_hostif_rx_packet_from_hw(switch_packet_header_t *packet_header, char 
     memset(&hostif_packet, 0, sizeof(switch_hostif_packet_t));
     cpu_header = &packet_header->cpu_header;
 
-    JLG(temp, switch_hostif_rcode_array, cpu_header->reason_code);
-    if (!temp) {
-        SWITCH_API_ERROR("rx_packet w/ un-handled reason_code 0x%x\n",
-                         cpu_header->reason_code);
-        return SWITCH_STATUS_ITEM_NOT_FOUND;
-    }
-
     SWITCH_API_TRACE("Received packet with %s trap on ifindex %x\n",
                      switch_api_hostif_code_string(cpu_header->reason_code),
                      cpu_header->ingress_ifindex);
+
+    JLG(temp, switch_hostif_rcode_array, cpu_header->reason_code);
+    if (!temp) {
+        SWITCH_API_TRACE("rx_packet w/ un-handled reason_code 0x%x, "
+                         "setting reason_code to 0\n", cpu_header->reason_code);
+        JLG(temp, switch_hostif_rcode_array, SWITCH_HOSTIF_REASON_CODE_NONE);
+    }
 
     rcode_info = (switch_hostif_rcode_info_t *) (*(unsigned long *)temp);
     if ((rcode_info->rcode_api_info.reason_code == SWITCH_HOSTIF_REASON_CODE_NONE) ||
