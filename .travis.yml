@@ -81,6 +81,8 @@ install:
   - bash CI/travis/install-bmv2.sh
   - bash CI/travis/install-p4c-bmv2.sh
   - bash CI/travis/install-p4ofagent.sh
+  - export CPPFLAGS="$CPPFLAGS -I$HOME/p4ofagent/include"
+  - export LDFLAGS="$LDFLAGS -L$HOME/p4ofagent/lib"
   - git clone https://github.com/floodlight/oftest.git oftest_tmp
   - export PYTHONPATH=$PYP_ADD:$PYTHONPATH
   - sudo ldconfig
