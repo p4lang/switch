@@ -80,6 +80,8 @@ install:
   - bash CI/travis/install-ptf.sh
   - bash CI/travis/install-bmv2.sh
   - bash CI/travis/install-p4c-bmv2.sh
+  - bash CI/travis/install-p4ofagent.sh
+  - git clone https://github.com/floodlight/oftest.git oftest_tmp
   - export PYTHONPATH=$PYP_ADD:$PYTHONPATH
   - sudo ldconfig
   - ./autogen.sh; ./configure --with-bmv2 --with-switchsai; make -j2
@@ -107,3 +109,12 @@ script:
   - sudo ./bmv2/run_drivers.sh &>/dev/null &
   - sleep 10
   - sudo PYTHONPATH=$PYP_ADD:$PYTHONPATH ./bmv2/run_tests.sh --test-dir tests/ptf-tests/sai-tests
+  - sudo killall bmswitchp4_drivers lt-bmswitchp4_drivers simple_switch lt-simple_switch; echo 0
+  - make clean
+  - configure --with-of --with-bmv2
+  - make
+  - sudo ./bmv2/run_bm.sh &>/dev/null &
+  - sleep 10
+  - sudo ./bmv2/run_drivers.sh &>/dev/null &
+  - sleep 10
+  - sudo ./run_of_tests.sh --oft-path oftest_tmp/oft
