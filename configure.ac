@@ -132,10 +132,15 @@ AS_IF([test "$want_bmv2" = yes], [
 AC_CHECK_HEADERS([assert.h stdio.h string.h sys/stat.h sys/types.h unistd.h], \
 [], [AC_MSG_ERROR([Missing header file])])
 
-#AS_IF([test "$want_of" = yes], [
-#    AC_CHECK_HEADER([p4ofagent/p4ofagent.h], [], \
-#    [AC_MSG_ERROR([Openflow requires installing p4ofagent from https://github.com/p4lang/p4ofagent])])
-#])
+AS_IF([test "$want_of" = yes], [
+    AX_SAVE_FLAGS(SAVE_1)
+
+    CPPFLAGS="$CPPFLAGS -D_BMV2_"
+    AC_CHECK_HEADER([p4ofagent/p4ofagent.h], [], \
+    [AC_MSG_ERROR([Openflow requires installing p4ofagent from https://github.com/p4lang/p4ofagent])])
+
+    AX_RESTORE_FLAGS(SAVE_1)
+])
 
 # Thrift
 AC_WITH([p4thrift],
