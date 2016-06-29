@@ -229,7 +229,7 @@ AC_CONFIG_FILES([tests/run_tests.py])
 
 AS_IF([test "$want_of" = yes], [
   AC_CONFIG_FILES([tests/of-tests/openflow.py])
-  AC_CONFIG_FILES([bmv2/run_of_tests.sh])
+  AC_CONFIG_FILES([bmv2/run_of_tests.sh], [chmod +x bmv2/run_of_tests.sh])
 ])
 
 export P4_NAME=switch
