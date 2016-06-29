@@ -12,7 +12,16 @@ services:
   - docker
 
 env:
-  - PYP_ADD="/usr/local/lib/python2.7/dist-packages:/usr/local/lib/python2.7/site-packages"
+  global:
+    - PYP_ADD="/usr/local/lib/python2.7/dist-packages:/usr/local/lib/python2.7/site-packages"
+  matrix:
+    - TEST_SCRIPT=./bmv2/run_tests.sh
+    - TEST_SCRIPT=./bmv2/run_of_tests.sh
+    - TEST_DIR=
+    - TEST_DIR=tests/ptf-tests/api-tests
+    - TEST_DIR=tests/ptf-tests/sai-tests
+    - CONFIGURE_AND_MAKE=./configure --with-bmv2 --with-switchsai; make -j2 
+    - CONFIGURE_AND_MAKE=./configure --with-bmv2 --with-of; make -j2 
 
 # There is probably some redundant stuff in this list. If you find one, remove
 # it 
@@ -86,37 +95,16 @@ install:
   - git clone https://github.com/floodlight/oftest.git oftest_tmp
   - export PYTHONPATH=$PYP_ADD:$PYTHONPATH
   - sudo ldconfig
-  - ./autogen.sh; ./configure --with-bmv2 --with-switchsai; make -j2
+  - ./autogen.sh
 
 before_script:
   - cp CI/travis/veth_setup.sh tools/
   - cd tools; sudo ./veth_setup.sh; sudo ./veth_disable_ipv6.sh; cd ..
 
-# TODO: improve
 script:
+  - $CONFIGURE_AND_MAKE
   - sudo ./bmv2/run_bm.sh &>/dev/null &
   - sleep 10
   - sudo ./bmv2/run_drivers.sh &>/dev/null &
   - sleep 10
-  - sudo PYTHONPATH=$PYP_ADD:$PYTHONPATH ./bmv2/run_tests.sh
-  - sudo killall bmswitchp4_drivers lt-bmswitchp4_drivers simple_switch lt-simple_switch; echo 0
-  - sudo ./bmv2/run_bm.sh &>/dev/null &
-  - sleep 10
-  - sudo ./bmv2/run_drivers.sh &>/dev/null &
-  - sleep 10
-  - sudo PYTHONPATH=$PYP_ADD:$PYTHONPATH ./bmv2/run_tests.sh --test-dir tests/ptf-tests/api-tests/
-  - sudo killall bmswitchp4_drivers lt-bmswitchp4_drivers simple_switch lt-simple_switch; echo 0
-  - sudo ./bmv2/run_bm.sh &>/dev/null &
-  - sleep 10
-  - sudo ./bmv2/run_drivers.sh &>/dev/null &
-  - sleep 10
-  - sudo PYTHONPATH=$PYP_ADD:$PYTHONPATH ./bmv2/run_tests.sh --test-dir tests/ptf-tests/sai-tests
-  - sudo killall bmswitchp4_drivers lt-bmswitchp4_drivers simple_switch lt-simple_switch; echo 0
-  - make clean
-  - ./configure --with-of --with-bmv2
-  - make
-  - sudo ./bmv2/run_bm.sh &>/dev/null &
-  - sleep 10
-  - sudo ./bmv2/run_drivers.sh &>/dev/null &
-  - sleep 10
-  - sudo ./bmv2/run_of_tests.sh --oft-path oftest_tmp/oft
+  - sudo $TEST_SCRIPT --test-dir $TEST_DIR
