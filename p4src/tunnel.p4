@@ -1164,13 +1164,13 @@ action ipv6_gre_rewrite() {
 }
 
 action ipv4_ip_rewrite() {
-    f_insert_ipv4_header(tunnel_metadata.inner_ip_proto);
+    f_insert_ipv4_header(IP_PROTOCOLS_TCP/*tunnel_metadata.inner_ip_proto*/);
     add(ipv4.totalLen, egress_metadata.payload_length, 20);
     modify_field(ethernet.etherType, ETHERTYPE_IPV4);
 }
 
 action ipv6_ip_rewrite() {
-    f_insert_ipv6_header(tunnel_metadata.inner_ip_proto);
+    f_insert_ipv6_header(IP_PROTOCOLS_TCP/*tunnel_metadata.inner_ip_proto*/);
     modify_field(ipv6.payloadLen, egress_metadata.payload_length);
     modify_field(ethernet.etherType, ETHERTYPE_IPV6);
 }
