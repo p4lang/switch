@@ -15,10 +15,10 @@ env:
   global:
     - PYP_ADD="/usr/local/lib/python2.7/dist-packages:/usr/local/lib/python2.7/site-packages"
   matrix:
-    - CONFIGURE_AND_MAKE=./configure --with-bmv2 --with-switchsai; make -j2 && TEST_SCRIPT=./bmv2/run_tests.sh && TEST_DIR=
-    - TEST_SCRIPT=./bmv2/run_tests.sh && TEST_DIR=tests/ptf-tests/api-tests
-    - TEST_SCRIPT=./bmv2/run_tests.sh && TEST_DIR=tests/ptf-tests/sai-tests
-    - CONFIGURE_AND_MAKE=./configure --with-bmv2 --with-of; make -j2 && TEST_SCRIPT=./bmv2/run_of_tests.sh && TEST_DIR=
+    - CONFIGURE_OPTIONS="--with-bmv2 --with-switchsai" && TEST_SCRIPT="./bmv2/run_tests.sh" && TEST_DIR=
+    - CONFIGURE_OPTIONS="--with-bmv2 --with-switchsai" && TEST_SCRIPT="./bmv2/run_tests.sh" && TEST_DIR="tests/ptf-tests/api-tests"
+    - CONFIGURE_OPTIONS="--with-bmv2 --with-switchsai" && TEST_SCRIPT="./bmv2/run_tests.sh" && TEST_DIR="tests/ptf-tests/sai-tests"
+    - CONFIGURE_OPTIONS="--with-bmv2 --with-of" && TEST_SCRIPT="./bmv2/run_of_tests.sh" && TEST_DIR=
 
 # There is probably some redundant stuff in this list. If you find one, remove
 # it 
@@ -99,7 +99,7 @@ before_script:
   - cd tools; sudo ./veth_setup.sh; sudo ./veth_disable_ipv6.sh; cd ..
 
 script:
-  - $CONFIGURE_AND_MAKE
+  - ./configure $CONFIGURE_OPTIONS; make -j2
   - sudo ./bmv2/run_bm.sh &>/dev/null &
   - sleep 10
   - sudo ./bmv2/run_drivers.sh &>/dev/null &
