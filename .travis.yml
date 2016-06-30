@@ -14,17 +14,15 @@ services:
 env:
   global:
     - PYP_ADD="/usr/local/lib/python2.7/dist-packages:/usr/local/lib/python2.7/site-packages"
+    - KILL_BMV2="killall bmswitchp4_drivers lt-bmswitchp4_drivers simple_switch lt-simple_switch; echo 0"
 
-matrix:
-  include:
-    env:
-      - SAI_BUILD="./configure --with-bmv2 --with-switchsai; make -j2"
-      - SAI_TEST_SCRIPT="./bmv2/run_tests.sh --test-dir tests/ptf-tests/sai-tests"
-      - API_TEST_SCRIPT="./bmv2/run_tests.sh --test-dir tests/ptf-tests/api-tests"
-      - PD_TEST_SCRIPT="./bmv2/run_tests.sh"
-    env:
-      - OF_BUILD="./configure --with-bmv2 --with-of; make -j2"
-      - OF_TEST_SCRIPT="./bmv2/run_of_tests.sh --oft-path oftest_tmp/oft"
+  matrix:
+    - SAI_BUILD="./configure --with-bmv2 --with-switchsai; make -j2"
+      && SAI_TEST_SCRIPT="./bmv2/run_tests.sh --test-dir tests/ptf-tests/sai-tests"
+      && API_TEST_SCRIPT="./bmv2/run_tests.sh --test-dir tests/ptf-tests/api-tests"
+      && PD_TEST_SCRIPT="./bmv2/run_tests.sh"
+    - OF_BUILD="./configure --with-bmv2 --with-of; make -j2"
+      && OF_TEST_SCRIPT="./bmv2/run_of_tests.sh --oft-path oftest_tmp/oft"
 
 # There is probably some redundant stuff in this list. If you find one, remove
 # it 
@@ -112,6 +110,22 @@ script:
   - sudo ./bmv2/run_drivers.sh &>/dev/null &
   - sleep 10
   - sudo $SAI_TEST_SCRIPT
+  - sudo $KILL_BMV2
+  - sudo ./bmv2/run_bm.sh &>/dev/null &
+  - sleep 10
+  - sudo ./bmv2/run_drivers.sh &>/dev/null &
+  - sleep 10
   - sudo $API_TEST_SCRIPT
+  - sudo $KILL_BMV2
+  - sudo ./bmv2/run_bm.sh &>/dev/null &
+  - sleep 10
+  - sudo ./bmv2/run_drivers.sh &>/dev/null &
+  - sleep 10
   - sudo $PD_TEST_SCRIPT
+  - sudo $KILL_BMV2
+  - sudo ./bmv2/run_bm.sh &>/dev/null &
+  - sleep 10
+  - sudo ./bmv2/run_drivers.sh &>/dev/null &
+  - sleep 10
   - sudo $OF_TEST_SCRIPT
+  - sudo $KILL_BMV2
