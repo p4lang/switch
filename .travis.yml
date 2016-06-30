@@ -17,11 +17,11 @@ env:
     - KILL_BMV2="killall bmswitchp4_drivers lt-bmswitchp4_drivers simple_switch lt-simple_switch; echo 0"
 
   matrix:
-    - SAI_BUILD="./configure --with-bmv2 --with-switchsai ; make -j2"
+    - SAI_BUILD="./configure --with-bmv2 --with-switchsai"
       && SAI_TEST_SCRIPT="sudo ./bmv2/run_tests.sh --test-dir tests/ptf-tests/sai-tests"
       && API_TEST_SCRIPT="sudo ./bmv2/run_tests.sh --test-dir tests/ptf-tests/api-tests"
       && PD_TEST_SCRIPT="sudo ./bmv2/run_tests.sh"
-    - OF_BUILD="./configure --with-bmv2 --with-of ; make -j2"
+    - OF_BUILD="./configure --with-bmv2 --with-of"
       && OF_TEST_SCRIPT="sudo ./bmv2/run_of_tests.sh --oft-path oftest_tmp/oft"
 
 # There is probably some redundant stuff in this list. If you find one, remove
@@ -105,6 +105,7 @@ before_script:
 script:
   - $SAI_BUILD
   - $OF_BUILD
+  - make -j2
   - sudo ./bmv2/run_bm.sh &>/dev/null &
   - sleep 10
   - sudo ./bmv2/run_drivers.sh &>/dev/null &
