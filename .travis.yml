@@ -100,6 +100,6 @@ script:
   - if  [ "$TEST_SCENARIO" = "switch" ] ; then ./configure --with-bmv2 --with-switchsai; fi
   - if  [ "$TEST_SCENARIO" = "of" ] ; then ./configure --with-bmv2 --with-of; fi
   - make -j2
-  - if  [ "$TEST_SCENARIO" = "switch" ] ; then ./CI/travis/run_switch_test.sh; fi
+  - if  [ "$TEST_SCENARIO" = "switch" ] ; then ./CI/travis/run_switch_tests.sh; fi
   - if  [ "$TEST_SCENARIO" = "of" ] ; then ./CI/travis/run_of_tests.sh; fi
 
