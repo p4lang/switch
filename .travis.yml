@@ -111,22 +111,21 @@ script:
   - sudo ./bmv2/run_drivers.sh &>/dev/null &
   - sleep 10
   - $SAI_TEST_SCRIPT
-  - sudo $KILL_BMV2
+  - sudo killall bmswitchp4_drivers lt-bmswitchp4_drivers simple_switch lt-simple_switch; echo 0
   - sudo ./bmv2/run_bm.sh &>/dev/null &
   - sleep 10
   - sudo ./bmv2/run_drivers.sh &>/dev/null &
   - sleep 10
   - $API_TEST_SCRIPT
-  - sudo $KILL_BMV2
+  - sudo killall bmswitchp4_drivers lt-bmswitchp4_drivers simple_switch lt-simple_switch; echo 0
   - sudo ./bmv2/run_bm.sh &>/dev/null &
   - sleep 10
   - sudo ./bmv2/run_drivers.sh &>/dev/null &
   - sleep 10
   - $PD_TEST_SCRIPT
-  - sudo $KILL_BMV2
+  - sudo killall bmswitchp4_drivers lt-bmswitchp4_drivers simple_switch lt-simple_switch; echo 0
   - sudo ./bmv2/run_bm.sh &>/dev/null &
   - sleep 10
   - sudo ./bmv2/run_drivers.sh &>/dev/null &
   - sleep 10
   - $OF_TEST_SCRIPT
-  - sudo $KILL_BMV2
