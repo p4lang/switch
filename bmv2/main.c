@@ -60,6 +60,11 @@ parse_options(int argc, char **argv)
       case OPT_PDSERVER:
         pd_server_str = strdup(optarg);
         break;
+      case OPT_OFIP:
+        of_controller_str = strdup(optarg);
+        break;
+      case OPT_OFIPV6:
+        of_ipv6 = 1;
       case 'h':
       case '?':
         printf("Drivers! \n");

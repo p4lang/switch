@@ -38,7 +38,9 @@ RUN apt-get install -y \
       python-scipy \
       python-setuptools \
       python-yaml \
-      wget
+      wget \
+      ethtool \
+      vim
 
 # install scapy
 RUN mkdir -p /tmp/scapy ; \
@@ -73,7 +75,7 @@ RUN mkdir -p /tmp/bm ; \
     ./autogen.sh ; \
     ./configure --with-pdfixed ; \
     make ; \
-    make install ; \
+    make install ; ldconfig ; \
     rm -rf /tmp/bm
 
 # install p4c-bm

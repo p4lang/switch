@@ -8,4 +8,4 @@ if [ ! -f $DRIVERS_EXE ]; then
     echo "bmswitchp4_drivers not found; did you run 'make'?"
     exit 1
 fi
-$DRIVERS_EXE
+$DRIVERS_EXE $@

@@ -1,5 +1,3 @@
-sudo ldconfig
-
 sudo /switch/tools/veth_setup.sh
 
 # start bm
