@@ -1,58 +1,15 @@
 #!/usr/bin/python
-
-# Copyright 2013-present Barefoot Networks, Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-########
-# README
-# 
-# This script is for use with the switch target of the behavioral model.
-# To run it, first build the behavioral model with an Openflow Agent,
-# then start an instance of Ryu running the simple_switch_13.py app. Supply the IP 
-# address of the Ryu instance to this script and you should be able to do "h1 ping h2."
-########
-
-from mininet.net import Mininet
-from mininet.topo import Topo
-from mininet.log import setLogLevel, info
-from mininet.cli import CLI
-
-from p4_mininet import P4DockerSwitch
-
-import os
 import sys
-import time
-from subprocess import Popen
+import os
 
-import argparse
+sys.path.append("/usr/lib/python2.7/site-packages")
+sys.path.append("/usr/local/lib/python2.7/dist-packages/bm/pdfixed")
 
-parser = argparse.ArgumentParser(description='Mininet demo')
-parser.add_argument('--controller-ip', help='IPv4 address of openflow controller',
-                    type=str, action="store", required=True)
-
-parser_args = parser.parse_args()
-
-import importlib
-from thrift.transport import TSocket
-from thrift.transport import TTransport
-from thrift.protocol import TBinaryProtocol
-from thrift.protocol import TMultiplexedProtocol
-
+# this configures for my env, not the docker env
 pd_dir = os.path.join('@abs_top_builddir@',
                       'p4-build', 'bmv2', 'pd_thrift_gen', 'gen-py')
-utils_dir = os.path.join('@abs_builddir@',
-                         '..', 'tests', 'of-tests', 'common')
+utils_dir = os.path.join('@abs_top_builddir@',
+                         'tests', 'of-tests', 'common')
 
 sys.path.append(pd_dir)
 sys.path.append(utils_dir)
@@ -60,6 +17,12 @@ sys.path.append(utils_dir)
 from p4_pd_rpc.ttypes import *
 from res_pd_rpc.ttypes import *
 from utils import *
+
+import importlib
+from thrift.transport import TSocket
+from thrift.transport import TTransport
+from thrift.protocol import TBinaryProtocol
+from thrift.protocol import TMultiplexedProtocol
 
 def setup_bd(client, conn_mgr):
     """
@@ -129,46 +92,5 @@ def configure_switch():
 
     transport.close()
 
-def main():
-    net = Mininet( controller=None )
-    sw1 = net.addSwitch( 'sw1', cls=P4DockerSwitch,
-                        target_name="p4switch",
-                        start_program="/bin/bash")
-
-    h1 = net.addHost( 'h1', ip = '10.0.0.1', mac = '00:04:00:00:00:02' )
-    h2 = net.addHost( 'h2', ip = '10.0.0.2', mac = '00:05:00:00:00:02' )
-
-    sw1.execProgram("/scripts/startup.sh --of-ip %s" % parser_args.controller_ip)
-
-    net.start()
-
+if __name__ == "__main__":
     configure_switch()
-
-    time.sleep(1)
-
-    print "Ready !"
-
-    result = 0
-    time.sleep(3)
-
-    node_values = net.values()
-    print node_values
-
-    hosts = net.hosts
-    print hosts
-
-    # ping hosts
-    print "PING BETWEEN THE HOSTS"
-    result = net.ping(hosts,30)
-
-    if result != 0:
-            print "PING FAILED BETWEEN HOSTS %s"  % (hosts)
-    else:
-        print "PING SUCCESSFUL!!!"
-
-    net.stop()
-    return result
-
-if __name__ == '__main__':
-    setLogLevel( 'info' )
-    main()
