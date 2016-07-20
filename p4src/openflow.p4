@@ -127,35 +127,6 @@ action openflow_miss(reason, table_id) {
     modify_field(ingress_egress_port, CPU_PORT_ID);
 }
 
-/***************************************************************
- * Packet Out
- ***************************************************************/
-
-action packet_out_eth_flood() {
-    modify_field(intrinsic_metadata.mcast_grp, fabric_header.dstPortOrGroup);
-    terminate_cpu_packet();
-    modify_field(openflow_metadata.ofvalid, TRUE);
-}
-
-action packet_out_unicast() {
-    modify_field(ingress_egress_port, fabric_header.dstPortOrGroup);
-    terminate_cpu_packet();
-    modify_field(openflow_metadata.ofvalid, TRUE);
-}
-
-table packet_out {
-    reads {
-        fabric_header.packetType : exact;
-        fabric_header_cpu.reasonCode : exact;
-    }
-
-    actions {
-        packet_out_eth_flood;
-        packet_out_unicast;
-        nop;
-    }
-}
-
 /****************************************************************
  * Egress openflow bitmap translation
  ****************************************************************/
