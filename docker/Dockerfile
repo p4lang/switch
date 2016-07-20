@@ -105,12 +105,9 @@ RUN mkdir /tmp/p4ofagent ; \
     rm -rf /tmp/p4ofagent
 
 # build switch
-RUN git clone https://github.com/p4lang/switch ; \
-    cd switch ; \
+RUN git clone https://github.com/pierce-m/switch ; \
+    cd switch ; git checkout docker-of ; \
     git submodule update --init --recursive ; \
     ./autogen.sh ; \
     ./configure --with-bmv2 --with-of ; \
     make
-
-RUN mkdir /scripts
-ADD startup.sh /scripts/startup.sh

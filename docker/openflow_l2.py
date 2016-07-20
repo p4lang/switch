@@ -61,13 +61,24 @@ def main():
         net.addLink( sw1, h1, port1 = 1, fast=False )
         net.addLink( sw1, h2, port1 = 2, fast=False )
 
-    sw1.execProgram("/scripts/startup.sh --of-ip %s" % parser_args.controller_ip)
-    sw1.cpFile('configure.sh', '/scripts/configure.sh')
+#    sw1.execProgram("/switch/docker/startup.sh --of-ip %s" % parser_args.controller_ip)
 
-    time.sleep(20)
-    sw1.execProgram("/scripts/configure.sh")
-    time.sleep(3)
+    print "About to copy file"
 
+    sw1.cpFile('docker/run_bm.sh', '/switch/docker/run_bm.sh')
+    print "Copied File"
+    sw1.execProgram('/switch/tools/veth_setup.sh')
+    time.sleep(5)
+    sw1.execProgram('/switch/docker/run_bm.sh')
+    print "Executed file"
+    time.sleep(10)
+
+    sw1.cpFile('docker/run_drivers.sh', '/switch/docker/run_drivers.sh')
+    sw1.execProgram('/switch/docker/run_drivers.sh --of-ip %s' % parser_args.controller_ip)
+    time.sleep(10)
+
+    sw1.execProgram('/switch/docker/configure.sh')
+    time.sleep(1)
 
     net.start()
 
@@ -76,22 +87,24 @@ def main():
     result = 0
     time.sleep(3)
 
-    node_values = net.values()
-    print node_values
+    CLI(net)
 
-    hosts = net.hosts
-    print hosts
-
-    # ping hosts
-    print "PING BETWEEN THE HOSTS"
-    result = net.ping(hosts,30)
-
-    if result != 0:
-            print "PING FAILED BETWEEN HOSTS %s"  % (hosts)
-    else:
-        print "PING SUCCESSFUL!!!"
-
-    net.stop()
+#    node_values = net.values()
+#    print node_values
+#
+#    hosts = net.hosts
+#    print hosts
+#
+#    # ping hosts
+#    print "PING BETWEEN THE HOSTS"
+#    result = net.ping(hosts,30)
+#
+#    if result != 0:
+#            print "PING FAILED BETWEEN HOSTS %s"  % (hosts)
+#    else:
+#        print "PING SUCCESSFUL!!!"
+#
+#    net.stop()
     return result
 
 if __name__ == '__main__':
