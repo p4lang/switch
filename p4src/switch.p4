@@ -100,6 +100,7 @@ action on_miss() {
 }
 
 control ingress {
+
     /* input mapping - derive an ifindex */
     process_ingress_port_mapping();
 
@@ -108,12 +109,6 @@ control ingress {
 
     /* read and apply system confuration parametes */
     process_global_params();
-
-#ifdef OPENFLOW_ENABLE
-    if (ingress_metadata.port_type == PORT_TYPE_CPU) {
-        apply(packet_out);
-    }
-#endif /* OPENFLOW_ENABLE */
 
     /* derive bd and its properties  */
     process_port_vlan_mapping();
@@ -208,6 +203,11 @@ control ingress {
         /* ecmp/nexthop lookup */
         process_nexthop();
 
+#ifdef OPENFLOW_ENABLE
+        /* openflow processing for ingress */
+        process_ofpat_ingress();
+#endif /* OPENFLOW_ENABLE */
+
         if (ingress_metadata.egress_ifindex == IFINDEX_FLOOD) {
             /* resolve multicast index for flooding */
             process_multicast_flooding();
@@ -216,17 +216,13 @@ control ingress {
             process_lag();
         }
 
-#ifdef OPENFLOW_ENABLE
-        /* openflow processing for ingress */
-        process_ofpat_ingress();
-#endif /* OPENFLOW_ENABLE */
-
         /* generate learn notify digest if permitted */
         process_mac_learning();
     }
 
     /* resolve fabric port to destination device */
     process_fabric_lag();
+
 
     if (ingress_metadata.port_type != PORT_TYPE_FABRIC) {
         /* system acls */
