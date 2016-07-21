@@ -1,0 +1,11 @@
+#!/bin/bash
+if [[ $EUID -ne 0 ]]; then
+    echo "This script should be run using sudo or as the root user"
+    exit 1
+fi
+DRIVERS_EXE=@abs_builddir@/bmswitchp4_drivers
+if [ ! -f $DRIVERS_EXE ]; then
+    echo "bmswitchp4_drivers not found; did you run 'make'?"
+    exit 1
+fi
+$DRIVERS_EXE $@

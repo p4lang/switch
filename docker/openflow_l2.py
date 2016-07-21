@@ -61,23 +61,8 @@ def main():
         net.addLink( sw1, h1, port1 = 1, fast=False )
         net.addLink( sw1, h2, port1 = 2, fast=False )
 
-#    sw1.execProgram("/switch/docker/startup.sh --of-ip %s" % parser_args.controller_ip)
+    sw1.execProgram("/switch/docker/startup.sh --of-ip %s" % parser_args.controller_ip)
 
-    print "About to copy file"
-
-    sw1.cpFile('docker/run_bm.sh', '/switch/docker/run_bm.sh')
-    print "Copied File"
-    sw1.execProgram('/switch/tools/veth_setup.sh')
-    time.sleep(5)
-    sw1.execProgram('/switch/docker/run_bm.sh')
-    print "Executed file"
-    time.sleep(10)
-
-    sw1.cpFile('docker/run_drivers.sh', '/switch/docker/run_drivers.sh')
-    sw1.execProgram('/switch/docker/run_drivers.sh --of-ip %s' % parser_args.controller_ip)
-    time.sleep(10)
-
-    sw1.execProgram('/switch/docker/configure.sh')
     time.sleep(1)
 
     net.start()
