@@ -17,6 +17,7 @@ limitations under the License.
 #include <saiport.h>
 #include "saiinternal.h"
 #include <switchapi/switch_port.h>
+#include <switchapi/switch_capability.h>
 
 static sai_api_t api_id = SAI_API_PORT;
 
@@ -74,17 +75,17 @@ sai_status_t sai_set_port_attribute(
                     &port_speed))
                 != SAI_STATUS_SUCCESS) {
                 SAI_LOG_ERROR("bad port speed for port %d speed: %s",
-                    port_id, sai_status_to_string(status));
+                    (port_id & 0xFFFF), sai_status_to_string(status));
                 return status;
             }
             switch_status = switch_api_port_speed_set(
                 device,
-                (switch_port_t) port_id,
+                (switch_port_t) (port_id & 0xFFFF),
                 (switch_port_speed_t) attr->value.u8);
             if ((status = sai_switch_status_to_sai_status(switch_status))
                 != SAI_STATUS_SUCCESS) {
                 SAI_LOG_ERROR("failed to set port %d speed: %s",
-                    port_id, sai_status_to_string(status));
+                    (port_id & 0xFFFF), sai_status_to_string(status));
                 return status;
             }
             break;
@@ -117,9 +118,12 @@ sai_status_t sai_get_port_attribute(
         _In_ uint32_t attr_count,
         _Inout_ sai_attribute_t *attr_list) {
 
-    SAI_LOG_ENTER();
-
+    switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
+    unsigned int i=0;
+    sai_attribute_t *attr = attr_list;
     sai_status_t status = SAI_STATUS_SUCCESS;
+
+    SAI_LOG_ENTER();
 
     if (!attr_list) {
         status = SAI_STATUS_INVALID_PARAMETER;
@@ -128,48 +132,71 @@ sai_status_t sai_get_port_attribute(
         return status;
     }
 
-    // attribute value holders
-    // Unused for now
-    /* int enable; */
-    /* switch_port_speed_t speed; */
+    for(i=0,attr=attr_list;i<attr_count;i++,attr++) {
+       switch (attr->id) {
+           case SAI_PORT_ATTR_TYPE:
+           {
+               switch_api_capability_t api_switch_info;
+               switch_api_capability_get(device, &api_switch_info);
+               if (api_switch_info.port_list[64] == port_id)
+                   attr->value.s32 = SAI_PORT_TYPE_CPU;
+               else
+                   attr->value.s32 = SAI_PORT_TYPE_LOGICAL;
+               status = sai_switch_status_to_sai_status(switch_status);
+           }
+               break;
 
-    int index;
-    sai_attribute_t *attribute;
-    switch_status_t switch_status;
-    for (index = 0; index < attr_count; index++) {
-        attribute = &attr_list[index];
-        switch(attribute->id) {
-            case SAI_PORT_ATTR_OPER_STATUS:
-                switch_status = switch_api_port_state_get(
-                    device,
-                    (switch_port_t) port_id,
-                    &attribute->value.booldata);
-                if ((status = sai_switch_status_to_sai_status(switch_status))
-                    != SAI_STATUS_SUCCESS) {
-                    SAI_LOG_ERROR("failed to get port %d oper state: %s",
-                        port_id, sai_status_to_string(status));
-                    return status;
-                }
-                status = sai_switch_port_enabled_to_sai_oper_status(attribute);
-                break;
-            case SAI_PORT_ATTR_SPEED:
-                switch_status = switch_api_port_speed_get(
-                    device,
-                    (switch_port_t) port_id,
-                    (switch_port_speed_t *) &attribute->value.u8);
-                if ((status = sai_switch_status_to_sai_status(switch_status))
-                    != SAI_STATUS_SUCCESS) {
-                    SAI_LOG_ERROR("failed to get port %d speed: %s",
-                        port_id, sai_status_to_string(status));
-                    return status;
-                }
-                break;
-            case SAI_PORT_ATTR_SUPPORTED_SPEED:
+           case SAI_PORT_ATTR_HW_LANE_LIST:
+               attr->value.u32list.count = 1;
+               attr->value.u32list.list[0] = port_id & 0xFFFF;
+               status = sai_switch_status_to_sai_status(switch_status);
+               break;
+
+           case SAI_PORT_ATTR_SUPPORTED_BREAKOUT_MODE:
+               attr->value.s32list.count = 1;
+               attr->value.s32list.list[0] = SAI_PORT_BREAKOUT_MODE_1_LANE;
+               status = sai_switch_status_to_sai_status(switch_status);
+               break;
+
+           case SAI_PORT_ATTR_CURRENT_BREAKOUT_MODE:
+               attr->value.s32 = SAI_PORT_BREAKOUT_MODE_1_LANE;
+               status = sai_switch_status_to_sai_status(switch_status);
+               break;
+           case SAI_PORT_ATTR_OPER_STATUS:
+               switch_status = switch_api_port_state_get(
+                   device,
+                   (switch_port_t) (port_id & 0xFFFF),
+                   &(attr->value.booldata));
+               if ((status = sai_switch_status_to_sai_status(switch_status))
+                   != SAI_STATUS_SUCCESS) {
+                   SAI_LOG_ERROR("failed to get port %d oper state: %s",
+                       (port_id & 0xFFFF), sai_status_to_string(status));
+                   return status;
+               }
+               status = sai_switch_port_enabled_to_sai_oper_status(attr);
+               attr->value.s32 =  SAI_PORT_OPER_STATUS_UP;
+               status = sai_switch_status_to_sai_status(switch_status);
+               break;
+           case SAI_PORT_ATTR_SPEED:
+               switch_status = switch_api_port_speed_get(
+                   device,
+                   (switch_port_t) (port_id & 0xFFFF),
+                   (switch_port_speed_t *) &attr->value.u8);
+               if ((status = sai_switch_status_to_sai_status(switch_status))
+                   != SAI_STATUS_SUCCESS) {
+                   SAI_LOG_ERROR("failed to get port %d speed: %s",
+                       (port_id & 0xFFFF), sai_status_to_string(status));
+                   return status;
+               }
+               attr->value.u32 = 40000; // SAI_PORT_SPEED_FORTY_GIG;
+               break;
+           case SAI_PORT_ATTR_SUPPORTED_SPEED:
                 // TODO: implement this, should return list of supported port speeds
-                attribute->value.u32list.count = 0;
+                attr->value.u32list.count = 0;
                 break;
             default:
-                return SAI_STATUS_NOT_SUPPORTED;
+               status = SAI_STATUS_NOT_SUPPORTED;
+               break;
         }
     }
 

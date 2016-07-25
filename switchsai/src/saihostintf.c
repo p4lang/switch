@@ -61,6 +61,7 @@ sai_status_t sai_create_hostif(
                 }
                 break;
             case SAI_HOSTIF_ATTR_RIF_OR_PORT_ID:
+                hostif.handle = attribute->value.oid;
                 break;
             case SAI_HOSTIF_ATTR_NAME:
                 memcpy(hostif.intf_name, attribute->value.chardata, HOSTIF_NAME_SIZE);
@@ -220,9 +221,6 @@ sai_status_t sai_create_hostif_trap_group(
         attribute = &attr_list[index];   
         switch (attribute->id) {
             case SAI_HOSTIF_TRAP_GROUP_ATTR_ADMIN_STATE:
-                break;
-            case SAI_HOSTIF_TRAP_GROUP_ATTR_PRIO:
-                hostif_group.priority = attribute->value.u32;
                 break;
             case SAI_HOSTIF_TRAP_GROUP_ATTR_QUEUE:
                 hostif_group.egress_queue = attribute->value.u32;
@@ -857,10 +855,10 @@ sai_status_t sai_send_hostif_packet(
     for (index = 0; index < attr_count; index++) {
         attribute = &attr_list[index];
         switch (attribute->id) {
-            case SAI_HOSTIF_PACKET_TX_TYPE:
-                hostif_packet.tx_bypass = switch_sai_tx_type_to_switch_api_tx_type(attribute->value.s32);
+            case SAI_HOSTIF_PACKET_ATTR_TX_TYPE:
+                hostif_packet.tx_bypass = switch_sai_tx_type_to_switch_api_tx_type(attribute->value.u32);
                 break;
-            case SAI_HOSTIF_PACKET_EGRESS_PORT_OR_LAG:
+            case SAI_HOSTIF_PACKET_ATTR_EGRESS_PORT_OR_LAG:
                 hostif_packet.handle = attribute->value.oid;
                 //Set is_lag flag if oid is lag
                 break;
@@ -911,20 +909,22 @@ void sai_recv_hostif_packet_cb(
     sai_attribute_t attr_list[max_attr_count];
     sai_attribute_t *attribute;
     attribute = &attr_list[attr_count];
-    attribute->id = SAI_HOSTIF_PACKET_TRAP_ID;
+    attribute->id = SAI_HOSTIF_PACKET_ATTR_TRAP_ID;
     attribute->value.u32 = hostif_packet->reason_code;
     attr_count++;
     attribute = &attr_list[attr_count];
-    attribute->id = SAI_HOSTIF_PACKET_INGRESS_PORT;
+    attribute->id = SAI_HOSTIF_PACKET_ATTR_INGRESS_PORT;
     attribute->value.oid = hostif_packet->handle;
     attr_count++;
 
+#if 0
     if (sai_switch_notifications.on_packet_event) {
         sai_switch_notifications.on_packet_event(hostif_packet->pkt,
                                              hostif_packet->pkt_size,
                                              attr_count,
                                              attr_list);
     }
+#endif
 
     SAI_LOG_EXIT();
 

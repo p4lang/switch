@@ -128,6 +128,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       }
   }
 
+#if 0
   void sai_thrift_parse_vlan_port_id_list(const std::vector<sai_thrift_vlan_port_t> & thrift_port_list, sai_vlan_port_t *port_list) {
       std::vector<sai_thrift_vlan_port_t>::const_iterator it = thrift_port_list.begin();
       sai_thrift_vlan_port_t thrift_vlan_port;
@@ -137,6 +138,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
           port_list[i].tagging_mode = (sai_vlan_tagging_mode_t) thrift_vlan_port.tagging_mode;
       }
   }
+#endif
 
   void sai_thrift_parse_ip_address(const sai_thrift_ip_address_t &thrift_ip_address, sai_ip_address_t *ip_address) {
       ip_address->addr_family = (sai_ip_addr_family_t) thrift_ip_address.addr_family;
@@ -516,9 +518,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
               case SAI_HOSTIF_TRAP_GROUP_ATTR_QUEUE:
                   attr_list[i].value.u32 = attribute.value.u32;
                   break;
-              case SAI_HOSTIF_TRAP_GROUP_ATTR_PRIO:
-                  attr_list[i].value.u32 = attribute.value.u32;
-                  break;
           }
       }
   }
@@ -659,6 +658,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   int32_t sai_thrift_add_ports_to_vlan(const sai_thrift_vlan_id_t vlan_id, const std::vector<sai_thrift_vlan_port_t> & thrift_port_list) {
       printf("sai_thrift_add_ports_to_vlan\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
+#if 0
       sai_vlan_api_t *vlan_api;
       status = sai_api_query(SAI_API_VLAN, (void **) &vlan_api);
       if (status != SAI_STATUS_SUCCESS) {
@@ -669,12 +669,14 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       uint32_t port_count = thrift_port_list.size();
       status = vlan_api->add_ports_to_vlan(vlan_id, port_count, port_list);
       free(port_list);
+#endif
       return status;
   }
 
   int32_t sai_thrift_remove_ports_from_vlan(const sai_thrift_vlan_id_t vlan_id, const std::vector<sai_thrift_vlan_port_t> & thrift_port_list) {
       printf("sai_thrift_remove_ports_from_vlan\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
+#if 0
       sai_vlan_api_t *vlan_api;
       status = sai_api_query(SAI_API_VLAN, (void **) &vlan_api);
       if (status != SAI_STATUS_SUCCESS) {
@@ -685,6 +687,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       uint32_t port_count = thrift_port_list.size();
       status = vlan_api->remove_ports_from_vlan(vlan_id, port_count, port_list);
       free(port_list);
+#endif
       return status;
   }
 

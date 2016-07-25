@@ -59,8 +59,8 @@ switch_port_init(switch_device_t device)
                                      port_info->ifindex,
                                      port_info->port_type,
                                      &(port_info->eg_port_entry));
-        port_info->port_handle = id_to_handle(SWITCH_HANDLE_TYPE_PORT, index);
 #endif
+        port_info->port_handle = id_to_handle(SWITCH_HANDLE_TYPE_PORT, index);
     }
     return SWITCH_STATUS_SUCCESS;
 }
@@ -121,6 +121,7 @@ switch_api_port_delete(switch_device_t device, uint16_t port_number)
 switch_status_t
 switch_api_port_state_get(switch_device_t device, switch_port_t port, bool *up)
 {
+    *up = TRUE;
     return SWITCH_STATUS_SUCCESS;
 }
 

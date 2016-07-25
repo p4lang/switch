@@ -265,6 +265,7 @@ switch_packet_rx_to_host(
     switch_packet_rx_entry_t           rx_entry;
     int                                intf_fd = 0;
     switch_status_t                    status = SWITCH_STATUS_SUCCESS;
+    char                                *xform_packet = in_packet;
 
     cpu_header = &packet_header->cpu_header;
 
@@ -277,19 +278,33 @@ switch_packet_rx_to_host(
     status = switch_packet_rx_info_get(
                              &rx_entry,
                              &rx_info);
-    if (status != SWITCH_STATUS_SUCCESS) {
-        SWITCH_API_ERROR("failed to find fd. dropping packet");
-        return;
-    }
-
-    SWITCH_API_INFO("Rx packet reason_code 0x%x - send to fd %d, action %d\n",
+    if (status == SWITCH_STATUS_SUCCESS) {
+        SWITCH_API_INFO("Rx packet reason_code 0x%x - send to fd %d, action %d\n",
                     rx_entry.reason_code, rx_info->intf_fd, rx_info->vlan_action);
+        switch_packet_rx_transform(packet_header, in_packet, packet, &packet_size);
+        intf_fd = rx_info->intf_fd;
+    }
+    else {
+        switch_handle_t                    hostif_handle = 0;		
+        switch_hostif_info_t              *hostif_info = NULL;		
+        switch_handle_t                    port_handle = 0;		
+        switch_port_info_t                *port_info = NULL;
 
-    switch_packet_rx_transform(packet_header, in_packet, packet, &packet_size);
-
-    intf_fd = rx_info->intf_fd;
-
-    if (write(intf_fd, in_packet, packet_size) < 0) {
+        // Find the host interface from the ifIndex, by default
+        port_handle = id_to_handle(SWITCH_HANDLE_TYPE_PORT, cpu_header->ingress_ifindex-1);
+        port_info = switch_api_port_get_internal(port_handle);		
+        if (!port_info) {		
+           return;		
+        }		
+        hostif_handle = port_info->hostif_handle;		
+        hostif_info = switch_hostif_get(hostif_handle);		
+        if (!hostif_info) {		
+            return;		
+        }
+        intf_fd = hostif_info->intf_fd;
+        xform_packet = packet;
+    }
+    if (write(intf_fd, xform_packet, packet_size) < 0) {
         perror("sendto host interface failed");
         return;
     }
@@ -371,6 +386,7 @@ switch_packet_tx_switched(
     switch_packet_tx_entry_t           tx_entry;
     switch_packet_tx_info_t           *tx_info = NULL;
     switch_status_t                    status;
+    char                                *xform_packet = packet;
 
     eth_header = (switch_ethernet_header_t *) in_packet;
     if (ntohs(eth_header->ether_type) == SWITCH_ETHERTYPE_DOT1Q) {
@@ -385,14 +401,16 @@ switch_packet_tx_switched(
                          &tx_entry,
                          &tx_info);
     if (status != SWITCH_STATUS_SUCCESS) {
-        SWITCH_API_ERROR("net filter tx not found. dropping packet");
-        return;
+//        SWITCH_API_ERROR("net filter tx not found. dropping packet");
+//        return;
+        xform_packet = in_packet;
     }
-
-    memset(packet, 0x0, SWITCH_PACKET_MAX_BUFFER_SIZE);
-    switch_packet_tx_bd_transform(in_packet, in_packet_size,
-        packet, &packet_size, tx_info);
-    switch_packet_tx_to_hw(packet_header, packet, packet_size);
+    else {
+        memset(packet, 0x0, SWITCH_PACKET_MAX_BUFFER_SIZE);
+        switch_packet_tx_bd_transform(in_packet, in_packet_size,
+                packet, &packet_size, tx_info);
+    }
+    switch_packet_tx_to_hw(packet_header, xform_packet, packet_size);
 }
 
 
@@ -439,29 +457,35 @@ switch_packet_tx_from_host(int intf_fd)
 
         tx_entry.intf_fd = intf_fd;
         tx_entry.vlan_id = vlan_id1;
-        status = switch_packet_tx_info_get(
-                             &tx_entry,
-                             &tx_info);
-        if (status != SWITCH_STATUS_SUCCESS) {
-            SWITCH_API_ERROR("net filter tx not found. dropping packet");
-            continue;
-        }
 
         memset(&packet_header, 0x0, sizeof(packet_header));
         cpu_header = &packet_header.cpu_header;
         fabric_header = &packet_header.fabric_header;
 
-        if (tx_info->bypass_flags == SWITCH_BYPASS_ALL) {
+        status = switch_packet_tx_info_get(
+                             &tx_entry,
+                             &tx_info);
+        if (status != SWITCH_STATUS_SUCCESS) {
+//            SWITCH_API_ERROR("net filter tx not found. dropping packet");
+//            continue;
             cpu_header->tx_bypass = TRUE;
-            cpu_header->reason_code = tx_info->bypass_flags;
-            fabric_header->dst_port_or_group = tx_info->port;
+            fabric_header->dst_port_or_group = handle_to_id(hostif_info->hostif.handle);
             memcpy(packet, in_packet, in_packet_size);
             packet_size = in_packet_size;
-        } else {
-            cpu_header->tx_bypass = FALSE;
-            cpu_header->reason_code = tx_info->bypass_flags;
-            switch_packet_tx_bd_transform(in_packet, in_packet_size,
-                packet, &packet_size, tx_info);
+        }
+        else {
+            if (tx_info->bypass_flags == SWITCH_BYPASS_ALL) {
+                cpu_header->tx_bypass = TRUE;
+                cpu_header->reason_code = tx_info->bypass_flags;
+                fabric_header->dst_port_or_group = tx_info->port;
+                memcpy(packet, in_packet, in_packet_size);
+                packet_size = in_packet_size;
+            } else {
+                cpu_header->tx_bypass = FALSE;
+                cpu_header->reason_code = tx_info->bypass_flags;
+                switch_packet_tx_bd_transform(in_packet, in_packet_size,
+                    packet, &packet_size, tx_info);
+            }
         }
 
         fabric_header = &packet_header.fabric_header;

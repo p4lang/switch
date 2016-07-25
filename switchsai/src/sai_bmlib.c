@@ -209,4 +209,10 @@ sai_api_initialize(uint64_t flags,
     return status;
 }
 
+
+sai_status_t 
+sai_api_uninitialize() {
+    return SAI_STATUS_SUCCESS;
+}
+
 #endif /* SAI_BMLIB */

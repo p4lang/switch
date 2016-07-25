@@ -123,6 +123,7 @@ typedef struct switch_hostif_packet_ {
 /** host interface */
 typedef struct switch_hostif_ {
     char intf_name[SWITCH_HOSTIF_NAME_SIZE];    /**< interface name */
+    switch_handle_t handle;                     /**< Associated port/intf */
 } switch_hostif_t;
 
 /** CPU Rx Callback */

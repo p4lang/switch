@@ -9,7 +9,7 @@
 sai_status_t sai_create_hash(
     _Out_ sai_object_id_t* hash_id,
     _In_ uint32_t attr_count,
-    _In_ sai_attribute_t *attr_list
+    _In_ const sai_attribute_t *attr_list
     ) {
     return SAI_STATUS_SUCCESS;
 }
