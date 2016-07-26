@@ -15,17 +15,19 @@ from oftest.parse import parse_mac
 
 import openflow_base_tests
 
-sys.path.append(os.path.join('@abs_builddir@', 'common'))
+root_dir = os.path.dirname(os.path.realpath(__file__))
+
+sys.path.append(os.path.join(root_dir, 'common'))
 
 from utils import *
 
-sys.path.append(os.path.join('@abs_top_builddir@',
-                             'p4-build', 'bmv2', 'pd_thrift_gen', 'gen-py'))
+sys.path.append(os.path.join(root_dir, '..', '..', 'p4-build', 'bmv2',
+                             'pd_thrift_gen', 'gen-py'))
 
 from p4_pd_rpc.ttypes import *
 from res_pd_rpc.ttypes import *
 
-sys.path.append(os.path.join('@abs_top_builddir@', 'openflow_mapping')) 
+sys.path.append(os.path.join(root_dir, '..', '..', 'openflow_mapping'))
 from l2 import *
 
 ### TODO: generate expected packets
