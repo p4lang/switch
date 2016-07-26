@@ -2625,9 +2625,6 @@ switch_pd_bd_table_delete_entry(switch_device_t device,
 {
     p4_pd_status_t status = 0;
 
-    status = p4_pd_dc_bd_action_profile_del_member(g_sess_hdl, device,
-                                                   bd_info->bd_entry);
-
 #ifndef P4_MULTICAST_DISABLE
     status = p4_pd_dc_bd_flood_table_delete(g_sess_hdl, device,
                                             bd_info->uuc_entry);
@@ -2639,6 +2636,9 @@ switch_pd_bd_table_delete_entry(switch_device_t device,
 
     status = p4_pd_dc_port_vlan_mapping_table_delete(g_sess_hdl, device,
                                                      bd_info->cpu_entry);
+
+    status = p4_pd_dc_bd_action_profile_del_member(g_sess_hdl, device,
+                                                   bd_info->bd_entry);
 
     p4_pd_complete_operations(g_sess_hdl);
     return status;

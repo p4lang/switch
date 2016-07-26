@@ -225,7 +225,7 @@ sai_status_t sai_create_vlan_member(
     for(index=0;index<attr_count;index++) {
         switch(attr_list[index].id) {
             case SAI_VLAN_MEMBER_ATTR_VLAN_ID:
-                vlan_id = attr_list[index].value.s32;
+                vlan_id = attr_list[index].value.u16;
                 break;
             case SAI_VLAN_MEMBER_ATTR_PORT_ID:
                 port_id = (switch_handle_t)attr_list[index].value.oid;
@@ -286,7 +286,7 @@ sai_status_t sai_remove_vlan_member(
 
     memset(&switch_port, 0, sizeof(switch_port));
     // check the OID for handle type?
-    switch_port.handle = id_to_handle(SWITCH_HANDLE_TYPE_INTERFACE, (vlan_member_id & 0xFFF));
+    switch_port.handle = id_to_handle(SWITCH_HANDLE_TYPE_PORT, (vlan_member_id & 0xFFF));
     vlan_id =  (vlan_member_id >> 12)  & 0xFFF;
     switch_status = switch_api_vlan_id_to_handle_get((switch_vlan_t) vlan_id, &vlan_handle);
     status = sai_switch_status_to_sai_status(switch_status);

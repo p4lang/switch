@@ -39,6 +39,20 @@ switch_inited=0
 port_list = []
 table_attr_list = []
 
+def sai_thrift_create_vlan_member(client, vlan_id, port, tagging_mode):
+    attribute1_value = sai_thrift_attribute_value_t(u16=vlan_id)
+    attribute1 = sai_thrift_attribute_t(id=SAI_VLAN_MEMBER_ATTR_VLAN_ID,
+                                            value=attribute1_value)
+    attribute2_value = sai_thrift_attribute_value_t(oid=port)
+    attribute2 = sai_thrift_attribute_t(id=SAI_VLAN_MEMBER_ATTR_PORT_ID,
+                                            value=attribute2_value)
+    attribute3_value = sai_thrift_attribute_value_t(s32=tagging_mode)
+    attribute3 = sai_thrift_attribute_t(id=SAI_VLAN_MEMBER_ATTR_TAGGING_MODE,
+                                            value=attribute3_value)
+    attr_list = [attribute1, attribute2, attribute3]
+    vlan_member = client.sai_thrift_create_vlan_member(thrift_attr_list=attr_list)
+    return vlan_member
+
 def sai_thrift_create_fdb(client, vlan_id, mac, port, mac_action):
     fdb_entry = sai_thrift_fdb_entry_t(mac_address=mac, vlan_id=vlan_id)
     #value 0 represents static entry, id=0, represents entry type

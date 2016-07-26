@@ -84,9 +84,8 @@ class L2AccessToAccessVlanTest(sai_base_test.ThriftInterfaceDataPlane):
         mac_action = SAI_PACKET_ACTION_FORWARD
 
         self.client.sai_thrift_create_vlan(vlan_id)
-        vlan_port1 = sai_thrift_vlan_port_t(port_id=port1, tagging_mode=SAI_VLAN_PORT_UNTAGGED)
-        vlan_port2 = sai_thrift_vlan_port_t(port_id=port2, tagging_mode=SAI_VLAN_PORT_UNTAGGED)
-        self.client.sai_thrift_add_ports_to_vlan(vlan_id, [vlan_port1, vlan_port2])
+        vlan_member1 = sai_thrift_create_vlan_member(self.client, vlan_id, port1, SAI_VLAN_PORT_UNTAGGED)
+        vlan_member2 = sai_thrift_create_vlan_member(self.client, vlan_id, port2, SAI_VLAN_PORT_UNTAGGED)
 
         sai_thrift_create_fdb(self.client, vlan_id, mac1, port1, mac_action)
         sai_thrift_create_fdb(self.client, vlan_id, mac2, port2, mac_action)
@@ -104,7 +103,8 @@ class L2AccessToAccessVlanTest(sai_base_test.ThriftInterfaceDataPlane):
             sai_thrift_delete_fdb(self.client, vlan_id, mac1, port1)
             sai_thrift_delete_fdb(self.client, vlan_id, mac2, port2)
 
-            self.client.sai_thrift_remove_ports_from_vlan(vlan_id, [vlan_port1, vlan_port2])
+            self.client.sai_thrift_remove_vlan_member(vlan_member1)
+            self.client.sai_thrift_remove_vlan_member(vlan_member2)
             self.client.sai_thrift_delete_vlan(vlan_id)
 
 class L2TrunkToTrunkVlanTest(sai_base_test.ThriftInterfaceDataPlane):
@@ -120,9 +120,8 @@ class L2TrunkToTrunkVlanTest(sai_base_test.ThriftInterfaceDataPlane):
         mac_action = SAI_PACKET_ACTION_FORWARD
 
         self.client.sai_thrift_create_vlan(vlan_id)
-        vlan_port1 = sai_thrift_vlan_port_t(port_id=port1, tagging_mode=SAI_VLAN_PORT_TAGGED)
-        vlan_port2 = sai_thrift_vlan_port_t(port_id=port2, tagging_mode=SAI_VLAN_PORT_TAGGED)
-        self.client.sai_thrift_add_ports_to_vlan(vlan_id, [vlan_port1, vlan_port2])
+        vlan_member1 = sai_thrift_create_vlan_member(self.client, vlan_id, port1, SAI_VLAN_PORT_TAGGED)
+        vlan_member2 = sai_thrift_create_vlan_member(self.client, vlan_id, port2, SAI_VLAN_PORT_TAGGED)
 
         sai_thrift_create_fdb(self.client, vlan_id, mac1, port1, mac_action)
         sai_thrift_create_fdb(self.client, vlan_id, mac2, port2, mac_action)
@@ -149,7 +148,8 @@ class L2TrunkToTrunkVlanTest(sai_base_test.ThriftInterfaceDataPlane):
             sai_thrift_delete_fdb(self.client, vlan_id, mac1, port1)
             sai_thrift_delete_fdb(self.client, vlan_id, mac2, port2)
 
-            self.client.sai_thrift_remove_ports_from_vlan(vlan_id, [vlan_port1, vlan_port2])
+            self.client.sai_thrift_remove_vlan_member(vlan_member1)
+            self.client.sai_thrift_remove_vlan_member(vlan_member2)
             self.client.sai_thrift_delete_vlan(vlan_id)
 
 class L2AccessToTrunkVlanTest(sai_base_test.ThriftInterfaceDataPlane):
@@ -165,9 +165,8 @@ class L2AccessToTrunkVlanTest(sai_base_test.ThriftInterfaceDataPlane):
         mac_action = SAI_PACKET_ACTION_FORWARD
 
         self.client.sai_thrift_create_vlan(vlan_id)
-        vlan_port1 = sai_thrift_vlan_port_t(port_id=port1, tagging_mode=SAI_VLAN_PORT_TAGGED)
-        vlan_port2 = sai_thrift_vlan_port_t(port_id=port2, tagging_mode=SAI_VLAN_PORT_UNTAGGED)
-        self.client.sai_thrift_add_ports_to_vlan(vlan_id, [vlan_port1, vlan_port2])
+        vlan_member1 = sai_thrift_create_vlan_member(self.client, vlan_id, port1, SAI_VLAN_PORT_TAGGED)
+        vlan_member2 = sai_thrift_create_vlan_member(self.client, vlan_id, port2, SAI_VLAN_PORT_UNTAGGED)
 
         sai_thrift_create_fdb(self.client, vlan_id, mac1, port1, mac_action)
         sai_thrift_create_fdb(self.client, vlan_id, mac2, port2, mac_action)
@@ -192,7 +191,8 @@ class L2AccessToTrunkVlanTest(sai_base_test.ThriftInterfaceDataPlane):
             sai_thrift_delete_fdb(self.client, vlan_id, mac1, port1)
             sai_thrift_delete_fdb(self.client, vlan_id, mac2, port2)
 
-            self.client.sai_thrift_remove_ports_from_vlan(vlan_id, [vlan_port1, vlan_port2])
+            self.client.sai_thrift_remove_vlan_member(vlan_member1)
+            self.client.sai_thrift_remove_vlan_member(vlan_member2)
             self.client.sai_thrift_delete_vlan(vlan_id)
 
 class L2TrunkToAccessVlanTest(sai_base_test.ThriftInterfaceDataPlane):
@@ -208,9 +208,8 @@ class L2TrunkToAccessVlanTest(sai_base_test.ThriftInterfaceDataPlane):
         mac_action = SAI_PACKET_ACTION_FORWARD
 
         self.client.sai_thrift_create_vlan(vlan_id)
-        vlan_port1 = sai_thrift_vlan_port_t(port_id=port1, tagging_mode=SAI_VLAN_PORT_UNTAGGED)
-        vlan_port2 = sai_thrift_vlan_port_t(port_id=port2, tagging_mode=SAI_VLAN_PORT_TAGGED)
-        self.client.sai_thrift_add_ports_to_vlan(vlan_id, [vlan_port1, vlan_port2])
+        vlan_member1 = sai_thrift_create_vlan_member(self.client, vlan_id, port1, SAI_VLAN_PORT_UNTAGGED)
+        vlan_member2 = sai_thrift_create_vlan_member(self.client, vlan_id, port2, SAI_VLAN_PORT_TAGGED)
 
         sai_thrift_create_fdb(self.client, vlan_id, mac1, port1, mac_action)
         sai_thrift_create_fdb(self.client, vlan_id, mac2, port2, mac_action)
@@ -235,7 +234,8 @@ class L2TrunkToAccessVlanTest(sai_base_test.ThriftInterfaceDataPlane):
             sai_thrift_delete_fdb(self.client, vlan_id, mac1, port1)
             sai_thrift_delete_fdb(self.client, vlan_id, mac2, port2)
 
-            self.client.sai_thrift_remove_ports_from_vlan(vlan_id, [vlan_port1, vlan_port2])
+            self.client.sai_thrift_remove_vlan_member(vlan_member1)
+            self.client.sai_thrift_remove_vlan_member(vlan_member2)
             self.client.sai_thrift_delete_vlan(vlan_id)
 
 class L2StpTest(sai_base_test.ThriftInterfaceDataPlane):
@@ -252,9 +252,8 @@ class L2StpTest(sai_base_test.ThriftInterfaceDataPlane):
         mac_action = SAI_PACKET_ACTION_FORWARD
 
         self.client.sai_thrift_create_vlan(vlan_id)
-        vlan_port1 = sai_thrift_vlan_port_t(port_id=port1, tagging_mode=SAI_VLAN_PORT_UNTAGGED)
-        vlan_port2 = sai_thrift_vlan_port_t(port_id=port2, tagging_mode=SAI_VLAN_PORT_UNTAGGED)
-        self.client.sai_thrift_add_ports_to_vlan(vlan_id, [vlan_port1, vlan_port2])
+        vlan_member1 = sai_thrift_create_vlan_member(self.client, vlan_id, port1, SAI_VLAN_PORT_UNTAGGED)
+        vlan_member2 = sai_thrift_create_vlan_member(self.client, vlan_id, port2, SAI_VLAN_PORT_UNTAGGED)
 
         stp_id = sai_thrift_create_stp_entry(self.client, vlan_list)
         self.client.sai_thrift_set_stp_port_state(stp_id, port1, SAI_PORT_STP_STATE_FORWARDING)
@@ -297,7 +296,8 @@ class L2StpTest(sai_base_test.ThriftInterfaceDataPlane):
 
             self.client.sai_thrift_remove_stp_entry(stp_id)
 
-            self.client.sai_thrift_remove_ports_from_vlan(vlan_id, [vlan_port1, vlan_port2])
+            self.client.sai_thrift_remove_vlan_member(vlan_member1)
+            self.client.sai_thrift_remove_vlan_member(vlan_member2)
             self.client.sai_thrift_delete_vlan(vlan_id)
 
 class L3IPv4HostTest(sai_base_test.ThriftInterfaceDataPlane):
@@ -965,10 +965,10 @@ class L2FloodTest(sai_base_test.ThriftInterfaceDataPlane):
         mac2 = '00:22:22:22:22:22'
 
         self.client.sai_thrift_create_vlan(vlan_id)
-        vlan_port1 = sai_thrift_vlan_port_t(port_id=port1, tagging_mode=SAI_VLAN_PORT_UNTAGGED)
-        vlan_port2 = sai_thrift_vlan_port_t(port_id=port2, tagging_mode=SAI_VLAN_PORT_UNTAGGED)
-        vlan_port3 = sai_thrift_vlan_port_t(port_id=port3, tagging_mode=SAI_VLAN_PORT_UNTAGGED)
-        self.client.sai_thrift_add_ports_to_vlan(vlan_id, [vlan_port1, vlan_port2, vlan_port3])
+        vlan_member1 = sai_thrift_create_vlan_member(self.client, vlan_id, port1, SAI_VLAN_PORT_UNTAGGED)
+        vlan_member2 = sai_thrift_create_vlan_member(self.client, vlan_id, port2, SAI_VLAN_PORT_UNTAGGED)
+        vlan_member3 = sai_thrift_create_vlan_member(self.client, vlan_id, port3, SAI_VLAN_PORT_UNTAGGED)
+        print vlan_member1, vlan_member2, vlan_member3
 
         pkt = simple_tcp_packet(eth_dst='00:11:11:11:11:11',
                                 eth_src='00:22:22:22:22:22',
@@ -989,7 +989,9 @@ class L2FloodTest(sai_base_test.ThriftInterfaceDataPlane):
             verify_packets(self, exp_pkt, [1, 2])
         finally:
             sai_thrift_flush_fdb_by_vlan(self.client, vlan_id)
-            self.client.sai_thrift_remove_ports_from_vlan(vlan_id, [vlan_port1, vlan_port2, vlan_port3])
+            self.client.sai_thrift_remove_vlan_member(vlan_member1)
+            self.client.sai_thrift_remove_vlan_member(vlan_member2)
+            self.client.sai_thrift_remove_vlan_member(vlan_member3)
             self.client.sai_thrift_delete_vlan(vlan_id)
 
 class L2LagTest(sai_base_test.ThriftInterfaceDataPlane):
@@ -1013,9 +1015,8 @@ class L2LagTest(sai_base_test.ThriftInterfaceDataPlane):
         lag_member3 = sai_thrift_create_lag_member(self.client, lag_id1, port3)
         lag_member4 = sai_thrift_create_lag_member(self.client, lag_id1, port4)
 
-        vlan_port1 = sai_thrift_vlan_port_t(port_id=lag_id1, tagging_mode=SAI_VLAN_PORT_UNTAGGED)
-        vlan_port2 = sai_thrift_vlan_port_t(port_id=port5, tagging_mode=SAI_VLAN_PORT_UNTAGGED)
-        self.client.sai_thrift_add_ports_to_vlan(vlan_id, [vlan_port1, vlan_port2])
+        vlan_member1 = sai_thrift_create_vlan_member(self.client, vlan_id, lag_id1, SAI_VLAN_PORT_UNTAGGED)
+        vlan_member2 = sai_thrift_create_vlan_member(self.client, vlan_id, port5, SAI_VLAN_PORT_UNTAGGED)
 
         sai_thrift_create_fdb(self.client, vlan_id, mac1, lag_id1, mac_action)
         sai_thrift_create_fdb(self.client, vlan_id, mac2, port5, mac_action)
@@ -1077,7 +1078,8 @@ class L2LagTest(sai_base_test.ThriftInterfaceDataPlane):
             sai_thrift_delete_fdb(self.client, vlan_id, mac1, lag_id1)
             sai_thrift_delete_fdb(self.client, vlan_id, mac2, port5)
 
-            self.client.sai_thrift_remove_ports_from_vlan(vlan_id, [vlan_port1, vlan_port2])
+            self.client.sai_thrift_remove_vlan_member(vlan_member1)
+            self.client.sai_thrift_remove_vlan_member(vlan_member2)
 
             self.client.sai_thrift_remove_lag_member(lag_member1)
             self.client.sai_thrift_remove_lag_member(lag_member2)
@@ -1108,12 +1110,11 @@ class L2LagMemberTest(sai_base_test.ThriftInterfaceDataPlane):
         lag_member3 = sai_thrift_create_lag_member(self.client, lag_id1, port3)
         lag_member4 = sai_thrift_create_lag_member(self.client, lag_id1, port4)
 
-        vlan_port1 = sai_thrift_vlan_port_t(port_id=port1, tagging_mode=SAI_VLAN_PORT_UNTAGGED)
-        vlan_port2 = sai_thrift_vlan_port_t(port_id=port2, tagging_mode=SAI_VLAN_PORT_UNTAGGED)
-        vlan_port3 = sai_thrift_vlan_port_t(port_id=port3, tagging_mode=SAI_VLAN_PORT_UNTAGGED)
-        vlan_port4 = sai_thrift_vlan_port_t(port_id=port4, tagging_mode=SAI_VLAN_PORT_UNTAGGED)
-        vlan_port5 = sai_thrift_vlan_port_t(port_id=port5, tagging_mode=SAI_VLAN_PORT_UNTAGGED)
-        self.client.sai_thrift_add_ports_to_vlan(vlan_id, [vlan_port1, vlan_port2, vlan_port3, vlan_port4, vlan_port5])
+        vlan_member1 = sai_thrift_create_vlan_member(self.client, vlan_id, port1, SAI_VLAN_PORT_UNTAGGED)
+        vlan_member2 = sai_thrift_create_vlan_member(self.client, vlan_id, port2, SAI_VLAN_PORT_UNTAGGED)
+        vlan_member3 = sai_thrift_create_vlan_member(self.client, vlan_id, port3, SAI_VLAN_PORT_UNTAGGED)
+        vlan_member4 = sai_thrift_create_vlan_member(self.client, vlan_id, port4, SAI_VLAN_PORT_UNTAGGED)
+        vlan_member5 = sai_thrift_create_vlan_member(self.client, vlan_id, port5, SAI_VLAN_PORT_UNTAGGED)
 
         sai_thrift_create_fdb(self.client, vlan_id, mac1, lag_id1, mac_action)
         sai_thrift_create_fdb(self.client, vlan_id, mac2, port5, mac_action)
@@ -1175,8 +1176,11 @@ class L2LagMemberTest(sai_base_test.ThriftInterfaceDataPlane):
             sai_thrift_delete_fdb(self.client, vlan_id, mac1, lag_id1)
             sai_thrift_delete_fdb(self.client, vlan_id, mac2, port5)
 
-            self.client.sai_thrift_remove_ports_from_vlan(vlan_id,
-                     [vlan_port1, vlan_port2, vlan_port3, vlan_port4, vlan_port5])
+            self.client.sai_thrift_remove_vlan_member(vlan_member1)
+            self.client.sai_thrift_remove_vlan_member(vlan_member2)
+            self.client.sai_thrift_remove_vlan_member(vlan_member3)
+            self.client.sai_thrift_remove_vlan_member(vlan_member4)
+            self.client.sai_thrift_remove_vlan_member(vlan_member5)
 
             self.client.sai_thrift_remove_lag_member(lag_member1)
             self.client.sai_thrift_remove_lag_member(lag_member2)
@@ -1542,8 +1546,7 @@ class L3VIIPv4HostTest(sai_base_test.ThriftInterfaceDataPlane):
         mac_action = SAI_PACKET_ACTION_FORWARD
 
         self.client.sai_thrift_create_vlan(vlan_id)
-        vlan_port1 = sai_thrift_vlan_port_t(port_id=port1, tagging_mode=SAI_VLAN_PORT_UNTAGGED)
-        self.client.sai_thrift_add_ports_to_vlan(vlan_id, [vlan_port1])
+        vlan_member1 = sai_thrift_create_vlan_member(self.client, vlan_id, port1, SAI_VLAN_PORT_UNTAGGED)
 
         vr_id = sai_thrift_create_virtual_router(self.client, v4_enabled, v6_enabled)
         mac1 = ''
@@ -1612,7 +1615,7 @@ class L3VIIPv4HostTest(sai_base_test.ThriftInterfaceDataPlane):
             self.client.sai_thrift_remove_next_hop(nhop2)
             self.client.sai_thrift_remove_router_interface(rif_id1)
             self.client.sai_thrift_remove_router_interface(rif_id2)
-            self.client.sai_thrift_remove_ports_from_vlan(vlan_id, [vlan_port1])
+            self.client.sai_thrift_remove_vlan_member(vlan_member1)
             self.client.sai_thrift_delete_vlan(vlan_id)
             self.client.sai_thrift_remove_virtual_router(vr_id)
 
@@ -1684,9 +1687,8 @@ class IngressLocalMirrorTest(sai_base_test.ThriftInterfaceDataPlane):
 
         self.client.sai_thrift_create_vlan(vlan_id)
 
-        vlan_port1 = sai_thrift_vlan_port_t(port_id=port1, tagging_mode=SAI_VLAN_PORT_UNTAGGED)
-        vlan_port2 = sai_thrift_vlan_port_t(port_id=port2, tagging_mode=SAI_VLAN_PORT_TAGGED)
-        self.client.sai_thrift_add_ports_to_vlan(vlan_id, [vlan_port1, vlan_port2])
+        vlan_member1 = sai_thrift_create_vlan_member(self.client, vlan_id, port1, SAI_VLAN_PORT_UNTAGGED)
+        vlan_member2 = sai_thrift_create_vlan_member(self.client, vlan_id, port2, SAI_VLAN_PORT_TAGGED)
 
         sai_thrift_create_fdb(self.client, vlan_id, mac1, port1, mac_action)
         sai_thrift_create_fdb(self.client, vlan_id, mac2, port2, mac_action)
@@ -1771,7 +1773,8 @@ class IngressLocalMirrorTest(sai_base_test.ThriftInterfaceDataPlane):
             sai_thrift_delete_fdb(self.client, vlan_id, mac1, port1)
             sai_thrift_delete_fdb(self.client, vlan_id, mac2, port2)
 
-            self.client.sai_thrift_remove_ports_from_vlan(vlan_id, [vlan_port1, vlan_port2])
+            self.client.sai_thrift_remove_vlan_member(vlan_member1)
+            self.client.sai_thrift_remove_vlan_member(vlan_member2)
             self.client.sai_thrift_delete_vlan(vlan_id)
 
 class IngressERSpanMirrorTest(sai_base_test.ThriftInterfaceDataPlane):
@@ -1790,9 +1793,8 @@ class IngressERSpanMirrorTest(sai_base_test.ThriftInterfaceDataPlane):
 
         self.client.sai_thrift_create_vlan(vlan_id)
 
-        vlan_port1 = sai_thrift_vlan_port_t(port_id=port1, tagging_mode=SAI_VLAN_PORT_UNTAGGED)
-        vlan_port2 = sai_thrift_vlan_port_t(port_id=port2, tagging_mode=SAI_VLAN_PORT_TAGGED)
-        self.client.sai_thrift_add_ports_to_vlan(vlan_id, [vlan_port1, vlan_port2])
+        vlan_member1 = sai_thrift_create_vlan_member(self.client, vlan_id, port1, SAI_VLAN_PORT_UNTAGGED)
+        vlan_member2 = sai_thrift_create_vlan_member(self.client, vlan_id, port2, SAI_VLAN_PORT_TAGGED)
 
         sai_thrift_create_fdb(self.client, vlan_id, mac1, port1, mac_action)
         sai_thrift_create_fdb(self.client, vlan_id, mac2, port2, mac_action)
@@ -1882,7 +1884,8 @@ class IngressERSpanMirrorTest(sai_base_test.ThriftInterfaceDataPlane):
             sai_thrift_delete_fdb(self.client, vlan_id, mac1, port1)
             sai_thrift_delete_fdb(self.client, vlan_id, mac2, port2)
 
-            self.client.sai_thrift_remove_ports_from_vlan(vlan_id, [vlan_port1, vlan_port2])
+            self.client.sai_thrift_remove_vlan_member(vlan_member1)
+            self.client.sai_thrift_remove_vlan_member(vlan_member2)
             self.client.sai_thrift_delete_vlan(vlan_id)
 
 class EgressLocalMirrorTest(sai_base_test.ThriftInterfaceDataPlane):
@@ -1901,9 +1904,8 @@ class EgressLocalMirrorTest(sai_base_test.ThriftInterfaceDataPlane):
 
         self.client.sai_thrift_create_vlan(vlan_id)
 
-        vlan_port1 = sai_thrift_vlan_port_t(port_id=port1, tagging_mode=SAI_VLAN_PORT_UNTAGGED)
-        vlan_port2 = sai_thrift_vlan_port_t(port_id=port2, tagging_mode=SAI_VLAN_PORT_TAGGED)
-        self.client.sai_thrift_add_ports_to_vlan(vlan_id, [vlan_port1, vlan_port2])
+        vlan_member1 = sai_thrift_create_vlan_member(self.client, vlan_id, port1, SAI_VLAN_PORT_UNTAGGED)
+        vlan_member2 = sai_thrift_create_vlan_member(self.client, vlan_id, port2, SAI_VLAN_PORT_TAGGED)
 
         sai_thrift_create_fdb(self.client, vlan_id, mac1, port1, mac_action)
         sai_thrift_create_fdb(self.client, vlan_id, mac2, port2, mac_action)
@@ -1963,7 +1965,8 @@ class EgressLocalMirrorTest(sai_base_test.ThriftInterfaceDataPlane):
             sai_thrift_delete_fdb(self.client, vlan_id, mac1, port1)
             sai_thrift_delete_fdb(self.client, vlan_id, mac2, port2)
 
-            self.client.sai_thrift_remove_ports_from_vlan(vlan_id, [vlan_port1, vlan_port2])
+            self.client.sai_thrift_remove_vlan_member(vlan_member1)
+            self.client.sai_thrift_remove_vlan_member(vlan_member2)
             self.client.sai_thrift_delete_vlan(vlan_id)
 
 class EgressERSpanMirrorTest(sai_base_test.ThriftInterfaceDataPlane):
@@ -1982,9 +1985,8 @@ class EgressERSpanMirrorTest(sai_base_test.ThriftInterfaceDataPlane):
 
         self.client.sai_thrift_create_vlan(vlan_id)
 
-        vlan_port1 = sai_thrift_vlan_port_t(port_id=port1, tagging_mode=SAI_VLAN_PORT_UNTAGGED)
-        vlan_port2 = sai_thrift_vlan_port_t(port_id=port2, tagging_mode=SAI_VLAN_PORT_UNTAGGED)
-        self.client.sai_thrift_add_ports_to_vlan(vlan_id, [vlan_port1, vlan_port2])
+        vlan_member1 = sai_thrift_create_vlan_member(self.client, vlan_id, port1, SAI_VLAN_PORT_UNTAGGED)
+        vlan_member2 = sai_thrift_create_vlan_member(self.client, vlan_id, port2, SAI_VLAN_PORT_UNTAGGED)
 
         sai_thrift_create_fdb(self.client, vlan_id, mac1, port1, mac_action)
         sai_thrift_create_fdb(self.client, vlan_id, mac2, port2, mac_action)
@@ -2060,7 +2062,8 @@ class EgressERSpanMirrorTest(sai_base_test.ThriftInterfaceDataPlane):
             sai_thrift_delete_fdb(self.client, vlan_id, mac1, port1)
             sai_thrift_delete_fdb(self.client, vlan_id, mac2, port2)
 
-            self.client.sai_thrift_remove_ports_from_vlan(vlan_id, [vlan_port1, vlan_port2])
+            self.client.sai_thrift_remove_vlan_member(vlan_member1)
+            self.client.sai_thrift_remove_vlan_member(vlan_member2)
             self.client.sai_thrift_delete_vlan(vlan_id)
 
 from switch_sai_thrift.sai_headers import SAI_VLAN_STAT_IN_OCTETS, SAI_VLAN_STAT_IN_UCAST_PKTS, SAI_VLAN_STAT_OUT_UCAST_PKTS
@@ -2078,9 +2081,8 @@ class L2VlanStatsTest(sai_base_test.ThriftInterfaceDataPlane):
         mac_action = SAI_PACKET_ACTION_FORWARD
 
         self.client.sai_thrift_create_vlan(vlan_id)
-        vlan_port1 = sai_thrift_vlan_port_t(port_id=port1, tagging_mode=SAI_VLAN_PORT_UNTAGGED)
-        vlan_port2 = sai_thrift_vlan_port_t(port_id=port2, tagging_mode=SAI_VLAN_PORT_UNTAGGED)
-        self.client.sai_thrift_add_ports_to_vlan(vlan_id, [vlan_port1, vlan_port2])
+        vlan_member1 = sai_thrift_create_vlan_member(self.client, vlan_id, port1, SAI_VLAN_PORT_UNTAGGED)
+        vlan_member2 = sai_thrift_create_vlan_member(self.client, vlan_id, port2, SAI_VLAN_PORT_UNTAGGED)
 
         sai_thrift_create_fdb(self.client, vlan_id, mac1, port1, mac_action)
         sai_thrift_create_fdb(self.client, vlan_id, mac2, port2, mac_action)
@@ -2121,7 +2123,8 @@ class L2VlanStatsTest(sai_base_test.ThriftInterfaceDataPlane):
             sai_thrift_delete_fdb(self.client, vlan_id, mac1, port1)
             sai_thrift_delete_fdb(self.client, vlan_id, mac2, port2)
 
-            self.client.sai_thrift_remove_ports_from_vlan(vlan_id, [vlan_port1, vlan_port2])
+            self.client.sai_thrift_remove_vlan_member(vlan_member1)
+            self.client.sai_thrift_remove_vlan_member(vlan_member2)
             self.client.sai_thrift_delete_vlan(vlan_id)
 
 class IPAclStatsTest(sai_base_test.ThriftInterfaceDataPlane):
