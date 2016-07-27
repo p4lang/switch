@@ -396,8 +396,10 @@ switch_mac_aging_poll_entries(switch_device_t device)
 #endif
     p4_pd_status_t                     status = 0;
 
-    JLF(temp, dmac_entry_hdl_array, *((Word_t *)&entry_hdl));
+    Word_t h = 0;
+    JLF(temp, dmac_entry_hdl_array, h);
     while (temp) {
+        entry_hdl = (p4_pd_entry_hdl_t) h;
 #ifndef P4_L2_DISABLE
         status = p4_pd_dc_dmac_get_hit_state(sess_hdl, entry_hdl, &hit_state);
 #endif /* P4_L2_DISABLE */
@@ -405,7 +407,7 @@ switch_mac_aging_poll_entries(switch_device_t device)
             SWITCH_API_ERROR("%s:%d: failed to get hit state for entry %x",
                          __FUNCTION__, __LINE__, entry_hdl);
         }
-        JLN(temp, dmac_entry_hdl_array, *((Word_t *)&entry_hdl));
+        JLN(temp, dmac_entry_hdl_array, h);
         mac_info = (switch_mac_info_t *) (*(unsigned long *) temp);
     }
     return &(mac_info->mac_entry);

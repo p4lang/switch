@@ -5,7 +5,6 @@ import sys
 import os
 import time
 
-
 import logging
 from oftest import config
 import oftest.base_tests as base_tests
@@ -16,19 +15,19 @@ from oftest.parse import parse_mac
 
 import openflow_base_tests
 
-sys.path.append(os.path.join(sys.path[0], '..', '..', '..', '..',
-                             'testutils')) 
+root_dir = os.path.dirname(os.path.realpath(__file__))
+
+sys.path.append(os.path.join(root_dir, 'common'))
 
 from utils import *
 
-sys.path.append(os.path.join(sys.path[0], '..', '..', '..', '..',
-                             'targets', 'switch', 'tests', 'pd_thrift')) 
+sys.path.append(os.path.join(root_dir, '..', '..', 'p4-build', 'bmv2',
+                             'pd_thrift_gen', 'gen-py'))
 
 from p4_pd_rpc.ttypes import *
 from res_pd_rpc.ttypes import *
 
-sys.path.append(os.path.join(sys.path[0], '..', '..', '..', '..',
-                             'targets', 'switch', 'openflow_mapping')) 
+sys.path.append(os.path.join(root_dir, '..', '..', 'openflow_mapping'))
 from l2 import *
 
 ### TODO: generate expected packets
@@ -162,6 +161,42 @@ def setup_default_table_configurations(client, sess_hdl, dev_tgt):
                             ingress_metadata_ifindex=ifindex,
                             vlan_tag__0__valid=True,
                             vlan_tag__0__vid=TEST_VLAN,
+                            vlan_tag__1__valid=0,
+                            vlan_tag__1__vid=0)
+    client.port_vlan_mapping_add_entry(
+                            sess_hdl, dev_tgt,
+                            match_spec, mbr_hdl)
+
+    ifindex = 0x41
+    action_spec = dc_set_bd_properties_action_spec_t(
+                            action_bd=0,
+                            action_vrf=0,
+                            action_rmac_group=0,
+                            action_bd_label=0,
+                            action_ipv4_unicast_enabled=True,
+                            action_ipv6_unicast_enabled=False,
+                            action_ipv4_multicast_enabled=False,
+                            action_ipv6_multicast_enabled=False,
+                            action_igmp_snooping_enabled=0,
+                            action_mld_snooping_enabled=0,
+                            action_ipv4_urpf_mode=0,
+                            action_ipv6_urpf_mode=0,
+                            action_stp_group=0,
+                            action_mrpf_group=0,
+                            action_ipv4_mcast_key_type=0,
+                            action_ipv4_mcast_key=0,
+                            action_ipv6_mcast_key_type=0,
+                            action_ipv6_mcast_key=0,
+                            action_stats_idx=0,
+                            action_learning_enabled=0)
+    
+    mbr_hdl = client.bd_action_profile_add_member_with_set_bd_properties(
+                            sess_hdl, dev_tgt,
+                            action_spec)
+    match_spec = dc_port_vlan_mapping_match_spec_t(
+                            ingress_metadata_ifindex=ifindex,
+                            vlan_tag__0__valid=0,
+                            vlan_tag__0__vid=0,
                             vlan_tag__1__valid=0,
                             vlan_tag__1__vid=0)
     client.port_vlan_mapping_add_entry(
@@ -420,61 +455,6 @@ class GroupMod(openflow_base_tests.OFTestInterface):
         self.controller.message_send(req)
         do_barrier(self.controller)
 
-class TableStatsGet(openflow_base_tests.OFTestInterface):
-    """
-    """
-    def __init__(self):
-        openflow_base_tests.OFTestInterface.__init__(self, "dc")
-
-    def runTest(self):
-        setup(self)
-
-        req = table_stats_req()
-        (reply, pkt) = self.controller.transact(req)
-        initial_matched_count = reply.entries[0].matched_count
-        initial_lookup_count = reply.entries[0].lookup_count
-
-        ports = sorted(config["port_map"].keys())
-        out_port = ports[0]
-
-        table = openflow_tables["dmac"]
-        table.match_fields[eth_dst_addr].testval = TEST_ETH_DST 
-        table.match_fields[ingress_vlan].testval = TEST_VLAN
-        hit_pkt, match = get_match(table.match_fields)
-
-        output = {
-            "OUTPUT": out_port
-        }
-
-        instr = get_apply_actions(output)
-        req = flow_add(table_id=table.id, match=match, instructions=instr,
-                       buffer_id=buf, priority=1, cookie=45)
-        self.controller.message_send(req)
-        do_barrier(self.controller)
-
-        num_hit_packets = 10
-        for _ in xrange(num_hit_packets):
-            self.dataplane.send(ports[0], hit_pkt)
-
-        miss_pkt = str(simple_tcp_packet(eth_dst="00:77:22:55:99:11",
-                       dl_vlan_enable=True, vlan_vid=3))
-
-        num_miss_packets = 7
-        for _ in xrange(num_miss_packets):
-            self.dataplane.send(ports[0], miss_pkt)
-
-        time.sleep(3)
-
-        req = table_stats_req()
-        (reply, pkt) = self.controller.transact(req)
-
-        req = flow_delete(cookie=45, table_id=0)
-        self.controller.message_send(req)
-        do_barrier(self.controller)
-
-        assert reply.entries[0].lookup_count == num_miss_packets + num_hit_packets + initial_lookup_count
-        assert reply.entries[0].matched_count == num_hit_packets + initial_matched_count
-
 class PacketIn(openflow_base_tests.OFTestInterface):
     """
     """
@@ -509,4 +489,40 @@ class PacketIn(openflow_base_tests.OFTestInterface):
         req = flow_delete(cookie=46, table_id=0)
         self.controller.message_send(req)
         do_barrier(self.controller)
+
+class PacketOut(openflow_base_tests.OFTestInterface):
+    """
+    """
+    def __init__(self):
+        openflow_base_tests.OFTestInterface.__init__(self, "dc")
+
+    def runTest(self):
+        setup(self)
+
+        ports = sorted(config["port_map"].keys())
+        port1 = ports[1]
+
+        outpkt = simple_tcp_packet()
+
+        # flood packet out
+        flood = ofp.message.packet_out()
+        flood.data = str(outpkt)
+        flood_act = ofp.action.output()
+        flood_act.port = 0xfffffffb
+        flood.actions.append(flood_act)
+        flood.buffer_id = 0xffffffff
+        self.controller.message_send(flood)
+        verify_packets(self, outpkt, ports)
+
+        time.sleep(2)
+
+        # unicast packet out
+        unicast = ofp.message.packet_out()
+        unicast.data = str(outpkt)
+        unicast_act = ofp.action.output()
+        unicast_act.port = port1
+        unicast.actions.append(unicast_act)
+        unicast.buffer_id = 0xffffffff
+        self.controller.message_send(unicast)
+        verify_packet(self, outpkt, port1)
 

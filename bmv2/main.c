@@ -27,6 +27,9 @@ limitations under the License.
 #include <assert.h>
 
 extern char *pd_server_str;
+extern char *of_controller_str;
+extern int of_ipv6;
+
 extern int bmv2_model_init();
 
 static void
@@ -38,10 +41,14 @@ parse_options(int argc, char **argv)
     enum long_opts {
       OPT_START = 256,
       OPT_PDSERVER,
+      OPT_OFIP,
+      OPT_OFIPV6,
     };
     static struct option long_options[] = {
       {"help", no_argument, 0, 'h' },
       {"pd-server", required_argument, 0, OPT_PDSERVER },
+      {"of-ip", required_argument, 0, OPT_OFIP },
+      {"of-ipv6", no_argument, 0, OPT_OFIPV6 },
       {0, 0, 0, 0 }
     };
     int c = getopt_long(argc, argv, "h",

@@ -316,7 +316,7 @@ action ipv4_tunnel_lookup_miss() {
     modify_field(l3_metadata.lkp_ip_ttl, ipv4.ttl);
     modify_field(l3_metadata.lkp_l4_sport, l3_metadata.lkp_outer_l4_sport);
     modify_field(l3_metadata.lkp_l4_dport, l3_metadata.lkp_outer_l4_dport);
-    modify_field(intrinsic_mcast_grp, 0);
+//    modify_field(intrinsic_mcast_grp, 0);
 }
 
 action ipv6_tunnel_lookup_miss() {
@@ -328,13 +328,13 @@ action ipv6_tunnel_lookup_miss() {
     modify_field(l3_metadata.lkp_ip_ttl, ipv6.hopLimit);
     modify_field(l3_metadata.lkp_l4_sport, l3_metadata.lkp_outer_l4_sport);
     modify_field(l3_metadata.lkp_l4_dport, l3_metadata.lkp_outer_l4_dport);
-    modify_field(intrinsic_mcast_grp, 0);
+//    modify_field(intrinsic_mcast_grp, 0);
 }
 
 action non_ip_tunnel_lookup_miss() {
     modify_field(l2_metadata.lkp_mac_sa, ethernet.srcAddr);
     modify_field(l2_metadata.lkp_mac_da, ethernet.dstAddr);
-    modify_field(intrinsic_mcast_grp, 0);
+//    modify_field(intrinsic_mcast_grp, 0);
 }
 
 table tunnel_miss {

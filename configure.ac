@@ -22,10 +22,18 @@ AS_IF([test "x$enable_coverage" = "xyes"], [
     COVERAGE_FLAGS="--coverage"
 ])
 
+
 want_bmv2=no
 AC_ARG_WITH([bmv2],
     AS_HELP_STRING([--with-bmv2], [Build for bmv2 target]),
     [want_bmv2=yes], [])
+
+want_of=no
+AS_IF([test "$want_bmv2" = yes], [
+  AC_ARG_WITH([of],
+    AS_HELP_STRING([--with-of], [Enable openflow for bmv2 target, will build switchapi as well]),
+    [want_of=yes], [])
+])
 
 AM_CONDITIONAL([WITH_BMV2], [test "$want_bmv2" = yes])
 
@@ -70,12 +78,18 @@ AS_IF([test "$want_switchsai" = yes], [
           AC_MSG_ERROR([cannot find ctypesgen.py, you can install it with 'pip install ctypesgen']))
 ])
 
+AS_IF([test "$want_of" = yes], [
+    want_switchapi=yes
+    MY_CPPFLAGS="$MY_CPPFLAGS -DOPENFLOW_ENABLE"
+])
+
 AS_IF([test "$want_switchapi" = yes], [
     MY_CPPFLAGS="$MY_CPPFLAGS -DSWITCHAPI_ENABLE"])
 
 AM_CONDITIONAL([WITH_SWITCHAPI], [test "$want_switchapi" = yes])
 AM_CONDITIONAL([WITH_SWITCHSAI], [test "$want_switchsai" = yes])
 AM_CONDITIONAL([WITH_SWITCHLINK], [test "$want_switchlink" = yes])
+AM_CONDITIONAL([WITH_OF], [test "$want_of" = yes])
 
 AC_PROG_CC_STDC
 AC_PROG_CXX
@@ -117,6 +131,16 @@ AS_IF([test "$want_bmv2" = yes], [
 
 AC_CHECK_HEADERS([assert.h stdio.h string.h sys/stat.h sys/types.h unistd.h], \
 [], [AC_MSG_ERROR([Missing header file])])
+
+AS_IF([test "$want_of" = yes], [
+    AX_SAVE_FLAGS(SAVE_1)
+
+    CPPFLAGS="$CPPFLAGS -D_BMV2_"
+    AC_CHECK_HEADER([p4ofagent/p4ofagent.h], [], \
+    [AC_MSG_ERROR([Openflow requires installing p4ofagent from https://github.com/p4lang/p4ofagent])])
+
+    AX_RESTORE_FLAGS(SAVE_1)
+])
 
 # Thrift
 AC_WITH([p4thrift],
@@ -203,9 +227,18 @@ AS_IF([test "$want_bmv2" = yes], [
 
 AC_CONFIG_FILES([tests/run_tests.py])
 
+AS_IF([test "$want_of" = yes], [
+  AC_CONFIG_FILES([bmv2/run_of_tests.sh], [chmod +x bmv2/run_of_tests.sh])
+])
+
 export P4_NAME=switch
 export P4_PATH=$ac_abs_confdir/p4src/switch.p4
 export P4_PREFIX=dc
+
+AS_IF([test "$want_of" = yes], [
+export P4C_BM_FLAGS="--plugin of --openflow-mapping-dir $ac_abs_confdir/openflow_mapping --openflow-mapping-mod l2 -DOPENFLOW_ENABLE"
+])
+
 AC_CONFIG_SUBDIRS([p4-build])
 
 AC_OUTPUT
@@ -216,6 +249,7 @@ AS_ECHO("Coverage enabled .............. : $coverage_enabled")
 AS_ECHO("With switchlink ............... : $want_switchlink")
 AS_ECHO("With switchsai ................ : $want_switchsai")
 AS_ECHO("With switchapi ................ : $want_switchapi")
+AS_ECHO("With openflow ................. : $want_of")
 AS_ECHO("Compile for p4factory ......... : $want_p4factory")
 AS_ECHO("Compile for bmv2 .............. : $want_bmv2")
 AS_ECHO("PTF found ..................... : $ptf_found")

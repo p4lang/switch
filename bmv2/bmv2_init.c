@@ -28,6 +28,8 @@ limitations under the License.
 #include <bmpd/switch/thrift-src/pd_rpc_server.h>
 
 char *pd_server_str = NULL;
+char *of_controller_str = NULL;
+int of_ipv6 = 0;
 
 /**
  * The maximum number of ports to support:
@@ -64,6 +66,9 @@ extern int start_switch_api_packet_driver(void);
 extern int start_p4_sai_thrift_rpc_server(char * port);
 #endif /* SWITCHSAI_ENABLE */
 
+#ifdef OPENFLOW_ENABLE
+extern void p4ofagent_init(bool ipv6, char *ip_ctl);
+#endif
 
 int
 bmv2_model_init() {
@@ -92,5 +97,9 @@ bmv2_model_init() {
   CHECK(switchlink_init());
 #endif /* SWITCHLINK_ENABLE */
 
+#ifdef OPENFLOW_ENABLE
+  p4ofagent_init(of_ipv6, of_controller_str);
+#endif
+  
   return rv;
 }
