@@ -1,9 +1,6 @@
 [submodule "switchsai/submodules/SAI"]
 	path = switchsai/submodules/SAI
 	url = https://github.com/p4lang/SAI
-[submodule "switchsai/submodules/ocpsai"]
-	path = switchsai/submodules/ocpsai
-	url = https://github.com/p4lang/ocpsai.git
 [submodule "p4-build"]
 	path = p4-build
 	url = https://github.com/p4lang/p4-build.git

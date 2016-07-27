@@ -23,7 +23,7 @@ static sai_api_t api_id = SAI_API_LAG;
 sai_status_t sai_create_lag_entry(
         _Out_ sai_object_id_t* lag_id,
         _In_ uint32_t attr_count,
-        _In_ sai_attribute_t *attr_list);
+        _In_ const sai_attribute_t *attr_list);
 
 sai_status_t sai_remove_lag_entry(
         _In_ sai_object_id_t lag_id);
@@ -47,7 +47,7 @@ sai_status_t sai_add_ports_to_lag(
 sai_status_t sai_create_lag_entry(
         _Out_ sai_object_id_t* lag_id,
         _In_ uint32_t attr_count,
-        _In_ sai_attribute_t *attr_list) {
+        _In_ const sai_attribute_t *attr_list) {
 
     SAI_LOG_ENTER();
 
@@ -166,7 +166,7 @@ sai_status_t sai_get_lag_attribute(
 }
 
 sai_status_t sai_lag_member_entry_parse(
-        _In_ sai_attribute_t *attr_list,
+        _In_ const sai_attribute_t *attr_list,
         _In_ uint32_t attr_count,
         _Out_ sai_object_id_t *lag_id,
         _Out_ sai_object_id_t *port_id) {
@@ -203,7 +203,7 @@ sai_status_t sai_lag_member_entry_parse(
 sai_status_t sai_create_lag_member(
         _Out_ sai_object_id_t* lag_member_id,
         _In_ uint32_t attr_count,
-        _In_ sai_attribute_t *attr_list) {
+        _In_ const sai_attribute_t *attr_list) {
 
     SAI_LOG_ENTER();
 

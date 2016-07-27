@@ -17,6 +17,7 @@ limitations under the License.
 #include <saivlan.h>
 #include "saiinternal.h"
 #include <switchapi/switch_vlan.h>
+#include <switchapi/switch_handle.h>
 #include <switchapi/switch_hostif.h>
 
 static sai_api_t api_id = SAI_API_VLAN;
@@ -196,36 +197,46 @@ sai_status_t sai_remove_all_vlans(void) {
 }
 
 /*
-* Routine Description:
-*    Add Port to VLAN
-*
-* Arguments:
-*    [in] vlan_id - VLAN id
-*    [in] port_count - number of ports
-*    [in] port_list - pointer to membership structures
-*
-* Return Values:
-*    SAI_STATUS_SUCCESS on success
-*    Failure status code on error
+    \brief Create VLAN Member
+    \param[out] vlan_member_id VLAN member ID
+    \param[in] attr_count number of attributes
+    \param[in] attr_list array of attributes
+    \return Success: SAI_STATUS_SUCCESS
+            Failure: failure status code on error
 */
-sai_status_t sai_add_ports_to_vlan(
-        _In_ sai_vlan_id_t vlan_id,
-        _In_ uint32_t port_count,
-        _In_ const sai_vlan_port_t* port_list) {
-
-    SAI_LOG_ENTER();
-
+sai_status_t sai_create_vlan_member(
+    _Out_ sai_object_id_t* vlan_member_id,
+    _In_ uint32_t attr_count,
+    _In_ const sai_attribute_t *attr_list
+    )
+{
     sai_status_t status = SAI_STATUS_SUCCESS;
+    SAI_LOG_ENTER();
     switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
     switch_handle_t vlan_handle = 0;
-    switch_vlan_port_t *switch_port_list;
-    uint32_t index = 0;
+    switch_vlan_port_t switch_port;
+    unsigned int index=0;
+    sai_vlan_tagging_mode_t tag_mode=SAI_VLAN_PORT_UNTAGGED;
+    unsigned short vlan_id = 0;
+    switch_handle_t port_id = 0;
 
-    if (!port_list) {
-        status = SAI_STATUS_INVALID_PARAMETER;
-        SAI_LOG_ERROR("null port list: %s",
-                      sai_status_to_string(status));
-        return status;
+    memset(vlan_member_id, 0, sizeof(sai_object_id_t));
+    memset(&switch_port, 0, sizeof(switch_port));
+    for(index=0;index<attr_count;index++) {
+        switch(attr_list[index].id) {
+            case SAI_VLAN_MEMBER_ATTR_VLAN_ID:
+                vlan_id = attr_list[index].value.u16;
+                break;
+            case SAI_VLAN_MEMBER_ATTR_PORT_ID:
+                port_id = (switch_handle_t)attr_list[index].value.oid;
+                break;
+            case SAI_VLAN_MEMBER_ATTR_TAGGING_MODE:
+                tag_mode = attr_list[index].value.s32;
+                break;
+            default:
+                // NEED error checking here!
+                break;
+        }
     }
 
     switch_status = switch_api_vlan_id_to_handle_get((switch_vlan_t) vlan_id, &vlan_handle);
@@ -236,28 +247,62 @@ sai_status_t sai_add_ports_to_vlan(
         return status;
     }
 
-    switch_port_list = (switch_vlan_port_t *) SAI_MALLOC(sizeof(switch_vlan_port_t) * port_count);
-    if (!switch_port_list) {
-        status = SAI_STATUS_NO_MEMORY;
-        SAI_LOG_ERROR("failed to add ports to vlan %d: %s",
-                      vlan_id, sai_status_to_string(status));
-        return status;
-    }
-
-    for (index = 0; index < port_count; index++) {
-        switch_port_list[index].handle = (switch_handle_t) port_list[index].port_id;
-        switch_port_list[index].tagging_mode = (switch_vlan_tagging_mode_t) port_list[index].tagging_mode;
-    }
-    switch_status = switch_api_vlan_ports_add(device, vlan_handle, port_count, switch_port_list);
+    switch_port.handle = port_id;
+    switch_port.tagging_mode = tag_mode;
+    switch_status = switch_api_vlan_ports_add(device, vlan_handle, 1, &switch_port);
     status = sai_switch_status_to_sai_status(switch_status);
     if (status != SAI_STATUS_SUCCESS) {
-        SAI_FREE(switch_port_list);
         SAI_LOG_ERROR("failed to add ports to vlan %d: %s",
                       vlan_id, sai_status_to_string(status));
         return status;
     }
 
-    SAI_FREE(switch_port_list);
+    // make it from port and vlan (no storage of handle)
+    *vlan_member_id =  0 | (port_id & 0xFFF) | (vlan_id << 12) | (SWITCH_HANDLE_TYPE_VLAN_MEMBER << HANDLE_TYPE_SHIFT);
+
+    SAI_LOG_EXIT();
+
+    return (sai_status_t) status;
+}
+
+
+/*
+    \brief Remove VLAN Member
+    \param[in] vlan_member_id VLAN member ID
+    \return Success: SAI_STATUS_SUCCESS
+            Failure: failure status code on error
+*/
+sai_status_t sai_remove_vlan_member(
+    _In_ sai_object_id_t vlan_member_id
+    )
+{
+    sai_status_t status = SAI_STATUS_SUCCESS;
+    SAI_LOG_ENTER();
+    switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
+    switch_handle_t vlan_handle = 0;
+    switch_vlan_port_t switch_port;
+    // sai_vlan_tagging_mode_t tag_mode=SAI_VLAN_PORT_UNTAGGED;
+    unsigned short vlan_id;
+
+    memset(&switch_port, 0, sizeof(switch_port));
+    // check the OID for handle type?
+    switch_port.handle = id_to_handle(SWITCH_HANDLE_TYPE_PORT, (vlan_member_id & 0xFFF));
+    vlan_id =  (vlan_member_id >> 12)  & 0xFFF;
+    switch_status = switch_api_vlan_id_to_handle_get((switch_vlan_t) vlan_id, &vlan_handle);
+    status = sai_switch_status_to_sai_status(switch_status);
+    if (status != SAI_STATUS_SUCCESS) {
+        SAI_LOG_ERROR("failed to del port from vlan (no VLAN) %d: %s",
+                      vlan_id, sai_status_to_string(status));
+        return status;
+    }
+
+    switch_status = switch_api_vlan_ports_remove(device, vlan_handle, 1, &switch_port);
+    status = sai_switch_status_to_sai_status(switch_status);
+    if (status != SAI_STATUS_SUCCESS) {
+        SAI_LOG_ERROR("failed to del ports from vlan %d: %s",
+                      vlan_id, sai_status_to_string(status));
+        return status;
+    }
 
     SAI_LOG_EXIT();
 
@@ -265,69 +310,68 @@ sai_status_t sai_add_ports_to_vlan(
 }
 
 /*
-* Routine Description:
-*    Remove Port from VLAN
-*
-* Arguments:
-*    [in] vlan_id - VLAN id
-*    [in] port_count - number of ports
-*    [in] port_list - pointer to membership structures
-*
-* Return Values:
-*    SAI_STATUS_SUCCESS on success
-*    Failure status code on error
+    \brief Set VLAN Member Attribute
+    \param[in] vlan_member_id VLAN member ID
+    \param[in] attr attribute structure containing ID and value
+    \return Success: SAI_STATUS_SUCCESS
+            Failure: failure status code on error
 */
-sai_status_t sai_remove_ports_from_vlan(
-        _In_ sai_vlan_id_t vlan_id,
-        _In_ uint32_t port_count,
-        _In_ const sai_vlan_port_t* port_list) {
-
+sai_status_t sai_set_vlan_member_attribute(
+    _In_ sai_object_id_t vlan_member_id,
+    _In_ const sai_attribute_t *attr
+    )
+{
+    sai_status_t status = SAI_STATUS_SUCCESS;
     SAI_LOG_ENTER();
 
+    SAI_LOG_EXIT();
+
+    return (sai_status_t) status;
+}
+
+/*
+    \brief Get VLAN Member Attribute
+    \param[in] vlan_member_id VLAN member ID
+    \param[in] attr_count number of attributes
+    \param[in,out] attr_list list of attribute structures containing ID and value
+    \return Success: SAI_STATUS_SUCCESS
+            Failure: failure status code on error
+*/
+sai_status_t sai_get_vlan_member_attribute(
+    _In_ sai_object_id_t vlan_member_id,
+    _In_ const uint32_t attr_count,
+    _Inout_ sai_attribute_t *attr_list
+    )
+{
     sai_status_t status = SAI_STATUS_SUCCESS;
-    switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
-    switch_handle_t vlan_handle = 0;
-    switch_vlan_port_t *switch_port_list;
-    uint32_t index = 0;
+    SAI_LOG_ENTER();
 
-    if (!port_list) {
-        status = SAI_STATUS_INVALID_PARAMETER;
-        SAI_LOG_ERROR("null port list: %s",
-                      sai_status_to_string(status));
-        return status;
-    }
+    SAI_LOG_EXIT();
 
-    switch_status = switch_api_vlan_id_to_handle_get((switch_vlan_t) vlan_id, &vlan_handle);
-    status = sai_switch_status_to_sai_status(switch_status);
-    if (status != SAI_STATUS_SUCCESS) {
-        SAI_LOG_ERROR("failed to rremove ports from vlan %d: %s",
-                      vlan_id, sai_status_to_string(status));
-        return status;
-    }
+    return (sai_status_t) status;
+}
 
-    switch_port_list = (switch_vlan_port_t *) SAI_MALLOC(sizeof(switch_vlan_port_t) * port_count);
-    if (!switch_port_list) {
-        status = SAI_STATUS_NO_MEMORY;
-        SAI_LOG_ERROR("failed to remove ports from vlan %d: %s",
-                      vlan_id, sai_status_to_string(status));
-        return status;
-    }
-
-    for (index = 0; index < port_count; index++) {
-        switch_port_list[index].handle = (switch_handle_t) port_list[index].port_id;
-        switch_port_list[index].tagging_mode = (switch_vlan_tagging_mode_t) port_list[index].tagging_mode;
-    }
-
-    switch_status = switch_api_vlan_ports_remove(device, vlan_handle, port_count, switch_port_list);
-    status = sai_switch_status_to_sai_status(switch_status);
-    if (status != SAI_STATUS_SUCCESS) {
-        SAI_FREE(switch_port_list);
-        SAI_LOG_ERROR("failed to add ports to vlan %d: %s",
-                      vlan_id, sai_status_to_string(status));
-        return status;
-    }
-
-    SAI_FREE(switch_port_list);
+/**
+ * Routine Description:
+ *   @brief Clear vlan statistics counters.
+ *
+ * Arguments:
+ *    @param[in] vlan_id - vlan id
+ *    @param[in] counter_ids - specifies the array of counter ids
+ *    @param[in] number_of_counters - number of counters in the array
+ *
+ * Return Values:
+ *    @return SAI_STATUS_SUCCESS on success
+ *            Failure status code on error
+ */
+sai_status_t sai_clear_vlan_stats(
+    _In_ sai_vlan_id_t vlan_id,
+    _In_ const sai_vlan_stat_counter_t *counter_ids,
+    _In_ uint32_t number_of_counters
+    )
+{
+    sai_status_t status = SAI_STATUS_SUCCESS;
+    SAI_LOG_ENTER();
 
     SAI_LOG_EXIT();
 
@@ -490,10 +534,12 @@ sai_vlan_api_t vlan_api = {
     .remove_vlan                       =             sai_remove_vlan_entry,
     .set_vlan_attribute                =             sai_set_vlan_entry_attribute,
     .get_vlan_attribute                =             sai_get_vlan_entry_attribute,
-    .add_ports_to_vlan                 =             sai_add_ports_to_vlan,
-    .remove_ports_from_vlan            =             sai_remove_ports_from_vlan,
-    .remove_all_vlans                  =             sai_remove_all_vlans,
-    .get_vlan_stats                    =             sai_get_vlan_stats
+    .create_vlan_member                =             sai_create_vlan_member,
+    .remove_vlan_member                =             sai_remove_vlan_member,
+    .set_vlan_member_attribute         =             sai_set_vlan_member_attribute,
+    .get_vlan_member_attribute         =             sai_get_vlan_member_attribute,
+    .get_vlan_stats                    =             sai_get_vlan_stats,
+    .clear_vlan_stats                  =             sai_clear_vlan_stats
 };
 
 sai_status_t sai_vlan_initialize(sai_api_service_t *sai_api_service) {

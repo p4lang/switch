@@ -99,6 +99,12 @@ typedef struct switch_api_capability_ {
 } switch_api_capability_t;
 
 /**
+  Get the default VRF handle
+*/
+switch_handle_t switch_api_default_vrf_internal();
+
+
+/**
  Sets switch capability attributes
  @param device device
  @param api_capability switch capability attributes

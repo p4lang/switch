@@ -69,6 +69,7 @@ void sai_disconnect_switch(void) {
 
 
 static int mac_set = 0;
+static unsigned char def_mac[6] = {0x00, 0x01, 0x04, 0x06, 0x08, 0x03};
 /*
 * Routine Description:
 *    Set switch attribute value
@@ -168,12 +169,18 @@ sai_status_t sai_get_switch_attribute(
             case SAI_SWITCH_ATTR_DEFAULT_STP_INST_ID:
                 break;
             case SAI_SWITCH_ATTR_SRC_MAC_ADDRESS:
+                if(!mac_set) {
+                    memcpy(&api_switch_info.switch_mac, def_mac, 6);
+                    mac_set = 1;
+                }
                 memcpy(attribute->value.mac, &api_switch_info.switch_mac, 6);
-                if(!mac_set)
-                    return SAI_STATUS_FAILURE;
+//                    return SAI_STATUS_FAILURE;
                 break;
             case SAI_SWITCH_ATTR_CPU_PORT:
                 attr_list->value.oid = api_switch_info.port_list[64];
+                break;
+            case SAI_SWITCH_ATTR_DEFAULT_VIRTUAL_ROUTER_ID:
+                attr_list->value.oid = switch_api_default_vrf_internal();
                 break;
         }
     }

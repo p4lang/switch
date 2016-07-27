@@ -39,7 +39,6 @@ typedef struct switch_capability_info_ {
 
 switch_status_t switch_capability_init(switch_device_t device);
 switch_handle_t switch_api_default_vlan_internal();
-switch_handle_t switch_api_default_vrf_internal();
 switch_handle_t switch_api_capability_rmac_handle_get();
 uint16_t switch_api_capability_smac_index_get();
 

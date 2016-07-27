@@ -95,6 +95,42 @@ src/saiutils.c \
 src/saivlan.c \
 src/switch_sai_rpc_server.cpp
 
+sai_headers = \
+submodules/SAI/inc/sai.h \
+submodules/SAI/inc/saihash.h \
+submodules/SAI/inc/sailag.h \
+submodules/SAI/inc/sainexthopgroup.h \
+submodules/SAI/inc/saiqosmaps.h \
+submodules/SAI/inc/sairouterintf.h \
+submodules/SAI/inc/saistatus.h \
+submodules/SAI/inc/saitypes.h \
+submodules/SAI/inc/saiacl.h \
+submodules/SAI/inc/saihostintf.h \
+submodules/SAI/inc/saimirror.h \
+submodules/SAI/inc/saiobject.h \
+submodules/SAI/inc/saiqueue.h \
+submodules/SAI/inc/saisamplepacket.h \
+submodules/SAI/inc/saistp.h \
+submodules/SAI/inc/saiudf.h \
+submodules/SAI/inc/saibuffer.h \
+submodules/SAI/inc/saiipmc.h \
+submodules/SAI/inc/saineighbor.h \
+submodules/SAI/inc/saipolicer.h \
+submodules/SAI/inc/sairoute.h \
+submodules/SAI/inc/saischeduler.h \
+submodules/SAI/inc/saiswitch.h \
+submodules/SAI/inc/saivlan.h \
+submodules/SAI/inc/saifdb.h \
+submodules/SAI/inc/sail2mc.h \
+submodules/SAI/inc/sainexthop.h \
+submodules/SAI/inc/saiport.h \
+submodules/SAI/inc/sairouter.h \
+submodules/SAI/inc/saischedulergroup.h \
+submodules/SAI/inc/saitunnel.h \
+submodules/SAI/inc/saiwred.h
+
+saiincludedir = $(includedir)/sai
+saiinclude_HEADERS = $(sai_headers)
 noinst_LTLIBRARIES =
 lib_LIBRARIES =
 lib_LTLIBRARIES =

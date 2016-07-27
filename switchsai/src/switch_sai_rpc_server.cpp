@@ -128,13 +128,25 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       }
   }
 
-  void sai_thrift_parse_vlan_port_id_list(const std::vector<sai_thrift_vlan_port_t> & thrift_port_list, sai_vlan_port_t *port_list) {
-      std::vector<sai_thrift_vlan_port_t>::const_iterator it = thrift_port_list.begin();
-      sai_thrift_vlan_port_t thrift_vlan_port;
-      for(uint32_t i = 0; i < thrift_port_list.size(); i++, it++) {
-          thrift_vlan_port = (sai_thrift_vlan_port_t)*it;
-          port_list[i].port_id = thrift_vlan_port.port_id;
-          port_list[i].tagging_mode = (sai_vlan_tagging_mode_t) thrift_vlan_port.tagging_mode;
+  void sai_thrift_parse_vlan_member_attributes(const std::vector<sai_thrift_attribute_t> & thrift_attr_list, sai_attribute_t *attr_list) {
+      std::vector<sai_thrift_attribute_t>::const_iterator it = thrift_attr_list.begin();
+      sai_thrift_attribute_t attribute;
+      for(uint32_t i = 0; i < thrift_attr_list.size(); i++, it++) {
+          attribute = (sai_thrift_attribute_t) *it;
+          attr_list[i].id = attribute.id;
+          switch (attribute.id) {
+              case SAI_VLAN_MEMBER_ATTR_VLAN_ID:
+                  attr_list[i].value.u16 = attribute.value.u16;
+                  break;
+              case SAI_VLAN_MEMBER_ATTR_PORT_ID:
+                  attr_list[i].value.oid = attribute.value.oid;
+                  break;
+              case SAI_VLAN_MEMBER_ATTR_TAGGING_MODE:
+                  attr_list[i].value.s32 = attribute.value.s32;
+                  break;
+              default:
+                  break;
+          }
       }
   }
 
@@ -516,9 +528,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
               case SAI_HOSTIF_TRAP_GROUP_ATTR_QUEUE:
                   attr_list[i].value.u32 = attribute.value.u32;
                   break;
-              case SAI_HOSTIF_TRAP_GROUP_ATTR_PRIO:
-                  attr_list[i].value.u32 = attribute.value.u32;
-                  break;
           }
       }
   }
@@ -656,35 +665,31 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       return status;
   }
 
-  int32_t sai_thrift_add_ports_to_vlan(const sai_thrift_vlan_id_t vlan_id, const std::vector<sai_thrift_vlan_port_t> & thrift_port_list) {
-      printf("sai_thrift_add_ports_to_vlan\n");
+  sai_thrift_object_id_t sai_thrift_create_vlan_member(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
+      printf("sai_thrift_create_vlan_member\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_vlan_api_t *vlan_api;
+      sai_object_id_t vlan_member_id = 0;
       status = sai_api_query(SAI_API_VLAN, (void **) &vlan_api);
       if (status != SAI_STATUS_SUCCESS) {
           return status;
       }
-      sai_vlan_port_t *port_list = (sai_vlan_port_t *) malloc(sizeof(sai_vlan_port_t) * thrift_port_list.size());
-      sai_thrift_parse_vlan_port_id_list(thrift_port_list, port_list);
-      uint32_t port_count = thrift_port_list.size();
-      status = vlan_api->add_ports_to_vlan(vlan_id, port_count, port_list);
-      free(port_list);
-      return status;
+      uint32_t attr_count = thrift_attr_list.size();
+      sai_attribute_t *attr_list = (sai_attribute_t *) malloc(sizeof(sai_attribute_t) * thrift_attr_list.size());
+      sai_thrift_parse_vlan_member_attributes(thrift_attr_list, attr_list);
+      status = vlan_api->create_vlan_member(&vlan_member_id, attr_count, attr_list);
+      return vlan_member_id;
   }
 
-  int32_t sai_thrift_remove_ports_from_vlan(const sai_thrift_vlan_id_t vlan_id, const std::vector<sai_thrift_vlan_port_t> & thrift_port_list) {
-      printf("sai_thrift_remove_ports_from_vlan\n");
+  sai_thrift_status_t sai_thrift_remove_vlan_member(const sai_thrift_object_id_t vlan_member_id) {
+      printf("sai_thrift_remove_vlan_member\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_vlan_api_t *vlan_api;
       status = sai_api_query(SAI_API_VLAN, (void **) &vlan_api);
       if (status != SAI_STATUS_SUCCESS) {
           return status;
       }
-      sai_vlan_port_t *port_list = (sai_vlan_port_t *) malloc(sizeof(sai_vlan_port_t) * thrift_port_list.size());
-      sai_thrift_parse_vlan_port_id_list(thrift_port_list, port_list);
-      uint32_t port_count = thrift_port_list.size();
-      status = vlan_api->remove_ports_from_vlan(vlan_id, port_count, port_list);
-      free(port_list);
+      status = vlan_api->remove_vlan_member(vlan_member_id);
       return status;
   }
 
@@ -1079,6 +1084,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       sai_neighbor_api_t *neighbor_api;
       status = sai_api_query(SAI_API_NEIGHBOR, (void **) &neighbor_api);
       sai_neighbor_entry_t neighbor_entry;
+      memset(&neighbor_entry, 0, sizeof(neighbor_entry));
       if (status != SAI_STATUS_SUCCESS) {
           return status;
       }
@@ -1096,6 +1102,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_neighbor_api_t *neighbor_api;
       sai_neighbor_entry_t neighbor_entry;
+      memset(&neighbor_entry, 0, sizeof(neighbor_entry));
       status = sai_api_query(SAI_API_NEIGHBOR, (void **) &neighbor_api);
       if (status != SAI_STATUS_SUCCESS) {
           return status;
@@ -1632,6 +1639,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       sai_thrift_parse_mirror_session_attributes(thrift_attr_list, attr_list);
       uint32_t attr_count = thrift_attr_list.size();
       mirror_api->create_mirror_session(&session_id, attr_count, attr_list);
+      free(attr_list);
       return session_id;
   }
 
@@ -1701,6 +1709,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       sai_thrift_parse_policer_attributes(thrift_attr_list, attr_list);
       uint32_t attr_count = thrift_attr_list.size();
       policer_api->create_policer(&policer_id, attr_count, attr_list);
+      free(attr_list);
       return policer_id;
   }
 

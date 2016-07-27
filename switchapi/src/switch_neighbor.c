@@ -427,6 +427,7 @@ switch_api_neighbor_entry_add(switch_device_t device, switch_api_neighbor_t *nei
     if (status != SWITCH_STATUS_SUCCESS) {
         SWITCH_API_ERROR("%s:%d: failed to create neighbor entry!", __FUNCTION__, __LINE__);
     }
+    neighbor->nhop_handle = nhop_handle;
     return handle;
 }
     
