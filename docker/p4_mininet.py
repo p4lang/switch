@@ -198,8 +198,8 @@ class P4DockerSwitch(Switch):
     def start( self, controllers ):
         print "Starting P4 docker switch", self.name
 
-    def execProgram( self, program ):
-	cmd = ['docker', 'exec', 'mininet-' + self.name, program ]
+    def execProgram( self, program, args=""):
+	cmd = ['docker', 'exec', 'mininet-' + self.name, program, args ]
         pid = subprocess.Popen( cmd, stdin=subprocess.PIPE,
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.STDOUT, close_fds=False )

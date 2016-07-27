@@ -61,7 +61,7 @@ def main():
         net.addLink( sw1, h1, port1 = 1, fast=False )
         net.addLink( sw1, h2, port1 = 2, fast=False )
 
-    sw1.execProgram("/switch/docker/startup.sh --of-ip %s" % parser_args.controller_ip)
+    sw1.execProgram("/switch/docker/startup.sh", args="--of-ip %s" % parser_args.controller_ip)
 
     time.sleep(1)
 
