@@ -538,13 +538,6 @@ sai_vlan_api_t vlan_api = {
     .remove_vlan_member                =             sai_remove_vlan_member,
     .set_vlan_member_attribute         =             sai_set_vlan_member_attribute,
     .get_vlan_member_attribute         =             sai_get_vlan_member_attribute,
-
-#if 0
-    .add_ports_to_vlan                 =             sai_add_ports_to_vlan,
-    .remove_ports_from_vlan            =             sai_remove_ports_from_vlan,
-    .remove_all_vlans                  =             sai_remove_all_vlans,
-#else
-#endif
     .get_vlan_stats                    =             sai_get_vlan_stats,
     .clear_vlan_stats                  =             sai_clear_vlan_stats
 };

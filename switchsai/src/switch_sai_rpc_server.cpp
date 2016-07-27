@@ -1084,6 +1084,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       sai_neighbor_api_t *neighbor_api;
       status = sai_api_query(SAI_API_NEIGHBOR, (void **) &neighbor_api);
       sai_neighbor_entry_t neighbor_entry;
+      memset(&neighbor_entry, 0, sizeof(neighbor_entry));
       if (status != SAI_STATUS_SUCCESS) {
           return status;
       }
@@ -1101,6 +1102,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_neighbor_api_t *neighbor_api;
       sai_neighbor_entry_t neighbor_entry;
+      memset(&neighbor_entry, 0, sizeof(neighbor_entry));
       status = sai_api_query(SAI_API_NEIGHBOR, (void **) &neighbor_api);
       if (status != SAI_STATUS_SUCCESS) {
           return status;
@@ -1637,6 +1639,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       sai_thrift_parse_mirror_session_attributes(thrift_attr_list, attr_list);
       uint32_t attr_count = thrift_attr_list.size();
       mirror_api->create_mirror_session(&session_id, attr_count, attr_list);
+      free(attr_list);
       return session_id;
   }
 
@@ -1706,6 +1709,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       sai_thrift_parse_policer_attributes(thrift_attr_list, attr_list);
       uint32_t attr_count = thrift_attr_list.size();
       policer_api->create_policer(&policer_id, attr_count, attr_list);
+      free(attr_list);
       return policer_id;
   }
 

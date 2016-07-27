@@ -67,11 +67,6 @@ struct sai_thrift_vlan_list_t {
     2: list<sai_thrift_vlan_id_t> vlan_list;
 }
 
-struct sai_thrift_vlan_port_list_t {
-    1: i32 count;
-    2: list<sai_thrift_vlan_port_t> port_list;
-}
-
 union sai_thrift_acl_mask_t {
     1: byte u8;
     2: byte s8;
@@ -141,9 +136,8 @@ union sai_thrift_attribute_value_t {
     15: sai_thrift_ip_address_t ipaddr;
     16: sai_thrift_object_list_t objlist;
     17: sai_thrift_vlan_list_t vlanlist;
-    18: sai_thrift_vlan_port_list_t vlanportlist;
-    19: sai_thrift_acl_field_data_t aclfield;
-    20: sai_thrift_acl_action_data_t aclaction;
+    18: sai_thrift_acl_field_data_t aclfield;
+    19: sai_thrift_acl_action_data_t aclaction;
 }
 
 struct sai_thrift_attribute_t {
