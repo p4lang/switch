@@ -36,34 +36,34 @@ extern "C" {
     The port can have a default, which generally allows tagging of untagged packets to this default
     domain for forwarding the packets through the device.
  *  @{
- */ // begin of Port
+ */  // begin of Port
 
 /** Port information */
 typedef struct switch_api_port_info_ {
-    uint16_t port_number;                           /**< FP port number */
-    bool phy_detected;                              /**< whether phy is present */
-    unsigned int ifg;                               /**<. inter frame gap in cycles */
-    unsigned int l3mtu;                             /**< L3 MTU */
-    unsigned int l2mtu;                             /**< Max frame size */
-    bool learn_enable;                              /**< enable learning on port */
-    bool bpdu_enable;                               /**< allow bpdu even when port is in block state */
-    unsigned int egress_rate;                       /**< Max rate on egress */
-    bool tunnel_term;                               /**< Permit tunnel termination */
-    bool ipv4_term;                                 /**< Permit IPv4 termination */         
-    bool ipv6_term;                                 /**< Permit IPv6 termination */         
-    bool igmp_snoop;                                /**< Enable IGMP snopping */
-    uint8_t urpf_mode;                              /**< None/Loose/Strict */
+  uint16_t port_number;     /**< FP port number */
+  bool phy_detected;        /**< whether phy is present */
+  unsigned int ifg;         /**<. inter frame gap in cycles */
+  unsigned int l3mtu;       /**< L3 MTU */
+  unsigned int l2mtu;       /**< Max frame size */
+  bool learn_enable;        /**< enable learning on port */
+  bool bpdu_enable;         /**< allow bpdu even when port is in block state */
+  unsigned int egress_rate; /**< Max rate on egress */
+  bool tunnel_term;         /**< Permit tunnel termination */
+  bool ipv4_term;           /**< Permit IPv4 termination */
+  bool ipv6_term;           /**< Permit IPv6 termination */
+  bool igmp_snoop;          /**< Enable IGMP snopping */
+  uint8_t urpf_mode;        /**< None/Loose/Strict */
 } switch_api_port_info_t;
 
 /** port speed */
 typedef enum {
-    SWITCH_API_PORT_SPEED_NONE,                   /**< Port Speed Not set */
-    SWITCH_API_PORT_SPEED_1G,                     /**< port speed 1G */
-    SWITCH_API_PORT_SPEED_10G,                    /**< port speed 10G */
-    SWITCH_API_PORT_SPEED_25G,                    /**< port speed 25G */
-    SWITCH_API_PORT_SPEED_40G,                    /**< port speed 40G */
-    SWITCH_API_PORT_SPEED_50G,                    /**< port speed 50G */
-    SWITCH_API_PORT_SPEED_100G                    /**< port speed 100G */
+  SWITCH_API_PORT_SPEED_NONE, /**< Port Speed Not set */
+  SWITCH_API_PORT_SPEED_1G,   /**< port speed 1G */
+  SWITCH_API_PORT_SPEED_10G,  /**< port speed 10G */
+  SWITCH_API_PORT_SPEED_25G,  /**< port speed 25G */
+  SWITCH_API_PORT_SPEED_40G,  /**< port speed 40G */
+  SWITCH_API_PORT_SPEED_50G,  /**< port speed 50G */
+  SWITCH_API_PORT_SPEED_100G  /**< port speed 100G */
 } switch_port_speed_t;
 
 /**
@@ -75,8 +75,10 @@ typedef enum {
  @param count actual count returned
  @param port_info array of port_info structures per port
  */
-switch_status_t switch_api_port_probe(switch_device_t device, unsigned int max_count,
-                              unsigned int *count, switch_api_port_info_t *port_info);
+switch_status_t switch_api_port_probe(switch_device_t device,
+                                      unsigned int max_count,
+                                      unsigned int *count,
+                                      switch_api_port_info_t *port_info);
 
 /**
  Port Enable  Set- Enabled the port on a device
@@ -84,8 +86,9 @@ switch_status_t switch_api_port_probe(switch_device_t device, unsigned int max_c
  @param port port on device to set
  @param enable TRUE => port is enabled FALSE => Port is disabled
 */
-switch_status_t switch_api_port_enable_set(switch_device_t device, switch_port_t port,
-                                   bool enable);
+switch_status_t switch_api_port_enable_set(switch_device_t device,
+                                           switch_port_t port,
+                                           bool enable);
 
 /**
  Port Enable Get - Get the Port Enabled state
@@ -93,8 +96,9 @@ switch_status_t switch_api_port_enable_set(switch_device_t device, switch_port_t
  @param port port on device to get information
  @param enable TRUE => port is enabled FALSE => Port is disabled
 */
-switch_status_t switch_api_port_enable_get(switch_device_t device, switch_port_t port,
-                                   bool *enable);
+switch_status_t switch_api_port_enable_get(switch_device_t device,
+                                           switch_port_t port,
+                                           bool *enable);
 
 /**
  Port Speed Set
@@ -102,8 +106,9 @@ switch_status_t switch_api_port_enable_get(switch_device_t device, switch_port_t
  @param port port on device to set
  @param speed desired speed of port
 */
-switch_status_t switch_api_port_speed_set(switch_device_t device, switch_port_t port,
-                                  switch_port_speed_t speed);
+switch_status_t switch_api_port_speed_set(switch_device_t device,
+                                          switch_port_t port,
+                                          switch_port_speed_t speed);
 
 /**
 Port Speed Get
@@ -111,8 +116,9 @@ Port Speed Get
 @param port port on device to get
 @param speed actual speed of port
 */
-switch_status_t switch_api_port_speed_get(switch_device_t device, switch_port_t port,
-                                  switch_port_speed_t *speed);
+switch_status_t switch_api_port_speed_get(switch_device_t device,
+                                          switch_port_t port,
+                                          switch_port_speed_t *speed);
 
 /**
  Port Autonegotiation Set
@@ -120,24 +126,26 @@ switch_status_t switch_api_port_speed_get(switch_device_t device, switch_port_t 
  @param port port on device to set
  @param enable Enable Autonegotiation if TRUE else disable
 */
-switch_status_t switch_api_port_autoneg_set(switch_device_t device, switch_port_t port,
-                                    bool enable);
+switch_status_t switch_api_port_autoneg_set(switch_device_t device,
+                                            switch_port_t port,
+                                            bool enable);
 /**
 Port Autonegotiation get
 @param device device to use
 @param port port on device to get
 @param enable returns TRUE if Autonegotiation is set else FALSE
 */
-switch_status_t switch_api_port_autoneg_get(switch_device_t device, switch_port_t port,
-                        bool *enable);
+switch_status_t switch_api_port_autoneg_get(switch_device_t device,
+                                            switch_port_t port,
+                                            bool *enable);
 
 /** Port Pause message information */
 typedef struct switch_port_pause_info_ {
-    bool rx;                             /**< rx ignore PAUSE FALSE => disable PAUSE */
-    bool tx;                             /**< tx send PAUSE frames when needed */
-    switch_mac_addr_t mac;                   /**< MAC addr to use when sending pause frames */
-    bool symmetric;                      /**< Symmetric or Asymmetric mode */
-    unsigned int quanta;                 /**< time in ms after which to stop sending pause */
+  bool rx;               /**< rx ignore PAUSE FALSE => disable PAUSE */
+  bool tx;               /**< tx send PAUSE frames when needed */
+  switch_mac_addr_t mac; /**< MAC addr to use when sending pause frames */
+  bool symmetric;        /**< Symmetric or Asymmetric mode */
+  unsigned int quanta;   /**< time in ms after which to stop sending pause */
 } switch_port_pause_info_t;
 
 /**
@@ -146,8 +154,9 @@ typedef struct switch_port_pause_info_ {
  @param port port on device to set
  @param pause_info Pause informaion for the port
 */
-switch_status_t switch_api_port_pause_set(switch_device_t device, switch_port_t port,
-                                  switch_port_pause_info_t *pause_info);
+switch_status_t switch_api_port_pause_set(switch_device_t device,
+                                          switch_port_t port,
+                                          switch_port_pause_info_t *pause_info);
 
 /**
  Port PAUSE control get
@@ -155,16 +164,17 @@ switch_status_t switch_api_port_pause_set(switch_device_t device, switch_port_t 
  @param port port on device to get
  @param pause_info Pause informaion for the port
 */
-switch_status_t switch_api_port_pause_get(switch_device_t device, switch_port_t port,
-                                  switch_port_pause_info_t *pause_info);
+switch_status_t switch_api_port_pause_get(switch_device_t device,
+                                          switch_port_t port,
+                                          switch_port_pause_info_t *pause_info);
 
 /** Priority Flow Control configuration */
 typedef struct switch_pfc_config_ {
-    uint32_t flags;                      /**< flags to control */
-    bool lossless;                       /**< lossless mode */
-    uint32_t fc_on_threshold;            /**< Threshold in bytes to turn on FC */
-    uint32_t fc_off_threshold;           /**< Threshold in bytes to turn on FC */
-    uint32_t drop_threshold;             /**< Discard threshold */
+  uint32_t flags;            /**< flags to control */
+  bool lossless;             /**< lossless mode */
+  uint32_t fc_on_threshold;  /**< Threshold in bytes to turn on FC */
+  uint32_t fc_off_threshold; /**< Threshold in bytes to turn on FC */
+  uint32_t drop_threshold;   /**< Discard threshold */
 } switch_pfc_config_t;
 
 /**
@@ -174,8 +184,10 @@ typedef struct switch_pfc_config_ {
  @param queue on the port to configure
  @param pfc PFC configuration parameters
 */
-switch_status_t switch_api_port_pfc_config_set(switch_device_t device, switch_port_t port,
-                                       uint8_t queue, switch_pfc_config_t *pfc);
+switch_status_t switch_api_port_pfc_config_set(switch_device_t device,
+                                               switch_port_t port,
+                                               uint8_t queue,
+                                               switch_pfc_config_t *pfc);
 
 /**
  Port operational state
@@ -183,7 +195,9 @@ switch_status_t switch_api_port_pfc_config_set(switch_device_t device, switch_po
  @param port port on device to get
  @param up port state
 */
-switch_status_t switch_api_port_state_get(switch_device_t device, switch_port_t port, bool *up);
+switch_status_t switch_api_port_state_get(switch_device_t device,
+                                          switch_port_t port,
+                                          bool *up);
 
 /**
  Port operational state declaration interval
@@ -191,8 +205,9 @@ switch_status_t switch_api_port_state_get(switch_device_t device, switch_port_t 
  @param port port on device to get
  @param interval microseconds to debounce
 */
-switch_status_t switch_api_port_debounce_set(switch_device_t device, switch_port_t port,
-                                     unsigned int interval);
+switch_status_t switch_api_port_debounce_set(switch_device_t device,
+                                             switch_port_t port,
+                                             unsigned int interval);
 
 /**
  Port set MAC in loopback
@@ -200,8 +215,9 @@ switch_status_t switch_api_port_debounce_set(switch_device_t device, switch_port
  @param port port on device to set
  @param enable loopback enabled if TRUE else FALSE
 */
-switch_status_t switch_api_port_mac_loopback_set(switch_device_t device, switch_port_t port,
-                                         bool enable);
+switch_status_t switch_api_port_mac_loopback_set(switch_device_t device,
+                                                 switch_port_t port,
+                                                 bool enable);
 
 /**
  Port get MAC loopback config
@@ -209,8 +225,9 @@ switch_status_t switch_api_port_mac_loopback_set(switch_device_t device, switch_
  @param port port on device to get
  @param enable TRUE if loopback is enabled else FALSE
 */
-switch_status_t switch_api_port_mac_loopback_get(switch_device_t device, switch_port_t port,
-                                         bool *enable);
+switch_status_t switch_api_port_mac_loopback_get(switch_device_t device,
+                                                 switch_port_t port,
+                                                 bool *enable);
 
 /**
  Port L2 MTU settings
@@ -218,8 +235,9 @@ switch_status_t switch_api_port_mac_loopback_get(switch_device_t device, switch_
  @param port port on device to set
  @param l2mtu Max frame size on port
 */
-switch_status_t switch_api_port_mtu_set(switch_device_t device, switch_port_t port,
-                                   unsigned int l2mtu);
+switch_status_t switch_api_port_mtu_set(switch_device_t device,
+                                        switch_port_t port,
+                                        unsigned int l2mtu);
 
 /**
  Port L3 MTU settings
@@ -227,8 +245,9 @@ switch_status_t switch_api_port_mtu_set(switch_device_t device, switch_port_t po
  @param port port on device to set
  @param l3mtu IP MTU on port
 */
-switch_status_t switch_api_port_l3_mtu_set(switch_device_t device, switch_port_t port,
-                                   unsigned int l3mtu);
+switch_status_t switch_api_port_l3_mtu_set(switch_device_t device,
+                                           switch_port_t port,
+                                           unsigned int l3mtu);
 
 /**
  Port MTU settings get
@@ -237,8 +256,10 @@ switch_status_t switch_api_port_l3_mtu_set(switch_device_t device, switch_port_t
  @param l2mtu maximum frame size (rx and tx)
  @param l3mtu IP MTU on port
 */
-switch_status_t switch_api_port_l3_mtu_get(switch_device_t device, switch_port_t port,
-                                   unsigned int *l2mtu, unsigned int *l3mtu);
+switch_status_t switch_api_port_l3_mtu_get(switch_device_t device,
+                                           switch_port_t port,
+                                           unsigned int *l2mtu,
+                                           unsigned int *l3mtu);
 
 /**
  Port egress rate set
@@ -246,8 +267,9 @@ switch_status_t switch_api_port_l3_mtu_get(switch_device_t device, switch_port_t
  @param port port on device to set
  @param rate rate in kbps
 */
-switch_status_t switch_api_port_egress_rate_set(switch_device_t device, switch_port_t port,
-                        unsigned int rate);
+switch_status_t switch_api_port_egress_rate_set(switch_device_t device,
+                                                switch_port_t port,
+                                                unsigned int rate);
 
 /**
  Set Port configuration
@@ -255,7 +277,8 @@ switch_status_t switch_api_port_egress_rate_set(switch_device_t device, switch_p
  @param api_port_info port information inclduing port number
  (portnumber specified in port_info->port_number)
 */
-switch_status_t switch_api_port_set(switch_device_t device, switch_api_port_info_t *api_port_info);
+switch_status_t switch_api_port_set(switch_device_t device,
+                                    switch_api_port_info_t *api_port_info);
 
 /**
  Get Port configuration
@@ -263,7 +286,8 @@ switch_status_t switch_api_port_set(switch_device_t device, switch_api_port_info
  @param api_port_info port information inclduing port number
  (portnumber specified in port_info->port_number)
 */
-switch_status_t switch_api_port_get(switch_device_t device, switch_api_port_info_t *api_port_info);
+switch_status_t switch_api_port_get(switch_device_t device,
+                                    switch_api_port_info_t *api_port_info);
 
 /**
  Set meter handle for port
@@ -284,10 +308,11 @@ switch_status_t switch_api_port_storm_control_set(switch_device_t device,
  @param pkt_type packet type
  @param meter_handle meter handle
  */
-switch_status_t switch_api_port_storm_control_get(switch_device_t device,
-                                                  switch_port_t port,
-                                                  switch_packet_type_t pkt_type,
-                                                  switch_handle_t *meter_handle);
+switch_status_t switch_api_port_storm_control_get(
+    switch_device_t device,
+    switch_port_t port,
+    switch_packet_type_t pkt_type,
+    switch_handle_t *meter_handle);
 /**
  Meter stats
  @param device device
@@ -296,19 +321,19 @@ switch_status_t switch_api_port_storm_control_get(switch_device_t device,
  @param counter_ids meter counter ids
  @param counters counter values
  */
-switch_status_t
-switch_api_storm_control_stats_get(switch_device_t device,
-                          switch_handle_t meter_handle,
-                          uint8_t count,
-                          switch_meter_stats_t *counter_ids,
-                          switch_counter_t *counters);
+switch_status_t switch_api_storm_control_stats_get(
+    switch_device_t device,
+    switch_handle_t meter_handle,
+    uint8_t count,
+    switch_meter_stats_t *counter_ids,
+    switch_counter_t *counters);
 
 /**
  Dump port table
  */
 switch_status_t switch_api_port_print_all(void);
 
-/** @} */ // end of Port
+/** @} */  // end of Port
 
 #ifdef __cplusplus
 }

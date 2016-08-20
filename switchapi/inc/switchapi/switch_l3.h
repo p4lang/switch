@@ -27,15 +27,15 @@ extern "C" {
 /** @defgroup L3 L3 API
  *  API functions create IP interfaces and route
  *  @{
- */ // begin of L3 API
-//L3
+ */  // begin of L3 API
+// L3
 
-//RPF check
+// RPF check
 /** Mode for RPF check - loose or strict mode */
 typedef enum {
-    SWITCH_API_RPF_CHECK_DEFAULT,
-    SWITCH_API_RPF_CHECK_LOOSE,
-    SWITCH_API_RPF_CHECK_STRICT
+  SWITCH_API_RPF_CHECK_DEFAULT,
+  SWITCH_API_RPF_CHECK_LOOSE,
+  SWITCH_API_RPF_CHECK_STRICT
 } switch_urpf_mode_t;
 
 /**
@@ -45,10 +45,11 @@ typedef enum {
  @param vrf virtual domain identifier
  @param ip_addr IP address to be configured(v4 or v6)
 */
-switch_status_t switch_api_l3_interface_address_add(switch_device_t device,
-                                                    switch_handle_t interface_handle,
-                                                    switch_handle_t vrf,
-                                                    switch_ip_addr_t *ip_addr);
+switch_status_t switch_api_l3_interface_address_add(
+    switch_device_t device,
+    switch_handle_t interface_handle,
+    switch_handle_t vrf,
+    switch_ip_addr_t *ip_addr);
 /**
  Delete a configured IP address on interface
  @param device device
@@ -56,10 +57,11 @@ switch_status_t switch_api_l3_interface_address_add(switch_device_t device,
  @param vrf virtual domain identifier
  @param ip_addr IP address to be deleted
 */
-switch_status_t switch_api_l3_interface_address_delete(switch_device_t device,
-                                                       switch_handle_t interface_handle,
-                                                       switch_handle_t vrf,
-                                                       switch_ip_addr_t *ip_addr);
+switch_status_t switch_api_l3_interface_address_delete(
+    switch_device_t device,
+    switch_handle_t interface_handle,
+    switch_handle_t vrf,
+    switch_ip_addr_t *ip_addr);
 /**
  Host address reachability entry - inserted into a Hash table to match a
  /32 IPv4 ot /128 IPv6 address, When there are multiple paths to reach
@@ -69,8 +71,10 @@ switch_status_t switch_api_l3_interface_address_delete(switch_device_t device,
  @param ip_addr IP address
  @param nhop_handle Nexthop Handle
 */
-switch_status_t switch_api_l3_route_add(switch_device_t device, switch_handle_t vrf,
-                               switch_ip_addr_t *ip_addr, switch_handle_t nhop_handle);
+switch_status_t switch_api_l3_route_add(switch_device_t device,
+                                        switch_handle_t vrf,
+                                        switch_ip_addr_t *ip_addr,
+                                        switch_handle_t nhop_handle);
 /**
  Host address entry delete
  @param device device
@@ -78,36 +82,42 @@ switch_status_t switch_api_l3_route_add(switch_device_t device, switch_handle_t 
  @param ip_addr IP address
  @param nhop_handle Nexthop Handle
 */
-switch_status_t switch_api_l3_route_delete(switch_device_t device, switch_handle_t vrf,
-                                   switch_ip_addr_t *ip_addr, switch_handle_t nhop_handle);
+switch_status_t switch_api_l3_route_delete(switch_device_t device,
+                                           switch_handle_t vrf,
+                                           switch_ip_addr_t *ip_addr,
+                                           switch_handle_t nhop_handle);
 
 /**
  Set native vlan on interface
  @param intf_handle - Handle that uniquely identifies interface
  @param value - Value of v4 urpf mode
 */
-switch_status_t switch_api_interface_ipv4_urpf_mode_set(switch_handle_t intf_handle, uint64_t value);
+switch_status_t switch_api_interface_ipv4_urpf_mode_set(
+    switch_handle_t intf_handle, uint64_t value);
 
 /**
  Get native vlan on interface
  @param intf_handle - Handle that uniquely identifies interface
  @param value - Value of v4 urpf mode
 */
-switch_status_t switch_api_interface_ipv4_urpf_mode_get(switch_handle_t intf_handle, uint64_t *value);
+switch_status_t switch_api_interface_ipv4_urpf_mode_get(
+    switch_handle_t intf_handle, uint64_t *value);
 
 /**
  Set native vlan on interface
  @param intf_handle - Handle that uniquely identifies interface
  @param value - Value of v6 urpf mode
 */
-switch_status_t switch_api_interface_ipv6_urpf_mode_set(switch_handle_t intf_handle, uint64_t value);
+switch_status_t switch_api_interface_ipv6_urpf_mode_set(
+    switch_handle_t intf_handle, uint64_t value);
 
 /**
  Get native vlan on interface
  @param intf_handle - Handle that uniquely identifies interface
  @param value - Value of v6 urpf mode
 */
-switch_status_t switch_api_interface_ipv6_urpf_mode_get(switch_handle_t intf_handle, uint64_t *value);
+switch_status_t switch_api_interface_ipv6_urpf_mode_get(
+    switch_handle_t intf_handle, uint64_t *value);
 
 /**
  Iterator function prototype for L3 routes
@@ -115,40 +125,47 @@ switch_status_t switch_api_interface_ipv6_urpf_mode_get(switch_handle_t intf_han
  @param ip_addr IP Address
  @param nhop_handle Nexthop handle
  */
-typedef switch_status_t (*switch_l3_table_iterator_fn)(switch_handle_t vrf_handle, switch_ip_addr_t ip_addr, switch_handle_t nhop_handle);
+typedef switch_status_t (*switch_l3_table_iterator_fn)(
+    switch_handle_t vrf_handle,
+    switch_ip_addr_t ip_addr,
+    switch_handle_t nhop_handle);
 
 /**
  Get all L3 routes
  @param iterator_fn - Iterator function to be called
 */
-switch_status_t switch_api_l3_route_entries_get(switch_l3_table_iterator_fn iterator_fn);
+switch_status_t switch_api_l3_route_entries_get(
+    switch_l3_table_iterator_fn iterator_fn);
 
 /**
  Get all L3 routes in a vrf
  @param vrf_handle Vrf handle
  @param iterator_fn - Iterator function to be called
  */
-switch_status_t switch_api_l3_route_entries_get_by_vrf(switch_handle_t vrf_handle, switch_l3_table_iterator_fn iterator_fn);
+switch_status_t switch_api_l3_route_entries_get_by_vrf(
+    switch_handle_t vrf_handle, switch_l3_table_iterator_fn iterator_fn);
 
 /**
  Get all L3 V4 routes in a vrf
  @param vrf_handle Vrf handle
  @param iterator_fn - Iterator function to be called
  */
-switch_status_t switch_api_l3_v4_route_entries_get_by_vrf(switch_handle_t vrf_handle, switch_l3_table_iterator_fn iterator_fn);
+switch_status_t switch_api_l3_v4_route_entries_get_by_vrf(
+    switch_handle_t vrf_handle, switch_l3_table_iterator_fn iterator_fn);
 
 /**
  Get all L3 V6 routes in a vrf
  @param vrf_handle Vrf handle
  @param iterator_fn - Iterator function to be called
  */
-switch_status_t switch_api_l3_v6_route_entries_get_by_vrf(switch_handle_t vrf_handle, switch_l3_table_iterator_fn iterator_fn);
+switch_status_t switch_api_l3_v6_route_entries_get_by_vrf(
+    switch_handle_t vrf_handle, switch_l3_table_iterator_fn iterator_fn);
 
 /**
   Dump L3 routing table
  */
 switch_status_t switch_api_l3_routes_print_all(void);
-/** @} */ // end of L3 API
+/** @} */  // end of L3 API
 
 #ifdef __cplusplus
 }

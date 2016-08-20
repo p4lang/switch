@@ -23,4 +23,4 @@ limitations under the License.
 #define SWITCH_API_VERBOSE printf
 #define SWITCH_API_TRACE printf
 
-char * switch_print_error(switch_status_t status);
+char *switch_print_error(switch_status_t status);

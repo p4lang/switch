@@ -40,19 +40,19 @@ extern "C" {
 
 /** Spanning Tree Group State */
 typedef enum {
-    SWITCH_PORT_STP_STATE_NONE,
-    SWITCH_PORT_STP_STATE_DISABLED,
-    SWITCH_PORT_STP_STATE_LEARNING,
-    SWITCH_PORT_STP_STATE_FORWARDING,
-    SWITCH_PORT_STP_STATE_BLOCKING,
+  SWITCH_PORT_STP_STATE_NONE,
+  SWITCH_PORT_STP_STATE_DISABLED,
+  SWITCH_PORT_STP_STATE_LEARNING,
+  SWITCH_PORT_STP_STATE_FORWARDING,
+  SWITCH_PORT_STP_STATE_BLOCKING,
 } switch_stp_state_t;
 
 /** Spanning tree mode */
 typedef enum switch_stp_mode_ {
-    SWITCH_PORT_STP_MODE_DISABLED,
-    SWITCH_PORT_STP_MODE_STP,
-    SWITCH_PORT_STP_MODE_RSTP,
-    SWITCH_PORT_STP_MODE_MSTP
+  SWITCH_PORT_STP_MODE_DISABLED,
+  SWITCH_PORT_STP_MODE_STP,
+  SWITCH_PORT_STP_MODE_RSTP,
+  SWITCH_PORT_STP_MODE_MSTP
 } switch_stp_mode_t;
 
 /**
@@ -60,14 +60,16 @@ typedef enum switch_stp_mode_ {
  @param device device
  @param stp_mode spanning tree mode
 */
-switch_handle_t switch_api_stp_group_create(switch_device_t device, switch_stp_mode_t stp_mode);
+switch_handle_t switch_api_stp_group_create(switch_device_t device,
+                                            switch_stp_mode_t stp_mode);
 
 /**
  Delete a spanning tree group
  @param device device
  @param stg_handle handle of the spanning tree group
 */
-switch_status_t switch_api_stp_group_delete(switch_device_t device, switch_handle_t stg_handle);
+switch_status_t switch_api_stp_group_delete(switch_device_t device,
+                                            switch_handle_t stg_handle);
 
 /**
  Add VLAN to the stp
@@ -77,9 +79,9 @@ switch_status_t switch_api_stp_group_delete(switch_device_t device, switch_handl
  @param vlan_handle list of vlan handles
 */
 switch_status_t switch_api_stp_group_vlans_add(switch_device_t device,
-                                              switch_handle_t stg_handle,
-                                              uint16_t vlan_count,
-                                              switch_handle_t *vlan_handle);
+                                               switch_handle_t stg_handle,
+                                               uint16_t vlan_count,
+                                               switch_handle_t *vlan_handle);
 
 /**
  Remove VLAN from the stp
@@ -89,9 +91,9 @@ switch_status_t switch_api_stp_group_vlans_add(switch_device_t device,
  @param vlan_handle list of vlan handles
 */
 switch_status_t switch_api_stp_group_vlans_remove(switch_device_t device,
-                                                 switch_handle_t stg_handle,
-                                                 uint16_t vlan_count,
-                                                 switch_handle_t *vlan_handle);
+                                                  switch_handle_t stg_handle,
+                                                  uint16_t vlan_count,
+                                                  switch_handle_t *vlan_handle);
 
 /**
  Set the port belonging to a stp in one of discard, learn or forward
@@ -100,8 +102,10 @@ switch_status_t switch_api_stp_group_vlans_remove(switch_device_t device,
  @param intf_handle - spanning tree interface
  @param state stp state
 */
-switch_status_t switch_api_stp_port_state_set(switch_device_t device, switch_handle_t stg_handle,
-                                      switch_handle_t intf_handle, switch_stp_state_t state);
+switch_status_t switch_api_stp_port_state_set(switch_device_t device,
+                                              switch_handle_t stg_handle,
+                                              switch_handle_t intf_handle,
+                                              switch_stp_state_t state);
 
 /**
  Get the state of the port belonging to a stp
@@ -110,8 +114,10 @@ switch_status_t switch_api_stp_port_state_set(switch_device_t device, switch_han
  @param intf_handle - spanning tree interface
  @param state stp state
 */
-switch_status_t switch_api_stp_port_state_get(switch_device_t device, switch_handle_t stg_handle,
-                                      switch_handle_t intf_handle, switch_stp_state_t *state);
+switch_status_t switch_api_stp_port_state_get(switch_device_t device,
+                                              switch_handle_t stg_handle,
+                                              switch_handle_t intf_handle,
+                                              switch_stp_state_t *state);
 
 /**
  Set the port belonging to a stp in one of discard, learn or forward
@@ -119,8 +125,9 @@ switch_status_t switch_api_stp_port_state_get(switch_device_t device, switch_han
  @param stg_handle handle of the Spanning tree group
  @param intf_handle - spanning tree interface
 */
-switch_status_t switch_api_stp_port_state_clear(switch_device_t device, switch_handle_t stg_handle,
-                                       switch_handle_t intf_handle);
+switch_status_t switch_api_stp_port_state_clear(switch_device_t device,
+                                                switch_handle_t stg_handle,
+                                                switch_handle_t intf_handle);
 
 /**
  Dump spanning tree group table

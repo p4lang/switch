@@ -17,64 +17,67 @@ limitations under the License.
 #ifndef __SWITCHLINK_DB_INT_H__
 #define __SWITCHLINK_DB_INT_H__
 
-#define min(a,b) \
-    ({ __typeof__ (a) _a = (a);  __typeof__ (b) _b = (b); \
-     _a > _b ? _a : _b; })
+#define min(a, b)           \
+  ({                        \
+    __typeof__(a) _a = (a); \
+    __typeof__(b) _b = (b); \
+    _a > _b ? _a : _b;      \
+  })
 
 typedef struct switchlink_db_intf_obj_ {
-    tommy_trie_inplace_node ifindex_node;
-    tommy_trie_inplace_node handle_node;
-    uint32_t ifindex;
-    switchlink_db_interface_info_t intf_info;
+  tommy_trie_inplace_node ifindex_node;
+  tommy_trie_inplace_node handle_node;
+  uint32_t ifindex;
+  switchlink_db_interface_info_t intf_info;
 } switchlink_db_intf_obj_t;
 
 typedef struct switchlink_db_bridge_obj_ {
-    tommy_trie_inplace_node ifindex_node;
-    tommy_trie_inplace_node handle_node;
-    uint32_t ifindex;
-    switchlink_db_bridge_info_t bridge;
+  tommy_trie_inplace_node ifindex_node;
+  tommy_trie_inplace_node handle_node;
+  uint32_t ifindex;
+  switchlink_db_bridge_info_t bridge;
 } switchlink_db_bridge_obj_t;
 
 typedef struct switchlink_db_mac_obj_ {
-    tommy_node hash_node;
-    tommy_node list_node;
-    switchlink_mac_addr_t addr;
-    switchlink_handle_t bridge_h;
-    switchlink_handle_t intf_h;
+  tommy_node hash_node;
+  tommy_node list_node;
+  switchlink_mac_addr_t addr;
+  switchlink_handle_t bridge_h;
+  switchlink_handle_t intf_h;
 } switchlink_db_mac_obj_t;
 
 typedef struct switchlink_db_neigh_obj_ {
-    tommy_node list_node;
-    switchlink_db_neigh_info_t neigh_info;
+  tommy_node list_node;
+  switchlink_db_neigh_info_t neigh_info;
 } switchlink_db_neigh_obj_t;
 
 typedef struct switchlink_db_ecmp_obj_ {
-    tommy_node list_node;
-    int32_t ref_count;
-    tommy_trie_inplace_node handle_node;
-    switchlink_db_ecmp_info_t ecmp_info;
+  tommy_node list_node;
+  int32_t ref_count;
+  tommy_trie_inplace_node handle_node;
+  switchlink_db_ecmp_info_t ecmp_info;
 } switchlink_db_ecmp_obj_t;
 
 typedef struct switchlink_db_oifl_obj_ {
-    tommy_node list_node;
-    int32_t ref_count;
-    tommy_trie_inplace_node handle_node;
-    switchlink_db_oifl_info_t oifl_info;
+  tommy_node list_node;
+  int32_t ref_count;
+  tommy_trie_inplace_node handle_node;
+  switchlink_db_oifl_info_t oifl_info;
 } switchlink_db_oifl_obj_t;
 
 typedef struct switchlink_db_route_obj_ {
-    tommy_node list_node;
-    switchlink_db_route_info_t route_info;
+  tommy_node list_node;
+  switchlink_db_route_info_t route_info;
 } switchlink_db_route_obj_t;
 
 typedef struct switchlink_db_mroute_obj_ {
-    tommy_node list_node;
-    switchlink_db_mroute_info_t mroute_info;
+  tommy_node list_node;
+  switchlink_db_mroute_info_t mroute_info;
 } switchlink_db_mroute_obj_t;
 
 typedef struct switchlink_db_mdb_obj_ {
-    tommy_node list_node;
-    switchlink_db_mdb_info_t mdb_info;
+  tommy_node list_node;
+  switchlink_db_mdb_info_t mdb_info;
 } switchlink_db_mdb_obj_t;
 
 #endif /* __SWITCHLINK_DB_INT_H__ */

@@ -23,22 +23,18 @@ limitations under the License.
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-    
-#define SWITCH_VRF_V4_ENABLED(info) \
-    info->flags.v4_enabled
 
-#define SWITCH_VRF_V6_ENABLED(info) \
-    info->flags.v6_enabled
+#define SWITCH_VRF_V4_ENABLED(info) info->flags.v4_enabled
 
-#define SWITCH_VRF_TYPE(info) \
-    info->flags.vrf_type
+#define SWITCH_VRF_V6_ENABLED(info) info->flags.v6_enabled
 
-#define SWITCH_VRF_IS_CORE(info) \
-    SWITCH_VRF_TYPE(info) == SWITCH_VRF_TYPE_CORE
+#define SWITCH_VRF_TYPE(info) info->flags.vrf_type
+
+#define SWITCH_VRF_IS_CORE(info) SWITCH_VRF_TYPE(info) == SWITCH_VRF_TYPE_CORE
 
 switch_status_t switch_vrf_init(switch_device_t device);
 switch_status_t switch_vrf_free(switch_device_t device);
-switch_vrf_info_t * switch_vrf_get(switch_handle_t vrf_handle);
+switch_vrf_info_t *switch_vrf_get(switch_handle_t vrf_handle);
 
 #ifdef __cplusplus
 }

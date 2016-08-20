@@ -26,39 +26,40 @@ extern "C" {
 #define SWITCH_MAC_MAXIMUM_BUFFER_SIZE 128
 
 #define SWITCH_MAC_TABLE_DEFAULT_AGING_TIME 10000
-#define SWITCH_MAC_TABLE_MAX_AGING_TIME     90000
+#define SWITCH_MAC_TABLE_MAX_AGING_TIME 90000
 
 typedef struct switch_mac_info_ {
-    unsigned char key[10];
-    switch_api_mac_entry_t mac_entry;
-    tommy_hashtable_node node;
-    tommy_node interface_node;
-    tommy_node vlan_node;
+  unsigned char key[10];
+  switch_api_mac_entry_t mac_entry;
+  tommy_hashtable_node node;
+  tommy_node interface_node;
+  tommy_node vlan_node;
 #ifdef SWITCH_PD
-    p4_pd_entry_hdl_t dmac_entry;
-    p4_pd_entry_hdl_t smac_entry;
+  p4_pd_entry_hdl_t dmac_entry;
+  p4_pd_entry_hdl_t smac_entry;
 #endif
 } switch_mac_info_t;
 
 typedef struct switch_mac_global_params_ {
-    uint32_t aging_time;
-    uint32_t learn_timeout;
+  uint32_t aging_time;
+  uint32_t learn_timeout;
 } switch_mac_global_params_t;
 
 typedef struct switch_mac_vlan_list_ {
-    tommy_list mac_entries;
-    uint32_t num_entries;
+  tommy_list mac_entries;
+  uint32_t num_entries;
 } switch_mac_vlan_list_t;
 
 typedef struct switch_mac_intf_list_ {
-    tommy_list mac_entries;
-    uint32_t num_entries;
+  tommy_list mac_entries;
+  uint32_t num_entries;
 } switch_mac_intf_list_t;
 
 switch_status_t switch_mac_table_init(switch_device_t device);
 switch_status_t switch_mac_table_free(void);
 uint32_t switch_api_mac_get_default_aging_time_internal();
-switch_mac_info_t * switch_mac_table_entry_find(switch_api_mac_entry_t *mac_entry);
+switch_mac_info_t *switch_mac_table_entry_find(
+    switch_api_mac_entry_t *mac_entry);
 #ifdef __cplusplus
 }
 #endif

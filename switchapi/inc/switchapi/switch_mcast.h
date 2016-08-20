@@ -27,14 +27,14 @@ extern "C" {
  The multicast API's are controlled based on the multicast protocols that propagates the route entries
  to MFIB. A multicast tree handle is programmed against each route in mfib. The tree is derived in the queuing block
  and the packet is replicated based on the members.
- */ // begin of MCAST
- // MCAST
+ */  // begin of MCAST
+                                       // MCAST
 
 /** Multicast mode */
 typedef enum switch_mcast_mode_ {
-    SWITCH_API_MCAST_IPMC_NONE,
-    SWITCH_API_MCAST_IPMC_PIM_SM,
-    SWITCH_API_MCAST_IPMC_PIM_BIDIR
+  SWITCH_API_MCAST_IPMC_NONE,
+  SWITCH_API_MCAST_IPMC_PIM_SM,
+  SWITCH_API_MCAST_IPMC_PIM_BIDIR
 } switch_mcast_mode_t;
 
 /* MCAST API's */
@@ -49,7 +49,8 @@ switch_handle_t switch_api_multicast_tree_create(switch_device_t device);
   @param device - device that programs the tree
   @param mgid_handle - Handle that uniquely identifies multicast tree
 */
-switch_status_t switch_api_multicast_tree_delete(switch_device_t device, switch_handle_t mgid_handle);
+switch_status_t switch_api_multicast_tree_delete(switch_device_t device,
+                                                 switch_handle_t mgid_handle);
 
 /**
  Add a list of members to multicast tree
@@ -59,9 +60,9 @@ switch_status_t switch_api_multicast_tree_delete(switch_device_t device, switch_
  @param mbrs - List of interfaces to be added to multicast tree
 */
 switch_status_t switch_api_multicast_member_add(switch_device_t device,
-                                        switch_handle_t mgid_handle,
-                                        uint16_t mbr_count,
-                                        switch_vlan_interface_t *mbrs);
+                                                switch_handle_t mgid_handle,
+                                                uint16_t mbr_count,
+                                                switch_vlan_interface_t *mbrs);
 
 /**
  Delete a list of members to multicast tree
@@ -70,10 +71,11 @@ switch_status_t switch_api_multicast_member_add(switch_device_t device,
  @param mbr_count - Count of members
  @param mbrs - List of interfaces to be deleted from multicast tree
 */
-switch_status_t switch_api_multicast_member_delete(switch_device_t device,
-                                        switch_handle_t mgid_handle,
-                                        uint16_t mbr_count,
-                                        switch_vlan_interface_t *mbrs);
+switch_status_t switch_api_multicast_member_delete(
+    switch_device_t device,
+    switch_handle_t mgid_handle,
+    uint16_t mbr_count,
+    switch_vlan_interface_t *mbrs);
 
 /**
  Get the list of members of a multicast tree
@@ -83,9 +85,9 @@ switch_status_t switch_api_multicast_member_delete(switch_device_t device,
  @param mbrs - List of interfaces part of the multicast tree
 */
 switch_status_t switch_api_multicast_member_get(switch_device_t device,
-                                        switch_handle_t mgid_handle,
-                                        uint16_t *mbr_count,
-                                        switch_vlan_interface_t **mbrs);
+                                                switch_handle_t mgid_handle,
+                                                uint16_t *mbr_count,
+                                                switch_vlan_interface_t **mbrs);
 
 /**
  Add a (S,G) or (*, G) entry to MFIB.
@@ -99,13 +101,13 @@ switch_status_t switch_api_multicast_member_get(switch_device_t device,
  @param rpf_vlan_count - Count of RPF vlan's
 */
 switch_status_t switch_api_multicast_mroute_add(switch_device_t device,
-                                        switch_handle_t mgid_handle,
-                                        switch_handle_t vlan_vrf_handle,
-                                        const switch_ip_addr_t *src_ip,
-                                        const switch_ip_addr_t *grp_ip,
-                                        switch_mcast_mode_t mc_mode,
-                                        switch_handle_t *rpf_vlan_list,
-                                        uint16_t rpf_vlan_count);
+                                                switch_handle_t mgid_handle,
+                                                switch_handle_t vlan_vrf_handle,
+                                                const switch_ip_addr_t *src_ip,
+                                                const switch_ip_addr_t *grp_ip,
+                                                switch_mcast_mode_t mc_mode,
+                                                switch_handle_t *rpf_vlan_list,
+                                                uint16_t rpf_vlan_count);
 
 /**
  Delete a (S,G) or (*, G) entry from MFIB.
@@ -114,10 +116,11 @@ switch_status_t switch_api_multicast_mroute_add(switch_device_t device,
  @param src_ip - Source IP address
  @param grp_ip - Group IP address
 */
-switch_status_t switch_api_multicast_mroute_delete(switch_device_t device,
-                                        switch_handle_t vrf_handle,
-                                        const switch_ip_addr_t *src_ip,
-                                        const switch_ip_addr_t *grp_ip);
+switch_status_t switch_api_multicast_mroute_delete(
+    switch_device_t device,
+    switch_handle_t vrf_handle,
+    const switch_ip_addr_t *src_ip,
+    const switch_ip_addr_t *grp_ip);
 
 /**
  For a (S,G) or (*, G) get the multicast tree
@@ -127,11 +130,12 @@ switch_status_t switch_api_multicast_mroute_delete(switch_device_t device,
  @param grp_ip - Group IP address
  @param mgid_handle - Handle of multicast tree
 */
-switch_status_t switch_api_multicast_mroute_tree_get(switch_device_t device,
-                                        switch_handle_t vrf_handle,
-                                        const switch_ip_addr_t *src_ip,
-                                        const switch_ip_addr_t *grp_ip,
-                                        switch_handle_t *mgid_handle);
+switch_status_t switch_api_multicast_mroute_tree_get(
+    switch_device_t device,
+    switch_handle_t vrf_handle,
+    const switch_ip_addr_t *src_ip,
+    const switch_ip_addr_t *grp_ip,
+    switch_handle_t *mgid_handle);
 
 /**
  Add an L2 (S,G) or (*, G) route entry to MFIB.
@@ -141,11 +145,12 @@ switch_status_t switch_api_multicast_mroute_tree_get(switch_device_t device,
  @param src_ip - Source IP address
  @param grp_ip - Group IP address
 */
-switch_status_t switch_api_multicast_l2route_add(switch_device_t device,
-                                         switch_handle_t mgid_handle,
-                                         switch_handle_t vlan_handle,
-                                         const switch_ip_addr_t *src_ip,
-                                         const switch_ip_addr_t *grp_ip);
+switch_status_t switch_api_multicast_l2route_add(
+    switch_device_t device,
+    switch_handle_t mgid_handle,
+    switch_handle_t vlan_handle,
+    const switch_ip_addr_t *src_ip,
+    const switch_ip_addr_t *grp_ip);
 
 /**
  Delete an L2 (S,G) or (*, G) route entry to MFIB.
@@ -154,10 +159,11 @@ switch_status_t switch_api_multicast_l2route_add(switch_device_t device,
  @param src_ip - Source IP address
  @param grp_ip - Group IP address
 */
-switch_status_t switch_api_multicast_l2route_delete(switch_device_t device,
-                                         switch_handle_t vlan_handle,
-                                         const switch_ip_addr_t *src_ip,
-                                         const switch_ip_addr_t *grp_ip);
+switch_status_t switch_api_multicast_l2route_delete(
+    switch_device_t device,
+    switch_handle_t vlan_handle,
+    const switch_ip_addr_t *src_ip,
+    const switch_ip_addr_t *grp_ip);
 
 /**
  For an L2 (S,G) or (*, G) get the multicast tree
@@ -167,13 +173,14 @@ switch_status_t switch_api_multicast_l2route_delete(switch_device_t device,
  @param grp_ip - Group IP address
  @param mgid_handle - Handle of multicast tree
 */
-switch_status_t switch_api_multicast_l2route_tree_get(switch_device_t device,
-                                        switch_handle_t vlan_handle,
-                                        const switch_ip_addr_t *src_ip,
-                                        const switch_ip_addr_t *grp_ip,
-                                        switch_handle_t *mgid_handle);
+switch_status_t switch_api_multicast_l2route_tree_get(
+    switch_device_t device,
+    switch_handle_t vlan_handle,
+    const switch_ip_addr_t *src_ip,
+    const switch_ip_addr_t *grp_ip,
+    switch_handle_t *mgid_handle);
 
-/** @} */ // end of mcast API
+/** @} */  // end of mcast API
 
 #ifdef __cplusplus
 }

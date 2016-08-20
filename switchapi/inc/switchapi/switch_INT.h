@@ -23,33 +23,28 @@ limitations under the License.
 extern "C" {
 #endif /* __cplusplus */
 
-#define INT_INS_MASK_VALID_BITS     0xFF00
+#define INT_INS_MASK_VALID_BITS 0xFF00
 
-switch_status_t
-switch_int_transit_enable(switch_device_t device, int32_t switch_id, int32_t enable);
+switch_status_t switch_int_transit_enable(switch_device_t device,
+                                          int32_t switch_id,
+                                          int32_t enable);
 
-switch_status_t
-switch_int_src_enable(switch_device_t device, int32_t switch_id,
-            switch_ip_addr_t *src,
-            switch_ip_addr_t *dst,
-            uint8_t max_hop, uint16_t ins_mask
-            );
-switch_status_t
-switch_int_src_disable(switch_device_t device,
-            switch_ip_addr_t *src,
-            switch_ip_addr_t *dst
-            );
-switch_status_t
-switch_int_sink_enable(switch_device_t device,
-            switch_ip_addr_t *dst,
-            int32_t mirror_id
-            );
-switch_status_t
-switch_int_sink_disable(switch_device_t device,
-            switch_ip_addr_t *dst
-            );
+switch_status_t switch_int_src_enable(switch_device_t device,
+                                      int32_t switch_id,
+                                      switch_ip_addr_t *src,
+                                      switch_ip_addr_t *dst,
+                                      uint8_t max_hop,
+                                      uint16_t ins_mask);
+switch_status_t switch_int_src_disable(switch_device_t device,
+                                       switch_ip_addr_t *src,
+                                       switch_ip_addr_t *dst);
+switch_status_t switch_int_sink_enable(switch_device_t device,
+                                       switch_ip_addr_t *dst,
+                                       int32_t mirror_id);
+switch_status_t switch_int_sink_disable(switch_device_t device,
+                                        switch_ip_addr_t *dst);
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
-#endif // _SWITCH_INT_H_
+#endif  /* __cplusplus */
+#endif  // _SWITCH_INT_H_

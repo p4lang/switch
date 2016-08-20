@@ -24,8 +24,8 @@ limitations under the License.
 extern "C" {
 #endif /* __cplusplus */
 
-switch_status_t
-switch_api_set_deflect_on_drop (switch_device_t device, bool dod);
+switch_status_t switch_api_set_deflect_on_drop(switch_device_t device,
+                                               bool dod);
 
 #ifdef __cplusplus
 }

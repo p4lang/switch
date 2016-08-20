@@ -26,16 +26,16 @@ extern "C" {
 
 /** Nexthop type */
 typedef enum switch_nhop_index_type_ {
-    SWITCH_NHOP_INDEX_TYPE_NONE,
-    SWITCH_NHOP_INDEX_TYPE_ONE_PATH,
-    SWITCH_NHOP_INDEX_TYPE_ECMP
+  SWITCH_NHOP_INDEX_TYPE_NONE,
+  SWITCH_NHOP_INDEX_TYPE_ONE_PATH,
+  SWITCH_NHOP_INDEX_TYPE_ECMP
 } switch_nhop_index_type_t;
 
 /** Nexthop Key */
 typedef struct switch_nhop_key_ {
-    switch_handle_t intf_handle;          /**< interface handle */
-    switch_ip_addr_t ip_addr;             /**< ip address */
-    bool ip_addr_valid;                   /**< ip address valid */
+  switch_handle_t intf_handle; /**< interface handle */
+  switch_ip_addr_t ip_addr;    /**< ip address */
+  bool ip_addr_valid;          /**< ip address valid */
 } switch_nhop_key_t;
 
 /**
@@ -43,7 +43,8 @@ typedef struct switch_nhop_key_ {
  @param device - device to program the nexthop
  @param nhop_key- Interface to be associated with the nexthop and nexthop ip
 */
-switch_handle_t switch_api_nhop_create(switch_device_t device, switch_nhop_key_t *nhop_key);
+switch_handle_t switch_api_nhop_create(switch_device_t device,
+                                       switch_nhop_key_t *nhop_key);
 
 /**
  Update a Nexthop
@@ -51,16 +52,18 @@ switch_handle_t switch_api_nhop_create(switch_device_t device, switch_nhop_key_t
  @param handle - handle of the next hop to update
  @param nhop_key - nhop key with new info
 */
-switch_status_t switch_api_nhop_set(switch_device_t device, switch_handle_t handle,
+switch_status_t switch_api_nhop_set(switch_device_t device,
+                                    switch_handle_t handle,
                                     switch_nhop_key_t *nhop_key);
 
 /**
  Get attributes of a Nexthop
  @param device - device to program the nexthop
- @param handle - handle of the next hop to get 
- @param [out]nhop_key - pointer to the attribute obj 
+ @param handle - handle of the next hop to get
+ @param [out]nhop_key - pointer to the attribute obj
 */
-switch_status_t switch_api_nhop_get(switch_device_t device, switch_handle_t handle,
+switch_status_t switch_api_nhop_get(switch_device_t device,
+                                    switch_handle_t handle,
                                     switch_nhop_key_t **nhop_key);
 
 /**
@@ -68,7 +71,8 @@ switch_status_t switch_api_nhop_get(switch_device_t device, switch_handle_t hand
  @param device device on which to create nhop group
  @param nhop_handle - Handle that identifies nexthop uniquely
 */
-switch_status_t switch_api_nhop_delete(switch_device_t device, switch_handle_t nhop_handle);
+switch_status_t switch_api_nhop_delete(switch_device_t device,
+                                       switch_handle_t nhop_handle);
 
 /**
  Create a ECMP Group
@@ -80,7 +84,8 @@ switch_handle_t switch_api_ecmp_create(switch_device_t device);
  Delete a ECMP Group
  @param ecmp_handle - Handle that identifies ECMP group uniquely
 */
-switch_status_t switch_api_ecmp_delete(switch_device_t device, switch_handle_t ecmp_handle);
+switch_status_t switch_api_ecmp_delete(switch_device_t device,
+                                       switch_handle_t ecmp_handle);
 
 /**
  Add nexthop member to ecmp group
@@ -89,8 +94,10 @@ switch_status_t switch_api_ecmp_delete(switch_device_t device, switch_handle_t e
  @param nhop_count - number of nexthops
  @param nhop_handle_list - List of nexthops to be added to the ECMP Group
 */
-switch_status_t switch_api_ecmp_member_add(switch_device_t device, switch_handle_t ecmp_handle,
-                                           uint16_t nhop_count, switch_handle_t *nhop_handle_list);
+switch_status_t switch_api_ecmp_member_add(switch_device_t device,
+                                           switch_handle_t ecmp_handle,
+                                           uint16_t nhop_count,
+                                           switch_handle_t *nhop_handle_list);
 
 /**
  Delete nexthop member from ecmp group
@@ -99,16 +106,21 @@ switch_status_t switch_api_ecmp_member_add(switch_device_t device, switch_handle
  @param nhop_count - number of nexthops
  @param nhop_handle_list - List of nexthops to be added to the ECMP Group
 */
-switch_status_t switch_api_ecmp_member_delete(switch_device_t device, switch_handle_t ecmp_handle,
-                                              uint16_t nhop_count, switch_handle_t *nhop_handle_list);
+switch_status_t switch_api_ecmp_member_delete(
+    switch_device_t device,
+    switch_handle_t ecmp_handle,
+    uint16_t nhop_count,
+    switch_handle_t *nhop_handle_list);
 
 /*
  Create ECMP Group along with the members.
  @param member_count - Number of nexthops
  @param nhop_handle - List of nexthops to be added to ECMP group
 */
-switch_handle_t switch_api_ecmp_create_with_members(switch_device_t device, uint32_t member_count,
-                                            switch_handle_t *nhop_handle);
+switch_handle_t switch_api_ecmp_create_with_members(
+    switch_device_t device,
+    uint32_t member_count,
+    switch_handle_t *nhop_handle);
 
 /*
  Return nexthop handle from (intf_handle, ip address)
