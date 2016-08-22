@@ -45,14 +45,14 @@ extern "C" {
 
 #define ETH_LEN 6
 
-#define switch_malloc(x, c) malloc(x * c)
+#define switch_malloc(x, c) malloc(x *c)
 #define switch_free(x) free(x)
 #define switch_realloc(x, sz) realloc(x, sz)
 
 #define HANDLE_TYPE_SHIFT 27
 
 #define handle_to_id(x) (x & 0x3FFFFFF)
-#define id_to_handle(t,x) (t << HANDLE_TYPE_SHIFT | (x))
+#define id_to_handle(t, x) (t << HANDLE_TYPE_SHIFT | (x))
 
 typedef int switch_status_t;
 typedef uint16_t switch_vlan_t;
@@ -70,23 +70,23 @@ typedef uint16_t switch_rid_t;
 
 /** Direction - ingress, egress or both */
 typedef enum {
-    SWITCH_API_DIRECTION_BOTH,           /**< Ingress and Egress directions */
-    SWITCH_API_DIRECTION_INGRESS,        /**< Ingress Only */
-    SWITCH_API_DIRECTION_EGRESS          /**< Egress Only */
+  SWITCH_API_DIRECTION_BOTH,    /**< Ingress and Egress directions */
+  SWITCH_API_DIRECTION_INGRESS, /**< Ingress Only */
+  SWITCH_API_DIRECTION_EGRESS   /**< Egress Only */
 } switch_direction_t;
 
 /** 128 bit field */
 typedef struct uint128_t {
-    union {
-        uint8_t  addr8[16];              /** 16x8bit */
-        uint16_t addr16[8];              /** 8x16bit */
-        uint32_t addr32[4];              /** 4x32bit */
-    } u;                                 /**< union */
-} uint128_t;                             /**< 128-bit value */
+  union {
+    uint8_t addr8[16];  /** 16x8bit */
+    uint16_t addr16[8]; /** 8x16bit */
+    uint32_t addr32[4]; /** 4x32bit */
+  } u;                  /**< union */
+} uint128_t;            /**< 128-bit value */
 
 /** Mac address declaration for use in API */
 typedef struct switch_mac_addr {
-    uint8_t mac_addr[ETH_LEN];       /**< 6 bytes of mac address */
+  uint8_t mac_addr[ETH_LEN]; /**< 6 bytes of mac address */
 } switch_mac_addr_t;
 
 /* init */
@@ -95,42 +95,42 @@ int start_switch_api_packet_driver(void);
 
 /** IP address type v4 or v6 */
 typedef enum {
-   SWITCH_API_IP_ADDR_V4,                 /**< IPv4 address type */
-   SWITCH_API_IP_ADDR_V6                  /**< IPv6 address type */
+  SWITCH_API_IP_ADDR_V4, /**< IPv4 address type */
+  SWITCH_API_IP_ADDR_V6  /**< IPv6 address type */
 } switch_ip_addr_type_t;
 
 /** IP address - v4 and v6 with type */
 typedef struct switch_ip_addr_ {
-    switch_ip_addr_type_t type;          /**< IPv4 or IPv6 */
-    union {
-        unsigned int v4addr;         /**< IPv4 address */
-        uint8_t v6addr[16];          /**< IPv6 address */
-    } ip;                            /**< detail based on type */
-    unsigned int prefix_len;         /**< prefix length on interface */
+  switch_ip_addr_type_t type; /**< IPv4 or IPv6 */
+  union {
+    unsigned int v4addr;   /**< IPv4 address */
+    uint8_t v6addr[16];    /**< IPv6 address */
+  } ip;                    /**< detail based on type */
+  unsigned int prefix_len; /**< prefix length on interface */
 } switch_ip_addr_t;
 
 #define SWITCH_IFINDEX_PORT_WIDTH 9
 
 /** Ifindex type */
 typedef enum switch_ifindex_type_ {
-    SWITCH_IFINDEX_TYPE_VLAN_INTERFACE = 1,
-    SWITCH_IFINDEX_TYPE_LAG = 2,
-    SWITCH_IFINDEX_TYPE_TUNNEL = 3,
-    SWITCH_IFINDEX_TYPE_CPU = 4,
-    SWITCH_IFINDEX_TYPE_MAX = 128
+  SWITCH_IFINDEX_TYPE_VLAN_INTERFACE = 1,
+  SWITCH_IFINDEX_TYPE_LAG = 2,
+  SWITCH_IFINDEX_TYPE_TUNNEL = 3,
+  SWITCH_IFINDEX_TYPE_CPU = 4,
+  SWITCH_IFINDEX_TYPE_MAX = 128
 } switch_ifinedx_type_t;
 
 /** counter info */
 typedef struct switch_counter_ {
-    uint64_t num_packets;           /**< number of packets */
-    uint64_t num_bytes;             /**< number of bytes */
+  uint64_t num_packets; /**< number of packets */
+  uint64_t num_bytes;   /**< number of bytes */
 } switch_counter_t;
 
 typedef enum switch_packet_type_ {
-    SWITCH_PACKET_TYPE_UNICAST = 1,
-    SWITCH_PACKET_TYPE_MULTICAST = 2,
-    SWITCH_PACKET_TYPE_BROADCAST = 4,
-    SWITCH_PACKET_TYPE_MAX = SWITCH_PACKET_TYPE_BROADCAST
+  SWITCH_PACKET_TYPE_UNICAST = 1,
+  SWITCH_PACKET_TYPE_MULTICAST = 2,
+  SWITCH_PACKET_TYPE_BROADCAST = 4,
+  SWITCH_PACKET_TYPE_MAX = SWITCH_PACKET_TYPE_BROADCAST
 } switch_packet_type_t;
 
 #ifdef __cplusplus

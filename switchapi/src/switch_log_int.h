@@ -24,26 +24,26 @@ void switch_log_init();
 
 extern switch_api_log_fn_t *switch_api_client_log_fn;
 
-#define SWITCH_API_ERROR(...) \
-    if (switch_api_client_log_fn) \
-        switch_api_client_log_fn(SWITCH_API_LOG_ERROR, __VA_ARGS__);
+#define SWITCH_API_ERROR(...)   \
+  if (switch_api_client_log_fn) \
+    switch_api_client_log_fn(SWITCH_API_LOG_ERROR, __VA_ARGS__);
 
-#define SWITCH_API_WARN(...) \
-    if (switch_api_client_log_fn) \
-        switch_api_client_log_fn(SWITCH_API_LOG_WARN, __VA_ARGS__);
+#define SWITCH_API_WARN(...)    \
+  if (switch_api_client_log_fn) \
+    switch_api_client_log_fn(SWITCH_API_LOG_WARN, __VA_ARGS__);
 
-#define SWITCH_API_INFO(...) \
-    if (switch_api_client_log_fn) \
-        switch_api_client_log_fn(SWITCH_API_LOG_INFO, __VA_ARGS__);
+#define SWITCH_API_INFO(...)    \
+  if (switch_api_client_log_fn) \
+    switch_api_client_log_fn(SWITCH_API_LOG_INFO, __VA_ARGS__);
 
 #define SWITCH_API_VERBOSE(...) \
-    if (switch_api_client_log_fn) \
-        switch_api_client_log_fn(SWITCH_API_LOG_VERBOSE, __VA_ARGS__);
+  if (switch_api_client_log_fn) \
+    switch_api_client_log_fn(SWITCH_API_LOG_VERBOSE, __VA_ARGS__);
 
-#define SWITCH_API_TRACE(...) \
-    if (switch_api_client_log_fn) \
-        switch_api_client_log_fn(SWITCH_API_LOG_TRACE, __VA_ARGS__);
+#define SWITCH_API_TRACE(...)   \
+  if (switch_api_client_log_fn) \
+    switch_api_client_log_fn(SWITCH_API_LOG_TRACE, __VA_ARGS__);
 
-char * switch_print_error(switch_status_t status);
+char *switch_print_error(switch_status_t status);
 
 #endif /*_SWITCH_LOG_INT_H_ */

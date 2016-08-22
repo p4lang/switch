@@ -26,48 +26,48 @@ limitations under the License.
 
 #ifdef __cplusplus
 extern "C" {
-#endif /* __cplusplus */
+#endif                                     /* __cplusplus */
 /** @defgroup Meters Meters Switching API
  *  API functions listed to configure meters
  *  @{
- */ // begin of meters
- // meters
+ */  // begin of meters
+                                           // meters
 
 /** Meter mode */
 typedef enum switch_meter_mode_ {
-    SWITCH_METER_MODE_NONE,                          /**< none */
-    SWITCH_METER_MODE_TWO_RATE_THREE_COLOR,          /**< two rate, three color */
-    SWITCH_METER_MODE_STORM_CONTROL                  /**< storm control */
+  SWITCH_METER_MODE_NONE,                 /**< none */
+  SWITCH_METER_MODE_TWO_RATE_THREE_COLOR, /**< two rate, three color */
+  SWITCH_METER_MODE_STORM_CONTROL         /**< storm control */
 } switch_meter_mode_t;
 
 /** Meter color mode */
 typedef enum switch_meter_color_source_ {
-    SWITCH_METER_COLOR_SOURCE_NONE,                  /**< none */
-    SWITCH_METER_COLOR_SOURCE_BLIND,                 /**< color blind */
-    SWITCH_METER_COLOR_SOURCE_AWARE                  /**< color source */
+  SWITCH_METER_COLOR_SOURCE_NONE,  /**< none */
+  SWITCH_METER_COLOR_SOURCE_BLIND, /**< color blind */
+  SWITCH_METER_COLOR_SOURCE_AWARE  /**< color source */
 } switch_meter_color_source_t;
 
 /** Meter type */
 typedef enum switch_meter_type_ {
-    SWITCH_METER_TYPE_NONE = 0,
-    SWITCH_METER_TYPE_PACKETS = 1,
-    SWITCH_METER_TYPE_BYTES = 2,
+  SWITCH_METER_TYPE_NONE = 0,
+  SWITCH_METER_TYPE_PACKETS = 1,
+  SWITCH_METER_TYPE_BYTES = 2,
 } switch_meter_type_t;
 
 /** Meter color */
 typedef enum switch_meter_color_ {
-    SWITCH_METER_COLOR_GREEN,
-    SWITCH_METER_COLOR_YELLOW,
-    SWITCH_METER_COLOR_RED,
-    SWITCH_METER_COLOR_MAX
+  SWITCH_METER_COLOR_GREEN,
+  SWITCH_METER_COLOR_YELLOW,
+  SWITCH_METER_COLOR_RED,
+  SWITCH_METER_COLOR_MAX
 } switch_meter_color_t;
 
 /** Meter stats */
 typedef enum switch_meter_stats_ {
-    SWITCH_METER_STATS_GREEEN,
-    SWITCH_METER_STATS_YELLOW,
-    SWITCH_METER_STATS_RED,
-    SWITCH_METER_STATS_MAX
+  SWITCH_METER_STATS_GREEEN,
+  SWITCH_METER_STATS_YELLOW,
+  SWITCH_METER_STATS_RED,
+  SWITCH_METER_STATS_MAX
 } switch_meter_stats_t;
 
 /** committed burst size */
@@ -83,15 +83,15 @@ typedef uint64_t switch_cir_t;
 typedef uint64_t switch_pir_t;
 
 /** Meter attributes */
-typedef struct switch_api_meter_{
-    switch_meter_mode_t meter_mode;                            /**< meter mode */
-    switch_meter_color_source_t color_source;                  /**< color source */
-    switch_meter_type_t meter_type;                            /**< meter type */
-    switch_cbs_t cbs;                                          /**< committed burst size */
-    switch_pbs_t pbs;                                          /**< peak burst size */
-    switch_cir_t cir;                                          /**< committed information rate */
-    switch_pir_t pir;                                          /**< peak information rate */
-    switch_acl_action_t action[SWITCH_METER_COLOR_MAX];        /**< packet action */
+typedef struct switch_api_meter_ {
+  switch_meter_mode_t meter_mode;           /**< meter mode */
+  switch_meter_color_source_t color_source; /**< color source */
+  switch_meter_type_t meter_type;           /**< meter type */
+  switch_cbs_t cbs;                         /**< committed burst size */
+  switch_pbs_t pbs;                         /**< peak burst size */
+  switch_cir_t cir;                         /**< committed information rate */
+  switch_pir_t pir;                         /**< peak information rate */
+  switch_acl_action_t action[SWITCH_METER_COLOR_MAX]; /**< packet action */
 } switch_api_meter_t;
 
 /**
@@ -128,14 +128,13 @@ switch_status_t switch_api_meter_delete(switch_device_t device,
  @param counter_ids meter counter ids
  @param counters counter values
  */
-switch_status_t
-switch_api_meter_stats_get(switch_device_t device,
-                          switch_handle_t meter_handle,
-                          uint8_t count,
-                          switch_meter_stats_t *counter_ids,
-                          switch_counter_t *counters);
+switch_status_t switch_api_meter_stats_get(switch_device_t device,
+                                           switch_handle_t meter_handle,
+                                           uint8_t count,
+                                           switch_meter_stats_t *counter_ids,
+                                           switch_counter_t *counters);
 
-/** @} */ // end of meter
+/** @} */  // end of meter
 
 #ifdef __cplusplus
 }

@@ -26,7 +26,7 @@ extern "C" {
 /** @defgroup RMAC Router MAC API
  *  API functions define and manipulate router mac groups
  *  @{
- */ // begin of Router MAC API
+ */  // begin of Router MAC API
 
 /**
  Create a router mac group
@@ -42,7 +42,8 @@ switch_handle_t switch_api_router_mac_group_create(switch_device_t device);
  @param device Device to be programmed
  @param rmac_handle - Rmac group to be deleted.
  */
-switch_status_t switch_api_router_mac_group_delete(switch_device_t device, switch_handle_t rmac_handle);
+switch_status_t switch_api_router_mac_group_delete(switch_device_t device,
+                                                   switch_handle_t rmac_handle);
 
 /**
  Add a mac to router mac group
@@ -50,7 +51,9 @@ switch_status_t switch_api_router_mac_group_delete(switch_device_t device, switc
  @param rmac_handle - ID of the RMAC group
  @param mac - Router mac address to be added to the group
  */
-switch_status_t switch_api_router_mac_add(switch_device_t device, switch_handle_t rmac_handle, switch_mac_addr_t *mac);
+switch_status_t switch_api_router_mac_add(switch_device_t device,
+                                          switch_handle_t rmac_handle,
+                                          switch_mac_addr_t *mac);
 
 /**
  Delete a mac from router mac group
@@ -58,28 +61,32 @@ switch_status_t switch_api_router_mac_add(switch_device_t device, switch_handle_
  @param rmac_handle - ID of the RMAC group
  @param mac - Router mac address to be removed from the group
  */
-switch_status_t switch_api_router_mac_delete(switch_device_t device, switch_handle_t rmac_handle, switch_mac_addr_t *mac);
+switch_status_t switch_api_router_mac_delete(switch_device_t device,
+                                             switch_handle_t rmac_handle,
+                                             switch_mac_addr_t *mac);
 
 /**
  Set router mac handle for L3 Interface
  @param intf_handle - Interface handle
  @param value - Value of router mac handle
  */
-switch_status_t switch_api_interface_router_mac_handle_set(switch_handle_t intf_handle, uint64_t value);
+switch_status_t switch_api_interface_router_mac_handle_set(
+    switch_handle_t intf_handle, uint64_t value);
 
 /**
  Set router mac handle for L3 Interface
  @param intf_handle - Interface handle
  @param value - Value of router mac handle
  */
-switch_status_t switch_api_interface_router_mac_handle_get(switch_handle_t intf_handle, uint64_t *value);
+switch_status_t switch_api_interface_router_mac_handle_get(
+    switch_handle_t intf_handle, uint64_t *value);
 
 /**
  Dump router mac group table
  */
 switch_status_t switch_api_router_mac_group_print_all(void);
 
-/** @} */ // end of Router MAC API
+/** @} */  // end of Router MAC API
 #ifdef __cplusplus
 }
 #endif

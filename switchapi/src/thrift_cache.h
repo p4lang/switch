@@ -32,4 +32,4 @@ namespace thrift_provider = p4::thrift;
 #include <thrift/transport/TBufferTransports.h>
 
 namespace thrift_provider = apache::thrift;
-#endif // P4THRIFT
+#endif  // P4THRIFT

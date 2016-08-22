@@ -24,17 +24,17 @@ limitations under the License.
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-    
+
 /** Switch information */
 typedef struct switch_capability_info_ {
-    switch_api_capability_t api_switch_info;
-    switch_mac_addr_t router_mac;                    /**< system router mac */
-    bool oper_status;                                /**< operational status */
-    switch_ecmp_hash_fields_t ecmp_hash;             /**< system hash */
-    switch_handle_t default_vrf_handle;              
-    switch_handle_t default_vlan_handle;
-    switch_handle_t rmac_handle;
-    uint16_t smac_index;
+  switch_api_capability_t api_switch_info;
+  switch_mac_addr_t router_mac;        /**< system router mac */
+  bool oper_status;                    /**< operational status */
+  switch_ecmp_hash_fields_t ecmp_hash; /**< system hash */
+  switch_handle_t default_vrf_handle;
+  switch_handle_t default_vlan_handle;
+  switch_handle_t rmac_handle;
+  uint16_t smac_index;
 } switch_capability_info_t;
 
 switch_status_t switch_capability_init(switch_device_t device);

@@ -20,15 +20,15 @@ limitations under the License.
 #include <switchapi/switch_status.h>
 
 typedef enum switch_api_log_levels_ {
-    SWITCH_API_LOG_NONE = 0,
-    SWITCH_API_LOG_ERROR,
-    SWITCH_API_LOG_WARN,
-    SWITCH_API_LOG_INFO,
-    SWITCH_API_LOG_VERBOSE,
-    SWITCH_API_LOG_TRACE,
+  SWITCH_API_LOG_NONE = 0,
+  SWITCH_API_LOG_ERROR,
+  SWITCH_API_LOG_WARN,
+  SWITCH_API_LOG_INFO,
+  SWITCH_API_LOG_VERBOSE,
+  SWITCH_API_LOG_TRACE,
 } switch_api_log_level_t;
 
-typedef int (switch_api_log_fn_t)(switch_api_log_level_t level, char *fmt, ...);
+typedef int(switch_api_log_fn_t)(switch_api_log_level_t level, char *fmt, ...);
 void switch_api_log_function_set(switch_api_log_fn_t *log_fn);
 
 #endif /* _SWITCH_LOG_H_ */

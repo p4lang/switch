@@ -17,12 +17,12 @@ limitations under the License.
 #ifndef __SWITCHLINK_ROUTE_H__
 #define __SWITCHLINK_ROUTE_H__
 
-extern void
-route_create(switchlink_handle_t vrf_h, switchlink_ip_addr_t *dst,
-             switchlink_ip_addr_t *gateway, switchlink_handle_t ecmp_h,
-             switchlink_handle_t intf_h);
+extern void route_create(switchlink_handle_t vrf_h,
+                         switchlink_ip_addr_t *dst,
+                         switchlink_ip_addr_t *gateway,
+                         switchlink_handle_t ecmp_h,
+                         switchlink_handle_t intf_h);
 
-extern void
-route_delete(switchlink_handle_t vrf_h, switchlink_ip_addr_t *dst);
+extern void route_delete(switchlink_handle_t vrf_h, switchlink_ip_addr_t *dst);
 
 #endif /* __SWITCHLINK_ROUTE_H__ */

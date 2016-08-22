@@ -23,12 +23,12 @@ limitations under the License.
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-    
-uint32_t MurmurHash2 (const void * key, size_t len, uint32_t seed);
+
+uint32_t MurmurHash2(const void *key, size_t len, uint32_t seed);
 
 /* API to get version of the library */
-const char * switch_get_version(void);
-const char * switch_get_internal_version(void);
+const char *switch_get_version(void);
+const char *switch_get_internal_version(void);
 
 #ifdef __cplusplus
 }

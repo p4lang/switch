@@ -23,122 +23,117 @@ limitations under the License.
 #ifdef P4_INT_TRANSIT_ENABLE
 static void *switch_int_proto_entry_handles = NULL;
 
-static bool
-switch_int_entry_hdl_get(switch_device_t device, p4_pd_entry_hdl_t *hdl)
-{
+static bool switch_int_entry_hdl_get(switch_device_t device,
+                                     p4_pd_entry_hdl_t *hdl) {
+  void *temp = NULL;
+  // check if already created
+  JLG(temp, switch_int_proto_entry_handles, device);
+  if (temp) {
+    *hdl = (p4_pd_entry_hdl_t) * (p4_pd_entry_hdl_t *)temp;
+    return true;
+  }
+  return false;
+}
+#endif
+
+switch_status_t switch_int_transit_enable(switch_device_t device,
+                                          int32_t switch_id,
+                                          int32_t enable) {
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
+#ifdef P4_INT_TRANSIT_ENABLE
+  p4_pd_entry_hdl_t entry_hdl;
+  if (enable) {
     void *temp = NULL;
     // check if already created
-    JLG(temp, switch_int_proto_entry_handles, device);
-    if(temp) {
-        *hdl = (p4_pd_entry_hdl_t)*(p4_pd_entry_hdl_t *)temp;
-        return true;
+    if (switch_int_entry_hdl_get(device, &entry_hdl)) {
+      return SWITCH_STATUS_ITEM_ALREADY_EXISTS;
     }
-    return false;
-}
-#endif
-
-switch_status_t
-switch_int_transit_enable(switch_device_t device, int32_t switch_id, int32_t enable)
-{
-    switch_status_t  status = SWITCH_STATUS_SUCCESS;
-#ifdef P4_INT_TRANSIT_ENABLE
-    p4_pd_entry_hdl_t entry_hdl;
-    if (enable) {
-        void *temp = NULL;
-        // check if already created
-        if (switch_int_entry_hdl_get(device, &entry_hdl)) {
-            return SWITCH_STATUS_ITEM_ALREADY_EXISTS;
-        }
-        // use the lowest priority entry for transit
-        status = switch_pd_int_transit_enable(device, switch_id, 1, &entry_hdl);
-        if (status == SWITCH_STATUS_SUCCESS) {
-            JLI(temp, switch_int_proto_entry_handles, device);
-            if(!temp) {
-                return SWITCH_STATUS_NO_MEMORY;
-            }
-            *(p4_pd_entry_hdl_t *)temp = entry_hdl;
-        }
-    } else {
-        // disable
-        int rc;
-        if (!switch_int_entry_hdl_get(device, &entry_hdl)) {
-            return SWITCH_STATUS_ITEM_NOT_FOUND;
-        }
-        status = switch_pd_int_transit_disable(device, entry_hdl);
-        if (status == SWITCH_STATUS_SUCCESS) {
-            JLD(rc, switch_int_proto_entry_handles, device);
-        }
+    // use the lowest priority entry for transit
+    status = switch_pd_int_transit_enable(device, switch_id, 1, &entry_hdl);
+    if (status == SWITCH_STATUS_SUCCESS) {
+      JLI(temp, switch_int_proto_entry_handles, device);
+      if (!temp) {
+        return SWITCH_STATUS_NO_MEMORY;
+      }
+      *(p4_pd_entry_hdl_t *)temp = entry_hdl;
     }
+  } else {
+    // disable
+    int rc;
+    if (!switch_int_entry_hdl_get(device, &entry_hdl)) {
+      return SWITCH_STATUS_ITEM_NOT_FOUND;
+    }
+    status = switch_pd_int_transit_disable(device, entry_hdl);
+    if (status == SWITCH_STATUS_SUCCESS) {
+      JLD(rc, switch_int_proto_entry_handles, device);
+    }
+  }
 #else
-    (void)device, (void)switch_id, (void)enable;
+  (void)device, (void)switch_id, (void)enable;
 #endif
-    return status;
+  return status;
 }
 
-switch_status_t
-switch_int_src_enable(switch_device_t device, int32_t switch_id,
-            switch_ip_addr_t *src,
-            switch_ip_addr_t *dst,
-            uint8_t max_hop, uint16_t ins_mask
-            )
-{
-    switch_status_t  status = SWITCH_STATUS_SUCCESS;
+switch_status_t switch_int_src_enable(switch_device_t device,
+                                      int32_t switch_id,
+                                      switch_ip_addr_t *src,
+                                      switch_ip_addr_t *dst,
+                                      uint8_t max_hop,
+                                      uint16_t ins_mask) {
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
 #ifdef P4_INT_EP_ENABLE
-    p4_pd_entry_hdl_t entry_hdl;
-    status = switch_pd_int_src_enable(device, switch_id,
-                                        src, dst,
-                                        max_hop, ins_mask,
-                                        0, &entry_hdl, false/*vtep_src*/);
-    // INT and VTEP src together is not supported yet
+  p4_pd_entry_hdl_t entry_hdl;
+  status = switch_pd_int_src_enable(device,
+                                    switch_id,
+                                    src,
+                                    dst,
+                                    max_hop,
+                                    ins_mask,
+                                    0,
+                                    &entry_hdl,
+                                    false /*vtep_src*/);
+// INT and VTEP src together is not supported yet
 #else
-    (void)device, (void)switch_id,
-    (void) src, (void) dst,
-    (void) max_hop, (void) ins_mask;
+  (void)device, (void)switch_id, (void)src, (void)dst, (void)max_hop,
+      (void)ins_mask;
 #endif
-    return status;
+  return status;
 }
 
-switch_status_t
-switch_int_src_disable(switch_device_t device,
-            switch_ip_addr_t *src,
-            switch_ip_addr_t *dst)
-{
-    switch_status_t  status = SWITCH_STATUS_SUCCESS;
+switch_status_t switch_int_src_disable(switch_device_t device,
+                                       switch_ip_addr_t *src,
+                                       switch_ip_addr_t *dst) {
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
 #ifdef P4_INT_EP_ENABLE
-    // TBD
+// TBD
 #else
-    (void)device, (void)dst, (void)src, (void)dst;
+  (void)device, (void)dst, (void)src, (void)dst;
 #endif
-    return status;
+  return status;
 }
 
-switch_status_t
-switch_int_sink_enable(switch_device_t device,
-            switch_ip_addr_t *dst,
-            int32_t mirror_id
-            )
-{
-    switch_status_t  status = SWITCH_STATUS_SUCCESS;
+switch_status_t switch_int_sink_enable(switch_device_t device,
+                                       switch_ip_addr_t *dst,
+                                       int32_t mirror_id) {
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
 #ifdef P4_INT_EP_ENABLE
-    p4_pd_entry_hdl_t entry_hdl;
-    status = switch_pd_int_sink_enable(device, dst,
-            mirror_id,
-            0, &entry_hdl, true/*use_client_ip*/);
-    // INT sink based on tunnel IP is not supported yet.
+  p4_pd_entry_hdl_t entry_hdl;
+  status = switch_pd_int_sink_enable(
+      device, dst, mirror_id, 0, &entry_hdl, true /*use_client_ip*/);
+// INT sink based on tunnel IP is not supported yet.
 #else
-    (void)device, (void)dst, (void)mirror_id;
+  (void)device, (void)dst, (void)mirror_id;
 #endif
-    return status;
+  return status;
 }
 
-switch_status_t
-switch_int_sink_disable(switch_device_t device, switch_ip_addr_t *dst)
-{
-    switch_status_t  status = SWITCH_STATUS_SUCCESS;
+switch_status_t switch_int_sink_disable(switch_device_t device,
+                                        switch_ip_addr_t *dst) {
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
 #ifdef P4_INT_EP_ENABLE
-    // TBD
+// TBD
 #else
-    (void)device, (void)dst;
+  (void)device, (void)dst;
 #endif
-    return status;
+  return status;
 }

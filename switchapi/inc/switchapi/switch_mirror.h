@@ -42,41 +42,41 @@ typedef unsigned int switch_mirror_id_t;
 
 /** Mirror Session Type */
 typedef enum {
-    SWITCH_MIRROR_SESSION_TYPE_SIMPLE,      /**< Simple Mirror session */
-    SWITCH_MIRROR_SESSION_TYPE_TRUNCATE,    /**< Truncate packet in session */
-    SWITCH_MIRROR_SESSION_TYPE_COALESCE     /**< Coalesce mirrorred packets */
+  SWITCH_MIRROR_SESSION_TYPE_SIMPLE,   /**< Simple Mirror session */
+  SWITCH_MIRROR_SESSION_TYPE_TRUNCATE, /**< Truncate packet in session */
+  SWITCH_MIRROR_SESSION_TYPE_COALESCE  /**< Coalesce mirrorred packets */
 } switch_mirror_session_type_t;
 
 /** Mirror Type */
 typedef enum {
-    SWITCH_MIRROR_TYPE_NONE = 0,            /**< None */
-    SWITCH_MIRROR_TYPE_LOCAL = 1,           /**< Local */
-    SWITCH_MIRROR_TYPE_REMOTE = 2,          /**< RSPAN */
-    SWITCH_MIRROR_TYPE_ENHANCED_REMOTE = 3  /**< ERSPAN */
+  SWITCH_MIRROR_TYPE_NONE = 0,           /**< None */
+  SWITCH_MIRROR_TYPE_LOCAL = 1,          /**< Local */
+  SWITCH_MIRROR_TYPE_REMOTE = 2,         /**< RSPAN */
+  SWITCH_MIRROR_TYPE_ENHANCED_REMOTE = 3 /**< ERSPAN */
 } switch_mirror_type_t;
 
 /** Mirror Session Info */
 typedef struct switch_api_mirror_info_ {
-    switch_mirror_type_t mirror_type;           /**< Mirror type */
-    switch_mirror_id_t session_id;              /**< Session id */
-    switch_mirror_session_type_t session_type;  /**< Session type */
-    switch_handle_t egress_port;                /**< Egress port */
-    switch_direction_t direction;               /**< Direction - tx/rx */
-    switch_cos_t cos;                           /**< VLAN CoS */
-    switch_vlan_t vlan_id;                      /**< VLAN ID */
-    uint16_t vlan_tpid;                         /**< VLAN Ethertype */
-    uint8_t vlan_priority;                      /**< VLAN priority */
-    bool tunnel_create;                         /**< Create tunnel? */
-    bool vlan_create;                           /**< Create VLAN? */
-    switch_encap_type_t encap_type;             /**< Encap type */
-    switch_tunnel_info_t tunnel_info;           /**< Tunnel info */
-    switch_mac_addr_t src_mac;                  /**< Source MAC */
-    switch_mac_addr_t dst_mac;                  /**< Destination MAC */
-    uint32_t max_pkt_len;                       /**< Max packet length */
-    switch_handle_t nhop_handle;                /**< Nexthop handle */
-    bool enable;                                /**< Enable? */
-    uint32_t extract_len;                       /**< Extract len */
-    uint32_t timeout_usec;                      /**< Timeout in micro secs */
+  switch_mirror_type_t mirror_type;          /**< Mirror type */
+  switch_mirror_id_t session_id;             /**< Session id */
+  switch_mirror_session_type_t session_type; /**< Session type */
+  switch_handle_t egress_port;               /**< Egress port */
+  switch_direction_t direction;              /**< Direction - tx/rx */
+  switch_cos_t cos;                          /**< VLAN CoS */
+  switch_vlan_t vlan_id;                     /**< VLAN ID */
+  uint16_t vlan_tpid;                        /**< VLAN Ethertype */
+  uint8_t vlan_priority;                     /**< VLAN priority */
+  bool tunnel_create;                        /**< Create tunnel? */
+  bool vlan_create;                          /**< Create VLAN? */
+  switch_encap_type_t encap_type;            /**< Encap type */
+  switch_tunnel_info_t tunnel_info;          /**< Tunnel info */
+  switch_mac_addr_t src_mac;                 /**< Source MAC */
+  switch_mac_addr_t dst_mac;                 /**< Destination MAC */
+  uint32_t max_pkt_len;                      /**< Max packet length */
+  switch_handle_t nhop_handle;               /**< Nexthop handle */
+  bool enable;                               /**< Enable? */
+  uint32_t extract_len;                      /**< Extract len */
+  uint32_t timeout_usec;                     /**< Timeout in micro secs */
 } switch_api_mirror_info_t;
 
 /**
@@ -92,7 +92,7 @@ typedef struct switch_api_mirror_info_ {
 /**
  * ID for negative mirror session
  */
-#define SWITCH_NEGATIVE_MIRROR_SESSION_ID  1015
+#define SWITCH_NEGATIVE_MIRROR_SESSION_ID 1015
 
 /**
  Create a mirror sesion
@@ -100,8 +100,8 @@ typedef struct switch_api_mirror_info_ {
  @param api_mirror_info parameters of mirror session
 */
 
-switch_handle_t switch_api_mirror_session_create(switch_device_t device,
-                                                 switch_api_mirror_info_t *api_mirror_info);
+switch_handle_t switch_api_mirror_session_create(
+    switch_device_t device, switch_api_mirror_info_t *api_mirror_info);
 
 /**
  Update a mirror sesion
@@ -109,9 +109,10 @@ switch_handle_t switch_api_mirror_session_create(switch_device_t device,
  @param mirror_handle mirror handle
  @param api_mirror_info parameters of mirror session
 */
-switch_status_t switch_api_mirror_session_update(switch_device_t device,
-                                                 switch_handle_t mirror_handle,
-                                                 switch_api_mirror_info_t *api_mirror_info);
+switch_status_t switch_api_mirror_session_update(
+    switch_device_t device,
+    switch_handle_t mirror_handle,
+    switch_api_mirror_info_t *api_mirror_info);
 /**
  Delete the mirror session
  @param device device
@@ -138,7 +139,7 @@ switch_status_t switch_mirror_nhop_create(switch_device_t device,
 switch_status_t switch_mirror_nhop_delete(switch_device_t device,
                                           switch_handle_t mirror_handle);
 
-/** @} */ // end of Mirror API
+/** @} */  // end of Mirror API
 
 #ifdef __cplusplus
 }
