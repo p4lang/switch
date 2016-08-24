@@ -105,15 +105,16 @@ static switch_status_t switch_l3_hash_key_decode(switch_l3_hash_t *hash_entry,
   uint8_t len = 0;
 
   memset(ip_addr, 0, sizeof(switch_ip_addr_t));
-  *vrf_handle = id_to_handle(SWITCH_HANDLE_TYPE_VRF,
-                             *(unsigned int *)(&hash_entry->key[len]));
+  unsigned int hash_key = 0;
+  memcpy(&hash_key, &hash_entry->key[len], 4);
+  *vrf_handle = id_to_handle(SWITCH_HANDLE_TYPE_VRF, hash_key);
   len += 4;
 
   ip_addr->type = hash_entry->key[len];
   len += 1;
 
   if (ip_addr->type == SWITCH_API_IP_ADDR_V4) {
-    ip_addr->ip.v4addr = *(unsigned int *)(&hash_entry->key[len]);
+    memcpy(&(ip_addr->ip.v4addr), &hash_entry->key[len], 4);
     len += 4;
   } else {
     memcpy(ip_addr->ip.v6addr, &hash_entry->key[len], 16);

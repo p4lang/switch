@@ -101,7 +101,7 @@ static inline int switch_mcast_rid_hash_cmp(const void *key1,
   return memcmp(key1, key2, SWITCH_MCAST_RID_HASH_KEY_SIZE);
 }
 
-static switch_mcast_rid_t *switch_mcast_rid_insert_hash(
+switch_mcast_rid_t *switch_mcast_rid_insert_hash(
     switch_mcast_rid_key_t *rid_key) {
   switch_mcast_rid_t *rid_info = NULL;
   unsigned char key[SWITCH_MCAST_RID_HASH_KEY_SIZE];
@@ -119,7 +119,7 @@ static switch_mcast_rid_t *switch_mcast_rid_insert_hash(
   return rid_info;
 }
 
-static switch_status_t switch_mcast_rid_delete_hash(
+switch_status_t switch_mcast_rid_delete_hash(
     switch_mcast_rid_key_t *rid_key) {
   switch_mcast_rid_t *rid_info = NULL;
   unsigned char key[SWITCH_MCAST_RID_HASH_KEY_SIZE];
@@ -136,7 +136,7 @@ static switch_status_t switch_mcast_rid_delete_hash(
   return SWITCH_STATUS_SUCCESS;
 }
 
-static switch_mcast_rid_t *switch_mcast_rid_search_hash(
+switch_mcast_rid_t *switch_mcast_rid_search_hash(
     switch_mcast_rid_key_t *rid_key, bool *inner_replica) {
   switch_mcast_rid_t *rid_info = NULL;
   switch_bd_info_t *bd_info = NULL;
