@@ -18,7 +18,7 @@ from ptf.testutils import *
 from ptf.thriftutils import *
 
 from switch_api_thrift.ttypes import  *
-from switchapi_thrift.switch_api_headers import  *
+from switch_api_thrift.switch_api_headers import  *
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(this_dir, '..'))

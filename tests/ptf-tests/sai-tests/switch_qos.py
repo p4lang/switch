@@ -16,7 +16,7 @@
 Thrift SAI interface basic tests
 """
 
-import switchsai_thrift
+import switch_sai_thrift
 
 import time
 import sys
@@ -33,11 +33,12 @@ from ptf.thriftutils import *
 
 import os
 
-from switchsai_thrift.ttypes import  *
-from switchsai_thrift.sai_headers import  *
+from switch_sai_thrift.ttypes import  *
+from switch_sai_thrift.sai_headers import  *
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.join(this_dir, '..', '..', 'base'))
+sys.path.append(os.path.join(this_dir, '..'))
+from common.utils import *
 from common.sai_utils import *
 
 from erspan3 import *

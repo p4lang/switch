@@ -2,7 +2,7 @@
 Thrift API interface ACL tests
 """
 
-import switchapi_thrift
+import switch_api_thrift
 
 import time
 import sys
@@ -21,16 +21,14 @@ from ptf.thriftutils import *
 
 import os
 
-from switchapi_thrift.ttypes import  *
-from switchapi_thrift.switch_api_headers import  *
+from switch_api_thrift.ttypes import  *
+from switch_api_thrift.switch_api_headers import  *
 
 from erspan3 import *
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
-
-sys.path.append(os.path.join(this_dir, '../../base'))
+sys.path.append(os.path.join(this_dir, '..'))
 from common.utils import *
-
 
 device=0
 cpu_port=64

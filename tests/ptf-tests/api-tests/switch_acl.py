@@ -33,7 +33,7 @@ from ptf.thriftutils import *
 
 import os
 from switch_api_thrift.ttypes import  *
-from switchapi_thrift.switch_api_headers import  *
+from switch_api_thrift.switch_api_headers import  *
 
 from erspan3 import *
 
