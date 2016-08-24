@@ -33,6 +33,7 @@ from ptf.thriftutils import *
 
 import os
 from switch_api_thrift.ttypes import  *
+from switchapi_thrift.switch_api_headers import  *
 
 from erspan3 import *
 
@@ -54,13 +55,13 @@ class IPAclTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(0, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if1 = self.client.switcht_api_interface_create(0, i_info1)
         i_ip1 = switcht_ip_addr_t(ipaddr='192.168.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(0, if1, vrf, i_ip1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(0, i_info2)
         i_ip2 = switcht_ip_addr_t(ipaddr='10.0.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(0, if2, vrf, i_ip2)
@@ -73,7 +74,7 @@ class IPAclTest(api_base_tests.ThriftInterfaceDataPlane):
                                                  interface_handle=if2,
                                                  mac_addr='00:11:22:33:44:55',
                                                  ip_addr=i_ip3,
-                                                 rw_type=1)
+                                                 rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor = self.client.switcht_api_neighbor_entry_add(0, neighbor_entry)
         self.client.switcht_api_l3_route_add(0, vrf, i_ip3, nhop)
 
@@ -104,7 +105,7 @@ class IPAclTest(api_base_tests.ThriftInterfaceDataPlane):
         kvp = []
         kvp_val = switcht_acl_value_t(value_num=int("0a0a0a01", 16))
         kvp_mask = switcht_acl_value_t(value_num=int("ffffffff", 16))
-        kvp.append(switcht_acl_key_value_pair_t(1, kvp_val, kvp_mask))
+        kvp.append(switcht_acl_key_value_pair_t(SWITCH_ACL_IP_FIELD_IPV4_DEST, kvp_val, kvp_mask))
         action = 1
         action_params = switcht_acl_action_params_t(redirect = switcht_acl_action_redirect(handle = 0))
         opt_action_params = switcht_acl_opt_action_params_t()
@@ -156,13 +157,13 @@ class MirrorAclTest_i2e(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(0, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if1 = self.client.switcht_api_interface_create(0, i_info1)
         i_ip1 = switcht_ip_addr_t(ipaddr='192.168.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(0, if1, vrf, i_ip1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(0, i_info2)
         i_ip2 = switcht_ip_addr_t(ipaddr='10.0.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(0, if2, vrf, i_ip2)
@@ -175,7 +176,7 @@ class MirrorAclTest_i2e(api_base_tests.ThriftInterfaceDataPlane):
                                                  interface_handle=if2,
                                                  mac_addr='00:11:22:33:44:55',
                                                  ip_addr=i_ip3,
-                                                 rw_type=1)
+                                                 rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor = self.client.switcht_api_neighbor_entry_add(0, neighbor_entry)
         self.client.switcht_api_l3_route_add(0, vrf, i_ip3, nhop)
 
@@ -214,7 +215,7 @@ class MirrorAclTest_i2e(api_base_tests.ThriftInterfaceDataPlane):
         kvp = []
         kvp_val = switcht_acl_value_t(value_num=int("0a0a0a01", 16))
         kvp_mask = switcht_acl_value_t(value_num=int("ffffffff", 16))
-        kvp.append(switcht_acl_key_value_pair_t(1, kvp_val, kvp_mask))
+        kvp.append(switcht_acl_key_value_pair_t(SWITCH_ACL_IP_FIELD_IPV4_DEST, kvp_val, kvp_mask))
         action = 9
         action_params = switcht_acl_action_params_t()
         opt_action_params = switcht_acl_opt_action_params_t(mirror_handle=mirror1)
@@ -303,13 +304,13 @@ class MirrorAclTest_e2e(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(0, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if1 = self.client.switcht_api_interface_create(0, i_info1)
         i_ip1 = switcht_ip_addr_t(ipaddr='192.168.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(0, if1, vrf, i_ip1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(0, i_info2)
         i_ip2 = switcht_ip_addr_t(ipaddr='10.0.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(0, if2, vrf, i_ip2)
@@ -322,7 +323,7 @@ class MirrorAclTest_e2e(api_base_tests.ThriftInterfaceDataPlane):
                                                  interface_handle=if2,
                                                  mac_addr='00:11:22:33:44:55',
                                                  ip_addr=i_ip3,
-                                                 rw_type=1)
+                                                 rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor = self.client.switcht_api_neighbor_entry_add(0, neighbor_entry)
         self.client.switcht_api_l3_route_add(0, vrf, i_ip3, nhop)
 
@@ -357,11 +358,11 @@ class MirrorAclTest_e2e(api_base_tests.ThriftInterfaceDataPlane):
         kvp = []
         kvp_val = switcht_acl_value_t(value_num=swports[2])
         kvp_mask = switcht_acl_value_t(value_num=0xff)
-        kvp.append(switcht_acl_key_value_pair_t(0, kvp_val, kvp_mask))
+        kvp.append(switcht_acl_key_value_pair_t(SWITCH_ACL_IP_FIELD_IPV4_SRC, kvp_val, kvp_mask))
         #kvp.append(switcht_acl_egr_key_value_pair_t(field=0, value=2, mask=-1))
         kvp_val = switcht_acl_value_t(value_num=0)
         kvp_mask = switcht_acl_value_t(value_num=0xff)
-        kvp.append(switcht_acl_key_value_pair_t(1, kvp_val, kvp_mask))
+        kvp.append(switcht_acl_key_value_pair_t(SWITCH_ACL_IP_FIELD_IPV4_DEST, kvp_val, kvp_mask))
         #kvp.append(switcht_acl_egr_key_value_pair_t(field=1, value=0, mask=-1))
         action = 1
         action_params = switcht_acl_action_params_t()
@@ -427,13 +428,13 @@ class MirrorAclTest_i2e_erspan(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(0, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if1 = self.client.switcht_api_interface_create(0, i_info1)
         i_ip1 = switcht_ip_addr_t(ipaddr='192.168.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(0, if1, vrf, i_ip1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(0, i_info2)
         i_ip2 = switcht_ip_addr_t(ipaddr='10.0.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(0, if2, vrf, i_ip2)
@@ -446,7 +447,7 @@ class MirrorAclTest_i2e_erspan(api_base_tests.ThriftInterfaceDataPlane):
                                                  interface_handle=if2,
                                                  mac_addr='00:11:22:33:44:55',
                                                  ip_addr=i_ip3,
-                                                 rw_type=1)
+                                                 rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor = self.client.switcht_api_neighbor_entry_add(0, neighbor_entry)
         self.client.switcht_api_l3_route_add(0, vrf, i_ip3, nhop)
 
@@ -468,14 +469,14 @@ class MirrorAclTest_i2e_erspan(api_base_tests.ThriftInterfaceDataPlane):
                                 ip_ttl=63)
 
         iu4 = interface_union(port_lag_handle = 4)
-        i_info4 = switcht_interface_info_t(device=0, type=4, u=iu4, mac='00:44:44:44:44:44', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info4 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu4, mac='00:44:44:44:44:44', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if4 = self.client.switcht_api_interface_create(0, i_info4)
         i_ip4 = switcht_ip_addr_t(ipaddr='10.0.0.4', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(0, if4, vrf, i_ip4)
 
         # Create an ERSPAN tunnel interface
-        src_ip = switcht_ip_addr_t(addr_type=0, ipaddr='4.4.4.1', prefix_length=32)
-        dst_ip = switcht_ip_addr_t(addr_type=0, ipaddr='4.4.4.3', prefix_length=32)
+        src_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='4.4.4.1', prefix_length=32)
+        dst_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='4.4.4.3', prefix_length=32)
         encap_info = switcht_encap_info_t(encap_type=7)
         ip_encap =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip, dst_ip=dst_ip, ttl=60, proto=47)
         tunnel_encap = switcht_tunnel_encap_t(ip_encap=ip_encap)
@@ -497,7 +498,8 @@ class MirrorAclTest_i2e_erspan(api_base_tests.ThriftInterfaceDataPlane):
                                                   interface_handle=ift,
                                                   mac_addr='00:44:44:44:44:44',
                                                   ip_addr=src_ip,
-                                                  rw_type=0, neigh_type=7)
+                                                  rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2,
+                                                  neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         neighbor1 = self.client.switcht_api_neighbor_entry_add(0, neighbor_entry1)
 
         neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=0,
@@ -507,9 +509,10 @@ class MirrorAclTest_i2e_erspan(api_base_tests.ThriftInterfaceDataPlane):
         neighbor2 = self.client.switcht_api_neighbor_entry_add(0, neighbor_entry2)
 
         # create a mirror session
-        minfo1 = switcht_mirror_info_t(session_id=85, direction=1,
-                                      egress_port=swports[4], mirror_type=3,
-                                      session_type=0,
+        minfo1 = switcht_mirror_info_t(session_id=85, direction=SWITCH_API_DIRECTION_INGRESS,
+                                      egress_port=swports[4],
+                                      mirror_type=SWITCH_MIRROR_TYPE_ENHANCED_REMOTE,
+                                      session_type=SWITCH_MIRROR_SESSION_TYPE_SIMPLE,
                                       cos=0, max_pkt_len=0,
                                       ttl=0, enable=1, nhop_handle=nhop1)
         mirror1 = self.client.switcht_api_mirror_session_create(0, minfo1)
@@ -520,7 +523,7 @@ class MirrorAclTest_i2e_erspan(api_base_tests.ThriftInterfaceDataPlane):
         kvp = []
         kvp_val = switcht_acl_value_t(value_num=int("0a0a0a01", 16))
         kvp_mask = switcht_acl_value_t(value_num=int("ffffffff", 16))
-        kvp.append(switcht_acl_key_value_pair_t(1, kvp_val, kvp_mask))
+        kvp.append(switcht_acl_key_value_pair_t(SWITCH_ACL_IP_FIELD_IPV4_DEST, kvp_val, kvp_mask))
         action = 9
         action_params = switcht_acl_action_params_t()
         opt_action_params = switcht_acl_opt_action_params_t(mirror_handle=mirror1)
@@ -583,7 +586,6 @@ class MirrorAclTest_i2e_erspan(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_group_delete(0, rmac)
         self.client.switcht_api_vrf_delete(0, vrf)
 
-
 ###############################################################################
 @group('acl')
 class IPAclStatsTest(api_base_tests.ThriftInterfaceDataPlane):
@@ -597,13 +599,13 @@ class IPAclStatsTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(0, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if1 = self.client.switcht_api_interface_create(0, i_info1)
         i_ip1 = switcht_ip_addr_t(ipaddr='192.168.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(0, if1, vrf, i_ip1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(0, i_info2)
         i_ip2 = switcht_ip_addr_t(ipaddr='10.0.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(0, if2, vrf, i_ip2)
@@ -616,7 +618,7 @@ class IPAclStatsTest(api_base_tests.ThriftInterfaceDataPlane):
                                                  interface_handle=if2,
                                                  mac_addr='00:11:22:33:44:55',
                                                  ip_addr=i_ip3,
-                                                 rw_type=1)
+                                                 rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor = self.client.switcht_api_neighbor_entry_add(0, neighbor_entry)
         self.client.switcht_api_l3_route_add(0, vrf, i_ip3, nhop)
 
@@ -626,7 +628,7 @@ class IPAclStatsTest(api_base_tests.ThriftInterfaceDataPlane):
         kvp = []
         kvp_val1 = switcht_acl_value_t(value_num=int("0a0a0a01", 16))
         kvp_mask1 = switcht_acl_value_t(value_num=int("ffffffff", 16))
-        kvp.append(switcht_acl_key_value_pair_t(1, kvp_val1, kvp_mask1))
+        kvp.append(switcht_acl_key_value_pair_t(SWITCH_ACL_IP_FIELD_IPV4_DEST, kvp_val1, kvp_mask1))
         action = 2
         action_params = switcht_acl_action_params_t(redirect = switcht_acl_action_redirect(handle = 0))
         opt_action_params = switcht_acl_opt_action_params_t(counter_handle = counter)
@@ -636,7 +638,7 @@ class IPAclStatsTest(api_base_tests.ThriftInterfaceDataPlane):
         kvp = []
         kvp_val2 = switcht_acl_value_t(value_num=int("0a0a0a02", 16))
         kvp_mask2 = switcht_acl_value_t(value_num=int("ffffffff", 16))
-        kvp.append(switcht_acl_key_value_pair_t(1, kvp_val2, kvp_mask2))
+        kvp.append(switcht_acl_key_value_pair_t(SWITCH_ACL_IP_FIELD_IPV4_DEST, kvp_val2, kvp_mask2))
         action = 1
         action_params = switcht_acl_action_params_t(redirect = switcht_acl_action_redirect(handle = 0))
         opt_action_params = switcht_acl_opt_action_params_t(counter_handle = counter)
@@ -697,7 +699,7 @@ class IPAclStatsTest(api_base_tests.ThriftInterfaceDataPlane):
                 num_bytes += pktlen
                 num_packets += 1
 
-            verify_no_other_packets(self, timeout=10)
+            verify_no_other_packets(self, timeout=30)
             stats = self.client.switcht_api_acl_stats_get(0, counter)
             print stats
             self.assertEqual(stats.num_packets, num_packets)

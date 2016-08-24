@@ -533,7 +533,6 @@ class L2VxlanTunnelTest(pd_base_tests.ThriftInterfaceDataPlane):
         try:
             send_packet(self, 1, str(pkt1))
             verify_packets(self, vxlan_pkt1, [2])
-
             send_packet(self, 2, str(vxlan_pkt2))
             verify_packets(self, pkt2, [1])
         finally:

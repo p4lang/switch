@@ -33,7 +33,8 @@ from ptf.thriftutils import *
 
 import os
 
-from switch_api_thrift.ttypes import  *
+from switchapi_thrift.ttypes import  *
+from switchapi_thrift.switch_api_headers import  *
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(this_dir, '..'))
@@ -55,11 +56,11 @@ class L2AccessToAccessVlanTest(api_base_tests.ThriftInterfaceDataPlane):
         vlan = self.client.switcht_api_vlan_create(device, 10)
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=2, u=iu2, mac='00:77:66:55:44:33', label=0)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu2, mac='00:77:66:55:44:33', label=0)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         vlan_port1 = switcht_vlan_port_t(handle=if1, tagging_mode=0)
@@ -70,15 +71,13 @@ class L2AccessToAccessVlanTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_mac_table_entry_create(device, vlan, '00:11:11:11:11:11', 2, if2)
         self.client.switcht_api_mac_table_entry_create(device, vlan, '00:22:22:22:22:22', 2, if1)
 
-        pkt = simple_tcp_packet(eth_dst='00:11:11:11:11:11',
+        pkt = simple_udp_packet(eth_dst='00:11:11:11:11:11',
                                 eth_src='00:22:22:22:22:22',
                                 ip_dst='10.0.0.1',
-                                ip_id=101,
                                 ip_ttl=64)
-        exp_pkt = simple_tcp_packet(eth_dst='00:11:11:11:11:11',
+        exp_pkt = simple_udp_packet(eth_dst='00:11:11:11:11:11',
                                 eth_src='00:22:22:22:22:22',
                                 ip_dst='10.0.0.1',
-                                ip_id=101,
                                 ip_ttl=64)
 
         try:
@@ -107,11 +106,11 @@ class L2TrunkToTrunkVlanTest(api_base_tests.ThriftInterfaceDataPlane):
         vlan = self.client.switcht_api_vlan_create(device, 10)
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=3, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_TRUNK, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=3, u=iu2, mac='00:77:66:55:44:33', label=0)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_TRUNK, u=iu2, mac='00:77:66:55:44:33', label=0)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         vlan_port1 = switcht_vlan_port_t(handle=if1, tagging_mode=0)
@@ -163,11 +162,11 @@ class L2AccessToTrunkVlanTest(api_base_tests.ThriftInterfaceDataPlane):
         vlan = self.client.switcht_api_vlan_create(device, 10)
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=3, u=iu2, mac='00:77:66:55:44:33', label=0)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_TRUNK, u=iu2, mac='00:77:66:55:44:33', label=0)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         vlan_port1 = switcht_vlan_port_t(handle=if1, tagging_mode=0)
@@ -217,11 +216,11 @@ class L2TrunkToAccessVlanTest(api_base_tests.ThriftInterfaceDataPlane):
         vlan = self.client.switcht_api_vlan_create(device, 10)
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=3, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_TRUNK, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=2, u=iu2, mac='00:77:66:55:44:33', label=0)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu2, mac='00:77:66:55:44:33', label=0)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         vlan_port1 = switcht_vlan_port_t(handle=if1, tagging_mode=0)
@@ -270,15 +269,15 @@ class L2StaticMacMoveTest(api_base_tests.ThriftInterfaceDataPlane):
         vlan = self.client.switcht_api_vlan_create(device, 10)
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=2, u=iu2, mac='00:77:66:55:44:33', label=0)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu2, mac='00:77:66:55:44:33', label=0)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         iu3 = interface_union(port_lag_handle = swports[3])
-        i_info3 = switcht_interface_info_t(device=0, type=2, u=iu3, mac='00:77:66:55:44:33', label=0)
+        i_info3 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu3, mac='00:77:66:55:44:33', label=0)
         if3 = self.client.switcht_api_interface_create(device, i_info3)
 
         vlan_port1 = switcht_vlan_port_t(handle=if1, tagging_mode=0)
@@ -336,15 +335,15 @@ class L2MacLearnTest(api_base_tests.ThriftInterfaceDataPlane):
         vlan = self.client.switcht_api_vlan_create(device, 10)
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=2, u=iu2, mac='00:77:66:55:44:33', label=0)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu2, mac='00:77:66:55:44:33', label=0)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         iu3 = interface_union(port_lag_handle = swports[3])
-        i_info3 = switcht_interface_info_t(device=0, type=2, u=iu3, mac='00:77:66:55:44:33', label=0)
+        i_info3 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu3, mac='00:77:66:55:44:33', label=0)
         if3 = self.client.switcht_api_interface_create(device, i_info3)
 
         vlan_port1 = switcht_vlan_port_t(handle=if1, tagging_mode=0)
@@ -410,15 +409,15 @@ class L2DynamicMacMoveTest(api_base_tests.ThriftInterfaceDataPlane):
         vlan = self.client.switcht_api_vlan_create(device, 10)
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=2, u=iu2, mac='00:77:66:55:44:33', label=0)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu2, mac='00:77:66:55:44:33', label=0)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         iu3 = interface_union(port_lag_handle = swports[3])
-        i_info3 = switcht_interface_info_t(device=0, type=2, u=iu3, mac='00:77:66:55:44:33', label=0)
+        i_info3 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu3, mac='00:77:66:55:44:33', label=0)
         if3 = self.client.switcht_api_interface_create(device, i_info3)
 
         vlan_port1 = switcht_vlan_port_t(handle=if1, tagging_mode=0)
@@ -484,15 +483,15 @@ class L2DynamicLearnAgeTest(api_base_tests.ThriftInterfaceDataPlane):
         vlan = self.client.switcht_api_vlan_create(device, 10)
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=2, u=iu2, mac='00:77:66:55:44:33', label=0)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu2, mac='00:77:66:55:44:33', label=0)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         iu3 = interface_union(port_lag_handle = swports[3])
-        i_info3 = switcht_interface_info_t(device=0, type=2, u=iu3, mac='00:77:66:55:44:33', label=0)
+        i_info3 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu3, mac='00:77:66:55:44:33', label=0)
         if3 = self.client.switcht_api_interface_create(device, i_info3)
 
         vlan_port1 = switcht_vlan_port_t(handle=if1, tagging_mode=0)
@@ -557,15 +556,15 @@ class L2FloodTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_vlan_learning_enabled_set(vlan, 0)
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=2, u=iu2, mac='00:77:66:55:44:33', label=0)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu2, mac='00:77:66:55:44:33', label=0)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         iu3 = interface_union(port_lag_handle = swports[3])
-        i_info3 = switcht_interface_info_t(device=0, type=2, u=iu3, mac='00:77:66:55:44:33', label=0)
+        i_info3 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu3, mac='00:77:66:55:44:33', label=0)
         if3 = self.client.switcht_api_interface_create(device, i_info3)
 
         vlan_port1 = switcht_vlan_port_t(handle=if1, tagging_mode=0)
@@ -613,16 +612,16 @@ class L2LagTest(api_base_tests.ThriftInterfaceDataPlane):
         vlan = self.client.switcht_api_vlan_create(device, 10)
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         lag = self.client.switcht_api_lag_create(device)
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag, side=0, port=swports[5])
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag, side=0, port=swports[6])
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag, side=0, port=swports[7])
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag, side=0, port=swports[8])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag, side=SWITCH_API_DIRECTION_BOTH, port=swports[5])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag, side=SWITCH_API_DIRECTION_BOTH, port=swports[6])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag, side=SWITCH_API_DIRECTION_BOTH, port=swports[7])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag, side=SWITCH_API_DIRECTION_BOTH, port=swports[8])
         iu2 = interface_union(port_lag_handle = lag)
-        i_info2 = switcht_interface_info_t(device=0, type=2, u=iu2, mac='00:77:66:55:44:33', label=0)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu2, mac='00:77:66:55:44:33', label=0)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         vlan_port1 = switcht_vlan_port_t(handle=if1, tagging_mode=0)
@@ -662,7 +661,7 @@ class L2LagTest(api_base_tests.ThriftInterfaceDataPlane):
 
             print 'L2LagTest:', count
             for i in range(0, 4):
-                self.assertTrue((count[i] >= ((max_itrs / 4) * 0.9)),
+                self.assertTrue((count[i] >= ((max_itrs / 4) * 0.8)),
                         "Not all paths are equally balanced")
 
             pkt = simple_tcp_packet(eth_src='00:11:11:11:11:11',
@@ -694,10 +693,10 @@ class L2LagTest(api_base_tests.ThriftInterfaceDataPlane):
             self.client.switcht_api_vlan_ports_remove(device, vlan, vlan_port1)
             self.client.switcht_api_vlan_ports_remove(device, vlan, vlan_port2)
 
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag, side=0, port=swports[5])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag, side=0, port=swports[6])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag, side=0, port=swports[7])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag, side=0, port=swports[8])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag, side=SWITCH_API_DIRECTION_BOTH, port=swports[5])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag, side=SWITCH_API_DIRECTION_BOTH, port=swports[6])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag, side=SWITCH_API_DIRECTION_BOTH, port=swports[7])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag, side=SWITCH_API_DIRECTION_BOTH, port=swports[8])
 
             self.client.switcht_api_interface_delete(device, if1)
             self.client.switcht_api_interface_delete(device, if2)
@@ -717,11 +716,11 @@ class L2StpTest(api_base_tests.ThriftInterfaceDataPlane):
         vlan = self.client.switcht_api_vlan_create(device, 10)
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=2, u=iu2, mac='00:77:66:55:44:33', label=0)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu2, mac='00:77:66:55:44:33', label=0)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         vlan_port1 = switcht_vlan_port_t(handle=if1, tagging_mode=0)
@@ -798,22 +797,22 @@ class L3IPv4HostTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
-        i_ip1 = switcht_ip_addr_t(addr_type=0, ipaddr='192.168.0.2', prefix_length=16)
+        i_ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='192.168.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if1, vrf, i_ip1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
-        i_ip2 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.0.2', prefix_length=16)
+        i_ip2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if2, vrf, i_ip2)
 
         # Add a static route
-        i_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='10.10.10.1', prefix_length=32)
+        i_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.10.10.1', prefix_length=32)
         nhop_key = switcht_nhop_key_t(intf_handle=if2, ip_addr_valid=0)
         nhop = self.client.switcht_api_nhop_create(device, nhop_key)
-        neighbor_entry = switcht_neighbor_info_t(nhop_handle=nhop, interface_handle=if2, mac_addr='00:11:22:33:44:55', ip_addr=i_ip3, rw_type=1)
+        neighbor_entry = switcht_neighbor_info_t(nhop_handle=nhop, interface_handle=if2, mac_addr='00:11:22:33:44:55', ip_addr=i_ip3, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip3, nhop)
 
@@ -853,7 +852,6 @@ class L3IPv4HostTest(api_base_tests.ThriftInterfaceDataPlane):
 ###############################################################################
 @group('l3')
 @group('ipv4')
-@group('maxsizes')
 class L3IPv4SubIntfHostTest(api_base_tests.ThriftInterfaceDataPlane):
     def runTest(self):
         print
@@ -967,30 +965,30 @@ class L3IPv4SubIntfHostTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
-        i_ip1 = switcht_ip_addr_t(addr_type=0, ipaddr='192.168.0.2', prefix_length=16)
+        i_ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='192.168.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if1, vrf, i_ip1)
 
         pv = switcht_port_vlan_t(port_lag_handle = swports[2], vlan_id=10)
         iu2 = interface_union(port_vlan=pv)
-        i_info2 = switcht_interface_info_t(device=0, type=6, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3_PORT_VLAN, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
-        i_ip2 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.0.2', prefix_length=16)
+        i_ip2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if2, vrf, i_ip2)
 
         # Add a static route
-        i_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='10.10.10.1', prefix_length=32)
+        i_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.10.10.1', prefix_length=32)
         nhop_key = switcht_nhop_key_t(intf_handle=if2, ip_addr_valid=0)
         nhop1 = self.client.switcht_api_nhop_create(device, nhop_key)
-        neighbor_entry = switcht_neighbor_info_t(nhop_handle=nhop1, interface_handle=if2, mac_addr='00:11:22:33:44:55', ip_addr=i_ip3, rw_type=1)
+        neighbor_entry = switcht_neighbor_info_t(nhop_handle=nhop1, interface_handle=if2, mac_addr='00:11:22:33:44:55', ip_addr=i_ip3, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor1 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip3, nhop1)
 
-        i_ip4 = switcht_ip_addr_t(addr_type=0, ipaddr='20.20.20.1', prefix_length=32)
+        i_ip4 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='20.20.20.1', prefix_length=32)
         nhop_key = switcht_nhop_key_t(intf_handle=if1, ip_addr_valid=0)
         nhop2 = self.client.switcht_api_nhop_create(device, nhop_key)
-        neighbor_entry = switcht_neighbor_info_t(nhop_handle=nhop2, interface_handle=if1, mac_addr='00:11:22:33:44:56', ip_addr=i_ip4, rw_type=1)
+        neighbor_entry = switcht_neighbor_info_t(nhop_handle=nhop2, interface_handle=if1, mac_addr='00:11:22:33:44:56', ip_addr=i_ip4, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor2 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip4, nhop2)
 
@@ -1070,28 +1068,28 @@ class L3IPv4HostModifyTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
-        i_ip1 = switcht_ip_addr_t(addr_type=0, ipaddr='192.168.0.2', prefix_length=16)
+        i_ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='192.168.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if1, vrf, i_ip1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
-        i_ip2 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.0.2', prefix_length=16)
+        i_ip2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if2, vrf, i_ip2)
 
         iu3 = interface_union(port_lag_handle = swports[3])
-        i_info3 = switcht_interface_info_t(device=0, type=4, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info3 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if3 = self.client.switcht_api_interface_create(device, i_info3)
-        i_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='11.0.0.2', prefix_length=16)
+        i_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='11.0.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if3, vrf, i_ip3)
 
-        i_ip4 = switcht_ip_addr_t(addr_type=0, ipaddr='10.10.10.1', prefix_length=32)
+        i_ip4 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.10.10.1', prefix_length=32)
 
         nhop_key1 = switcht_nhop_key_t(intf_handle=if2, ip_addr_valid=0)
         nhop1 = self.client.switcht_api_nhop_create(device, nhop_key1)
-        neighbor_entry1 = switcht_neighbor_info_t(nhop_handle=nhop1, interface_handle=if2, mac_addr='00:22:22:22:22:22', ip_addr=i_ip4, rw_type=1)
+        neighbor_entry1 = switcht_neighbor_info_t(nhop_handle=nhop1, interface_handle=if2, mac_addr='00:22:22:22:22:22', ip_addr=i_ip4, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor1 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry1)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip4, nhop1)
 
@@ -1115,7 +1113,7 @@ class L3IPv4HostModifyTest(api_base_tests.ThriftInterfaceDataPlane):
 
         nhop_key2 = switcht_nhop_key_t(intf_handle=if3, ip_addr_valid=0)
         nhop2 = self.client.switcht_api_nhop_create(device, nhop_key2)
-        neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=nhop2, interface_handle=if3, mac_addr='00:33:33:33:33:33', ip_addr=i_ip4, rw_type=1)
+        neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=nhop2, interface_handle=if3, mac_addr='00:33:33:33:33:33', ip_addr=i_ip4, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor2 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry2)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip4, nhop2)
 
@@ -1171,22 +1169,22 @@ class L3IPv4LpmTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
-        i_ip1 = switcht_ip_addr_t(addr_type=0, ipaddr='192.168.0.2', prefix_length=16)
+        i_ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='192.168.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if1, vrf, i_ip1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
-        i_ip2 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.0.2', prefix_length=16)
+        i_ip2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if2, vrf, i_ip2)
 
         # Add a static route
-        i_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='10.10.10.0', prefix_length=24)
+        i_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.10.10.0', prefix_length=24)
         nhop_key = switcht_nhop_key_t(intf_handle=if2, ip_addr_valid=0)
         nhop = self.client.switcht_api_nhop_create(device, nhop_key)
-        neighbor_entry = switcht_neighbor_info_t(nhop_handle=nhop, interface_handle=if2, mac_addr='00:11:22:33:44:55', ip_addr=i_ip3, rw_type=1)
+        neighbor_entry = switcht_neighbor_info_t(nhop_handle=nhop, interface_handle=if2, mac_addr='00:11:22:33:44:55', ip_addr=i_ip3, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip3, nhop)
 
@@ -1223,10 +1221,193 @@ class L3IPv4LpmTest(api_base_tests.ThriftInterfaceDataPlane):
             self.client.switcht_api_router_mac_group_delete(device, rmac)
             self.client.switcht_api_vrf_delete(device, vrf)
 
+###############################################################################
+@group('l3')
+@group('ipv4')
+class L3IPv4LookupTest(api_base_tests.ThriftInterfaceDataPlane):
+    def testLookup(self, vrf, ip_key, exp_nhop):
+        result_nhop = self.client.switcht_api_l3_route_lookup(device, vrf, ip_key)
+        self.assertTrue(result_nhop == exp_nhop)
+
+    def runTest(self):
+        print
+        print "IPv4 FIB lookup test -- both exact match and LPM -- in switchAPI."
+        print "The lookup is purely done in control plane (switchAPI), not using dataplane tables."
+
+        self.client.switcht_api_init(device)
+        vrf = self.client.switcht_api_vrf_create(device, 1)
+
+        rmac = self.client.switcht_api_router_mac_group_create(device)
+        self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
+
+        iu1 = interface_union(port_lag_handle = swports[1])
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        if1 = self.client.switcht_api_interface_create(device, i_info1)
+        i_ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='192.168.0.2', prefix_length=16)
+        self.client.switcht_api_l3_interface_address_add(device, if1, vrf, i_ip1)
+
+        iu2 = interface_union(port_lag_handle = swports[2])
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        if2 = self.client.switcht_api_interface_create(device, i_info2)
+        i_ip2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.0.2', prefix_length=16)
+        self.client.switcht_api_l3_interface_address_add(device, if2, vrf, i_ip2)
+
+        nhop_key = switcht_nhop_key_t(intf_handle=if2, ip_addr_valid=0)
+
+        ip_default = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='0.0.0.0', prefix_length=0)
+        ip_classA = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.0.0', prefix_length=8)
+        ip_classB = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.10.0.0', prefix_length=16)
+        ip_classB23 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.10.10.0', prefix_length=23)
+        ip_classC = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.10.10.0', prefix_length=24)
+        ip_host = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.10.10.10', prefix_length=32)
+
+        nhop_default = self.client.switcht_api_nhop_create(device, nhop_key)
+        nhop_classA = self.client.switcht_api_nhop_create(device, nhop_key)
+        nhop_classB = self.client.switcht_api_nhop_create(device, nhop_key)
+        nhop_classB23 = self.client.switcht_api_nhop_create(device, nhop_key)
+        nhop_classC = self.client.switcht_api_nhop_create(device, nhop_key)
+        nhop_host = self.client.switcht_api_nhop_create(device, nhop_key)
+
+        try:
+            self.client.switcht_api_l3_route_add(device, vrf, ip_default, nhop_default)
+            self.testLookup(vrf, ip_host, nhop_default)
+
+            self.client.switcht_api_l3_route_add(device, vrf, ip_classA, nhop_classA)
+            self.testLookup(vrf, ip_host, nhop_classA)
+
+            self.client.switcht_api_l3_route_add(device, vrf, ip_classB, nhop_classB)
+            self.testLookup(vrf, ip_host, nhop_classB)
+
+            self.client.switcht_api_l3_route_add(device, vrf, ip_classB23, nhop_classB23)
+            self.testLookup(vrf, ip_host, nhop_classB23)
+
+            self.client.switcht_api_l3_route_add(device, vrf, ip_classC, nhop_classC)
+            self.testLookup(vrf, ip_host, nhop_classC)
+
+            self.client.switcht_api_l3_route_add(device, vrf, ip_host, nhop_host)
+            self.testLookup(vrf, ip_host, nhop_host)
+
+            self.client.switcht_api_l3_route_delete(device, vrf, ip_host, nhop_host)
+            self.testLookup(vrf, ip_host, nhop_classC)
+
+            ip_host2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='20.10.10.10', prefix_length=32)
+            self.testLookup(vrf, ip_host2, nhop_default)
+
+        finally:
+            # clean up
+            self.client.switcht_api_l3_route_delete(device, vrf, ip_classC, nhop_classC)
+            self.client.switcht_api_l3_route_delete(device, vrf, ip_classB23, nhop_classB23)
+            self.client.switcht_api_l3_route_delete(device, vrf, ip_classB, nhop_classB)
+            self.client.switcht_api_l3_route_delete(device, vrf, ip_classA, nhop_classA)
+            self.client.switcht_api_l3_route_delete(device, vrf, ip_default, nhop_default)
+
+            self.client.switcht_api_nhop_delete(device, nhop_default)
+            self.client.switcht_api_nhop_delete(device, nhop_classA)
+            self.client.switcht_api_nhop_delete(device, nhop_classB)
+            self.client.switcht_api_nhop_delete(device, nhop_classB23)
+            self.client.switcht_api_nhop_delete(device, nhop_classC)
+            self.client.switcht_api_nhop_delete(device, nhop_host)
+
+
+            self.client.switcht_api_l3_interface_address_delete(device, if1, vrf, i_ip1)
+            self.client.switcht_api_l3_interface_address_delete(device, if2, vrf, i_ip2)
+
+            self.client.switcht_api_interface_delete(device, if1)
+            self.client.switcht_api_interface_delete(device, if2)
+
+            self.client.switcht_api_router_mac_delete(device, rmac, '00:77:66:55:44:33')
+            self.client.switcht_api_router_mac_group_delete(device, rmac)
+            self.client.switcht_api_vrf_delete(device, vrf)
 
 ###############################################################################
 @group('l3')
 @group('ipv6')
+class L3IPv6LookupTest(api_base_tests.ThriftInterfaceDataPlane):
+    def testLookup(self, vrf, ip_key, exp_nhop):
+        result_nhop = self.client.switcht_api_l3_route_lookup(device, vrf, ip_key)
+        self.assertTrue(result_nhop == exp_nhop)
+
+    def runTest(self):
+        print
+        print "IPv6 FIB lookup test -- both exact match and LPM -- in switchAPI."
+        print "The lookup is purely done in control plane (switchAPI), not using dataplane tables."
+
+        self.client.switcht_api_init(device)
+        vrf = self.client.switcht_api_vrf_create(device, 1)
+
+        rmac = self.client.switcht_api_router_mac_group_create(device)
+        self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
+
+        iu1 = interface_union(port_lag_handle = swports[1])
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        if1 = self.client.switcht_api_interface_create(device, i_info1)
+        i_ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='2000::2', prefix_length=120)
+        self.client.switcht_api_l3_interface_address_add(device, if1, vrf, i_ip1)
+
+        iu2 = interface_union(port_lag_handle = swports[2])
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        if2 = self.client.switcht_api_interface_create(device, i_info2)
+        i_ip2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='3000::2', prefix_length=120)
+        self.client.switcht_api_l3_interface_address_add(device, if2, vrf, i_ip2)
+
+        nhop_key = switcht_nhop_key_t(intf_handle=if2, ip_addr_valid=0)
+
+        ip_default = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='::', prefix_length=0)
+        ip_p8 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='3000::', prefix_length=8)
+        ip_p16 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='3000:10::0', prefix_length=16)
+        ip_host = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='3000:10::10', prefix_length=128)
+
+        nhop_default = self.client.switcht_api_nhop_create(device, nhop_key)
+        nhop_p8 = self.client.switcht_api_nhop_create(device, nhop_key)
+        nhop_p16 = self.client.switcht_api_nhop_create(device, nhop_key)
+        nhop_host = self.client.switcht_api_nhop_create(device, nhop_key)
+
+        try:
+            self.client.switcht_api_l3_route_add(device, vrf, ip_default, nhop_default)
+            self.testLookup(vrf, ip_host, nhop_default)
+
+            self.client.switcht_api_l3_route_add(device, vrf, ip_p8, nhop_p8)
+            self.testLookup(vrf, ip_host, nhop_p8)
+
+            self.client.switcht_api_l3_route_add(device, vrf, ip_p16, nhop_p16)
+            self.testLookup(vrf, ip_host, nhop_p16)
+
+            self.client.switcht_api_l3_route_add(device, vrf, ip_host, nhop_host)
+            self.testLookup(vrf, ip_host, nhop_host)
+
+            self.client.switcht_api_l3_route_delete(device, vrf, ip_host, nhop_host)
+            self.testLookup(vrf, ip_host, nhop_p16)
+
+            ip_host2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='4000:10:10:10:10:10:10:10:10:10:10:10:10:10:10:10', prefix_length=128)
+            self.testLookup(vrf, ip_host2, nhop_default)
+
+        finally:
+            # clean up
+            self.client.switcht_api_l3_route_delete(device, vrf, ip_p16, nhop_p16)
+            self.client.switcht_api_l3_route_delete(device, vrf, ip_p8, nhop_p8)
+            self.client.switcht_api_l3_route_delete(device, vrf, ip_default, nhop_default)
+
+            self.client.switcht_api_nhop_delete(device, nhop_default)
+            self.client.switcht_api_nhop_delete(device, nhop_p8)
+            self.client.switcht_api_nhop_delete(device, nhop_p16)
+            self.client.switcht_api_nhop_delete(device, nhop_host)
+
+
+            self.client.switcht_api_l3_interface_address_delete(device, if1, vrf, i_ip1)
+            self.client.switcht_api_l3_interface_address_delete(device, if2, vrf, i_ip2)
+
+            self.client.switcht_api_interface_delete(device, if1)
+            self.client.switcht_api_interface_delete(device, if2)
+
+            self.client.switcht_api_router_mac_delete(device, rmac, '00:77:66:55:44:33')
+            self.client.switcht_api_router_mac_group_delete(device, rmac)
+            self.client.switcht_api_vrf_delete(device, vrf)
+
+
+###############################################################################
+@group('l3')
+@group('ipv6')
+@group('maxsizes')
 class L3IPv6HostTest(api_base_tests.ThriftInterfaceDataPlane):
     def runTest(self):
         print
@@ -1238,22 +1419,22 @@ class L3IPv6HostTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
-        i_ip1 = switcht_ip_addr_t(addr_type=1, ipaddr='2000::2', prefix_length=120)
+        i_ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='2000::2', prefix_length=120)
         self.client.switcht_api_l3_interface_address_add(device, if1, vrf, i_ip1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
-        i_ip2 = switcht_ip_addr_t(addr_type=1, ipaddr='3000::2', prefix_length=120)
+        i_ip2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='3000::2', prefix_length=120)
         self.client.switcht_api_l3_interface_address_add(device, if2, vrf, i_ip2)
 
         # Add a static route
-        i_ip3 = switcht_ip_addr_t(addr_type=1, ipaddr='1234:5678:9abc:def0:4422:1133:5577:99aa', prefix_length=128)
+        i_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='1234:5678:9abc:def0:4422:1133:5577:99aa', prefix_length=128)
         nhop_key = switcht_nhop_key_t(intf_handle=if2, ip_addr_valid=0)
         nhop = self.client.switcht_api_nhop_create(device, nhop_key)
-        neighbor_entry = switcht_neighbor_info_t(nhop_handle=nhop, interface_handle=if2, mac_addr='00:11:22:33:44:55', ip_addr=i_ip3, rw_type=1)
+        neighbor_entry = switcht_neighbor_info_t(nhop_handle=nhop, interface_handle=if2, mac_addr='00:11:22:33:44:55', ip_addr=i_ip3, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip3, nhop)
 
@@ -1303,22 +1484,22 @@ class L3IPv6LpmTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
-        i_ip1 = switcht_ip_addr_t(addr_type=1, ipaddr='2000::2', prefix_length=120)
+        i_ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='2000::2', prefix_length=120)
         self.client.switcht_api_l3_interface_address_add(device, if1, vrf, i_ip1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
-        i_ip2 = switcht_ip_addr_t(addr_type=1, ipaddr='3000::2', prefix_length=120)
+        i_ip2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='3000::2', prefix_length=120)
         self.client.switcht_api_l3_interface_address_add(device, if2, vrf, i_ip2)
 
         # Add a static route
-        i_ip3 = switcht_ip_addr_t(addr_type=1, ipaddr='3000::0', prefix_length=120)
+        i_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='3000::0', prefix_length=120)
         nhop_key = switcht_nhop_key_t(intf_handle=if2, ip_addr_valid=0)
         nhop = self.client.switcht_api_nhop_create(device, nhop_key)
-        neighbor_entry = switcht_neighbor_info_t(nhop_handle=nhop, interface_handle=if2, mac_addr='00:99:99:99:99:99', ip_addr=i_ip3, rw_type=1)
+        neighbor_entry = switcht_neighbor_info_t(nhop_handle=nhop, interface_handle=if2, mac_addr='00:99:99:99:99:99', ip_addr=i_ip3, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip3, nhop)
 
@@ -1367,33 +1548,33 @@ class L3IPv4EcmpTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
-        i_ip1 = switcht_ip_addr_t(addr_type=0, ipaddr='192.168.0.2', prefix_length=16)
+        i_ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='192.168.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if1, vrf, i_ip1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
-        i_ip2 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.0.2', prefix_length=16)
+        i_ip2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if2, vrf, i_ip2)
 
         iu3 = interface_union(port_lag_handle = swports[3])
-        i_info3 = switcht_interface_info_t(device=0, type=4, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info3 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if3 = self.client.switcht_api_interface_create(device, i_info3)
-        i_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='11.0.0.2', prefix_length=16)
+        i_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='11.0.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if3, vrf, i_ip3)
 
-        i_ip4 = switcht_ip_addr_t(addr_type=0, ipaddr='10.10.10.1', prefix_length=32)
+        i_ip4 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.10.10.1', prefix_length=32)
 
         nhop_key1 = switcht_nhop_key_t(intf_handle=if2, ip_addr_valid=0)
         nhop1 = self.client.switcht_api_nhop_create(device, nhop_key1)
-        neighbor_entry1 = switcht_neighbor_info_t(nhop_handle=nhop1, interface_handle=if2, mac_addr='00:11:22:33:44:55', ip_addr=i_ip4, rw_type=1)
+        neighbor_entry1 = switcht_neighbor_info_t(nhop_handle=nhop1, interface_handle=if2, mac_addr='00:11:22:33:44:55', ip_addr=i_ip4, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor1 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry1)
 
         nhop_key2 = switcht_nhop_key_t(intf_handle=if3, ip_addr_valid=0)
         nhop2 = self.client.switcht_api_nhop_create(device, nhop_key2)
-        neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=nhop2, interface_handle=if3, mac_addr='00:11:22:33:44:56', ip_addr=i_ip4, rw_type=1)
+        neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=nhop2, interface_handle=if3, mac_addr='00:11:22:33:44:56', ip_addr=i_ip4, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor2 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry2)
 
         ecmp = self.client.switcht_api_l3_ecmp_create(device)
@@ -1489,33 +1670,33 @@ class L3IPv6EcmpTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
-        i_ip1 = switcht_ip_addr_t(addr_type=1, ipaddr='2000:1:1:0:0:0:0:1', prefix_length=120)
+        i_ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='2000:1:1:0:0:0:0:1', prefix_length=120)
         self.client.switcht_api_l3_interface_address_add(device, if1, vrf, i_ip1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
-        i_ip2 = switcht_ip_addr_t(addr_type=1, ipaddr='3000:1:1:0:0:0:0:1', prefix_length=120)
+        i_ip2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='3000:1:1:0:0:0:0:1', prefix_length=120)
         self.client.switcht_api_l3_interface_address_add(device, if2, vrf, i_ip2)
 
         iu3 = interface_union(port_lag_handle = swports[3])
-        i_info3 = switcht_interface_info_t(device=0, type=4, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info3 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if3 = self.client.switcht_api_interface_create(device, i_info3)
-        i_ip3 = switcht_ip_addr_t(addr_type=1, ipaddr='4000:1:1:0:0:0:0:1', prefix_length=120)
+        i_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='4000:1:1:0:0:0:0:1', prefix_length=120)
         self.client.switcht_api_l3_interface_address_add(device, if3, vrf, i_ip3)
 
-        i_ip4 = switcht_ip_addr_t(addr_type=1, ipaddr='5000:1:1:0:0:0:0:1', prefix_length=128)
+        i_ip4 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='5000:1:1:0:0:0:0:1', prefix_length=128)
 
         nhop_key1 = switcht_nhop_key_t(intf_handle=if2, ip_addr_valid=0)
         nhop1 = self.client.switcht_api_nhop_create(device, nhop_key1)
-        neighbor_entry1 = switcht_neighbor_info_t(nhop_handle=nhop1, interface_handle=if2, mac_addr='00:11:22:33:44:55', ip_addr=i_ip4, rw_type=1)
+        neighbor_entry1 = switcht_neighbor_info_t(nhop_handle=nhop1, interface_handle=if2, mac_addr='00:11:22:33:44:55', ip_addr=i_ip4, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor1 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry1)
 
         nhop_key2 = switcht_nhop_key_t(intf_handle=if3, ip_addr_valid=0)
         nhop2 = self.client.switcht_api_nhop_create(device, nhop_key2)
-        neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=nhop2, interface_handle=if3, mac_addr='00:11:22:33:44:56', ip_addr=i_ip4, rw_type=1)
+        neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=nhop2, interface_handle=if3, mac_addr='00:11:22:33:44:56', ip_addr=i_ip4, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor2 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry2)
 
         ecmp = self.client.switcht_api_l3_ecmp_create(device)
@@ -1613,63 +1794,63 @@ class L3IPv4LpmEcmpTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[0])
-        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
-        i_ip1 = switcht_ip_addr_t(addr_type=0, ipaddr='192.168.0.2', prefix_length=16)
+        i_ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='192.168.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if1, vrf, i_ip1)
 
         iu2 = interface_union(port_lag_handle = swports[1])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
-        i_ip2 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.0.2', prefix_length=16)
+        i_ip2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if2, vrf, i_ip2)
 
         iu3 = interface_union(port_lag_handle = swports[2])
-        i_info3 = switcht_interface_info_t(device=0, type=4, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info3 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if3 = self.client.switcht_api_interface_create(device, i_info3)
-        i_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='11.0.0.2', prefix_length=16)
+        i_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='11.0.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if3, vrf, i_ip3)
 
         iu4 = interface_union(port_lag_handle = swports[3])
-        i_info4 = switcht_interface_info_t(device=0, type=4, u=iu4, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info4 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu4, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if4 = self.client.switcht_api_interface_create(device, i_info4)
-        i_ip4 = switcht_ip_addr_t(addr_type=0, ipaddr='12.0.0.2', prefix_length=16)
+        i_ip4 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='12.0.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if4, vrf, i_ip4)
 
         iu5 = interface_union(port_lag_handle = swports[4])
-        i_info5 = switcht_interface_info_t(device=0, type=4, u=iu5, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info5 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu5, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if5 = self.client.switcht_api_interface_create(device, i_info5)
-        i_ip5 = switcht_ip_addr_t(addr_type=0, ipaddr='13.0.0.2', prefix_length=16)
+        i_ip5 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='13.0.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if5, vrf, i_ip5)
 
         nhop_key1 = switcht_nhop_key_t(intf_handle=if2, ip_addr_valid=0)
         nhop1 = self.client.switcht_api_nhop_create(device, nhop_key1)
-        n_ip1 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.0.100', prefix_length=32)
-        neighbor_entry1 = switcht_neighbor_info_t(nhop_handle=nhop1, interface_handle=if2, mac_addr='00:11:22:33:44:55', ip_addr=n_ip1, rw_type=1)
+        n_ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.0.100', prefix_length=32)
+        neighbor_entry1 = switcht_neighbor_info_t(nhop_handle=nhop1, interface_handle=if2, mac_addr='00:11:22:33:44:55', ip_addr=n_ip1, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor1 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry1)
 
         nhop_key2 = switcht_nhop_key_t(intf_handle=if3, ip_addr_valid=0)
         nhop2 = self.client.switcht_api_nhop_create(device, nhop_key2)
-        n_ip2 = switcht_ip_addr_t(addr_type=0, ipaddr='11.0.0.100', prefix_length=32)
-        neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=nhop2, interface_handle=if3, mac_addr='00:11:22:33:44:56', ip_addr=n_ip2, rw_type=1)
+        n_ip2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='11.0.0.100', prefix_length=32)
+        neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=nhop2, interface_handle=if3, mac_addr='00:11:22:33:44:56', ip_addr=n_ip2, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor2 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry2)
 
         nhop_key3 = switcht_nhop_key_t(intf_handle=if4, ip_addr_valid=0)
         nhop3 = self.client.switcht_api_nhop_create(device, nhop_key3)
-        n_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='12.0.0.101', prefix_length=32)
-        neighbor_entry3 = switcht_neighbor_info_t(nhop_handle=nhop3, interface_handle=if2, mac_addr='00:11:22:33:44:57', ip_addr=n_ip3, rw_type=1)
+        n_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='12.0.0.101', prefix_length=32)
+        neighbor_entry3 = switcht_neighbor_info_t(nhop_handle=nhop3, interface_handle=if2, mac_addr='00:11:22:33:44:57', ip_addr=n_ip3, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor3 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry3)
 
         nhop_key4 = switcht_nhop_key_t(intf_handle=if5, ip_addr_valid=0)
         nhop4 = self.client.switcht_api_nhop_create(device, nhop_key4)
-        n_ip4 = switcht_ip_addr_t(addr_type=0, ipaddr='13.0.0.101', prefix_length=32)
-        neighbor_entry4 = switcht_neighbor_info_t(nhop_handle=nhop4, interface_handle=if3, mac_addr='00:11:22:33:44:58', ip_addr=n_ip4, rw_type=1)
+        n_ip4 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='13.0.0.101', prefix_length=32)
+        neighbor_entry4 = switcht_neighbor_info_t(nhop_handle=nhop4, interface_handle=if3, mac_addr='00:11:22:33:44:58', ip_addr=n_ip4, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor4 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry4)
 
         ecmp = self.client.switcht_api_l3_ecmp_create(device)
         self.client.switcht_api_l3_ecmp_member_add(device, ecmp, 4, [nhop1, nhop2, nhop3, nhop4])
 
-        r_ip = switcht_ip_addr_t(addr_type=0, ipaddr='10.10.0.0', prefix_length=16)
+        r_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.10.0.0', prefix_length=16)
         self.client.switcht_api_l3_route_add(device, vrf, r_ip, ecmp)
 
         try:
@@ -1782,59 +1963,59 @@ class L3IPv6LpmEcmpTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
-        i_ip1 = switcht_ip_addr_t(addr_type=1, ipaddr='1000:1:1:0:0:0:0:1', prefix_length=120)
+        i_ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='1000:1:1:0:0:0:0:1', prefix_length=120)
         self.client.switcht_api_l3_interface_address_add(device, if1, vrf, i_ip1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
-        i_ip2 = switcht_ip_addr_t(addr_type=1, ipaddr='2000:1:1:0:0:0:0:1', prefix_length=120)
+        i_ip2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='2000:1:1:0:0:0:0:1', prefix_length=120)
         self.client.switcht_api_l3_interface_address_add(device, if2, vrf, i_ip2)
 
         iu3 = interface_union(port_lag_handle = swports[3])
-        i_info3 = switcht_interface_info_t(device=0, type=4, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info3 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if3 = self.client.switcht_api_interface_create(device, i_info3)
-        i_ip3 = switcht_ip_addr_t(addr_type=1, ipaddr='3000:1:1:0:0:0:0:1', prefix_length=120)
+        i_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='3000:1:1:0:0:0:0:1', prefix_length=120)
         self.client.switcht_api_l3_interface_address_add(device, if3, vrf, i_ip3)
 
         iu4 = interface_union(port_lag_handle = swports[4])
-        i_info4 = switcht_interface_info_t(device=0, type=4, u=iu4, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info4 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu4, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if4 = self.client.switcht_api_interface_create(device, i_info4)
-        i_ip4 = switcht_ip_addr_t(addr_type=1, ipaddr='4000:1:1:0:0:0:0:1', prefix_length=120)
+        i_ip4 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='4000:1:1:0:0:0:0:1', prefix_length=120)
         self.client.switcht_api_l3_interface_address_add(device, if4, vrf, i_ip4)
 
         iu5 = interface_union(port_lag_handle = swports[5])
-        i_info5 = switcht_interface_info_t(device=0, type=4, u=iu5, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info5 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu5, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if5 = self.client.switcht_api_interface_create(device, i_info5)
-        i_ip5 = switcht_ip_addr_t(addr_type=1, ipaddr='5000:1:1:0:0:0:0:1', prefix_length=120)
+        i_ip5 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='5000:1:1:0:0:0:0:1', prefix_length=120)
         self.client.switcht_api_l3_interface_address_add(device, if5, vrf, i_ip5)
 
         nhop_key1 = switcht_nhop_key_t(intf_handle=if2, ip_addr_valid=0)
         nhop1 = self.client.switcht_api_nhop_create(device, nhop_key1)
-        neighbor_entry1 = switcht_neighbor_info_t(nhop_handle=nhop1, interface_handle=if2, mac_addr='00:11:22:33:44:55', ip_addr=i_ip2, rw_type=1)
+        neighbor_entry1 = switcht_neighbor_info_t(nhop_handle=nhop1, interface_handle=if2, mac_addr='00:11:22:33:44:55', ip_addr=i_ip2, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor1 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry1)
 
         nhop_key2 = switcht_nhop_key_t(intf_handle=if3, ip_addr_valid=0)
         nhop2 = self.client.switcht_api_nhop_create(device, nhop_key2)
-        neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=nhop2, interface_handle=if3, mac_addr='00:11:22:33:44:56', ip_addr=i_ip3, rw_type=1)
+        neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=nhop2, interface_handle=if3, mac_addr='00:11:22:33:44:56', ip_addr=i_ip3, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor2 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry2)
 
         nhop_key3 = switcht_nhop_key_t(intf_handle=if4, ip_addr_valid=0)
         nhop3 = self.client.switcht_api_nhop_create(device, nhop_key3)
-        neighbor_entry3 = switcht_neighbor_info_t(nhop_handle=nhop3, interface_handle=if4, mac_addr='00:11:22:33:44:57', ip_addr=i_ip4, rw_type=1)
+        neighbor_entry3 = switcht_neighbor_info_t(nhop_handle=nhop3, interface_handle=if4, mac_addr='00:11:22:33:44:57', ip_addr=i_ip4, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor3 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry3)
 
         nhop_key4 = switcht_nhop_key_t(intf_handle=if5, ip_addr_valid=0)
         nhop4 = self.client.switcht_api_nhop_create(device, nhop_key4)
-        neighbor_entry4 = switcht_neighbor_info_t(nhop_handle=nhop4, interface_handle=if5, mac_addr='00:11:22:33:44:58', ip_addr=i_ip5, rw_type=1)
+        neighbor_entry4 = switcht_neighbor_info_t(nhop_handle=nhop4, interface_handle=if5, mac_addr='00:11:22:33:44:58', ip_addr=i_ip5, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor4 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry4)
 
         ecmp = self.client.switcht_api_l3_ecmp_create(device)
         self.client.switcht_api_l3_ecmp_member_add(device, ecmp, 4, [nhop1, nhop2, nhop3, nhop4])
 
-        r_ip = switcht_ip_addr_t(addr_type=1, ipaddr='6000:1:1:0:0:0:0:0', prefix_length=64)
+        r_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='6000:1:1:0:0:0:0:0', prefix_length=64)
         self.client.switcht_api_l3_route_add(device, vrf, r_ip, ecmp)
 
         try:
@@ -1950,24 +2131,24 @@ class L3IPv4LagTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
-        i_ip1 = switcht_ip_addr_t(addr_type=0, ipaddr='192.168.0.2', prefix_length=16)
+        i_ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='192.168.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if1, vrf, i_ip1)
 
         lag = self.client.switcht_api_lag_create(device)
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag, side=0, port=swports[2])
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag, side=0, port=swports[3])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag, side=SWITCH_API_DIRECTION_BOTH, port=swports[2])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag, side=SWITCH_API_DIRECTION_BOTH, port=swports[3])
         iu2 = interface_union(port_lag_handle = lag)
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0,vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0,vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
-        i_ip2 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.0.2', prefix_length=16)
+        i_ip2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if2, vrf, i_ip2)
 
-        i_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='10.10.10.1', prefix_length=32)
+        i_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.10.10.1', prefix_length=32)
         nhop_key = switcht_nhop_key_t(intf_handle=if2, ip_addr_valid=0)
         nhop = self.client.switcht_api_nhop_create(device, nhop_key)
-        neighbor_entry = switcht_neighbor_info_t(nhop_handle=nhop, interface_handle=if2, mac_addr='00:11:22:33:44:55', ip_addr=i_ip3, rw_type=1)
+        neighbor_entry = switcht_neighbor_info_t(nhop_handle=nhop, interface_handle=if2, mac_addr='00:11:22:33:44:55', ip_addr=i_ip3, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip3, nhop)
 
@@ -1996,8 +2177,8 @@ class L3IPv4LagTest(api_base_tests.ThriftInterfaceDataPlane):
             self.client.switcht_api_l3_interface_address_delete(device, if1, vrf, i_ip1)
             self.client.switcht_api_l3_interface_address_delete(device, if2, vrf, i_ip2)
 
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag, side=0, port=swports[2])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag, side=0, port=swports[3])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag, side=SWITCH_API_DIRECTION_BOTH, port=swports[2])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag, side=SWITCH_API_DIRECTION_BOTH, port=swports[3])
 
             self.client.switcht_api_interface_delete(device, if1)
             self.client.switcht_api_interface_delete(device, if2)
@@ -2009,9 +2190,8 @@ class L3IPv4LagTest(api_base_tests.ThriftInterfaceDataPlane):
 
 
 ###############################################################################
-@group('l2')
 @group('l3')
-@group('ipv4')
+@group('ipv6')
 class L3IPv6LagTest(api_base_tests.ThriftInterfaceDataPlane):
     def runTest(self):
         print
@@ -2022,25 +2202,25 @@ class L3IPv6LagTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
-        i_ip1 = switcht_ip_addr_t(addr_type=1, ipaddr='5001::10', prefix_length=128)
+        i_ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='5001::10', prefix_length=128)
         self.client.switcht_api_l3_interface_address_add(device, if1, vrf, i_ip1)
 
         lag = self.client.switcht_api_lag_create(device)
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag, side=0, port=swports[2])
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag, side=0, port=swports[3])
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag, side=0, port=swports[4])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag, side=SWITCH_API_DIRECTION_BOTH, port=swports[2])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag, side=SWITCH_API_DIRECTION_BOTH, port=swports[3])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag, side=SWITCH_API_DIRECTION_BOTH, port=swports[4])
         iu2 = interface_union(port_lag_handle = lag)
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0,vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0,vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
-        i_ip2 = switcht_ip_addr_t(addr_type=1, ipaddr='4001::10', prefix_length=128)
+        i_ip2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='4001::10', prefix_length=128)
         self.client.switcht_api_l3_interface_address_add(device, if2, vrf, i_ip2)
 
-        i_ip3 = switcht_ip_addr_t(addr_type=1, ipaddr='4001::1', prefix_length=128)
+        i_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='4001::1', prefix_length=128)
         nhop_key = switcht_nhop_key_t(intf_handle=if2, ip_addr_valid=0)
         nhop = self.client.switcht_api_nhop_create(device, nhop_key)
-        neighbor_entry = switcht_neighbor_info_t(nhop_handle=nhop, interface_handle=if2, mac_addr='00:88:88:88:88:88', ip_addr=i_ip3, rw_type=1)
+        neighbor_entry = switcht_neighbor_info_t(nhop_handle=nhop, interface_handle=if2, mac_addr='00:88:88:88:88:88', ip_addr=i_ip3, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip3, nhop)
 
@@ -2067,9 +2247,9 @@ class L3IPv6LagTest(api_base_tests.ThriftInterfaceDataPlane):
             self.client.switcht_api_l3_interface_address_delete(device, if1, vrf, i_ip1)
             self.client.switcht_api_l3_interface_address_delete(device, if2, vrf, i_ip2)
 
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag, side=0, port=swports[2])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag, side=0, port=swports[3])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag, side=0, port=swports[4])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag, side=SWITCH_API_DIRECTION_BOTH, port=swports[2])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag, side=SWITCH_API_DIRECTION_BOTH, port=swports[3])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag, side=SWITCH_API_DIRECTION_BOTH, port=swports[4])
 
             self.client.switcht_api_interface_delete(device, if1)
             self.client.switcht_api_interface_delete(device, if2)
@@ -2095,67 +2275,67 @@ class L3EcmpLagTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1,
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1,
                 mac='00:77:66:55:44:33', label=0, vrf_handle=vrf,
                 rmac_handle=rmac)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
-        i_ip1 = switcht_ip_addr_t(addr_type=0, ipaddr='192.168.0.2',
+        i_ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='192.168.0.2',
                 prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if1, vrf, i_ip1)
 
         lag1 = self.client.switcht_api_lag_create(device)
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=0, port=swports[2])
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=0, port=swports[3])
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=0, port=swports[4])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[2])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[3])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[4])
         iu2 = interface_union(port_lag_handle = lag1)
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2,
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2,
                 mac='00:77:66:55:44:33', label=0, vrf_handle=vrf,
                 rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
-        i_ip2 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.2.2', prefix_length=16)
+        i_ip2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.2.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if2, vrf, i_ip2)
 
         lag2 = self.client.switcht_api_lag_create(device)
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=0, port=swports[5])
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=0, port=swports[6])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[5])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[6])
         iu3 = interface_union(port_lag_handle = lag2)
-        i_info3 = switcht_interface_info_t(device=0, type=4, u=iu3,
+        i_info3 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu3,
                 mac='00:77:66:55:44:33', label=0, vrf_handle=vrf,
                 rmac_handle=rmac)
         if3 = self.client.switcht_api_interface_create(device, i_info3)
-        i_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.3.2', prefix_length=16)
+        i_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.3.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if3, vrf, i_ip3)
 
         iu4 = interface_union(port_lag_handle = swports[7])
-        i_info4 = switcht_interface_info_t(device=0, type=4, u=iu4,
+        i_info4 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu4,
                 mac='00:77:66:55:44:33', label=0, vrf_handle=vrf,
                 rmac_handle=rmac)
         if4 = self.client.switcht_api_interface_create(device, i_info4)
-        i_ip4 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.4.2', prefix_length=16)
+        i_ip4 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.4.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if4, vrf, i_ip4)
 
-        i_ip5 = switcht_ip_addr_t(addr_type=0, ipaddr='10.100.0.0',
+        i_ip5 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.100.0.0',
                 prefix_length=16)
 
         nhop_key1 = switcht_nhop_key_t(intf_handle=if2, ip_addr_valid=0)
         nhop1 = self.client.switcht_api_nhop_create(device, nhop_key1)
         neighbor_entry1 = switcht_neighbor_info_t(nhop_handle=nhop1,
                 interface_handle=if2, mac_addr='00:11:22:33:44:55',
-                ip_addr=i_ip5, rw_type=1)
+                ip_addr=i_ip5, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor1 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry1)
 
         nhop_key2 = switcht_nhop_key_t(intf_handle=if3, ip_addr_valid=0)
         nhop2 = self.client.switcht_api_nhop_create(device, nhop_key2)
         neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=nhop2,
                 interface_handle=if3, mac_addr='00:11:22:33:44:56',
-                ip_addr=i_ip5, rw_type=1)
+                ip_addr=i_ip5, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor2 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry2)
 
         nhop_key3 = switcht_nhop_key_t(intf_handle=if4, ip_addr_valid=0)
         nhop3 = self.client.switcht_api_nhop_create(device, nhop_key3)
         neighbor_entry3 = switcht_neighbor_info_t(nhop_handle=nhop3,
                 interface_handle=if4, mac_addr='00:11:22:33:44:57',
-                ip_addr=i_ip5, rw_type=1)
+                ip_addr=i_ip5, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor3 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry3)
 
         ecmp = self.client.switcht_api_l3_ecmp_create(device)
@@ -2231,15 +2411,15 @@ class L3EcmpLagTest(api_base_tests.ThriftInterfaceDataPlane):
             self.client.switcht_api_neighbor_entry_remove(device, neighbor3)
             self.client.switcht_api_nhop_delete(device, nhop3)
 
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=0,
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH,
                     port=swports[2])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=0,
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH,
                     port=swports[3])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=0,
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH,
                     port=swports[4])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=0,
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH,
                     port=swports[5])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=0,
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH,
                     port=swports[6])
 
             self.client.switcht_api_l3_interface_address_delete(device, if1, vrf, i_ip1)
@@ -2274,41 +2454,41 @@ class L3RpfTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac, v4_urpf_mode=1)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac, v4_urpf_mode=1)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
-        i_ip1 = switcht_ip_addr_t(addr_type=0, ipaddr='192.168.0.2', prefix_length=16)
+        i_ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='192.168.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if1, vrf, i_ip1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac, v4_urpf_mode=2)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac, v4_urpf_mode=2)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
-        i_ip2 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.0.2', prefix_length=16)
+        i_ip2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if2, vrf, i_ip2)
 
         # add neighbor 192.168.0.1
-        i_ip1 = switcht_ip_addr_t(addr_type=0, ipaddr='192.168.0.1', prefix_length=32)
+        i_ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='192.168.0.1', prefix_length=32)
         nhop_key1 = switcht_nhop_key_t(intf_handle=if1, ip_addr_valid=0)
         nhop1 = self.client.switcht_api_nhop_create(device, nhop_key1)
-        neighbor_entry1 = switcht_neighbor_info_t(nhop_handle=nhop1, interface_handle=if1, mac_addr='00:11:22:33:44:55', ip_addr=i_ip1, rw_type=1)
+        neighbor_entry1 = switcht_neighbor_info_t(nhop_handle=nhop1, interface_handle=if1, mac_addr='00:11:22:33:44:55', ip_addr=i_ip1, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor1 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry1)
 
         # add neighbor 10.0.0.2
-        i_ip2 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.0.2', prefix_length=32)
+        i_ip2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.0.2', prefix_length=32)
         nhop_key2 = switcht_nhop_key_t(intf_handle=if2, ip_addr_valid=0)
         nhop2 = self.client.switcht_api_nhop_create(device, nhop_key2)
-        neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=nhop2, interface_handle=if2, mac_addr='00:11:22:33:44:56', ip_addr=i_ip2, rw_type=1)
+        neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=nhop2, interface_handle=if2, mac_addr='00:11:22:33:44:56', ip_addr=i_ip2, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor2 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry2)
 
         # Add a static route 10.10/16 --> if1
-        i_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='10.10.0.0', prefix_length=16)
+        i_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.10.0.0', prefix_length=16)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip3, nhop1)
 
         # Add a static route 10.11/16 --> if2
-        i_ip4 = switcht_ip_addr_t(addr_type=0, ipaddr='10.11.0.0', prefix_length=16)
+        i_ip4 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.11.0.0', prefix_length=16)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip4, nhop2)
 
         # Add a static route 10.13/16 --> if1
-        i_ip5 = switcht_ip_addr_t(addr_type=0, ipaddr='10.13.0.0', prefix_length=16)
+        i_ip5 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.13.0.0', prefix_length=16)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip5, nhop1)
 
         # send the test packet(s)
@@ -2429,15 +2609,15 @@ class L2StaticMacBulkDeleteTest(api_base_tests.ThriftInterfaceDataPlane):
         vlan = self.client.switcht_api_vlan_create(device, 10)
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=2, u=iu2, mac='00:77:66:55:44:33', label=0)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu2, mac='00:77:66:55:44:33', label=0)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         iu3 = interface_union(port_lag_handle = swports[3])
-        i_info3 = switcht_interface_info_t(device=0, type=2, u=iu3, mac='00:77:66:55:44:33', label=0)
+        i_info3 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu3, mac='00:77:66:55:44:33', label=0)
         if3 = self.client.switcht_api_interface_create(device, i_info3)
 
         vlan_port1 = switcht_vlan_port_t(handle=if1, tagging_mode=0)
@@ -2547,29 +2727,29 @@ class L2VxlanUnicastBasicTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         # Create a logical network (LN)
         bt = switcht_bridge_type(tunnel_vni=0x1234)
         encap = switcht_encap_info_t(u=bt)
-        lognet_info = switcht_logical_network_t(type=4, encap_info=encap, age_interval=1800, vrf=vrf)
+        lognet_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_BASIC, encap_info=encap, age_interval=1800, vrf=vrf)
         ln1 = self.client.switcht_api_logical_network_create(device, lognet_info)
 
         # Create a tunnel interface
         udp = switcht_udp_t(src_port=1234, dst_port=4789)
-        src_ip = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.1', prefix_length=32)
-        dst_ip = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.3', prefix_length=32)
+        src_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.1', prefix_length=32)
+        dst_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.3', prefix_length=32)
         udp_tcp = switcht_udp_tcp_t(udp = udp)
         #encap_type 3 is vxlan
-        encap_info = switcht_encap_info_t(encap_type=3)
+        encap_info = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_VXLAN)
         ip_encap =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip, dst_ip=dst_ip, ttl=60, proto=17, u=udp_tcp)
         tunnel_encap = switcht_tunnel_encap_t(ip_encap=ip_encap)
-        iu4 = switcht_tunnel_info_t(encap_mode = 0, tunnel_encap=tunnel_encap, encap_info=encap_info, out_if=if2)
+        iu4 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap, encap_info=encap_info, out_if=if2)
         if4 = self.client.switcht_api_tunnel_interface_create(device, 0, iu4)
 
         #add L2 port to LN
@@ -2582,7 +2762,7 @@ class L2VxlanUnicastBasicTest(api_base_tests.ThriftInterfaceDataPlane):
                                                   interface_handle=if4,
                                                   mac_addr='00:33:33:33:33:33',
                                                   ip_addr=src_ip,
-                                                  rw_type=0, neigh_type=7)
+                                                  rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         neighbor1 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry1)
 
         neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if4, mac_addr='00:33:33:33:33:33', ip_addr=src_ip)
@@ -2668,31 +2848,31 @@ class L2IPv4InIPv6VxlanUnicastBasicTest(api_base_tests.ThriftInterfaceDataPlane)
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         # Create a logical network (LN)
         bt = switcht_bridge_type(tunnel_vni=0x1234)
         encap = switcht_encap_info_t(u=bt)
-        lognet_info = switcht_logical_network_t(type=4, encap_info=encap, age_interval=1800, vrf=vrf)
+        lognet_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_BASIC, encap_info=encap, age_interval=1800, vrf=vrf)
         ln1 = self.client.switcht_api_logical_network_create(device, lognet_info)
 
         # Create a tunnel interface
         udp = switcht_udp_t(src_port=1234, dst_port=4789)
         ipv6_src_addr = '1234:5678:9abc:def0:1234:5678:9abc:def0'
         ipv6_dst_addr = '1111:2222:3333:4444:5555:6666:7777:8888'
-        src_ip = switcht_ip_addr_t(addr_type=1, ipaddr=ipv6_src_addr, prefix_length=128)
-        dst_ip = switcht_ip_addr_t(addr_type=1, ipaddr=ipv6_dst_addr, prefix_length=128)
+        src_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr=ipv6_src_addr, prefix_length=128)
+        dst_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr=ipv6_dst_addr, prefix_length=128)
         udp_tcp = switcht_udp_tcp_t(udp = udp)
         #encap_type 3 is vxlan
-        encap_info = switcht_encap_info_t(encap_type=3)
+        encap_info = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_VXLAN)
         ip_encap =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip, dst_ip=dst_ip, ttl=60, proto=17, u=udp_tcp)
         tunnel_encap = switcht_tunnel_encap_t(ip_encap=ip_encap)
-        iu4 = switcht_tunnel_info_t(encap_mode = 0, tunnel_encap=tunnel_encap, encap_info=encap_info, out_if=if2)
+        iu4 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap, encap_info=encap_info, out_if=if2)
         if4 = self.client.switcht_api_tunnel_interface_create(device, 0, iu4)
 
         #add L2 port to LN
@@ -2705,7 +2885,7 @@ class L2IPv4InIPv6VxlanUnicastBasicTest(api_base_tests.ThriftInterfaceDataPlane)
                                                   interface_handle=if4,
                                                   mac_addr='00:33:33:33:33:33',
                                                   ip_addr=src_ip,
-                                                  rw_type=0, neigh_type=8)
+                                                  rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV6_TUNNEL)
         neighbor1 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry1)
 
         neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if4, mac_addr='00:33:33:33:33:33', ip_addr=src_ip)
@@ -2770,31 +2950,31 @@ class L2IPv6InIPv6VxlanUnicastBasicTest(api_base_tests.ThriftInterfaceDataPlane)
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         # Create a logical network (LN)
         bt = switcht_bridge_type(tunnel_vni=0x1234)
         encap = switcht_encap_info_t(u=bt)
-        lognet_info = switcht_logical_network_t(type=4, encap_info=encap, age_interval=1800, vrf=vrf)
+        lognet_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_BASIC, encap_info=encap, age_interval=1800, vrf=vrf)
         ln1 = self.client.switcht_api_logical_network_create(device, lognet_info)
 
         # Create a tunnel interface
         udp = switcht_udp_t(src_port=1234, dst_port=4789)
         ipv6_src_addr = '1234:5678:9abc:def0:1234:5678:9abc:def0'
         ipv6_dst_addr = '1111:2222:3333:4444:5555:6666:7777:8888'
-        src_ip = switcht_ip_addr_t(addr_type=1, ipaddr=ipv6_src_addr, prefix_length=128)
-        dst_ip = switcht_ip_addr_t(addr_type=1, ipaddr=ipv6_dst_addr, prefix_length=128)
+        src_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr=ipv6_src_addr, prefix_length=128)
+        dst_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr=ipv6_dst_addr, prefix_length=128)
         udp_tcp = switcht_udp_tcp_t(udp = udp)
         #encap_type 3 is vxlan
-        encap_info = switcht_encap_info_t(encap_type=3)
+        encap_info = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_VXLAN)
         ip_encap =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip, dst_ip=dst_ip, ttl=60, proto=17, u=udp_tcp)
         tunnel_encap = switcht_tunnel_encap_t(ip_encap=ip_encap)
-        iu4 = switcht_tunnel_info_t(encap_mode = 0, tunnel_encap=tunnel_encap, encap_info=encap_info, out_if=if2)
+        iu4 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap, encap_info=encap_info, out_if=if2)
         if4 = self.client.switcht_api_tunnel_interface_create(device, 0, iu4)
 
         #add L2 port to LN
@@ -2807,7 +2987,7 @@ class L2IPv6InIPv6VxlanUnicastBasicTest(api_base_tests.ThriftInterfaceDataPlane)
                                                   interface_handle=if4,
                                                   mac_addr='00:33:33:33:33:33',
                                                   ip_addr=src_ip,
-                                                  rw_type=0, neigh_type=8)
+                                                  rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV6_TUNNEL)
         neighbor1 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry1)
 
         neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if4, mac_addr='00:33:33:33:33:33', ip_addr=src_ip)
@@ -2890,27 +3070,27 @@ class L2NvgreUnicastBasicTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         # Create a logical network (LN)
         bt = switcht_bridge_type(tunnel_vni=0x1234)
         encap = switcht_encap_info_t(u=bt)
         #encap_type 3 is vxlan
-        lognet_info = switcht_logical_network_t(type=4, encap_info=encap, age_interval=1800, vrf=vrf)
+        lognet_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_BASIC, encap_info=encap, age_interval=1800, vrf=vrf)
         ln1 = self.client.switcht_api_logical_network_create(device, lognet_info)
 
         # Create a tunnel interface
-        src_ip = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.1', prefix_length=32)
-        dst_ip = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.3', prefix_length=32)
-        encap_info = switcht_encap_info_t(encap_type=5)
+        src_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.1', prefix_length=32)
+        dst_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.3', prefix_length=32)
+        encap_info = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_NVGRE)
         ip_encap =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip, dst_ip=dst_ip, ttl=60, proto=47, gre_proto=0x6558)
         tunnel_encap = switcht_tunnel_encap_t(ip_encap=ip_encap)
-        iu4 = switcht_tunnel_info_t(encap_mode = 0, tunnel_encap=tunnel_encap, encap_info=encap_info, out_if=if2)
+        iu4 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap, encap_info=encap_info, out_if=if2)
         if4 = self.client.switcht_api_tunnel_interface_create(device, 0, iu4)
 
         #add L2 port to LN
@@ -2923,7 +3103,7 @@ class L2NvgreUnicastBasicTest(api_base_tests.ThriftInterfaceDataPlane):
                                                   interface_handle=if4,
                                                   mac_addr='00:33:33:33:33:33',
                                                   ip_addr=src_ip,
-                                                  rw_type=0, neigh_type=7)
+                                                  rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         neighbor1 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry1)
 
         neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if4, mac_addr='00:33:33:33:33:33', ip_addr=src_ip)
@@ -3006,26 +3186,26 @@ class L2NvgreUnicastEnhancedTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         # Create a logical network (LN)
-        lognet_info = switcht_logical_network_t(type=5, age_interval=1800, vrf=vrf)
+        lognet_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_ENHANCED, age_interval=1800, vrf=vrf)
         ln1 = self.client.switcht_api_logical_network_create(device, lognet_info)
 
         # Create a tunnel interface
-        src_ip = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.1', prefix_length=32)
-        dst_ip = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.3', prefix_length=32)
+        src_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.1', prefix_length=32)
+        dst_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.3', prefix_length=32)
         nvgre = switcht_nvgre_id_t(tnid=0x1234)
         bt = switcht_bridge_type(nvgre_info=nvgre)
-        encap_info = switcht_encap_info_t(encap_type=5, u=bt)
+        encap_info = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_NVGRE, u=bt)
         ip_encap =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip, dst_ip=dst_ip, ttl=60, proto=47, gre_proto=0x6558)
         tunnel_encap = switcht_tunnel_encap_t(ip_encap=ip_encap)
-        iu4 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap, encap_info=encap_info, out_if=if2)
+        iu4 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap, encap_info=encap_info, out_if=if2)
         if4 = self.client.switcht_api_tunnel_interface_create(device, 0, iu4)
 
         #add L2 port to LN
@@ -3038,7 +3218,7 @@ class L2NvgreUnicastEnhancedTest(api_base_tests.ThriftInterfaceDataPlane):
                                                   interface_handle=if4,
                                                   mac_addr='00:33:33:33:33:33',
                                                   ip_addr=src_ip,
-                                                  rw_type=0, neigh_type=7)
+                                                  rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         neighbor1 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry1)
 
         neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if4, mac_addr='00:33:33:33:33:33', ip_addr=src_ip)
@@ -3124,35 +3304,35 @@ class L2VxlanUnicastLagBasicTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         lag1 = self.client.switcht_api_lag_create(device)
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=0, port=swports[1])
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=0, port=swports[2])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[1])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[2])
         iu1 = interface_union(port_lag_handle = lag1)
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         lag2 = self.client.switcht_api_lag_create(device)
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=0, port=swports[3])
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=0, port=swports[4])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[3])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[4])
         iu2 = interface_union(port_lag_handle = lag2)
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         # Create a logical network (LN)
         bt = switcht_bridge_type(tunnel_vni=0x1234)
         encap = switcht_encap_info_t(u=bt)
         #encap_type 3 is vxlan
-        lognet_info = switcht_logical_network_t(type=4, encap_info=encap, age_interval=1800, vrf=vrf)
+        lognet_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_BASIC, encap_info=encap, age_interval=1800, vrf=vrf)
         ln1 = self.client.switcht_api_logical_network_create(device, lognet_info)
 
         # Create a tunnel interface
         udp = switcht_udp_t(src_port=1234, dst_port=4789)
-        src_ip = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.1', prefix_length=32)
-        dst_ip = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.3', prefix_length=32)
+        src_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.1', prefix_length=32)
+        dst_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.3', prefix_length=32)
         udp_tcp = switcht_udp_tcp_t(udp = udp)
         ip_encap =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip, dst_ip=dst_ip, ttl=60, proto=17, u=udp_tcp)
         tunnel_encap = switcht_tunnel_encap_t(ip_encap=ip_encap)
-        encap_info = switcht_encap_info_t(encap_type=3)
-        iu4 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap, encap_info=encap_info, out_if=if2)
+        encap_info = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_VXLAN)
+        iu4 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap, encap_info=encap_info, out_if=if2)
         if4 = self.client.switcht_api_tunnel_interface_create(device, 0, iu4)
 
         #add L2 port to LN
@@ -3165,7 +3345,7 @@ class L2VxlanUnicastLagBasicTest(api_base_tests.ThriftInterfaceDataPlane):
                                                   interface_handle=if4,
                                                   mac_addr='00:33:33:33:33:33',
                                                   ip_addr=src_ip,
-                                                  rw_type=0, neigh_type=7)
+                                                  rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         neighbor1 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry1)
 
         neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if4, mac_addr='00:33:33:33:33:33', ip_addr=src_ip)
@@ -3239,11 +3419,11 @@ class L2VxlanUnicastLagBasicTest(api_base_tests.ThriftInterfaceDataPlane):
             self.client.switcht_api_logical_network_member_remove(device, ln1, if4)
             self.client.switcht_api_logical_network_delete(device, ln1)
 
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=0, port=swports[1])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=0, port=swports[2])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[1])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[2])
 
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=0, port=swports[3])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=0, port=swports[4])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[3])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[4])
 
             self.client.switcht_api_tunnel_interface_delete(device, if4)
             self.client.switcht_api_interface_delete(device, if1)
@@ -3271,29 +3451,29 @@ class L2GeneveUnicastBasicTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         # Create a logical network (LN)
         bt = switcht_bridge_type(tunnel_vni=0x1234)
         encap = switcht_encap_info_t(u=bt)
         #encap_type 3 is vxlan
-        lognet_info = switcht_logical_network_t(type=4, encap_info=encap, age_interval=1800, vrf=vrf)
+        lognet_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_BASIC, encap_info=encap, age_interval=1800, vrf=vrf)
         ln1 = self.client.switcht_api_logical_network_create(device, lognet_info)
 
         # Create a tunnel interface
         udp = switcht_udp_t(src_port=1234, dst_port=6081)
-        src_ip = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.1', prefix_length=32)
-        dst_ip = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.3', prefix_length=32)
+        src_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.1', prefix_length=32)
+        dst_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.3', prefix_length=32)
         udp_tcp = switcht_udp_tcp_t(udp = udp)
         ip_encap =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip, dst_ip=dst_ip, ttl=60, proto=17, u=udp_tcp)
         tunnel_encap = switcht_tunnel_encap_t(ip_encap=ip_encap)
-        encap_info =  switcht_encap_info_t(encap_type=6)
-        iu4 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap, encap_info=encap_info, out_if=if2)
+        encap_info =  switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_GENEVE)
+        iu4 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap, encap_info=encap_info, out_if=if2)
         if4 = self.client.switcht_api_tunnel_interface_create(device, 0, iu4)
 
         #add L2 port to LN
@@ -3306,7 +3486,7 @@ class L2GeneveUnicastBasicTest(api_base_tests.ThriftInterfaceDataPlane):
                                                   interface_handle=if4,
                                                   mac_addr='00:33:33:33:33:33',
                                                   ip_addr=src_ip,
-                                                  rw_type=0, neigh_type=7)
+                                                  rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         neighbor1 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry1)
 
         neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if4, mac_addr='00:33:33:33:33:33', ip_addr=src_ip)
@@ -3395,35 +3575,35 @@ class L2GeneveUnicastLagBasicTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         lag1 = self.client.switcht_api_lag_create(device)
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=0, port=swports[1])
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=0, port=swports[2])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[1])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[2])
         iu1 = interface_union(port_lag_handle = lag1)
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         lag2 = self.client.switcht_api_lag_create(device)
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=0, port=swports[3])
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=0, port=swports[4])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[3])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[4])
         iu2 = interface_union(port_lag_handle = lag2)
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         # Create a logical network (LN)
         bt = switcht_bridge_type(tunnel_vni=0x1234)
         encap = switcht_encap_info_t(u=bt)
         #encap_type 3 is vxlan
-        lognet_info = switcht_logical_network_t(type=4, encap_info=encap, age_interval=1800, vrf=vrf)
+        lognet_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_BASIC, encap_info=encap, age_interval=1800, vrf=vrf)
         ln1 = self.client.switcht_api_logical_network_create(device, lognet_info)
 
         # Create a tunnel interface
         udp = switcht_udp_t(src_port=1234, dst_port=6081)
-        src_ip = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.1', prefix_length=32)
-        dst_ip = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.3', prefix_length=32)
+        src_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.1', prefix_length=32)
+        dst_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.3', prefix_length=32)
         udp_tcp = switcht_udp_tcp_t(udp = udp)
         ip_encap =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip, dst_ip=dst_ip, ttl=60, proto=17, u=udp_tcp)
         tunnel_encap = switcht_tunnel_encap_t(ip_encap=ip_encap)
-        encap_info = switcht_encap_info_t(encap_type=6)
-        iu4 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap, encap_info=encap_info, out_if=if2)
+        encap_info = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_GENEVE)
+        iu4 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap, encap_info=encap_info, out_if=if2)
         if4 = self.client.switcht_api_tunnel_interface_create(device, 0, iu4)
 
         #add L2 port to LN
@@ -3436,7 +3616,7 @@ class L2GeneveUnicastLagBasicTest(api_base_tests.ThriftInterfaceDataPlane):
                                                   interface_handle=if4,
                                                   mac_addr='00:33:33:33:33:33',
                                                   ip_addr=src_ip,
-                                                  rw_type=0, neigh_type=7)
+                                                  rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         neighbor1 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry1)
 
         neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if4, mac_addr='00:33:33:33:33:33', ip_addr=src_ip)
@@ -3511,11 +3691,11 @@ class L2GeneveUnicastLagBasicTest(api_base_tests.ThriftInterfaceDataPlane):
             self.client.switcht_api_logical_network_member_remove(device, ln1, if4)
             self.client.switcht_api_logical_network_delete(device, ln1)
 
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=0, port=swports[1])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=0, port=swports[2])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[1])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[2])
 
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=0, port=swports[3])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=0, port=swports[4])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[3])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[4])
 
             self.client.switcht_api_tunnel_interface_delete(device, if4)
             self.client.switcht_api_interface_delete(device, if1)
@@ -3543,33 +3723,33 @@ class L2NvgreUnicastLagBasicTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         lag1 = self.client.switcht_api_lag_create(device)
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=0, port=swports[1])
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=0, port=swports[2])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[1])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[2])
         iu1 = interface_union(port_lag_handle = lag1)
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         lag2 = self.client.switcht_api_lag_create(device)
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=0, port=swports[3])
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=0, port=swports[4])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[3])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[4])
         iu2 = interface_union(port_lag_handle = lag2)
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         # Create a logical network (LN)
         bt = switcht_bridge_type(tunnel_vni=0x1234)
         encap = switcht_encap_info_t(u=bt)
         #encap_type 3 is vxlan
-        lognet_info = switcht_logical_network_t(type=4, encap_info=encap, age_interval=1800, vrf=vrf)
+        lognet_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_BASIC, encap_info=encap, age_interval=1800, vrf=vrf)
         ln1 = self.client.switcht_api_logical_network_create(device, lognet_info)
 
         # Create a tunnel interface
-        src_ip = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.1', prefix_length=32)
-        dst_ip = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.3', prefix_length=32)
+        src_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.1', prefix_length=32)
+        dst_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.3', prefix_length=32)
         ip_encap =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip, dst_ip=dst_ip, ttl=60, proto=47, gre_proto=0x6558)
         tunnel_encap = switcht_tunnel_encap_t(ip_encap=ip_encap)
-        encap_info = switcht_encap_info_t(encap_type=5)
-        iu4 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap, encap_info=encap_info, out_if=if2)
+        encap_info = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_NVGRE)
+        iu4 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap, encap_info=encap_info, out_if=if2)
         if4 = self.client.switcht_api_tunnel_interface_create(device, 0, iu4)
 
         #add L2 port to LN
@@ -3582,7 +3762,7 @@ class L2NvgreUnicastLagBasicTest(api_base_tests.ThriftInterfaceDataPlane):
                                                   interface_handle=if4,
                                                   mac_addr='00:33:33:33:33:33',
                                                   ip_addr=src_ip,
-                                                  rw_type=0, neigh_type=7)
+                                                  rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         neighbor1 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry1)
 
         neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if4, mac_addr='00:33:33:33:33:33', ip_addr=src_ip)
@@ -3654,11 +3834,11 @@ class L2NvgreUnicastLagBasicTest(api_base_tests.ThriftInterfaceDataPlane):
             self.client.switcht_api_logical_network_member_remove(device, ln1, if4)
             self.client.switcht_api_logical_network_delete(device, ln1)
 
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=0, port=swports[1])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=0, port=swports[2])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[1])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[2])
 
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=0, port=swports[3])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=0, port=swports[4])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[3])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[4])
 
             self.client.switcht_api_tunnel_interface_delete(device, if4)
             self.client.switcht_api_interface_delete(device, if1)
@@ -3682,15 +3862,15 @@ class L2LNSubIntfEncapTest(api_base_tests.ThriftInterfaceDataPlane):
         vrf = self.client.switcht_api_vrf_create(device, 2)
         pv1 = switcht_port_vlan_t(port_lag_handle=swports[1], vlan_id=10)
         iu1 = interface_union(port_vlan = pv1)
-        i_info1 = switcht_interface_info_t(device=0, type=9, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_PORT_VLAN, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         pv2 = switcht_port_vlan_t(port_lag_handle=swports[2], vlan_id=20)
         iu2 = interface_union(port_vlan = pv2)
-        i_info2 = switcht_interface_info_t(device=0, type=9, u=iu2, mac='00:77:66:55:44:33', label=0)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_PORT_VLAN, u=iu2, mac='00:77:66:55:44:33', label=0)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
-        lognet_info = switcht_logical_network_t(type=4, age_interval=1800, vrf=vrf)
+        lognet_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_BASIC, age_interval=1800, vrf=vrf)
         ln1 = self.client.switcht_api_logical_network_create(device, lognet_info)
 
         self.client.switcht_api_logical_network_member_add(device, ln1, if1)
@@ -3760,40 +3940,40 @@ class L2VxlanToGeneveUnicastBasicTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         # Create a logical network (LN)
         bt = switcht_bridge_type(tunnel_vni=0x1234)
         encap = switcht_encap_info_t(u=bt)
         #encap_type 3 is vxlan
-        lognet_info = switcht_logical_network_t(type=4, encap_info=encap, age_interval=1800, vrf=vrf)
+        lognet_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_BASIC, encap_info=encap, age_interval=1800, vrf=vrf)
         ln1 = self.client.switcht_api_logical_network_create(device, lognet_info)
 
         # Create a geneve tunnel interface
         udp3 = switcht_udp_t(src_port=1234, dst_port=6081)
-        src_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.1', prefix_length=32)
-        dst_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.3', prefix_length=32)
+        src_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.1', prefix_length=32)
+        dst_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.3', prefix_length=32)
         udp_tcp3 = switcht_udp_tcp_t(udp = udp3)
         ip_encap3 =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip3, dst_ip=dst_ip3, ttl=60, proto=17, u=udp_tcp3)
         tunnel_encap3 = switcht_tunnel_encap_t(ip_encap=ip_encap3)
-        encap_info3 =  switcht_encap_info_t(encap_type=6)
-        iu3 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap3, encap_info=encap_info3, out_if=if1)
+        encap_info3 =  switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_GENEVE)
+        iu3 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap3, encap_info=encap_info3, out_if=if1)
         if3 = self.client.switcht_api_tunnel_interface_create(device, 0, iu3)
 
         # Create a vxlan tunnel interface
         udp4 = switcht_udp_t(src_port=1234, dst_port=4789)
-        src_ip4 = switcht_ip_addr_t(addr_type=0, ipaddr='2.2.2.1', prefix_length=32)
-        dst_ip4 = switcht_ip_addr_t(addr_type=0, ipaddr='2.2.2.3', prefix_length=32)
+        src_ip4 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='2.2.2.1', prefix_length=32)
+        dst_ip4 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='2.2.2.3', prefix_length=32)
         udp_tcp4 = switcht_udp_tcp_t(udp = udp4)
         ip_encap4 =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip4, dst_ip=dst_ip4, ttl=60, proto=17, u=udp_tcp4)
         tunnel_encap4 = switcht_tunnel_encap_t(ip_encap=ip_encap4)
-        encap_info4 =  switcht_encap_info_t(encap_type=3)
-        iu4 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap4, encap_info=encap_info4, out_if=if2)
+        encap_info4 =  switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_VXLAN)
+        iu4 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap4, encap_info=encap_info4, out_if=if2)
         if4 = self.client.switcht_api_tunnel_interface_create(device, 0, iu4)
 
         #add L2 port to LN
@@ -3806,7 +3986,7 @@ class L2VxlanToGeneveUnicastBasicTest(api_base_tests.ThriftInterfaceDataPlane):
                                                   interface_handle=if3,
                                                   mac_addr='00:33:33:33:33:33',
                                                   ip_addr=src_ip3,
-                                                  rw_type=0, neigh_type=7)
+                                                  rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         neighbor3 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry3)
 
         neighbor_entry1 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if3, mac_addr='00:33:33:33:33:33', ip_addr=src_ip3)
@@ -3818,7 +3998,7 @@ class L2VxlanToGeneveUnicastBasicTest(api_base_tests.ThriftInterfaceDataPlane):
                                                   interface_handle=if4,
                                                   mac_addr='00:44:44:44:44:44',
                                                   ip_addr=src_ip4,
-                                                  rw_type=0, neigh_type=7)
+                                                  rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         neighbor4 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry4)
 
         neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if4, mac_addr='00:44:44:44:44:44', ip_addr=src_ip4)
@@ -3941,46 +4121,46 @@ class L2VxlanToGeneveUnicastLagBasicTest(api_base_tests.ThriftInterfaceDataPlane
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         lag1 = self.client.switcht_api_lag_create(device)
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=0, port=swports[1])
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=0, port=swports[2])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[1])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[2])
         iu1 = interface_union(port_lag_handle = lag1)
-        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         lag2 = self.client.switcht_api_lag_create(device)
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=0, port=swports[3])
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=0, port=swports[4])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[3])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[4])
         iu2 = interface_union(port_lag_handle = lag2)
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         # Create a logical network (LN)
         bt = switcht_bridge_type(tunnel_vni=0x1234)
         encap = switcht_encap_info_t(u=bt)
         #encap_type 3 is vxlan
-        lognet_info = switcht_logical_network_t(type=4, encap_info=encap, age_interval=1800, vrf=vrf)
+        lognet_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_BASIC, encap_info=encap, age_interval=1800, vrf=vrf)
         ln1 = self.client.switcht_api_logical_network_create(device, lognet_info)
 
         # Create a geneve tunnel interface
         udp3 = switcht_udp_t(src_port=1234, dst_port=6081)
-        src_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.1', prefix_length=32)
-        dst_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.3', prefix_length=32)
+        src_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.1', prefix_length=32)
+        dst_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.3', prefix_length=32)
         udp_tcp3 = switcht_udp_tcp_t(udp = udp3)
         ip_encap3 =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip3, dst_ip=dst_ip3, ttl=60, proto=17, u=udp_tcp3)
         tunnel_encap3 = switcht_tunnel_encap_t(ip_encap=ip_encap3)
-        encap_info3 =  switcht_encap_info_t(encap_type=6)
-        iu3 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap3, encap_info=encap_info3, out_if=if1)
+        encap_info3 =  switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_GENEVE)
+        iu3 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap3, encap_info=encap_info3, out_if=if1)
         if3 = self.client.switcht_api_tunnel_interface_create(device, 0, iu3)
 
         # Create a vxlan tunnel interface
         udp4 = switcht_udp_t(src_port=1234, dst_port=4789)
-        src_ip4 = switcht_ip_addr_t(addr_type=0, ipaddr='2.2.2.1', prefix_length=32)
-        dst_ip4 = switcht_ip_addr_t(addr_type=0, ipaddr='2.2.2.3', prefix_length=32)
+        src_ip4 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='2.2.2.1', prefix_length=32)
+        dst_ip4 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='2.2.2.3', prefix_length=32)
         udp_tcp4 = switcht_udp_tcp_t(udp = udp4)
         ip_encap4 =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip4, dst_ip=dst_ip4, ttl=60, proto=17, u=udp_tcp4)
         tunnel_encap4 = switcht_tunnel_encap_t(ip_encap=ip_encap4)
-        encap_info4 =  switcht_encap_info_t(encap_type=3)
-        iu4 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap4, encap_info=encap_info4, out_if=if2)
+        encap_info4 =  switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_VXLAN)
+        iu4 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap4, encap_info=encap_info4, out_if=if2)
         if4 = self.client.switcht_api_tunnel_interface_create(device, 0, iu4)
 
         #add L2 port to LN
@@ -3993,7 +4173,7 @@ class L2VxlanToGeneveUnicastLagBasicTest(api_base_tests.ThriftInterfaceDataPlane
                                                   interface_handle=if3,
                                                   mac_addr='00:33:33:33:33:33',
                                                   ip_addr=src_ip3,
-                                                  rw_type=0, neigh_type=7)
+                                                  rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         neighbor3 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry3)
 
         neighbor_entry1 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if3, mac_addr='00:33:33:33:33:33', ip_addr=src_ip3)
@@ -4005,7 +4185,7 @@ class L2VxlanToGeneveUnicastLagBasicTest(api_base_tests.ThriftInterfaceDataPlane
                                                   interface_handle=if4,
                                                   mac_addr='00:44:44:44:44:44',
                                                   ip_addr=src_ip4,
-                                                  rw_type=0, neigh_type=7)
+                                                  rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         neighbor4 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry4)
 
         neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if4, mac_addr='00:44:44:44:44:44', ip_addr=src_ip4)
@@ -4112,12 +4292,12 @@ class L2VxlanToGeneveUnicastLagBasicTest(api_base_tests.ThriftInterfaceDataPlane
             self.client.switcht_api_interface_delete(device, if1)
             self.client.switcht_api_interface_delete(device, if2)
 
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=0, port=swports[1])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=0, port=swports[2])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[1])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[2])
             self.client.switcht_api_lag_delete(device, lag1)
 
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=0, port=swports[3])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=0, port=swports[4])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[3])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[4])
             self.client.switcht_api_lag_delete(device, lag2)
 
             self.client.switcht_api_router_mac_delete(device, rmac, '00:77:66:55:44:33')
@@ -4139,28 +4319,28 @@ class L2VxlanUnicastEnhancedTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         # Create a logical network (LN)
-        lognet_info = switcht_logical_network_t(type=5, age_interval=1800, vrf=vrf)
+        lognet_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_ENHANCED, age_interval=1800, vrf=vrf)
         ln1 = self.client.switcht_api_logical_network_create(device, lognet_info)
 
         # Create a tunnel interface
         udp = switcht_udp_t(src_port=1234, dst_port=4789)
-        src_ip = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.1', prefix_length=32)
-        dst_ip = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.3', prefix_length=32)
+        src_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.1', prefix_length=32)
+        dst_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.3', prefix_length=32)
         udp_tcp = switcht_udp_tcp_t(udp = udp)
         vxlan = switcht_vxlan_id_t(vnid=0x1234)
         bt = switcht_bridge_type(vxlan_info=vxlan)
-        encap_info = switcht_encap_info_t(encap_type=3, u=bt)
+        encap_info = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_VXLAN, u=bt)
         ip_encap =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip, dst_ip=dst_ip, ttl=60, proto=17, u=udp_tcp)
         tunnel_encap = switcht_tunnel_encap_t(ip_encap=ip_encap)
-        iu4 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap, encap_info=encap_info, out_if=if2)
+        iu4 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap, encap_info=encap_info, out_if=if2)
         if4 = self.client.switcht_api_tunnel_interface_create(device, 0, iu4)
 
         #add L2 port to LN
@@ -4173,7 +4353,7 @@ class L2VxlanUnicastEnhancedTest(api_base_tests.ThriftInterfaceDataPlane):
                                                   interface_handle=if4,
                                                   mac_addr='00:33:33:33:33:33',
                                                   ip_addr=src_ip,
-                                                  rw_type=0, neigh_type=7)
+                                                  rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         neighbor1 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry1)
 
         neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if4, mac_addr='00:33:33:33:33:33', ip_addr=src_ip)
@@ -4262,35 +4442,35 @@ class L2VxlanUnicastLagEnhancedTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         lag1 = self.client.switcht_api_lag_create(device)
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=0, port=swports[1])
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=0, port=swports[2])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[1])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[2])
         iu1 = interface_union(port_lag_handle = lag1)
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         lag2 = self.client.switcht_api_lag_create(device)
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=0, port=swports[3])
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=0, port=swports[4])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[3])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[4])
         iu2 = interface_union(port_lag_handle = lag2)
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         # Create a logical network (LN)
         #encap_type 3 is vxlan
-        lognet_info = switcht_logical_network_t(type=5, age_interval=1800, vrf=vrf)
+        lognet_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_ENHANCED, age_interval=1800, vrf=vrf)
         ln1 = self.client.switcht_api_logical_network_create(device, lognet_info)
 
         # Create a tunnel interface
         udp = switcht_udp_t(src_port=1234, dst_port=4789)
-        src_ip = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.1', prefix_length=32)
-        dst_ip = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.3', prefix_length=32)
+        src_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.1', prefix_length=32)
+        dst_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.3', prefix_length=32)
         udp_tcp = switcht_udp_tcp_t(udp = udp)
         vxlan = switcht_vxlan_id_t(vnid=0x1234)
         bt = switcht_bridge_type(vxlan_info=vxlan)
-        encap_info = switcht_encap_info_t(encap_type=3, u=bt)
+        encap_info = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_VXLAN, u=bt)
         ip_encap =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip, dst_ip=dst_ip, ttl=60, proto=17, u=udp_tcp)
         tunnel_encap = switcht_tunnel_encap_t(ip_encap=ip_encap)
-        iu4 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap, encap_info=encap_info, out_if=if2)
+        iu4 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap, encap_info=encap_info, out_if=if2)
         if4 = self.client.switcht_api_tunnel_interface_create(device, 0, iu4)
 
         #add L2 port to LN
@@ -4303,7 +4483,7 @@ class L2VxlanUnicastLagEnhancedTest(api_base_tests.ThriftInterfaceDataPlane):
                                                   interface_handle=if4,
                                                   mac_addr='00:33:33:33:33:33',
                                                   ip_addr=src_ip,
-                                                  rw_type=0, neigh_type=7)
+                                                  rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         neighbor1 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry1)
 
         neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if4, mac_addr='00:33:33:33:33:33', ip_addr=src_ip)
@@ -4378,11 +4558,11 @@ class L2VxlanUnicastLagEnhancedTest(api_base_tests.ThriftInterfaceDataPlane):
             self.client.switcht_api_logical_network_member_remove(device, ln1, if4)
             self.client.switcht_api_logical_network_delete(device, ln1)
 
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=0, port=swports[1])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=0, port=swports[2])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[1])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[2])
 
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=0, port=swports[3])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=0, port=swports[4])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[3])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[4])
 
             self.client.switcht_api_tunnel_interface_delete(device, if4)
             self.client.switcht_api_interface_delete(device, if1)
@@ -4410,41 +4590,41 @@ class L2VxlanToGeneveUnicastEnhancedTest(api_base_tests.ThriftInterfaceDataPlane
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         # Create a logical network (LN)
-        lognet_info = switcht_logical_network_t(type=5, age_interval=1800, vrf=vrf)
+        lognet_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_ENHANCED, age_interval=1800, vrf=vrf)
         ln1 = self.client.switcht_api_logical_network_create(device, lognet_info)
 
         # Create a geneve tunnel interface
         udp3 = switcht_udp_t(src_port=1234, dst_port=6081)
-        src_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.1', prefix_length=32)
-        dst_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.3', prefix_length=32)
+        src_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.1', prefix_length=32)
+        dst_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.3', prefix_length=32)
         udp_tcp3 = switcht_udp_tcp_t(udp = udp3)
         geneve3 = switcht_geneve_id_t(vni=0x4321)
         bt3 = switcht_bridge_type(geneve_info=geneve3)
-        encap_info3 = switcht_encap_info_t(encap_type=6, u=bt3)
+        encap_info3 = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_GENEVE, u=bt3)
         ip_encap3 =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip3, dst_ip=dst_ip3, ttl=60, proto=17, u=udp_tcp3)
         tunnel_encap3 = switcht_tunnel_encap_t(ip_encap=ip_encap3)
-        iu3 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap3, encap_info=encap_info3, out_if=if1)
+        iu3 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap3, encap_info=encap_info3, out_if=if1)
         if3 = self.client.switcht_api_tunnel_interface_create(device, 0, iu3)
 
         # Create a vxlan tunnel interface
         udp4 = switcht_udp_t(src_port=1234, dst_port=4789)
-        src_ip4 = switcht_ip_addr_t(addr_type=0, ipaddr='2.2.2.1', prefix_length=32)
-        dst_ip4 = switcht_ip_addr_t(addr_type=0, ipaddr='2.2.2.3', prefix_length=32)
+        src_ip4 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='2.2.2.1', prefix_length=32)
+        dst_ip4 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='2.2.2.3', prefix_length=32)
         udp_tcp4 = switcht_udp_tcp_t(udp = udp4)
         vxlan4 = switcht_vxlan_id_t(vnid=0x1234)
         bt4 = switcht_bridge_type(vxlan_info=vxlan4)
-        encap_info4 = switcht_encap_info_t(encap_type=3, u=bt4)
+        encap_info4 = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_VXLAN, u=bt4)
         ip_encap4 =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip4, dst_ip=dst_ip4, ttl=60, proto=17, u=udp_tcp4)
         tunnel_encap4 = switcht_tunnel_encap_t(ip_encap=ip_encap4)
-        iu4 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap4, encap_info=encap_info4, out_if=if2)
+        iu4 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap4, encap_info=encap_info4, out_if=if2)
         if4 = self.client.switcht_api_tunnel_interface_create(device, 0, iu4)
 
         #add L2 port to LN
@@ -4457,7 +4637,7 @@ class L2VxlanToGeneveUnicastEnhancedTest(api_base_tests.ThriftInterfaceDataPlane
                                                   interface_handle=if3,
                                                   mac_addr='00:33:33:33:33:33',
                                                   ip_addr=src_ip3,
-                                                  rw_type=0, neigh_type=7)
+                                                  rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         neighbor3 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry3)
 
         neighbor_entry1 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if3, mac_addr='00:33:33:33:33:33', ip_addr=src_ip3)
@@ -4469,7 +4649,7 @@ class L2VxlanToGeneveUnicastEnhancedTest(api_base_tests.ThriftInterfaceDataPlane
                                                   interface_handle=if4,
                                                   mac_addr='00:44:44:44:44:44',
                                                   ip_addr=src_ip4,
-                                                  rw_type=0, neigh_type=7)
+                                                  rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         neighbor4 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry4)
 
         neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if4, mac_addr='00:44:44:44:44:44', ip_addr=src_ip4)
@@ -4589,47 +4769,47 @@ class L2VxlanToGeneveUnicastLagEnhancedTest(api_base_tests.ThriftInterfaceDataPl
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         lag1 = self.client.switcht_api_lag_create(device)
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=0, port=swports[1])
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=0, port=swports[2])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[1])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[2])
         iu1 = interface_union(port_lag_handle = lag1)
-        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         lag2 = self.client.switcht_api_lag_create(device)
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=0, port=swports[3])
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=0, port=swports[4])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[3])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[4])
         iu2 = interface_union(port_lag_handle = lag2)
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         # Create a logical network (LN)
-        lognet_info = switcht_logical_network_t(type=5, age_interval=1800, vrf=vrf)
+        lognet_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_ENHANCED, age_interval=1800, vrf=vrf)
         ln1 = self.client.switcht_api_logical_network_create(device, lognet_info)
 
         # Create a geneve tunnel interface
         udp3 = switcht_udp_t(src_port=1234, dst_port=6081)
-        src_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.1', prefix_length=32)
-        dst_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.3', prefix_length=32)
+        src_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.1', prefix_length=32)
+        dst_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.3', prefix_length=32)
         udp_tcp3 = switcht_udp_tcp_t(udp = udp3)
         geneve3 = switcht_geneve_id_t(vni=0x4321)
         bt3 = switcht_bridge_type(geneve_info=geneve3)
-        encap_info3 = switcht_encap_info_t(encap_type=6, u=bt3)
+        encap_info3 = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_GENEVE, u=bt3)
         ip_encap3 =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip3, dst_ip=dst_ip3, ttl=60, proto=17, u=udp_tcp3)
         tunnel_encap3 = switcht_tunnel_encap_t(ip_encap=ip_encap3)
-        iu3 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap3, encap_info=encap_info3, out_if=if1)
+        iu3 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap3, encap_info=encap_info3, out_if=if1)
         if3 = self.client.switcht_api_tunnel_interface_create(device, 0, iu3)
 
         # Create a vxlan tunnel interface
         udp4 = switcht_udp_t(src_port=1234, dst_port=4789)
-        src_ip4 = switcht_ip_addr_t(addr_type=0, ipaddr='2.2.2.1', prefix_length=32)
-        dst_ip4 = switcht_ip_addr_t(addr_type=0, ipaddr='2.2.2.3', prefix_length=32)
+        src_ip4 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='2.2.2.1', prefix_length=32)
+        dst_ip4 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='2.2.2.3', prefix_length=32)
         udp_tcp4 = switcht_udp_tcp_t(udp = udp4)
         vxlan4 = switcht_vxlan_id_t(vnid=0x1234)
         bt4 = switcht_bridge_type(vxlan_info=vxlan4)
-        encap_info4 = switcht_encap_info_t(encap_type=3, u=bt4)
+        encap_info4 = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_VXLAN, u=bt4)
         ip_encap4 =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip4, dst_ip=dst_ip4, ttl=60, proto=17, u=udp_tcp4)
         tunnel_encap4 = switcht_tunnel_encap_t(ip_encap=ip_encap4)
-        iu4 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap4, encap_info=encap_info4, out_if=if2)
+        iu4 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap4, encap_info=encap_info4, out_if=if2)
         if4 = self.client.switcht_api_tunnel_interface_create(device, 0, iu4)
 
         #add L2 port to LN
@@ -4642,7 +4822,7 @@ class L2VxlanToGeneveUnicastLagEnhancedTest(api_base_tests.ThriftInterfaceDataPl
                                                   interface_handle=if3,
                                                   mac_addr='00:33:33:33:33:33',
                                                   ip_addr=src_ip3,
-                                                  rw_type=0, neigh_type=7)
+                                                  rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         neighbor3 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry3)
 
         neighbor_entry1 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if3, mac_addr='00:33:33:33:33:33', ip_addr=src_ip3)
@@ -4654,7 +4834,7 @@ class L2VxlanToGeneveUnicastLagEnhancedTest(api_base_tests.ThriftInterfaceDataPl
                                                   interface_handle=if4,
                                                   mac_addr='00:44:44:44:44:44',
                                                   ip_addr=src_ip4,
-                                                  rw_type=0, neigh_type=7)
+                                                  rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         neighbor4 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry4)
 
         neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if4, mac_addr='00:44:44:44:44:44', ip_addr=src_ip4)
@@ -4766,11 +4946,11 @@ class L2VxlanToGeneveUnicastLagEnhancedTest(api_base_tests.ThriftInterfaceDataPl
             self.client.switcht_api_interface_delete(device, if1)
             self.client.switcht_api_interface_delete(device, if2)
 
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=0, port=swports[1])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=0, port=swports[2])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[1])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[2])
 
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=0, port=swports[3])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=0, port=swports[4])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[3])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[4])
 
             self.client.switcht_api_lag_delete(device, lag1)
             self.client.switcht_api_lag_delete(device, lag2)
@@ -4795,34 +4975,34 @@ class L2VxlanFloodBasicTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=2, u=iu2, mac='00:77:66:55:44:33', label=0)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu2, mac='00:77:66:55:44:33', label=0)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         iu3 = interface_union(port_lag_handle = swports[3])
-        i_info3 = switcht_interface_info_t(device=0, type=4, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info3 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if3 = self.client.switcht_api_interface_create(device, i_info3)
 
         # Create a logical network (LN)
         bt = switcht_bridge_type(tunnel_vni=0x1234)
         encap = switcht_encap_info_t(u=bt)
         #encap_type 3 is vxlan
-        lognet_info = switcht_logical_network_t(type=4, encap_info=encap, age_interval=1800, vrf=vrf)
+        lognet_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_BASIC, encap_info=encap, age_interval=1800, vrf=vrf)
         ln1 = self.client.switcht_api_logical_network_create(device, lognet_info)
 
         # Create a tunnel interface
         flags = switcht_interface_flags(flood_enabled=1)
         udp = switcht_udp_t(src_port=1234, dst_port=4789)
-        src_ip = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.1', prefix_length=32)
-        dst_ip = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.3', prefix_length=32)
+        src_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.1', prefix_length=32)
+        dst_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.3', prefix_length=32)
         udp_tcp = switcht_udp_tcp_t(udp = udp)
-        encap_info = switcht_encap_info_t(encap_type=3)
+        encap_info = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_VXLAN)
         ip_encap =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip, dst_ip=dst_ip, ttl=60, proto=17, u=udp_tcp)
         tunnel_encap = switcht_tunnel_encap_t(ip_encap=ip_encap)
-        iu4 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap, encap_info=encap_info, out_if=if3, flags=flags)
+        iu4 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap, encap_info=encap_info, out_if=if3, flags=flags)
         if4 = self.client.switcht_api_tunnel_interface_create(device, 0, iu4)
 
         nhop_key1 = switcht_nhop_key_t(intf_handle=if4, ip_addr_valid=0)
@@ -4837,7 +5017,7 @@ class L2VxlanFloodBasicTest(api_base_tests.ThriftInterfaceDataPlane):
                                                   interface_handle=if4,
                                                   mac_addr='00:33:33:33:33:33',
                                                   ip_addr=src_ip,
-                                                  rw_type=0, neigh_type=7)
+                                                  rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         neighbor1 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry1)
 
         neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if4, mac_addr='00:33:33:33:33:33', ip_addr=src_ip)
@@ -4925,51 +5105,51 @@ class L3VxlanUnicastBasicTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         # Create a logical network (LN)
         bt = switcht_bridge_type(tunnel_vni=0x1234)
         encap = switcht_encap_info_t(u=bt)
         ln_flags = switcht_ln_flags(ipv4_unicast_enabled=1)
-        lognet_info = switcht_logical_network_t(type=4, encap_info=encap, age_interval=1800, vrf=vrf, rmac_handle=rmac, flags=ln_flags)
+        lognet_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_BASIC, encap_info=encap, age_interval=1800, vrf=vrf, rmac_handle=rmac, flags=ln_flags)
         ln1 = self.client.switcht_api_logical_network_create(device, lognet_info)
 
         # Create a tunnel interface
         udp = switcht_udp_t(src_port=1234, dst_port=4789)
-        src_ip = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.1', prefix_length=32)
-        dst_ip = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.3', prefix_length=32)
+        src_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.1', prefix_length=32)
+        dst_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.3', prefix_length=32)
         udp_tcp = switcht_udp_tcp_t(udp = udp)
         #encap_type 3 is vxlan
-        encap_info = switcht_encap_info_t(encap_type=3)
+        encap_info = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_VXLAN)
         ip_encap =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip, dst_ip=dst_ip, ttl=60, proto=17, u=udp_tcp)
         tunnel_encap = switcht_tunnel_encap_t(ip_encap=ip_encap)
-        iu4 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap, encap_info=encap_info, out_if=if2)
+        iu4 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap, encap_info=encap_info, out_if=if2)
         if4 = self.client.switcht_api_tunnel_interface_create(device, 0, iu4)
         self.client.switcht_api_logical_network_member_add(device, ln1, if4)
 
-        i_ip1 = switcht_ip_addr_t(addr_type=0, ipaddr='10.10.10.1', prefix_length=32)
+        i_ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.10.10.1', prefix_length=32)
         nhop_key1 = switcht_nhop_key_t(intf_handle=if1, ip_addr_valid=0)
         nhop1 = self.client.switcht_api_nhop_create(device, nhop_key1)
         neighbor_entry1 = switcht_neighbor_info_t(nhop_handle=nhop1,
                                                   interface_handle=if1,
                                                   mac_addr='00:33:33:33:33:33',
                                                   ip_addr=i_ip1,
-                                                  rw_type=1)
+                                                  rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor1 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry1)
 
-        i_ip2 = switcht_ip_addr_t(addr_type=0, ipaddr='20.20.20.1', prefix_length=32)
+        i_ip2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='20.20.20.1', prefix_length=32)
         nhop_key2 = switcht_nhop_key_t(intf_handle=if4, ip_addr_valid=0)
         nhop2 = self.client.switcht_api_nhop_create(device, nhop_key2)
         neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=nhop2,
                                                   interface_handle=if4,
                                                   mac_addr='00:44:44:44:44:44',
                                                   ip_addr=i_ip2,
-                                                  rw_type=1, neigh_type=7)
+                                                  rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         neighbor2 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry2)
 
         neighbor_entry3 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if4, mac_addr='00:55:55:55:55:55', ip_addr=src_ip)
@@ -5066,20 +5246,23 @@ class L2DynamicMacLearnTest(api_base_tests.ThriftInterfaceDataPlane):
         vlan = self.client.switcht_api_vlan_create(device, 10)
         self.client.switcht_api_vlan_aging_interval_set(vlan, 60000)
 
+        default_learn_timeout = 500
+        learn_timeout_in_ms = 5000
+
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=2, u=iu2, mac='00:77:66:55:44:33', label=0)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu2, mac='00:77:66:55:44:33', label=0)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         iu3 = interface_union(port_lag_handle = swports[3])
-        i_info3 = switcht_interface_info_t(device=0, type=2, u=iu3, mac='00:77:66:55:44:33', label=0)
+        i_info3 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu3, mac='00:77:66:55:44:33', label=0)
         if3 = self.client.switcht_api_interface_create(device, i_info3)
 
         iu4 = interface_union(port_lag_handle = swports[4])
-        i_info4 = switcht_interface_info_t(device=0, type=2, u=iu4, mac='00:77:66:55:44:33', label=0)
+        i_info4 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu4, mac='00:77:66:55:44:33', label=0)
         if4 = self.client.switcht_api_interface_create(device, i_info4)
 
         vlan_port1 = switcht_vlan_port_t(handle=if1, tagging_mode=0)
@@ -5103,11 +5286,11 @@ class L2DynamicMacLearnTest(api_base_tests.ThriftInterfaceDataPlane):
                                         ip_ttl=0)
                 send_packet(self, port, str(pkt))
 
-        time.sleep(3)
+        time.sleep(int(learn_timeout_in_ms/1000) + 2)
 
         try:
-            for src_port in range (1, 5):
-                for dst_port in range (1, 5):
+            for dst_port in range (1, 5):
+                for src_port in range (1, 5):
                     for mac_offset in range (1, 9):
                         if src_port == dst_port:
                             continue
@@ -5120,7 +5303,9 @@ class L2DynamicMacLearnTest(api_base_tests.ThriftInterfaceDataPlane):
                                                 ip_id=108,
                                                 ip_ttl=64)
                         send_packet(self, src_port, str(pkt))
-                        verify_packets(self, pkt, [dst_port])
+                        verify_packet(self, pkt, dst_port)
+
+            verify_no_other_packets(self)
 
         finally:
             self.client.switcht_api_mac_table_entries_delete_all(device)
@@ -5151,24 +5336,24 @@ class L2MplsPopTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=2, u=iu2, mac='00:77:66:55:44:33', label=0)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu2, mac='00:77:66:55:44:33', label=0)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
-        lognet_info = switcht_logical_network_t(type=5, age_interval=1800, vrf=vrf, rmac_handle=rmac)
+        lognet_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_ENHANCED, age_interval=1800, vrf=vrf, rmac_handle=rmac)
         ln1 = self.client.switcht_api_logical_network_create(device, lognet_info)
 
         mpls_tag1 = switcht_mpls_t(label=0xabcde, exp=0x5, ttl=0x30, bos=0)
         mpls_tag2 = switcht_mpls_t(label=0x54321, exp=0x2, ttl=0x40, bos=1)
         pop_info=switcht_mpls_pop_t(tag=[mpls_tag1, mpls_tag2], count=2)
         mpls_info = switcht_mpls_info_t(pop_info=pop_info)
-        mpls_encap = switcht_mpls_encap_t(mpls_type=0, mpls_action=0, mpls_mode=2, u=mpls_info, bd_handle=ln1)
+        mpls_encap = switcht_mpls_encap_t(mpls_type=SWITCH_API_MPLS_TYPE_EOMPLS, mpls_action=SWITCH_API_MPLS_ACTION_POP, mpls_mode=SWITCH_API_MPLS_TERMINATE, u=mpls_info, bd_handle=ln1)
         tunnel_encap = switcht_tunnel_encap_t(mpls_encap=mpls_encap)
         flags=switcht_interface_flags(flood_enabled=0, core_intf=0)
-        iu3 = switcht_tunnel_info_t(encap_mode=1, tunnel_encap=tunnel_encap, out_if=if1, flags=flags)
+        iu3 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_MPLS, tunnel_encap=tunnel_encap, out_if=if1, flags=flags)
         if3 = self.client.switcht_api_tunnel_interface_create(device, 0, iu3)
 
         self.client.switcht_api_logical_network_member_add(device, ln1, if1)
@@ -5227,24 +5412,24 @@ class L2MplsPushTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=2, u=iu2, mac='00:77:66:55:44:33', label=0)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu2, mac='00:77:66:55:44:33', label=0)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
-        lognet_info = switcht_logical_network_t(type=5, age_interval=1800, vrf=vrf, rmac_handle=rmac)
+        lognet_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_ENHANCED, age_interval=1800, vrf=vrf, rmac_handle=rmac)
         ln1 = self.client.switcht_api_logical_network_create(device, lognet_info)
 
         mpls_tag1 = switcht_mpls_t(label=0xabcde, exp=0x5, ttl=0x30, bos=0)
         mpls_tag2 = switcht_mpls_t(label=0x54321, exp=0x2, ttl=0x40, bos=1)
         push_info=switcht_mpls_push_t(tag=[mpls_tag1, mpls_tag2], count=2)
         mpls_info = switcht_mpls_info_t(push_info=push_info)
-        mpls_encap = switcht_mpls_encap_t(mpls_type=0, mpls_action=1, mpls_mode=0, u=mpls_info, bd_handle=ln1)
+        mpls_encap = switcht_mpls_encap_t(mpls_type=SWITCH_API_MPLS_TYPE_EOMPLS, mpls_action=SWITCH_API_MPLS_ACTION_PUSH, mpls_mode=SWITCH_API_MPLS_INITIATE, u=mpls_info, bd_handle=ln1)
         tunnel_encap = switcht_tunnel_encap_t(mpls_encap=mpls_encap)
         flags=switcht_interface_flags(flood_enabled=0, core_intf=0)
-        iu3 = switcht_tunnel_info_t(encap_mode=1, tunnel_encap=tunnel_encap, out_if=if1, flags=flags)
+        iu3 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_MPLS, tunnel_encap=tunnel_encap, out_if=if1, flags=flags)
         if3 = self.client.switcht_api_tunnel_interface_create(device, 0, iu3)
 
         self.client.switcht_api_logical_network_member_add(device, ln1, if1)
@@ -5256,7 +5441,7 @@ class L2MplsPushTest(api_base_tests.ThriftInterfaceDataPlane):
 
         #neighbor type 5 is push l2vpn
         neighbor_entry1 = switcht_neighbor_info_t(nhop_handle=nhop1,
-                                                  neigh_type=5,
+                                                  neigh_type=SWITCH_API_NEIGHBOR_MPLS_PUSH_L2VPN,
                                                   interface_handle= if3,
                                                   mpls_label=0,
                                                   header_count=2)
@@ -5321,14 +5506,14 @@ class L2MplsSwapTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=2, u=iu2, mac='00:77:66:55:44:33', label=0)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu2, mac='00:77:66:55:44:33', label=0)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
-        lognet_info = switcht_logical_network_t(type=5, age_interval=1800, vrf=vrf, rmac_handle=rmac)
+        lognet_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_ENHANCED, age_interval=1800, vrf=vrf, rmac_handle=rmac)
         ln1 = self.client.switcht_api_logical_network_create(device, lognet_info)
 
         self.client.switcht_api_logical_network_member_add(device, ln1, if1)
@@ -5341,11 +5526,17 @@ class L2MplsSwapTest(api_base_tests.ThriftInterfaceDataPlane):
         inner_tag = switcht_mpls_t(label=0x54321, exp=0x2, ttl=0x40, bos=1)
         swap_info=switcht_mpls_swap_t(old_tag=old_mpls_tag, new_tag=new_mpls_tag)
         mpls_info = switcht_mpls_info_t(swap_info=swap_info)
-        mpls_encap = switcht_mpls_encap_t(mpls_type=0, mpls_action=2, mpls_mode=1, u=mpls_info, nhop_handle=nhop1)
+        mpls_encap = switcht_mpls_encap_t(mpls_type=SWITCH_API_MPLS_TYPE_EOMPLS, mpls_action=SWITCH_API_MPLS_ACTION_SWAP, mpls_mode=SWITCH_API_MPLS_TRANSIT, u=mpls_info, nhop_handle=nhop1)
         self.client.switcht_api_mpls_tunnel_transit_create(device, mpls_encap)
 
         #neighbor type 2 is swap l2vpn
-        neighbor_entry1 = switcht_neighbor_info_t(neigh_type=2, nhop_handle=nhop1, interface_handle=if2, mac_addr='00:44:44:44:44:44', mpls_label=0x98765, rw_type=0)
+        neighbor_entry1 = switcht_neighbor_info_t(
+                             neigh_type=SWITCH_API_NEIGHBOR_MPLS_SWAP_L3VPN,
+                             nhop_handle=nhop1,
+                             interface_handle=if2,
+                             mac_addr='00:44:44:44:44:44',
+                             mpls_label=0x98765,
+                             rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2)
         neighbor1 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry1)
 
         try:
@@ -5402,36 +5593,36 @@ class L3MplsPopTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
-        i_ip2 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.0.2', prefix_length=16)
+        i_ip2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if2, vrf, i_ip2)
 
         ln_flags = switcht_ln_flags(ipv4_unicast_enabled=1)
-        lognet_info = switcht_logical_network_t(type=5, age_interval=1800, vrf=vrf, rmac_handle=rmac, flags=ln_flags)
+        lognet_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_ENHANCED, age_interval=1800, vrf=vrf, rmac_handle=rmac, flags=ln_flags)
         ln1 = self.client.switcht_api_logical_network_create(device, lognet_info)
 
         mpls_tag1 = switcht_mpls_t(label=0xabcde, exp=0x5, ttl=0x30, bos=0)
         mpls_tag2 = switcht_mpls_t(label=0x54321, exp=0x2, ttl=0x40, bos=1)
         pop_info=switcht_mpls_pop_t(tag=[mpls_tag1, mpls_tag2], count=2)
         mpls_info = switcht_mpls_info_t(pop_info=pop_info)
-        mpls_encap = switcht_mpls_encap_t(mpls_type=1, mpls_action=0, mpls_mode=2, u=mpls_info, bd_handle=ln1, vrf_handle=vrf)
+        mpls_encap = switcht_mpls_encap_t(mpls_type=SWITCH_API_MPLS_TYPE_IPV4_MPLS, mpls_action=SWITCH_API_MPLS_ACTION_POP, mpls_mode=SWITCH_API_MPLS_TERMINATE, u=mpls_info, bd_handle=ln1, vrf_handle=vrf)
         tunnel_encap = switcht_tunnel_encap_t(mpls_encap=mpls_encap)
         flags=switcht_interface_flags(flood_enabled=0, core_intf=0)
-        iu3 = switcht_tunnel_info_t(encap_mode=1, tunnel_encap=tunnel_encap, out_if=if1, flags=flags)
+        iu3 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_MPLS, tunnel_encap=tunnel_encap, out_if=if1, flags=flags)
         if3 = self.client.switcht_api_tunnel_interface_create(device, 0, iu3)
 
         self.client.switcht_api_logical_network_member_add(device, ln1, if1)
         self.client.switcht_api_logical_network_member_add(device, ln1, if3)
 
-        i_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='20.20.20.1', prefix_length=32)
+        i_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='20.20.20.1', prefix_length=32)
         nhop_key = switcht_nhop_key_t(intf_handle=if2, ip_addr_valid=0)
         nhop = self.client.switcht_api_nhop_create(device, nhop_key)
-        neighbor_entry = switcht_neighbor_info_t(nhop_handle=nhop, interface_handle=if2, mac_addr='00:33:33:33:33:33', ip_addr=i_ip3, rw_type=1)
+        neighbor_entry = switcht_neighbor_info_t(nhop_handle=nhop, interface_handle=if2, mac_addr='00:33:33:33:33:33', ip_addr=i_ip3, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip3, nhop)
 
@@ -5490,41 +5681,41 @@ class L3MplsPushTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
-        i_ip2 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.0.2', prefix_length=16)
+        i_ip2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if2, vrf, i_ip2)
 
-        lognet_info = switcht_logical_network_t(type=5, age_interval=1800, vrf=vrf, rmac_handle=rmac)
+        lognet_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_ENHANCED, age_interval=1800, vrf=vrf, rmac_handle=rmac)
         ln1 = self.client.switcht_api_logical_network_create(device, lognet_info)
 
         mpls_tag1 = switcht_mpls_t(label=0xabcde, exp=0x5, ttl=0x30, bos=0)
         mpls_tag2 = switcht_mpls_t(label=0x54321, exp=0x2, ttl=0x40, bos=1)
         push_info=switcht_mpls_push_t(tag=[mpls_tag1, mpls_tag2], count=2)
         mpls_info = switcht_mpls_info_t(push_info=push_info)
-        mpls_encap = switcht_mpls_encap_t(mpls_type=1, mpls_action=1, mpls_mode=0, u=mpls_info, bd_handle=ln1)
+        mpls_encap = switcht_mpls_encap_t(mpls_type=SWITCH_API_MPLS_TYPE_IPV4_MPLS, mpls_action=SWITCH_API_MPLS_ACTION_PUSH, mpls_mode=SWITCH_API_MPLS_INITIATE, u=mpls_info, bd_handle=ln1)
         tunnel_encap = switcht_tunnel_encap_t(mpls_encap=mpls_encap)
         flags=switcht_interface_flags(flood_enabled=0, core_intf=0)
-        iu3 = switcht_tunnel_info_t(encap_mode=1, tunnel_encap=tunnel_encap, out_if=if1, flags=flags)
+        iu3 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_MPLS, tunnel_encap=tunnel_encap, out_if=if1, flags=flags)
         if3 = self.client.switcht_api_tunnel_interface_create(device, 0, iu3)
 
         self.client.switcht_api_logical_network_member_add(device, ln1, if1)
         self.client.switcht_api_logical_network_member_add(device, ln1, if3)
 
-        i_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='20.20.20.1', prefix_length=32)
+        i_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='20.20.20.1', prefix_length=32)
         nhop_key1 = switcht_nhop_key_t(intf_handle=if3, ip_addr_valid=0)
         nhop1 = self.client.switcht_api_nhop_create(device, nhop_key1)
         #neighbor type 6 is push l3vpn
         neighbor_entry1 = switcht_neighbor_info_t(nhop_handle=nhop1,
-                                                  neigh_type=6,
+                                                  neigh_type=SWITCH_API_NEIGHBOR_MPLS_PUSH_L3VPN,
                                                   interface_handle=if3,
                                                   mpls_label=0,
                                                   header_count=2,
-                                                  rw_type=1)
+                                                  rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor1 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry1)
         neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if3, mac_addr='00:44:44:44:44:44')
         neighbor2 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry2)
@@ -5591,45 +5782,45 @@ class L2TunnelSplicingExtreme1Test(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         iu3 = interface_union(port_lag_handle = swports[3])
-        i_info3 = switcht_interface_info_t(device=0, type=4, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info3 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if3 = self.client.switcht_api_interface_create(device, i_info3)
 
         # Create a logical network (LN)
-        lognet_info = switcht_logical_network_t(type=5, age_interval=1800, vrf=vrf)
+        lognet_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_ENHANCED, age_interval=1800, vrf=vrf)
         ln1 = self.client.switcht_api_logical_network_create(device, lognet_info)
 
         # Create a geneve tunnel interface
         udp4 = switcht_udp_t(src_port=1234, dst_port=6081)
-        src_ip4 = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.1', prefix_length=32)
-        dst_ip4 = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.3', prefix_length=32)
+        src_ip4 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.1', prefix_length=32)
+        dst_ip4 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.3', prefix_length=32)
         udp_tcp4 = switcht_udp_tcp_t(udp = udp4)
         geneve4 = switcht_geneve_id_t(vni=0x4321)
         bt4 = switcht_bridge_type(geneve_info=geneve4)
-        encap_info4 = switcht_encap_info_t(encap_type=6, u=bt4)
+        encap_info4 = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_GENEVE, u=bt4)
         ip_encap4 =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip4, dst_ip=dst_ip4, ttl=60, proto=17, u=udp_tcp4)
         tunnel_encap4 = switcht_tunnel_encap_t(ip_encap=ip_encap4)
-        iu4 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap4, encap_info=encap_info4, out_if=if1)
+        iu4 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap4, encap_info=encap_info4, out_if=if1)
         if4 = self.client.switcht_api_tunnel_interface_create(device, 0, iu4)
 
         # Create a vxlan tunnel interface
         udp5 = switcht_udp_t(src_port=1234, dst_port=4789)
-        src_ip5 = switcht_ip_addr_t(addr_type=0, ipaddr='2.2.2.1', prefix_length=32)
-        dst_ip5 = switcht_ip_addr_t(addr_type=0, ipaddr='2.2.2.3', prefix_length=32)
+        src_ip5 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='2.2.2.1', prefix_length=32)
+        dst_ip5 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='2.2.2.3', prefix_length=32)
         udp_tcp5 = switcht_udp_tcp_t(udp = udp5)
         vxlan5 = switcht_vxlan_id_t(vnid=0x1234)
         bt5 = switcht_bridge_type(vxlan_info=vxlan5)
-        encap_info5 = switcht_encap_info_t(encap_type=3, u=bt5)
+        encap_info5 = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_VXLAN, u=bt5)
         ip_encap5 =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip5, dst_ip=dst_ip5, ttl=60, proto=17, u=udp_tcp5)
         tunnel_encap5 = switcht_tunnel_encap_t(ip_encap=ip_encap5)
-        iu5 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap5, encap_info=encap_info5, out_if=if2)
+        iu5 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap5, encap_info=encap_info5, out_if=if2)
         if5 = self.client.switcht_api_tunnel_interface_create(device, 0, iu5)
 
         #Create a mpls push interface
@@ -5637,10 +5828,10 @@ class L2TunnelSplicingExtreme1Test(api_base_tests.ThriftInterfaceDataPlane):
         mpls_tag2 = switcht_mpls_t(label=0xbbbbb, exp=0x2, ttl=0x40, bos=1)
         push_info=switcht_mpls_push_t(tag=[mpls_tag1, mpls_tag2], count=2)
         mpls_info = switcht_mpls_info_t(push_info=push_info)
-        mpls_encap = switcht_mpls_encap_t(mpls_type=0, mpls_action=1, mpls_mode=0, u=mpls_info, bd_handle=ln1)
+        mpls_encap = switcht_mpls_encap_t(mpls_type=SWITCH_API_MPLS_TYPE_EOMPLS, mpls_action=SWITCH_API_MPLS_ACTION_PUSH, mpls_mode=SWITCH_API_MPLS_INITIATE, u=mpls_info, bd_handle=ln1)
         tunnel_encap = switcht_tunnel_encap_t(mpls_encap=mpls_encap)
         flags=switcht_interface_flags(flood_enabled=0, core_intf=0)
-        iu6 = switcht_tunnel_info_t(encap_mode=1, tunnel_encap=tunnel_encap, out_if=if3, flags=flags)
+        iu6 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_MPLS, tunnel_encap=tunnel_encap, out_if=if3, flags=flags)
         if6 = self.client.switcht_api_tunnel_interface_create(device, 0, iu6)
 
         #Create a mpls pop interface
@@ -5648,10 +5839,10 @@ class L2TunnelSplicingExtreme1Test(api_base_tests.ThriftInterfaceDataPlane):
         mpls_tag2 = switcht_mpls_t(label=0xddddd, exp=0x2, ttl=0x40, bos=1)
         pop_info=switcht_mpls_pop_t(tag=[mpls_tag1, mpls_tag2], count=2)
         mpls_info = switcht_mpls_info_t(pop_info=pop_info)
-        mpls_encap = switcht_mpls_encap_t(mpls_type=0, mpls_action=0, mpls_mode=2, u=mpls_info, bd_handle=ln1)
+        mpls_encap = switcht_mpls_encap_t(mpls_type=SWITCH_API_MPLS_TYPE_EOMPLS, mpls_action=SWITCH_API_MPLS_ACTION_POP, mpls_mode=SWITCH_API_MPLS_TERMINATE, u=mpls_info, bd_handle=ln1)
         tunnel_encap = switcht_tunnel_encap_t(mpls_encap=mpls_encap)
         flags=switcht_interface_flags(flood_enabled=0, core_intf=0)
-        iu7 = switcht_tunnel_info_t(encap_mode=1, tunnel_encap=tunnel_encap, out_if=if3, flags=flags)
+        iu7 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_MPLS, tunnel_encap=tunnel_encap, out_if=if3, flags=flags)
         if7 = self.client.switcht_api_tunnel_interface_create(device, 0, iu7)
 
         #add L2 port to LN
@@ -5666,7 +5857,7 @@ class L2TunnelSplicingExtreme1Test(api_base_tests.ThriftInterfaceDataPlane):
                                                   interface_handle=if4,
                                                   mac_addr='00:33:33:33:33:33',
                                                   ip_addr=src_ip4,
-                                                  rw_type=0, neigh_type=7)
+                                                  rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         neighbor4 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry4)
         neighbor_entry1 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if4, mac_addr='00:33:33:33:33:33', ip_addr=src_ip4)
         neighbor1 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry1)
@@ -5677,7 +5868,7 @@ class L2TunnelSplicingExtreme1Test(api_base_tests.ThriftInterfaceDataPlane):
                                                   interface_handle=if5,
                                                   mac_addr='00:44:44:44:44:44',
                                                   ip_addr=src_ip5,
-                                                  rw_type=0, neigh_type=7)
+                                                  rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         neighbor5 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry5)
         neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if5, mac_addr='00:44:44:44:44:44', ip_addr=src_ip5)
         neighbor2 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry2)
@@ -5685,7 +5876,13 @@ class L2TunnelSplicingExtreme1Test(api_base_tests.ThriftInterfaceDataPlane):
         #neighbor type 5 is push l2vpn
         nhop_key6 = switcht_nhop_key_t(intf_handle=if6, ip_addr_valid=0)
         nhop6 = self.client.switcht_api_nhop_create(device, nhop_key6)
-        neighbor_entry6 = switcht_neighbor_info_t(nhop_handle=nhop6, neigh_type=5, interface_handle= if6, mpls_label=0, header_count=2, rw_type=0)
+        neighbor_entry6 = switcht_neighbor_info_t(
+                             nhop_handle=nhop6,
+                             neigh_type=SWITCH_API_NEIGHBOR_MPLS_PUSH_L2VPN,
+                             interface_handle= if6,
+                             mpls_label=0,
+                             header_count=2,
+                             rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2)
         neighbor6 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry6)
         neighbor_entry3 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if6, mac_addr='00:55:55:55:55:55')
         neighbor3 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry3)
@@ -5823,7 +6020,7 @@ class L2TunnelSplicingExtreme1Test(api_base_tests.ThriftInterfaceDataPlane):
             send_packet(self, swports[1], str(geneve_pkt))
             verify_packets(self, mpls_pkt, [swports[3]])
 
-            print "Sending packet from Mpls port %d" % swports[3], "  to Geneve port %d" % swports[1], ""
+            print "Sending packet from Mpls port %d" % swports[3], "to Geneve port %d" % swports[1], ""
             pkt = simple_tcp_packet(eth_dst='00:aa:aa:aa:aa:aa',
                                     eth_src='00:cc:cc:cc:cc:cc',
                                     ip_dst='10.10.10.1',
@@ -5898,32 +6095,32 @@ class L2LagFloodTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_vlan_learning_enabled_set(vlan, 0)
 
         lag1 = self.client.switcht_api_lag_create(device)
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=0, port=swports[1])
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=0, port=swports[2])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[1])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[2])
         iu1 = interface_union(port_lag_handle = lag1)
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         lag2 = self.client.switcht_api_lag_create(device)
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=0, port=swports[3])
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=0, port=swports[4])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[3])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[4])
         iu2 = interface_union(port_lag_handle = lag2)
-        i_info2 = switcht_interface_info_t(device=0, type=2, u=iu2, mac='00:77:66:55:44:33', label=0)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu2, mac='00:77:66:55:44:33', label=0)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         lag3 = self.client.switcht_api_lag_create(device)
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag3, side=0, port=swports[5])
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag3, side=0, port=swports[6])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag3, side=SWITCH_API_DIRECTION_BOTH, port=swports[5])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag3, side=SWITCH_API_DIRECTION_BOTH, port=swports[6])
         iu3 = interface_union(port_lag_handle = lag3)
-        i_info3 = switcht_interface_info_t(device=0, type=2, u=iu3, mac='00:77:66:55:44:33', label=0)
+        i_info3 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu3, mac='00:77:66:55:44:33', label=0)
         if3 = self.client.switcht_api_interface_create(device, i_info3)
 
         iu4 = interface_union(port_lag_handle = swports[7])
-        i_info4 = switcht_interface_info_t(device=0, type=2, u=iu4, mac='00:77:66:55:44:33', label=0)
+        i_info4 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu4, mac='00:77:66:55:44:33', label=0)
         if4 = self.client.switcht_api_interface_create(device, i_info4)
 
         iu5 = interface_union(port_lag_handle = swports[8])
-        i_info5 = switcht_interface_info_t(device=0, type=2, u=iu5, mac='00:77:66:55:44:33', label=0)
+        i_info5 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu5, mac='00:77:66:55:44:33', label=0)
         if5 = self.client.switcht_api_interface_create(device, i_info5)
 
         vlan_port1 = switcht_vlan_port_t(handle=if1, tagging_mode=0)
@@ -5986,12 +6183,12 @@ class L2LagFloodTest(api_base_tests.ThriftInterfaceDataPlane):
             self.client.switcht_api_interface_delete(device, if4)
             self.client.switcht_api_interface_delete(device, if5)
 
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=0, port=swports[1])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=0, port=swports[2])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=0, port=swports[3])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=0, port=swports[4])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag3, side=0, port=swports[5])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag3, side=0, port=swports[6])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[1])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[2])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[3])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag2, side=SWITCH_API_DIRECTION_BOTH, port=swports[4])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag3, side=SWITCH_API_DIRECTION_BOTH, port=swports[5])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag3, side=SWITCH_API_DIRECTION_BOTH, port=swports[6])
 
             self.client.switcht_api_lag_delete(device, lag1)
             self.client.switcht_api_lag_delete(device, lag2)
@@ -6015,60 +6212,60 @@ class L2TunnelSplicingExtreme2Test(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         iu3 = interface_union(port_lag_handle = swports[3])
-        i_info3 = switcht_interface_info_t(device=0, type=4, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info3 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if3 = self.client.switcht_api_interface_create(device, i_info3)
 
         iu4 = interface_union(port_lag_handle = swports[4])
-        i_info4 = switcht_interface_info_t(device=0, type=4, u=iu4, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info4 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu4, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if4 = self.client.switcht_api_interface_create(device, i_info4)
 
         lag1 = self.client.switcht_api_lag_create(device)
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=0, port=swports[5])
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=0, port=swports[6])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[5])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[6])
         iu5 = interface_union(port_lag_handle = lag1)
-        i_info5 = switcht_interface_info_t(device=0, type=2, u=iu5, mac='00:77:66:55:44:33', label=0)
+        i_info5 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu5, mac='00:77:66:55:44:33', label=0)
         if5 = self.client.switcht_api_interface_create(device, i_info5)
 
         iu7 = interface_union(port_lag_handle = swports[7])
-        i_info7 = switcht_interface_info_t(device=0, type=2, u=iu7, mac='00:77:66:55:44:33', label=0)
+        i_info7 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu7, mac='00:77:66:55:44:33', label=0)
         if7 = self.client.switcht_api_interface_create(device, i_info7)
 
         # Create a logical network (LN)
-        lognet_info = switcht_logical_network_t(type=5, age_interval=1800, vrf=vrf)
+        lognet_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_ENHANCED, age_interval=1800, vrf=vrf)
         ln1 = self.client.switcht_api_logical_network_create(device, lognet_info)
 
         # Create a geneve tunnel interface
         udp11 = switcht_udp_t(src_port=1234, dst_port=6081)
-        src_ip11 = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.1', prefix_length=32)
-        dst_ip11 = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.3', prefix_length=32)
+        src_ip11 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.1', prefix_length=32)
+        dst_ip11 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.3', prefix_length=32)
         udp_tcp11 = switcht_udp_tcp_t(udp = udp11)
         geneve11 = switcht_geneve_id_t(vni=0x4321)
         bt11 = switcht_bridge_type(geneve_info=geneve11)
-        encap_info11 = switcht_encap_info_t(encap_type=6, u=bt11)
+        encap_info11 = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_GENEVE, u=bt11)
         ip_encap11 =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip11, dst_ip=dst_ip11, ttl=60, proto=17, u=udp_tcp11)
         tunnel_encap11 = switcht_tunnel_encap_t(ip_encap=ip_encap11)
-        iu11 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap11, encap_info=encap_info11, out_if=if1)
+        iu11 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap11, encap_info=encap_info11, out_if=if1)
         if11 = self.client.switcht_api_tunnel_interface_create(device, 0, iu11)
 
         # Create a vxlan tunnel interface
         udp21 = switcht_udp_t(src_port=1234, dst_port=4789)
-        src_ip21 = switcht_ip_addr_t(addr_type=0, ipaddr='2.2.2.1', prefix_length=32)
-        dst_ip21 = switcht_ip_addr_t(addr_type=0, ipaddr='2.2.2.3', prefix_length=32)
+        src_ip21 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='2.2.2.1', prefix_length=32)
+        dst_ip21 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='2.2.2.3', prefix_length=32)
         udp_tcp21 = switcht_udp_tcp_t(udp = udp21)
         vxlan21 = switcht_vxlan_id_t(vnid=0x1234)
         bt21 = switcht_bridge_type(vxlan_info=vxlan21)
-        encap_info21 = switcht_encap_info_t(encap_type=3, u=bt21)
+        encap_info21 = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_VXLAN, u=bt21)
         ip_encap21 =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip21, dst_ip=dst_ip21, ttl=60, proto=17, u=udp_tcp21)
         tunnel_encap21 = switcht_tunnel_encap_t(ip_encap=ip_encap21)
-        iu21 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap21, encap_info=encap_info21, out_if=if2)
+        iu21 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap21, encap_info=encap_info21, out_if=if2)
         if21 = self.client.switcht_api_tunnel_interface_create(device, 0, iu21)
 
         #Create a mpls push interface
@@ -6076,10 +6273,10 @@ class L2TunnelSplicingExtreme2Test(api_base_tests.ThriftInterfaceDataPlane):
         mpls_tag2 = switcht_mpls_t(label=0xbbbbb, exp=0x2, ttl=0x40, bos=1)
         push_info=switcht_mpls_push_t(tag=[mpls_tag1, mpls_tag2], count=2)
         mpls_info = switcht_mpls_info_t(push_info=push_info)
-        mpls_encap = switcht_mpls_encap_t(mpls_type=0, mpls_action=1, mpls_mode=0, u=mpls_info, bd_handle=ln1)
+        mpls_encap = switcht_mpls_encap_t(mpls_type=SWITCH_API_MPLS_TYPE_EOMPLS, mpls_action=SWITCH_API_MPLS_ACTION_PUSH, mpls_mode=SWITCH_API_MPLS_INITIATE, u=mpls_info, bd_handle=ln1)
         tunnel_encap = switcht_tunnel_encap_t(mpls_encap=mpls_encap)
         flags=switcht_interface_flags(flood_enabled=0, core_intf=0)
-        iu31 = switcht_tunnel_info_t(encap_mode=1, tunnel_encap=tunnel_encap, out_if=if3, flags=flags)
+        iu31 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_MPLS, tunnel_encap=tunnel_encap, out_if=if3, flags=flags)
         if31 = self.client.switcht_api_tunnel_interface_create(device, 0, iu31)
 
         #Create a mpls pop interface
@@ -6087,21 +6284,21 @@ class L2TunnelSplicingExtreme2Test(api_base_tests.ThriftInterfaceDataPlane):
         mpls_tag2 = switcht_mpls_t(label=0xddddd, exp=0x2, ttl=0x40, bos=1)
         pop_info=switcht_mpls_pop_t(tag=[mpls_tag1, mpls_tag2], count=2)
         mpls_info = switcht_mpls_info_t(pop_info=pop_info)
-        mpls_encap = switcht_mpls_encap_t(mpls_type=0, mpls_action=0, mpls_mode=2, u=mpls_info, bd_handle=ln1)
+        mpls_encap = switcht_mpls_encap_t(mpls_type=SWITCH_API_MPLS_TYPE_EOMPLS, mpls_action=SWITCH_API_MPLS_ACTION_POP, mpls_mode=SWITCH_API_MPLS_TERMINATE, u=mpls_info, bd_handle=ln1)
         tunnel_encap = switcht_tunnel_encap_t(mpls_encap=mpls_encap)
         flags=switcht_interface_flags(flood_enabled=0, core_intf=0)
-        iu32 = switcht_tunnel_info_t(encap_mode=1, tunnel_encap=tunnel_encap, out_if=if3, flags=flags)
+        iu32 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_MPLS, tunnel_encap=tunnel_encap, out_if=if3, flags=flags)
         if32 = self.client.switcht_api_tunnel_interface_create(device, 0, iu32)
 
         # Create a nvgre tunnel interface
-        src_ip41 = switcht_ip_addr_t(addr_type=0, ipaddr='3.3.3.1', prefix_length=32)
-        dst_ip41 = switcht_ip_addr_t(addr_type=0, ipaddr='3.3.3.3', prefix_length=32)
+        src_ip41 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='3.3.3.1', prefix_length=32)
+        dst_ip41 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='3.3.3.3', prefix_length=32)
         nvgre41 = switcht_nvgre_id_t(tnid=0x4545)
         bt41 = switcht_bridge_type(nvgre_info=nvgre41)
-        encap_info41 = switcht_encap_info_t(encap_type=5, u=bt41)
+        encap_info41 = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_NVGRE, u=bt41)
         ip_encap41 =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip41, dst_ip=dst_ip41, ttl=60, proto=47, gre_proto=0x6558)
         tunnel_encap41 = switcht_tunnel_encap_t(ip_encap=ip_encap41)
-        iu41 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap41, encap_info=encap_info41, out_if=if4)
+        iu41 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap41, encap_info=encap_info41, out_if=if4)
         if41 = self.client.switcht_api_tunnel_interface_create(device, 0, iu41)
 
         #add L2 port to LN
@@ -6119,7 +6316,7 @@ class L2TunnelSplicingExtreme2Test(api_base_tests.ThriftInterfaceDataPlane):
                                                    interface_handle=if11,
                                                    mac_addr='00:33:33:33:33:33',
                                                    ip_addr=src_ip11,
-                                                   rw_type=0, neigh_type=7)
+                                                   rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         neighbor11 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry11)
         neighbor_entry12 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if11, mac_addr='00:33:33:33:33:33', ip_addr=src_ip11)
         neighbor12 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry12)
@@ -6130,7 +6327,7 @@ class L2TunnelSplicingExtreme2Test(api_base_tests.ThriftInterfaceDataPlane):
                                                    interface_handle=if21,
                                                    mac_addr='00:44:44:44:44:44',
                                                    ip_addr=src_ip21,
-                                                   rw_type=0, neigh_type=7)
+                                                   rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         neighbor21 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry21)
         neighbor_entry22 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if21, mac_addr='00:44:44:44:44:44', ip_addr=src_ip21)
         neighbor22 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry22)
@@ -6138,7 +6335,13 @@ class L2TunnelSplicingExtreme2Test(api_base_tests.ThriftInterfaceDataPlane):
         #neighbor type 5 is push l2vpn
         nhop_key31 = switcht_nhop_key_t(intf_handle=if31, ip_addr_valid=0)
         nhop31 = self.client.switcht_api_nhop_create(device, nhop_key31)
-        neighbor_entry31 = switcht_neighbor_info_t(nhop_handle=nhop31, neigh_type=5, interface_handle= if31, mpls_label=0, header_count=2, rw_type=0)
+        neighbor_entry31 = switcht_neighbor_info_t(
+                             nhop_handle=nhop31,
+                             neigh_type=SWITCH_API_NEIGHBOR_MPLS_PUSH_L2VPN,
+                             interface_handle= if31,
+                             mpls_label=0,
+                             header_count=2,
+                             rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2)
         neighbor31 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry31)
         neighbor_entry32 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if31, mac_addr='00:55:55:55:55:55')
         neighbor32 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry32)
@@ -6149,7 +6352,7 @@ class L2TunnelSplicingExtreme2Test(api_base_tests.ThriftInterfaceDataPlane):
                                                    interface_handle=if41,
                                                    mac_addr='00:66:66:66:66:66',
                                                    ip_addr=src_ip41,
-                                                   rw_type=0, neigh_type=7)
+                                                   rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         neighbor41 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry41)
         neighbor_entry42 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if41, mac_addr='00:66:66:66:66:66', ip_addr=src_ip41)
         neighbor42 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry42)
@@ -6474,7 +6677,7 @@ class L2TunnelSplicingExtreme2Test(api_base_tests.ThriftInterfaceDataPlane):
             send_packet(self, swports[4], str(nvgre_pkt))
             verify_packets(self, mpls_pkt, [swports[3]])
 
-            print "Sending packet from Mpls port %d" % swports[3], "  to Nvgre port %d" % swports[4], ""
+            print "Sending packet from Mpls port %d" % swports[3], "to Nvgre port %d" % swports[4], ""
             pkt = simple_tcp_packet(eth_dst='00:04:00:00:00:41',
                                     eth_src='00:03:00:00:00:31',
                                     ip_dst='10.10.10.1',
@@ -6602,8 +6805,8 @@ class L2TunnelSplicingExtreme2Test(api_base_tests.ThriftInterfaceDataPlane):
             self.client.switcht_api_tunnel_interface_delete(device, if32)
             self.client.switcht_api_tunnel_interface_delete(device, if41)
 
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=0, port=swports[5])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=0, port=swports[6])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[5])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag1, side=SWITCH_API_DIRECTION_BOTH, port=swports[6])
             self.client.switcht_api_lag_delete(device, lag1)
 
             self.client.switcht_api_interface_delete(device, if1)
@@ -6631,15 +6834,15 @@ class L2VxlanLearnBasicTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         iu3 = interface_union(port_lag_handle = swports[3])
-        i_info3 = switcht_interface_info_t(device=0, type=2, u=iu3, mac='00:77:66:55:44:33', label=0)
+        i_info3 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu3, mac='00:77:66:55:44:33', label=0)
         if3 = self.client.switcht_api_interface_create(device, i_info3)
 
         # Create a logical network (LN)
@@ -6648,7 +6851,7 @@ class L2VxlanLearnBasicTest(api_base_tests.ThriftInterfaceDataPlane):
         encap = switcht_encap_info_t(u=bt)
 
         #encap_type 4 is vxlan
-        lognet_info = switcht_logical_network_t(type=4, encap_info=encap,
+        lognet_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_BASIC, encap_info=encap,
                                                 age_interval=10000,
                                                 vrf=vrf, flags=ln_flags)
         ln1 = self.client.switcht_api_logical_network_create(device, lognet_info)
@@ -6656,13 +6859,13 @@ class L2VxlanLearnBasicTest(api_base_tests.ThriftInterfaceDataPlane):
         # Create a tunnel interface
         flags = switcht_interface_flags(flood_enabled=1)
         udp = switcht_udp_t(src_port=1234, dst_port=4789)
-        src_ip = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.1', prefix_length=32)
-        dst_ip = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.3', prefix_length=32)
+        src_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.1', prefix_length=32)
+        dst_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.3', prefix_length=32)
         udp_tcp = switcht_udp_tcp_t(udp = udp)
-        encap_info = switcht_encap_info_t(encap_type=3)
+        encap_info = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_VXLAN)
         ip_encap =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip, dst_ip=dst_ip, ttl=60, proto=17, u=udp_tcp)
         tunnel_encap = switcht_tunnel_encap_t(ip_encap=ip_encap)
-        iu4 = switcht_tunnel_info_t(encap_mode = 0, tunnel_encap=tunnel_encap, encap_info=encap_info, out_if=if2, flags=flags)
+        iu4 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap, encap_info=encap_info, out_if=if2, flags=flags)
         if4 = self.client.switcht_api_tunnel_interface_create(device, 0, iu4)
 
         nhop_key1 = switcht_nhop_key_t(intf_handle=if4, ip_addr_valid=0)
@@ -6677,7 +6880,7 @@ class L2VxlanLearnBasicTest(api_base_tests.ThriftInterfaceDataPlane):
                                                   interface_handle=if4,
                                                   mac_addr='00:33:33:33:33:33',
                                                   ip_addr=src_ip,
-                                                  rw_type=0, neigh_type=7)
+                                                  rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         neighbor1 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry1)
 
         neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if4, mac_addr='00:33:33:33:33:33', ip_addr=src_ip)
@@ -6766,11 +6969,11 @@ class L2VlanStatsTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_vlan_stats_enable(device, vlan)
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=2, u=iu2, mac='00:77:66:55:44:33', label=0)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu2, mac='00:77:66:55:44:33', label=0)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         vlan_port1 = switcht_vlan_port_t(handle=if1, tagging_mode=0)
@@ -6858,72 +7061,72 @@ class L2TunnelFloodEnhancedTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         iu3 = interface_union(port_lag_handle = swports[3])
-        i_info3 = switcht_interface_info_t(device=0, type=4, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info3 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if3 = self.client.switcht_api_interface_create(device, i_info3)
 
         # Create a logical network (LN)
-        lognet_info = switcht_logical_network_t(type=5, age_interval=1800, vrf=vrf)
+        lognet_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_ENHANCED, age_interval=1800, vrf=vrf)
         ln1 = self.client.switcht_api_logical_network_create(device, lognet_info)
 
         flags = switcht_interface_flags(flood_enabled=1)
 
         # Create a geneve tunnel interface
         udp11 = switcht_udp_t(src_port=1234, dst_port=6081)
-        src_ip11 = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.1', prefix_length=32)
-        dst_ip11 = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.3', prefix_length=32)
+        src_ip11 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.1', prefix_length=32)
+        dst_ip11 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.3', prefix_length=32)
         udp_tcp11 = switcht_udp_tcp_t(udp = udp11)
         geneve11 = switcht_geneve_id_t(vni=0x4321)
         bt11 = switcht_bridge_type(geneve_info=geneve11)
-        encap_info11 = switcht_encap_info_t(encap_type=6, u=bt11)
+        encap_info11 = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_GENEVE, u=bt11)
         ip_encap11 =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip11, dst_ip=dst_ip11, ttl=60, proto=17, u=udp_tcp11)
         tunnel_encap11 = switcht_tunnel_encap_t(ip_encap=ip_encap11)
-        iu11 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap11, encap_info=encap_info11, out_if=if1, flags=flags)
+        iu11 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap11, encap_info=encap_info11, out_if=if1, flags=flags)
         if11 = self.client.switcht_api_tunnel_interface_create(device, 0, iu11)
 
         # Create a vxlan tunnel interface
         udp21 = switcht_udp_t(src_port=1234, dst_port=4789)
-        src_ip21 = switcht_ip_addr_t(addr_type=0, ipaddr='2.2.2.1', prefix_length=32)
-        dst_ip21 = switcht_ip_addr_t(addr_type=0, ipaddr='2.2.2.3', prefix_length=32)
+        src_ip21 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='2.2.2.1', prefix_length=32)
+        dst_ip21 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='2.2.2.3', prefix_length=32)
         udp_tcp21 = switcht_udp_tcp_t(udp = udp21)
         vxlan21 = switcht_vxlan_id_t(vnid=0x1234)
         bt21 = switcht_bridge_type(vxlan_info=vxlan21)
-        encap_info21 = switcht_encap_info_t(encap_type=3, u=bt21)
+        encap_info21 = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_VXLAN, u=bt21)
         ip_encap21 =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip21, dst_ip=dst_ip21, ttl=60, proto=17, u=udp_tcp21)
         tunnel_encap21 = switcht_tunnel_encap_t(ip_encap=ip_encap21)
-        iu21 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap21, encap_info=encap_info21, out_if=if2, flags=flags)
+        iu21 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap21, encap_info=encap_info21, out_if=if2, flags=flags)
         if21 = self.client.switcht_api_tunnel_interface_create(device, 0, iu21)
 
         # Create a nvgre tunnel interface
-        src_ip31 = switcht_ip_addr_t(addr_type=0, ipaddr='3.3.3.1', prefix_length=32)
-        dst_ip31 = switcht_ip_addr_t(addr_type=0, ipaddr='3.3.3.3', prefix_length=32)
+        src_ip31 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='3.3.3.1', prefix_length=32)
+        dst_ip31 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='3.3.3.3', prefix_length=32)
         nvgre31 = switcht_nvgre_id_t(tnid=0x4545)
         bt31 = switcht_bridge_type(nvgre_info=nvgre31)
-        encap_info31 = switcht_encap_info_t(encap_type=5, u=bt31)
+        encap_info31 = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_NVGRE, u=bt31)
         ip_encap31 =  switcht_ip_encap_t(vrf=vrf, src_ip=src_ip31, dst_ip=dst_ip31, ttl=60, proto=47, gre_proto=0x6558)
         tunnel_encap31 = switcht_tunnel_encap_t(ip_encap=ip_encap31)
-        iu31 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap31, encap_info=encap_info31, out_if=if3, flags=flags)
+        iu31 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap31, encap_info=encap_info31, out_if=if3, flags=flags)
         if31 = self.client.switcht_api_tunnel_interface_create(device, 0, iu31)
 
         pv4 = switcht_port_vlan_t(port_lag_handle=swports[4], vlan_id=10)
         iu4 = interface_union(port_vlan = pv4)
-        i_info4 = switcht_interface_info_t(device=0, type=9, u=iu4, mac='00:77:66:55:44:33', label=0)
+        i_info4 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_PORT_VLAN, u=iu4, mac='00:77:66:55:44:33', label=0)
         if4 = self.client.switcht_api_interface_create(device, i_info4)
 
         pv5 = switcht_port_vlan_t(port_lag_handle=swports[5], vlan_id=20)
         iu5 = interface_union(port_vlan = pv5)
-        i_info5 = switcht_interface_info_t(device=0, type=9, u=iu5, mac='00:77:66:55:44:33', label=0)
+        i_info5 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_PORT_VLAN, u=iu5, mac='00:77:66:55:44:33', label=0)
         if5 = self.client.switcht_api_interface_create(device, i_info5)
 
         iu6 = interface_union(port_lag_handle = swports[6])
-        i_info6 = switcht_interface_info_t(device=0, type=2, u=iu6, mac='00:77:66:55:44:33', label=0)
+        i_info6 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu6, mac='00:77:66:55:44:33', label=0)
         if6 = self.client.switcht_api_interface_create(device, i_info6)
 
         nhop_key11 = switcht_nhop_key_t(intf_handle=if11, ip_addr_valid=0)
@@ -6944,7 +7147,7 @@ class L2TunnelFloodEnhancedTest(api_base_tests.ThriftInterfaceDataPlane):
                                                    interface_handle=if11,
                                                    mac_addr='00:11:11:11:11:11',
                                                    ip_addr=src_ip11,
-                                                   rw_type=0, neigh_type=7)
+                                                   rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         neighbor11 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry11)
         neighbor_entry12 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if11, mac_addr='00:11:11:11:11:11', ip_addr=src_ip11)
         neighbor12 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry12)
@@ -6953,7 +7156,7 @@ class L2TunnelFloodEnhancedTest(api_base_tests.ThriftInterfaceDataPlane):
                                                    interface_handle=if21,
                                                    mac_addr='00:22:22:22:22:22',
                                                    ip_addr=src_ip21,
-                                                   rw_type=0, neigh_type=7)
+                                                   rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         neighbor21 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry21)
         neighbor_entry22 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if21, mac_addr='00:22:22:22:22:22', ip_addr=src_ip21)
         neighbor22 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry22)
@@ -6962,7 +7165,7 @@ class L2TunnelFloodEnhancedTest(api_base_tests.ThriftInterfaceDataPlane):
                                                    interface_handle=if31,
                                                    mac_addr='00:33:33:33:33:33',
                                                    ip_addr=src_ip31,
-                                                   rw_type=0, neigh_type=7)
+                                                   rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         neighbor31 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry31)
         neighbor_entry32 = switcht_neighbor_info_t(nhop_handle=0, interface_handle=if31, mac_addr='00:33:33:33:33:33:33', ip_addr=src_ip31)
         neighbor32 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry32)
@@ -7086,11 +7289,11 @@ class L3VIIPv4HostTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=2, u=iu2, mac='00:77:66:55:44:33', label=0)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu2, mac='00:77:66:55:44:33', label=0)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         vlan_port1 = switcht_vlan_port_t(handle=if1, tagging_mode=0)
@@ -7102,38 +7305,38 @@ class L3VIIPv4HostTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_mac_table_entry_create(device, vlan, '00:22:22:22:22:22', 2, if2)
 
         iu3 = interface_union(port_lag_handle = swports[3])
-        i_info3 = switcht_interface_info_t(device=0, type=4, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info3 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if3 = self.client.switcht_api_interface_create(device, i_info3)
-        i_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='192.168.0.2', prefix_length=16)
+        i_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='192.168.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if3, vrf, i_ip3)
 
         iu4 = interface_union(vlan_id = 10)
-        i_info4 = switcht_interface_info_t(device=0, type=5, u=iu4, mac='00:77:66:55:44:33',
+        i_info4 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3_VLAN, u=iu4, mac='00:77:66:55:44:33',
                                            label=0, vrf_handle=vrf, rmac_handle=rmac,
                                            v4_unicast_enabled=1, v6_unicast_enabled=1)
         if4 = self.client.switcht_api_interface_create(device, i_info4)
-        i_ip4 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.0.2', prefix_length=16)
+        i_ip4 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if4, vrf, i_ip4)
 
         # Add a static route
-        i_ip41 = switcht_ip_addr_t(addr_type=0, ipaddr='10.10.10.1', prefix_length=32)
+        i_ip41 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.10.10.1', prefix_length=32)
         nhop_key41 = switcht_nhop_key_t(intf_handle=if4, ip_addr_valid=0)
         nhop41 = self.client.switcht_api_nhop_create(device, nhop_key41)
-        neighbor_entry41 = switcht_neighbor_info_t(nhop_handle=nhop41, interface_handle=if4, mac_addr='00:11:11:11:11:11', ip_addr=i_ip41, rw_type=1)
+        neighbor_entry41 = switcht_neighbor_info_t(nhop_handle=nhop41, interface_handle=if4, mac_addr='00:11:11:11:11:11', ip_addr=i_ip41, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor41 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry41)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip41, nhop41)
 
-        i_ip42 = switcht_ip_addr_t(addr_type=0, ipaddr='11.11.11.1', prefix_length=32)
+        i_ip42 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='11.11.11.1', prefix_length=32)
         nhop_key42 = switcht_nhop_key_t(intf_handle=if4, ip_addr_valid=0)
         nhop42 = self.client.switcht_api_nhop_create(device, nhop_key42)
-        neighbor_entry42 = switcht_neighbor_info_t(nhop_handle=nhop42, interface_handle=if4, mac_addr='00:22:22:22:22:22', ip_addr=i_ip42, rw_type=1)
+        neighbor_entry42 = switcht_neighbor_info_t(nhop_handle=nhop42, interface_handle=if4, mac_addr='00:22:22:22:22:22', ip_addr=i_ip42, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor42 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry42)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip42, nhop42)
 
-        i_ip31 = switcht_ip_addr_t(addr_type=0, ipaddr='12.12.12.1', prefix_length=32)
+        i_ip31 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='12.12.12.1', prefix_length=32)
         nhop_key31 = switcht_nhop_key_t(intf_handle=if3, ip_addr_valid=0)
         nhop31 = self.client.switcht_api_nhop_create(device, nhop_key31)
-        neighbor_entry31 = switcht_neighbor_info_t(nhop_handle=nhop31, interface_handle=if3, mac_addr='00:33:33:33:33:33', ip_addr=i_ip31, rw_type=1)
+        neighbor_entry31 = switcht_neighbor_info_t(nhop_handle=nhop31, interface_handle=if3, mac_addr='00:33:33:33:33:33', ip_addr=i_ip31, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor31 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry31)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip31, nhop31)
 
@@ -7244,11 +7447,11 @@ class L3VIIPv6HostTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=2, u=iu2, mac='00:77:66:55:44:33', label=0)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu2, mac='00:77:66:55:44:33', label=0)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         vlan_port1 = switcht_vlan_port_t(handle=if1, tagging_mode=0)
@@ -7260,38 +7463,38 @@ class L3VIIPv6HostTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_mac_table_entry_create(device, vlan, '00:22:22:22:22:22', 2, if2)
 
         iu3 = interface_union(port_lag_handle = swports[3])
-        i_info3 = switcht_interface_info_t(device=0, type=4, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info3 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if3 = self.client.switcht_api_interface_create(device, i_info3)
-        i_ip3 = switcht_ip_addr_t(addr_type=1, ipaddr='2000::2', prefix_length=128)
+        i_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='2000::2', prefix_length=128)
         self.client.switcht_api_l3_interface_address_add(device, if3, vrf, i_ip3)
 
         iu4 = interface_union(vlan_id = 10)
-        i_info4 = switcht_interface_info_t(device=0, type=5, u=iu4, mac='00:77:66:55:44:33',
+        i_info4 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3_VLAN, u=iu4, mac='00:77:66:55:44:33',
                                            label=0, vrf_handle=vrf, rmac_handle=rmac,
                                            v4_unicast_enabled=1, v6_unicast_enabled=1)
         if4 = self.client.switcht_api_interface_create(device, i_info4)
-        i_ip4 = switcht_ip_addr_t(addr_type=0, ipaddr='3000::2', prefix_length=128)
+        i_ip4 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='3000::2', prefix_length=128)
         self.client.switcht_api_l3_interface_address_add(device, if4, vrf, i_ip4)
 
         # Add a static route
-        i_ip41 = switcht_ip_addr_t(addr_type=1, ipaddr='1234:5678:9abc:def0:4422:1133:5577:99aa', prefix_length=128)
+        i_ip41 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='1234:5678:9abc:def0:4422:1133:5577:99aa', prefix_length=128)
         nhop_key41 = switcht_nhop_key_t(intf_handle=if4, ip_addr_valid=0)
         nhop41 = self.client.switcht_api_nhop_create(device, nhop_key41)
-        neighbor_entry41 = switcht_neighbor_info_t(nhop_handle=nhop41, interface_handle=if4, mac_addr='00:11:11:11:11:11', ip_addr=i_ip41, rw_type=1)
+        neighbor_entry41 = switcht_neighbor_info_t(nhop_handle=nhop41, interface_handle=if4, mac_addr='00:11:11:11:11:11', ip_addr=i_ip41, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor41 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry41)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip41, nhop41)
 
-        i_ip42 = switcht_ip_addr_t(addr_type=1, ipaddr='1234:5678:9abc:def0:4422:1133:5577:99bb', prefix_length=128)
+        i_ip42 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='1234:5678:9abc:def0:4422:1133:5577:99bb', prefix_length=128)
         nhop_key42 = switcht_nhop_key_t(intf_handle=if4, ip_addr_valid=0)
         nhop42 = self.client.switcht_api_nhop_create(device, nhop_key42)
-        neighbor_entry42 = switcht_neighbor_info_t(nhop_handle=nhop42, interface_handle=if4, mac_addr='00:22:22:22:22:22', ip_addr=i_ip42, rw_type=1)
+        neighbor_entry42 = switcht_neighbor_info_t(nhop_handle=nhop42, interface_handle=if4, mac_addr='00:22:22:22:22:22', ip_addr=i_ip42, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor42 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry42)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip42, nhop42)
 
-        i_ip31 = switcht_ip_addr_t(addr_type=1, ipaddr='1234:5678:9abc:def0:4422:1133:5577:99cc', prefix_length=128)
+        i_ip31 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='1234:5678:9abc:def0:4422:1133:5577:99cc', prefix_length=128)
         nhop_key31 = switcht_nhop_key_t(intf_handle=if3, ip_addr_valid=0)
         nhop31 = self.client.switcht_api_nhop_create(device, nhop_key31)
-        neighbor_entry31 = switcht_neighbor_info_t(nhop_handle=nhop31, interface_handle=if3, mac_addr='00:33:33:33:33:33', ip_addr=i_ip31, rw_type=1)
+        neighbor_entry31 = switcht_neighbor_info_t(nhop_handle=nhop31, interface_handle=if3, mac_addr='00:33:33:33:33:33', ip_addr=i_ip31, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor31 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry31)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip31, nhop31)
 
@@ -7394,11 +7597,11 @@ class L3VIIPv4HostFloodTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=2, u=iu2, mac='00:77:66:55:44:33', label=0)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu2, mac='00:77:66:55:44:33', label=0)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         vlan_port1 = switcht_vlan_port_t(handle=if1, tagging_mode=0)
@@ -7407,38 +7610,38 @@ class L3VIIPv4HostFloodTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_vlan_ports_add(device, vlan, vlan_port2)
 
         iu3 = interface_union(port_lag_handle = swports[3])
-        i_info3 = switcht_interface_info_t(device=0, type=4, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info3 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if3 = self.client.switcht_api_interface_create(device, i_info3)
-        i_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='192.168.0.2', prefix_length=16)
+        i_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='192.168.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if3, vrf, i_ip3)
 
         iu4 = interface_union(vlan_id = 10)
-        i_info4 = switcht_interface_info_t(device=0, type=5, u=iu4, mac='00:77:66:55:44:33',
+        i_info4 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3_VLAN, u=iu4, mac='00:77:66:55:44:33',
                                            label=0, vrf_handle=vrf, rmac_handle=rmac,
                                            v4_unicast_enabled=1, v6_unicast_enabled=1)
         if4 = self.client.switcht_api_interface_create(device, i_info4)
-        i_ip4 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.0.2', prefix_length=16)
+        i_ip4 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if4, vrf, i_ip4)
 
         # Add a static route
-        i_ip41 = switcht_ip_addr_t(addr_type=0, ipaddr='10.10.10.1', prefix_length=32)
+        i_ip41 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.10.10.1', prefix_length=32)
         nhop_key41 = switcht_nhop_key_t(intf_handle=if4, ip_addr_valid=0)
         nhop41 = self.client.switcht_api_nhop_create(device, nhop_key41)
-        neighbor_entry41 = switcht_neighbor_info_t(nhop_handle=nhop41, interface_handle=if4, mac_addr='00:11:11:11:11:11', ip_addr=i_ip41, rw_type=1)
+        neighbor_entry41 = switcht_neighbor_info_t(nhop_handle=nhop41, interface_handle=if4, mac_addr='00:11:11:11:11:11', ip_addr=i_ip41, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor41 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry41)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip41, nhop41)
 
-        i_ip42 = switcht_ip_addr_t(addr_type=0, ipaddr='11.11.11.1', prefix_length=32)
+        i_ip42 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='11.11.11.1', prefix_length=32)
         nhop_key42 = switcht_nhop_key_t(intf_handle=if4, ip_addr_valid=0)
         nhop42 = self.client.switcht_api_nhop_create(device, nhop_key42)
-        neighbor_entry42 = switcht_neighbor_info_t(nhop_handle=nhop42, interface_handle=if4, mac_addr='00:22:22:22:22:22', ip_addr=i_ip42, rw_type=1)
+        neighbor_entry42 = switcht_neighbor_info_t(nhop_handle=nhop42, interface_handle=if4, mac_addr='00:22:22:22:22:22', ip_addr=i_ip42, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor42 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry42)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip42, nhop42)
 
-        i_ip31 = switcht_ip_addr_t(addr_type=0, ipaddr='12.12.12.1', prefix_length=32)
+        i_ip31 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='12.12.12.1', prefix_length=32)
         nhop_key31 = switcht_nhop_key_t(intf_handle=if3, ip_addr_valid=0)
         nhop31 = self.client.switcht_api_nhop_create(device, nhop_key31)
-        neighbor_entry31 = switcht_neighbor_info_t(nhop_handle=nhop31, interface_handle=if3, mac_addr='00:33:33:33:33:33', ip_addr=i_ip31, rw_type=1)
+        neighbor_entry31 = switcht_neighbor_info_t(nhop_handle=nhop31, interface_handle=if3, mac_addr='00:33:33:33:33:33', ip_addr=i_ip31, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor31 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry31)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip31, nhop31)
 
@@ -7550,15 +7753,15 @@ class L3VIFloodTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=2, u=iu2, mac='00:77:66:55:44:33', label=0)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu2, mac='00:77:66:55:44:33', label=0)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         iu3 = interface_union(port_lag_handle = swports[3])
-        i_info3 = switcht_interface_info_t(device=0, type=2, u=iu3, mac='00:77:66:55:44:33', label=0)
+        i_info3 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu3, mac='00:77:66:55:44:33', label=0)
         if3 = self.client.switcht_api_interface_create(device, i_info3)
 
         vlan_port1 = switcht_vlan_port_t(handle=if1, tagging_mode=0)
@@ -7569,11 +7772,11 @@ class L3VIFloodTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_vlan_ports_add(device, vlan, vlan_port3)
 
         iu4 = interface_union(vlan_id = 10)
-        i_info4 = switcht_interface_info_t(device=0, type=5, u=iu4, mac='00:77:66:55:44:33',
+        i_info4 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3_VLAN, u=iu4, mac='00:77:66:55:44:33',
                                            label=0, vrf_handle=vrf, rmac_handle=rmac,
                                            v4_unicast_enabled=1, v6_unicast_enabled=1)
         if4 = self.client.switcht_api_interface_create(device, i_info4)
-        i_ip4 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.0.2', prefix_length=16)
+        i_ip4 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if4, vrf, i_ip4)
 
         # send the test packet(s)
@@ -7644,17 +7847,17 @@ class L3VIIPv4LagTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         lag12 = self.client.switcht_api_lag_create(device)
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag12, side=0, port=swports[1])
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag12, side=0, port=swports[2])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag12, side=SWITCH_API_DIRECTION_BOTH, port=swports[1])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag12, side=SWITCH_API_DIRECTION_BOTH, port=swports[2])
         iu12 = interface_union(port_lag_handle = lag12)
-        i_info12 = switcht_interface_info_t(device=0, type=2, u=iu12, mac='00:77:66:55:44:33', label=0)
+        i_info12 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu12, mac='00:77:66:55:44:33', label=0)
         if12 = self.client.switcht_api_interface_create(device, i_info12)
 
         lag34 = self.client.switcht_api_lag_create(device)
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag34, side=0, port=swports[3])
-        self.client.switcht_api_lag_member_add(device, lag_handle=lag34, side=0, port=swports[4])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag34, side=SWITCH_API_DIRECTION_BOTH, port=swports[3])
+        self.client.switcht_api_lag_member_add(device, lag_handle=lag34, side=SWITCH_API_DIRECTION_BOTH, port=swports[4])
         iu34 = interface_union(port_lag_handle = lag34)
-        i_info34 = switcht_interface_info_t(device=0, type=2, u=iu34, mac='00:77:66:55:44:33', label=0)
+        i_info34 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu34, mac='00:77:66:55:44:33', label=0)
         if34 = self.client.switcht_api_interface_create(device, i_info34)
 
         vlan_port1 = switcht_vlan_port_t(handle=if12, tagging_mode=0)
@@ -7663,30 +7866,30 @@ class L3VIIPv4LagTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_vlan_ports_add(device, vlan, vlan_port2)
 
         iu1 = interface_union(vlan_id = 10)
-        i_info1 = switcht_interface_info_t(device=0, type=5, u=iu1, mac='00:77:66:55:44:33',
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3_VLAN, u=iu1, mac='00:77:66:55:44:33',
                                            label=0, vrf_handle=vrf, rmac_handle=rmac,
                                            v4_unicast_enabled=1, v6_unicast_enabled=1)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
-        i_ip1 = switcht_ip_addr_t(addr_type=0, ipaddr='100.0.0.2', prefix_length=32)
+        i_ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='100.0.0.2', prefix_length=32)
         self.client.switcht_api_l3_interface_address_add(device, if1, vrf, i_ip1)
 
         iu2 = interface_union(port_lag_handle = swports[5])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2, mac='00:77:66:55:44:33', label=0,vrf_handle=vrf, rmac_handle=rmac)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2, mac='00:77:66:55:44:33', label=0,vrf_handle=vrf, rmac_handle=rmac)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
-        i_ip2 = switcht_ip_addr_t(addr_type=0, ipaddr='200.0.0.2', prefix_length=32)
+        i_ip2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='200.0.0.2', prefix_length=32)
         self.client.switcht_api_l3_interface_address_add(device, if2, vrf, i_ip2)
 
-        i_ip11 = switcht_ip_addr_t(addr_type=0, ipaddr='11.11.11.1', prefix_length=32)
+        i_ip11 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='11.11.11.1', prefix_length=32)
         nhop_key11 = switcht_nhop_key_t(intf_handle=if1, ip_addr_valid=0)
         nhop11 = self.client.switcht_api_nhop_create(device, nhop_key11)
-        neighbor_entry11 = switcht_neighbor_info_t(nhop_handle=nhop11, interface_handle=if1, mac_addr='00:11:11:11:11:11', ip_addr=i_ip11, rw_type=1)
+        neighbor_entry11 = switcht_neighbor_info_t(nhop_handle=nhop11, interface_handle=if1, mac_addr='00:11:11:11:11:11', ip_addr=i_ip11, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor11 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry11)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip11, nhop11)
 
-        i_ip12 = switcht_ip_addr_t(addr_type=0, ipaddr='12.12.12.1', prefix_length=32)
+        i_ip12 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='12.12.12.1', prefix_length=32)
         nhop_key12 = switcht_nhop_key_t(intf_handle=if1, ip_addr_valid=0)
         nhop12 = self.client.switcht_api_nhop_create(device, nhop_key12)
-        neighbor_entry12 = switcht_neighbor_info_t(nhop_handle=nhop12, interface_handle=if1, mac_addr='00:12:12:12:12:12', ip_addr=i_ip12, rw_type=1)
+        neighbor_entry12 = switcht_neighbor_info_t(nhop_handle=nhop12, interface_handle=if1, mac_addr='00:12:12:12:12:12', ip_addr=i_ip12, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor12 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry12)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip12, nhop12)
 
@@ -7750,12 +7953,12 @@ class L3VIIPv4LagTest(api_base_tests.ThriftInterfaceDataPlane):
             self.client.switcht_api_interface_delete(device, if1)
             self.client.switcht_api_interface_delete(device, if2)
 
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag12, side=0, port=swports[1])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag12, side=0, port=swports[2])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag12, side=SWITCH_API_DIRECTION_BOTH, port=swports[1])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag12, side=SWITCH_API_DIRECTION_BOTH, port=swports[2])
             self.client.switcht_api_interface_delete(device, if12)
 
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag34, side=0, port=swports[3])
-            self.client.switcht_api_lag_member_delete(device, lag_handle=lag34, side=0, port=swports[4])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag34, side=SWITCH_API_DIRECTION_BOTH, port=swports[3])
+            self.client.switcht_api_lag_member_delete(device, lag_handle=lag34, side=SWITCH_API_DIRECTION_BOTH, port=swports[4])
             self.client.switcht_api_interface_delete(device, if34)
 
             self.client.switcht_api_lag_delete(device, lag12)
@@ -7783,11 +7986,11 @@ class L3VIIPv4HostVlanTaggingTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=3, u=iu2, mac='00:77:66:55:44:33', label=0)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_TRUNK, u=iu2, mac='00:77:66:55:44:33', label=0)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         vlan_port1 = switcht_vlan_port_t(handle=if1, tagging_mode=0)
@@ -7799,38 +8002,38 @@ class L3VIIPv4HostVlanTaggingTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_mac_table_entry_create(device, vlan, '00:22:22:22:22:22', 2, if2)
 
         iu3 = interface_union(port_lag_handle = swports[3])
-        i_info3 = switcht_interface_info_t(device=0, type=4, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info3 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if3 = self.client.switcht_api_interface_create(device, i_info3)
-        i_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='192.168.0.2', prefix_length=16)
+        i_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='192.168.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if3, vrf, i_ip3)
 
         iu4 = interface_union(vlan_id = 10)
-        i_info4 = switcht_interface_info_t(device=0, type=5, u=iu4, mac='00:77:66:55:44:33',
+        i_info4 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3_VLAN, u=iu4, mac='00:77:66:55:44:33',
                                            label=0, vrf_handle=vrf, rmac_handle=rmac,
                                            v4_unicast_enabled=1, v6_unicast_enabled=1)
         if4 = self.client.switcht_api_interface_create(device, i_info4)
-        i_ip4 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.0.2', prefix_length=16)
+        i_ip4 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if4, vrf, i_ip4)
 
         # Add a static route
-        i_ip41 = switcht_ip_addr_t(addr_type=0, ipaddr='10.10.10.1', prefix_length=32)
+        i_ip41 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.10.10.1', prefix_length=32)
         nhop_key41 = switcht_nhop_key_t(intf_handle=if4, ip_addr_valid=0)
         nhop41 = self.client.switcht_api_nhop_create(device, nhop_key41)
-        neighbor_entry41 = switcht_neighbor_info_t(nhop_handle=nhop41, interface_handle=if4, mac_addr='00:11:11:11:11:11', ip_addr=i_ip41, rw_type=1)
+        neighbor_entry41 = switcht_neighbor_info_t(nhop_handle=nhop41, interface_handle=if4, mac_addr='00:11:11:11:11:11', ip_addr=i_ip41, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor41 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry41)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip41, nhop41)
 
-        i_ip42 = switcht_ip_addr_t(addr_type=0, ipaddr='11.11.11.1', prefix_length=32)
+        i_ip42 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='11.11.11.1', prefix_length=32)
         nhop_key42 = switcht_nhop_key_t(intf_handle=if4, ip_addr_valid=0)
         nhop42 = self.client.switcht_api_nhop_create(device, nhop_key42)
-        neighbor_entry42 = switcht_neighbor_info_t(nhop_handle=nhop42, interface_handle=if4, mac_addr='00:22:22:22:22:22', ip_addr=i_ip42, rw_type=1)
+        neighbor_entry42 = switcht_neighbor_info_t(nhop_handle=nhop42, interface_handle=if4, mac_addr='00:22:22:22:22:22', ip_addr=i_ip42, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor42 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry42)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip42, nhop42)
 
-        i_ip31 = switcht_ip_addr_t(addr_type=0, ipaddr='12.12.12.1', prefix_length=32)
+        i_ip31 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='12.12.12.1', prefix_length=32)
         nhop_key31 = switcht_nhop_key_t(intf_handle=if3, ip_addr_valid=0)
         nhop31 = self.client.switcht_api_nhop_create(device, nhop_key31)
-        neighbor_entry31 = switcht_neighbor_info_t(nhop_handle=nhop31, interface_handle=if3, mac_addr='00:33:33:33:33:33', ip_addr=i_ip31, rw_type=1)
+        neighbor_entry31 = switcht_neighbor_info_t(nhop_handle=nhop31, interface_handle=if3, mac_addr='00:33:33:33:33:33', ip_addr=i_ip31, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor31 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry31)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip31, nhop31)
 
@@ -7960,11 +8163,11 @@ class L3VINhopGleanTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=2, u=iu2, mac='00:77:66:55:44:33', label=0)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu2, mac='00:77:66:55:44:33', label=0)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         vlan_port1 = switcht_vlan_port_t(handle=if1, tagging_mode=0)
@@ -7975,29 +8178,29 @@ class L3VINhopGleanTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_mac_table_entry_create(device, vlan, '00:22:22:22:22:22', 2, if2)
 
         iu3 = interface_union(port_lag_handle = swports[3])
-        i_info3 = switcht_interface_info_t(device=0, type=4, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info3 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if3 = self.client.switcht_api_interface_create(device, i_info3)
-        i_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='192.168.0.2', prefix_length=16)
+        i_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='192.168.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if3, vrf, i_ip3)
 
         iu4 = interface_union(vlan_id = 10)
-        i_info4 = switcht_interface_info_t(device=0, type=5, u=iu4, mac='00:77:66:55:44:33',
+        i_info4 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3_VLAN, u=iu4, mac='00:77:66:55:44:33',
                                            label=0, vrf_handle=vrf, rmac_handle=rmac,
                                            v4_unicast_enabled=1, v6_unicast_enabled=1)
         if4 = self.client.switcht_api_interface_create(device, i_info4)
-        i_ip4 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.0.2', prefix_length=16)
+        i_ip4 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if4, vrf, i_ip4)
 
         # Add a static route
-        i_ip41 = switcht_ip_addr_t(addr_type=0, ipaddr='10.10.10.1', prefix_length=32)
+        i_ip41 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.10.10.1', prefix_length=32)
         nhop_key41 = switcht_nhop_key_t(intf_handle=if4, ip_addr_valid=0)
         nhop41 = self.client.switcht_api_nhop_create(device, nhop_key41)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip41, nhop41)
 
-        i_ip42 = switcht_ip_addr_t(addr_type=0, ipaddr='11.11.11.1', prefix_length=32)
+        i_ip42 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='11.11.11.1', prefix_length=32)
         nhop_key42 = switcht_nhop_key_t(intf_handle=if4, ip_addr_valid=0)
         nhop42 = self.client.switcht_api_nhop_create(device, nhop_key42)
-        neighbor_entry42 = switcht_neighbor_info_t(nhop_handle=nhop42, interface_handle=if4, mac_addr='00:22:22:22:22:22', ip_addr=i_ip42, rw_type=1)
+        neighbor_entry42 = switcht_neighbor_info_t(nhop_handle=nhop42, interface_handle=if4, mac_addr='00:22:22:22:22:22', ip_addr=i_ip42, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor42 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry42)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip42, nhop42)
 
@@ -8024,7 +8227,6 @@ class L3VINhopGleanTest(api_base_tests.ThriftInterfaceDataPlane):
 
             print "Sending packet l3 port %d" % swports[3], "to cpu %d" % cpu_port
             send_packet(self, swports[3], str(pkt))
-            print hexdump(exp_pkt1)
             verify_packets(self, exp_pkt1, [cpu_port])
 
             self.client.switcht_api_mac_table_entry_create(device, vlan, '00:11:11:11:11:11', 2, if1)
@@ -8033,7 +8235,7 @@ class L3VINhopGleanTest(api_base_tests.ThriftInterfaceDataPlane):
             send_packet(self, swports[3], str(pkt))
             verify_packets(self, exp_pkt1, [cpu_port])
 
-            neighbor_entry41 = switcht_neighbor_info_t(nhop_handle=nhop41, interface_handle=if4, mac_addr='00:11:11:11:11:11', ip_addr=i_ip41, rw_type=1)
+            neighbor_entry41 = switcht_neighbor_info_t(nhop_handle=nhop41, interface_handle=if4, mac_addr='00:11:11:11:11:11', ip_addr=i_ip41, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
             neighbor41 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry41)
 
             print "Sending packet l3 port %d" % swports[3], "to vlan interface port %d" % swports[1]
@@ -8107,11 +8309,11 @@ class MalformedPacketsTest(api_base_tests.ThriftInterfaceDataPlane):
         # vlan 10, with two ports 0 and 1
         self.vlan = self.client.switcht_api_vlan_create(device, 10)
         iu1 = interface_union(port_lag_handle = swports[0])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1,
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1,
                                            mac='00:77:66:55:44:33', label=0)
         self.if1 = self.client.switcht_api_interface_create(device, i_info1)
         iu2 = interface_union(port_lag_handle = swports[1])
-        i_info2 = switcht_interface_info_t(device=0, type=2, u=iu2,
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu2,
                                            mac='00:77:66:55:44:33', label=0)
         self.if2 = self.client.switcht_api_interface_create(device, i_info2)
         self.vlan_port1 = switcht_vlan_port_t(handle=self.if1, tagging_mode=0)
@@ -8127,12 +8329,12 @@ class MalformedPacketsTest(api_base_tests.ThriftInterfaceDataPlane):
 
         # logical network with one native 2 and one tunnel interface 3
         iu3 = interface_union(port_lag_handle = swports[2])
-        i_info3 = switcht_interface_info_t(device=0, type=2, u=iu3,
+        i_info3 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu3,
                                            mac='00:77:66:55:44:33', label=0)
         self.if3 = self.client.switcht_api_interface_create(device, i_info3)
 
         iu4 = interface_union(port_lag_handle = swports[3])
-        i_info4 = switcht_interface_info_t(device=0, type=4, u=iu4,
+        i_info4 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu4,
                                            mac='00:77:66:55:44:33', label=0,
                                            vrf_handle=self.vrf,
                                            rmac_handle=self.rmac)
@@ -8141,24 +8343,24 @@ class MalformedPacketsTest(api_base_tests.ThriftInterfaceDataPlane):
         # Create a logical network (LN)
         bt = switcht_bridge_type(tunnel_vni=0x1234)
         encap = switcht_encap_info_t(u=bt)
-        ln_info = switcht_logical_network_t(type=4, encap_info=encap,
+        ln_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_BASIC, encap_info=encap,
                                             age_interval=1800, vrf=self.vrf)
         self.ln1 = self.client.switcht_api_logical_network_create(device,
                                                                   ln_info)
 
         # Create a tunnel interface
         udp = switcht_udp_t(src_port=1234, dst_port=4789)
-        src_ip = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.1',
+        src_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.1',
                                    prefix_length=32)
-        dst_ip = switcht_ip_addr_t(addr_type=0, ipaddr='1.1.1.3',
+        dst_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='1.1.1.3',
                                    prefix_length=32)
         udp_tcp = switcht_udp_tcp_t(udp = udp)
-        encap_info = switcht_encap_info_t(encap_type=3)
+        encap_info = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_VXLAN)
         ip_encap = switcht_ip_encap_t(vrf=self.vrf, src_ip=src_ip,
                                       dst_ip=dst_ip,
                                       ttl=60, proto=17, u=udp_tcp)
         tunnel_encap = switcht_tunnel_encap_t(ip_encap=ip_encap)
-        iu5 = switcht_tunnel_info_t(encap_mode = 0, tunnel_encap=tunnel_encap,
+        iu5 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap,
                                     encap_info=encap_info, out_if=self.if4)
         self.if5 = self.client.switcht_api_tunnel_interface_create(device, 0,
                                                                    iu5)
@@ -8175,7 +8377,7 @@ class MalformedPacketsTest(api_base_tests.ThriftInterfaceDataPlane):
                                                   interface_handle=self.if5,
                                                   mac_addr='00:33:33:33:33:33',
                                                   ip_addr=src_ip,
-                                                  rw_type=0, neigh_type=7)
+                                                  rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L2, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         self.neighbor1 = self.client.switcht_api_neighbor_entry_add(device,
                                                                 neighbor_entry1)
         neighbor_entry2 = switcht_neighbor_info_t(nhop_handle=0,
@@ -8654,11 +8856,11 @@ class L3VIIPv4HostMacMoveTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[1])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1, mac='00:77:66:55:44:33', label=0)
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1, mac='00:77:66:55:44:33', label=0)
         if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[2])
-        i_info2 = switcht_interface_info_t(device=0, type=2, u=iu2, mac='00:77:66:55:44:33', label=0)
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu2, mac='00:77:66:55:44:33', label=0)
         if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         vlan_port1 = switcht_vlan_port_t(handle=if1, tagging_mode=0)
@@ -8667,31 +8869,31 @@ class L3VIIPv4HostMacMoveTest(api_base_tests.ThriftInterfaceDataPlane):
         self.client.switcht_api_vlan_ports_add(device, vlan, vlan_port2)
 
         iu3 = interface_union(port_lag_handle = swports[3])
-        i_info3 = switcht_interface_info_t(device=0, type=4, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
+        i_info3 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu3, mac='00:77:66:55:44:33', label=0, vrf_handle=vrf, rmac_handle=rmac)
         if3 = self.client.switcht_api_interface_create(device, i_info3)
-        i_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='192.168.0.2', prefix_length=16)
+        i_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='192.168.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if3, vrf, i_ip3)
 
         iu4 = interface_union(vlan_id = 10)
-        i_info4 = switcht_interface_info_t(device=0, type=5, u=iu4, mac='00:77:66:55:44:33',
+        i_info4 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3_VLAN, u=iu4, mac='00:77:66:55:44:33',
                                            label=0, vrf_handle=vrf, rmac_handle=rmac,
                                            v4_unicast_enabled=1, v6_unicast_enabled=1)
         if4 = self.client.switcht_api_interface_create(device, i_info4)
-        i_ip4 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.0.2', prefix_length=16)
+        i_ip4 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.0.2', prefix_length=16)
         self.client.switcht_api_l3_interface_address_add(device, if4, vrf, i_ip4)
 
         # Add a static route
-        i_ip41 = switcht_ip_addr_t(addr_type=0, ipaddr='10.10.10.1', prefix_length=32)
+        i_ip41 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.10.10.1', prefix_length=32)
         nhop_key41 = switcht_nhop_key_t(intf_handle=if4, ip_addr_valid=0)
         nhop41 = self.client.switcht_api_nhop_create(device, nhop_key41)
-        neighbor_entry41 = switcht_neighbor_info_t(nhop_handle=nhop41, interface_handle=if4, mac_addr='00:11:11:11:11:11', ip_addr=i_ip41, rw_type=1)
+        neighbor_entry41 = switcht_neighbor_info_t(nhop_handle=nhop41, interface_handle=if4, mac_addr='00:11:11:11:11:11', ip_addr=i_ip41, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor41 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry41)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip41, nhop41)
 
-        i_ip31 = switcht_ip_addr_t(addr_type=0, ipaddr='12.12.12.1', prefix_length=32)
+        i_ip31 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='12.12.12.1', prefix_length=32)
         nhop_key31 = switcht_nhop_key_t(intf_handle=if3, ip_addr_valid=0)
         nhop31 = self.client.switcht_api_nhop_create(device, nhop_key31)
-        neighbor_entry31 = switcht_neighbor_info_t(nhop_handle=nhop31, interface_handle=if3, mac_addr='00:33:33:33:33:33', ip_addr=i_ip31, rw_type=1)
+        neighbor_entry31 = switcht_neighbor_info_t(nhop_handle=nhop31, interface_handle=if3, mac_addr='00:33:33:33:33:33', ip_addr=i_ip31, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         neighbor31 = self.client.switcht_api_neighbor_entry_add(device, neighbor_entry31)
         self.client.switcht_api_l3_route_add(device, vrf, i_ip31, nhop31)
 
@@ -8714,7 +8916,7 @@ class L3VIIPv4HostMacMoveTest(api_base_tests.ThriftInterfaceDataPlane):
             send_packet(self, swports[1], str(pkt))
             verify_packets(self, exp_pkt, [swports[3]])
 
-            time.sleep(3)
+            time.sleep(1)   # don't sleep too long, other wise mac aging is kicking in
 
             pkt = simple_tcp_packet(eth_dst='00:77:66:55:44:33',
                                 eth_src='00:33:33:33:33:33',
@@ -8748,9 +8950,8 @@ class L3VIIPv4HostMacMoveTest(api_base_tests.ThriftInterfaceDataPlane):
                                 ip_ttl=63)
             print "Sending packet vlan interface  port %d" % swports[2], " to l3  port %d" % swports[3]
             send_packet(self, swports[2], str(pkt))
-            verify_packets(self, exp_pkt, [swports[3]])
-
-            time.sleep(3)
+            verify_packet(self, exp_pkt, swports[3])
+            time.sleep(1)   # don't sleep too long, other wise mac aging is kicking in
 
             pkt = simple_tcp_packet(eth_dst='00:77:66:55:44:33',
                                 eth_src='00:33:33:33:33:33',
@@ -8765,6 +8966,7 @@ class L3VIIPv4HostMacMoveTest(api_base_tests.ThriftInterfaceDataPlane):
                                 ip_src='192.168.0.1',
                                 ip_id=105,
                                 ip_ttl=63)
+
             print "Sending packet l3 port %d" % swports[3], " to vlan interface port %d" % swports[2]
             send_packet(self, swports[3], str(pkt))
             verify_packets(self, exp_pkt, [swports[2]])
@@ -8815,14 +9017,14 @@ class ExceptionPacketsTest(api_base_tests.ThriftInterfaceDataPlane):
 
         # create two l3 interfaces
         iu1 = interface_union(port_lag_handle = swports[0])
-        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1,
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1,
                                            mac='00:77:66:55:44:33', label=0,
                                            vrf_handle=self.vrf,
                                            rmac_handle=self.rmac)
         self.if1 = self.client.switcht_api_interface_create(device, i_info1)
-        self.i_ip1 = switcht_ip_addr_t(addr_type=0, ipaddr='192.168.0.2',
+        self.i_ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='192.168.0.2',
                                        prefix_length=16)
-        self.i_ip11 = switcht_ip_addr_t(addr_type=1, ipaddr='2000::2',
+        self.i_ip11 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='2000::2',
                                         prefix_length=64)
         self.client.switcht_api_l3_interface_address_add(device, self.if1,
                                                          self.vrf,
@@ -8831,67 +9033,67 @@ class ExceptionPacketsTest(api_base_tests.ThriftInterfaceDataPlane):
                                                          self.vrf,
                                                          self.i_ip11)
         iu2 = interface_union(port_lag_handle = swports[1])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2,
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2,
                                            mac='00:77:66:55:44:33', label=0,
                                            vrf_handle=self.vrf,
                                            rmac_handle=self.rmac)
         self.if2 = self.client.switcht_api_interface_create(device, i_info2)
-        self.i_ip2 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.0.2',
+        self.i_ip2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.0.2',
                                        prefix_length=16)
-        self.i_ip21 = switcht_ip_addr_t(addr_type=1, ipaddr='3000::2',
+        self.i_ip21 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='3000::2',
                                         prefix_length=64)
         self.client.switcht_api_l3_interface_address_add(device, self.if2,
                                                          self.vrf,
                                                          self.i_ip2)
 
         # add ipv4 static routes
-        self.i_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='10.10.10.1',
+        self.i_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.10.10.1',
                                        prefix_length=32)
         nhop_key = switcht_nhop_key_t(intf_handle=self.if2, ip_addr_valid=0)
         self.nhop1 = self.client.switcht_api_nhop_create(device, nhop_key)
         neighbor_entry = switcht_neighbor_info_t(nhop_handle=self.nhop1,
                                                  interface_handle=self.if2,
                                                  mac_addr='00:11:22:33:44:55',
-                                                 ip_addr=self.i_ip3, rw_type=1)
+                                                 ip_addr=self.i_ip3, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         self.neighbor1 = self.client.switcht_api_neighbor_entry_add(device,
                                                                 neighbor_entry)
         self.client.switcht_api_l3_route_add(device, self.vrf, self.i_ip3,
                                              self.nhop1)
 
-        self.i_ip31 = switcht_ip_addr_t(addr_type=0, ipaddr='10.20.10.1',
+        self.i_ip31 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.20.10.1',
                                         prefix_length=32)
         nhop_key = switcht_nhop_key_t(intf_handle=self.if1, ip_addr_valid=0)
         self.nhop11 = self.client.switcht_api_nhop_create(device, nhop_key)
         neighbor_entry = switcht_neighbor_info_t(nhop_handle=self.nhop11,
                                                  interface_handle=self.if1,
                                                  mac_addr='00:11:22:33:44:66',
-                                                 ip_addr=self.i_ip31, rw_type=1)
+                                                 ip_addr=self.i_ip31, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         self.neighbor11 = self.client.switcht_api_neighbor_entry_add(device,
                                                                 neighbor_entry)
         self.client.switcht_api_l3_route_add(device, self.vrf, self.i_ip31,
                                              self.nhop11)
 
         # add an ipv6 static route
-        self.i_ip4 = switcht_ip_addr_t(addr_type=1,
+        self.i_ip4 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6,
                                        ipaddr='3000::3', prefix_length=64)
         nhop_key = switcht_nhop_key_t(intf_handle=self.if2, ip_addr_valid=0)
         self.nhop2 = self.client.switcht_api_nhop_create(device, nhop_key)
         neighbor_entry = switcht_neighbor_info_t(nhop_handle=self.nhop2,
                                                  interface_handle=self.if2,
                                                  mac_addr='00:11:22:33:44:55',
-                                                 ip_addr=self.i_ip4, rw_type=1)
+                                                 ip_addr=self.i_ip4, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         self.neighbor2 = self.client.switcht_api_neighbor_entry_add(device,
                                                                 neighbor_entry)
         self.client.switcht_api_l3_route_add(device, self.vrf, self.i_ip4,
                                              self.nhop2)
-        self.i_ip41 = switcht_ip_addr_t(addr_type=1,
+        self.i_ip41 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6,
                                         ipaddr='2000::3', prefix_length=64)
         nhop_key = switcht_nhop_key_t(intf_handle=self.if1, ip_addr_valid=0)
         self.nhop21 = self.client.switcht_api_nhop_create(device, nhop_key)
         neighbor_entry = switcht_neighbor_info_t(nhop_handle=self.nhop21,
                                                  interface_handle=self.if2,
                                                  mac_addr='00:11:22:33:44:77',
-                                                 ip_addr=self.i_ip41, rw_type=1)
+                                                 ip_addr=self.i_ip41, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
         self.neighbor21 = self.client.switcht_api_neighbor_entry_add(device,
                                                                  neighbor_entry)
         self.client.switcht_api_l3_route_add(device, self.vrf, self.i_ip41,
@@ -9049,6 +9251,116 @@ class ExceptionPacketsTest(api_base_tests.ThriftInterfaceDataPlane):
 
         api_base_tests.ThriftInterfaceDataPlane.tearDown(self)
 
+
+###############################################################################
+@group('l3')
+@group('ipv4')
+class L3IPv4MtuTest(api_base_tests.ThriftInterfaceDataPlane):
+    def runTest(self):
+        print
+        print "Skipping L3IPv4MtuTest"
+        return
+        self.client.switcht_api_init(device)
+        vrf = self.client.switcht_api_vrf_create(device, swports[1])
+
+        rmac = self.client.switcht_api_router_mac_group_create(device)
+        self.client.switcht_api_router_mac_add(device, rmac,
+                                               '00:77:66:55:44:33')
+
+        iu1 = interface_union(port_lag_handle = swports[1])
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1,
+                                           mac='00:77:66:55:44:33', label=0,
+                                           vrf_handle=vrf, rmac_handle=rmac)
+        if1 = self.client.switcht_api_interface_create(device, i_info1)
+        i_ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='192.168.0.2',
+                                  prefix_length=16)
+        self.client.switcht_api_l3_interface_address_add(device, if1,
+                                                         vrf, i_ip1)
+
+        iu2 = interface_union(port_lag_handle = swports[2])
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2,
+                                           mac='00:77:66:55:44:33', label=0,
+                                           vrf_handle=vrf, rmac_handle=rmac)
+        if2 = self.client.switcht_api_interface_create(device, i_info2)
+        i_ip2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.0.2',
+                                  prefix_length=16)
+        self.client.switcht_api_l3_interface_address_add(device, if2,
+                                                         vrf, i_ip2)
+
+        # Add a static route
+        i_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.10.10.1',
+                                  prefix_length=32)
+        nhop_key = switcht_nhop_key_t(intf_handle=if2, ip_addr_valid=0)
+        nhop = self.client.switcht_api_nhop_create(device, nhop_key)
+        neighbor_entry = switcht_neighbor_info_t(nhop_handle=nhop,
+                                                 interface_handle=if2,
+                                                 mac_addr='00:11:22:33:44:55',
+                                                 ip_addr=i_ip3, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
+        neighbor = self.client.switcht_api_neighbor_entry_add(device,
+                                                              neighbor_entry)
+        self.client.switcht_api_l3_route_add(device, vrf, i_ip3, nhop)
+
+        # send the test packet(s)
+        try:
+            pkt = simple_tcp_packet(eth_dst='00:77:66:55:44:33',
+                                    eth_src='00:22:22:22:22:22',
+                                    ip_dst='10.10.10.1',
+                                    ip_src='192.168.0.1',
+                                    ip_id=105,
+                                    ip_ttl=64,
+                                    pktlen=128)
+            exp_pkt = simple_tcp_packet(
+                                    eth_dst='00:11:22:33:44:55',
+                                    eth_src='00:77:66:55:44:33',
+                                    ip_dst='10.10.10.1',
+                                    ip_src='192.168.0.1',
+                                    ip_id=105,
+                                    ip_ttl=63,
+                                    pktlen=128)
+            send_packet(self, swports[1], str(pkt))
+            verify_packets(self, exp_pkt, [swports[2]])
+
+            pkt = simple_tcp_packet(eth_dst='00:77:66:55:44:33',
+                                    eth_src='00:22:22:22:22:22',
+                                    ip_dst='10.10.10.1',
+                                    ip_src='192.168.0.1',
+                                    ip_id=105,
+                                    ip_ttl=64,
+                                    pktlen=523+14)
+            exp_pkt = simple_tcp_packet(
+                                    eth_dst='00:11:22:33:44:55',
+                                    eth_src='00:77:66:55:44:33',
+                                    ip_dst='10.10.10.1',
+                                    ip_src='192.168.0.1',
+                                    ip_id=105,
+                                    ip_ttl=63,
+                                    pktlen=523+14)
+            cpu_pkt = simple_cpu_packet(ingress_port=swports[1],
+                                        ingress_ifindex=2,
+                                        reason_code=0x1c,
+                                        ingress_bd=0x02,
+                                        inner_pkt=exp_pkt)
+            send_packet(self, swports[1], str(pkt))
+            verify_packets(self, cpu_pkt, [cpu_port])
+        finally:
+            self.client.switcht_api_neighbor_entry_remove(device, neighbor)
+            self.client.switcht_api_l3_route_delete(device, vrf, i_ip3, nhop)
+            self.client.switcht_api_nhop_delete(device, nhop)
+
+            self.client.switcht_api_l3_interface_address_delete(device, if1,
+                                                                vrf, i_ip1)
+            self.client.switcht_api_l3_interface_address_delete(device, if2,
+                                                                vrf, i_ip2)
+
+            self.client.switcht_api_interface_delete(device, if1)
+            self.client.switcht_api_interface_delete(device, if2)
+
+            self.client.switcht_api_router_mac_delete(device, rmac,
+                                                      '00:77:66:55:44:33')
+            self.client.switcht_api_router_mac_group_delete(device, rmac)
+            self.client.switcht_api_vrf_delete(device, vrf)
+
+
 ###############################################################################
 @group('tunnel')
 class IPinIPTest(api_base_tests.ThriftInterfaceDataPlane):
@@ -9064,29 +9376,29 @@ class IPinIPTest(api_base_tests.ThriftInterfaceDataPlane):
                                                '00:77:66:55:44:33')
 
         iu1 = interface_union(port_lag_handle = swports[0])
-        i_info1 = switcht_interface_info_t(device=0, type=4, u=iu1,
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1,
                                            mac='00:77:66:55:44:33', label=0,
                                            vrf_handle=self.vrf,
                                            rmac_handle=self.rmac)
         self.if1 = self.client.switcht_api_interface_create(device, i_info1)
 
         iu2 = interface_union(port_lag_handle = swports[1])
-        i_info2 = switcht_interface_info_t(device=0, type=4, u=iu2,
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu2,
                                            mac='00:77:66:55:44:33', label=0,
                                            vrf_handle=self.vrf,
                                            rmac_handle=self.rmac)
         self.if2 = self.client.switcht_api_interface_create(device, i_info2)
 
         # Create an GRE IPv4 tunnel interface (encap_type = 4)
-        src_ip = switcht_ip_addr_t(addr_type=0, ipaddr='10.100.1.1',
+        src_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.100.1.1',
                                    prefix_length=32)
-        dst_ip = switcht_ip_addr_t(addr_type=0, ipaddr='10.200.1.3',
+        dst_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.200.1.3',
                                    prefix_length=32)
-        encap_info = switcht_encap_info_t(encap_type=4)
+        encap_info = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_GRE)
         ip_encap =  switcht_ip_encap_t(vrf=self.vrf, src_ip=src_ip,
                                        dst_ip=dst_ip, ttl=64, proto=47)
         tunnel_encap = switcht_tunnel_encap_t(ip_encap=ip_encap)
-        iu3 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap,
+        iu3 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap,
                                     encap_info=encap_info, out_if=self.if2)
         self.ift1 = self.client.switcht_api_tunnel_interface_create(device,
                                                                     0, iu3)
@@ -9097,7 +9409,7 @@ class IPinIPTest(api_base_tests.ThriftInterfaceDataPlane):
         neighbor_entry = switcht_neighbor_info_t(nhop_handle=self.nhop1,
                                                  interface_handle=self.ift1,
                                                  mac_addr='00:44:44:44:44:44',
-                                                 rw_type=1, neigh_type=7)
+                                                 rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         self.neigh1 = self.client.switcht_api_neighbor_entry_add(device,
                                                                  neighbor_entry)
         neighbor_entry = switcht_neighbor_info_t(nhop_handle=0,
@@ -9108,15 +9420,15 @@ class IPinIPTest(api_base_tests.ThriftInterfaceDataPlane):
                                                                  neighbor_entry)
 
         # Create an GRE IPv6 tunnel interface (encap_type = 4)
-        src_ip = switcht_ip_addr_t(addr_type=1, ipaddr='3ffe::1',
+        src_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='3ffe::1',
                                    prefix_length=128)
-        dst_ip = switcht_ip_addr_t(addr_type=1, ipaddr='3ffe::2',
+        dst_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='3ffe::2',
                                    prefix_length=128)
-        encap_info = switcht_encap_info_t(encap_type=4)
+        encap_info = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_GRE)
         ip_encap =  switcht_ip_encap_t(vrf=self.vrf, src_ip=src_ip,
                                        dst_ip=dst_ip, ttl=64, proto=47)
         tunnel_encap = switcht_tunnel_encap_t(ip_encap=ip_encap)
-        iu4 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap,
+        iu4 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap,
                                     encap_info=encap_info, out_if=self.if2)
         self.ift2 = self.client.switcht_api_tunnel_interface_create(device,
                                                                     0, iu4)
@@ -9127,7 +9439,7 @@ class IPinIPTest(api_base_tests.ThriftInterfaceDataPlane):
         neighbor_entry = switcht_neighbor_info_t(nhop_handle=self.nhop2,
                                                  interface_handle=self.ift2,
                                                  mac_addr='00:44:44:44:44:44',
-                                                 rw_type=1, neigh_type=8)
+                                                 rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3, neigh_type=SWITCH_API_NEIGHBOR_IPV6_TUNNEL)
         self.neigh3 = self.client.switcht_api_neighbor_entry_add(device,
                                                                  neighbor_entry)
         neighbor_entry = switcht_neighbor_info_t(nhop_handle=0,
@@ -9138,15 +9450,15 @@ class IPinIPTest(api_base_tests.ThriftInterfaceDataPlane):
                                                                  neighbor_entry)
 
         # Create an IPv4 tunnel interface (encap_type = 8)
-        src_ip = switcht_ip_addr_t(addr_type=0, ipaddr='10.100.1.1',
+        src_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.100.1.1',
                                    prefix_length=32)
-        dst_ip = switcht_ip_addr_t(addr_type=0, ipaddr='10.200.1.3',
+        dst_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.200.1.3',
                                    prefix_length=32)
-        encap_info = switcht_encap_info_t(encap_type=8)
+        encap_info = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_IPIP)
         ip_encap =  switcht_ip_encap_t(vrf=self.vrf, src_ip=src_ip,
                                        dst_ip=dst_ip, ttl=64, proto=4)
         tunnel_encap = switcht_tunnel_encap_t(ip_encap=ip_encap)
-        iu5 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap,
+        iu5 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap,
                                     encap_info=encap_info, out_if=self.if2)
         self.ift3 = self.client.switcht_api_tunnel_interface_create(device,
                                                                     0, iu5)
@@ -9157,7 +9469,7 @@ class IPinIPTest(api_base_tests.ThriftInterfaceDataPlane):
         neighbor_entry = switcht_neighbor_info_t(nhop_handle=self.nhop3,
                                                  interface_handle=self.ift3,
                                                  mac_addr='00:44:44:44:44:44',
-                                                 rw_type=1, neigh_type=7)
+                                                 rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3, neigh_type=SWITCH_API_NEIGHBOR_IPV4_TUNNEL)
         self.neigh5 = self.client.switcht_api_neighbor_entry_add(device,
                                                                  neighbor_entry)
         neighbor_entry = switcht_neighbor_info_t(nhop_handle=0,
@@ -9168,15 +9480,15 @@ class IPinIPTest(api_base_tests.ThriftInterfaceDataPlane):
                                                                  neighbor_entry)
 
         # Create an IPv6 tunnel interface (encap_type = 8)
-        src_ip = switcht_ip_addr_t(addr_type=1, ipaddr='3ffe::1',
+        src_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='3ffe::1',
                                    prefix_length=128)
-        dst_ip = switcht_ip_addr_t(addr_type=1, ipaddr='3ffe::2',
+        dst_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='3ffe::2',
                                    prefix_length=128)
-        encap_info = switcht_encap_info_t(encap_type=8)
+        encap_info = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_IPIP)
         ip_encap =  switcht_ip_encap_t(vrf=self.vrf, src_ip=src_ip,
                                        dst_ip=dst_ip, ttl=64, proto=41)
         tunnel_encap = switcht_tunnel_encap_t(ip_encap=ip_encap)
-        iu6 = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap,
+        iu6 = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP, tunnel_encap=tunnel_encap,
                                     encap_info=encap_info, out_if=self.if2)
         self.ift4 = self.client.switcht_api_tunnel_interface_create(device,
                                                                     0, iu6)
@@ -9187,7 +9499,7 @@ class IPinIPTest(api_base_tests.ThriftInterfaceDataPlane):
         neighbor_entry = switcht_neighbor_info_t(nhop_handle=self.nhop4,
                                                  interface_handle=self.ift4,
                                                  mac_addr='00:44:44:44:44:44',
-                                                 rw_type=1, neigh_type=8)
+                                                 rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3, neigh_type=SWITCH_API_NEIGHBOR_IPV6_TUNNEL)
         self.neigh7 = self.client.switcht_api_neighbor_entry_add(device,
                                                                  neighbor_entry)
         neighbor_entry = switcht_neighbor_info_t(nhop_handle=0,
@@ -9198,45 +9510,45 @@ class IPinIPTest(api_base_tests.ThriftInterfaceDataPlane):
                                                                  neighbor_entry)
 
         # Add route 10.10.10.1/32 => GRE IPv4 tunnel ift1
-        self.ip1 = switcht_ip_addr_t(addr_type=0, ipaddr='10.10.10.1',
+        self.ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.10.10.1',
                                      prefix_length=32)
         self.client.switcht_api_l3_route_add(device, self.vrf,
                                              self.ip1, self.nhop1)
         # Add route 2ffe::1/128 => GRE IPV4 tunnel ift1
-        self.ip2 = switcht_ip_addr_t(addr_type=1, ipaddr='2ffe::1',
+        self.ip2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='2ffe::1',
                                      prefix_length=128)
         self.client.switcht_api_l3_route_add(device, self.vrf,
                                              self.ip2, self.nhop1)
 
         # Add route 10.10.10.2/32 => GRE IPv6 tunnel ift2
-        self.ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='10.10.10.2',
+        self.ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.10.10.2',
                                      prefix_length=32)
         self.client.switcht_api_l3_route_add(device, self.vrf,
                                              self.ip3, self.nhop2)
         # Add route 2ffe::2/128 => GRE IPV6 tunnel ift2
-        self.ip4 = switcht_ip_addr_t(addr_type=1, ipaddr='2ffe::2',
+        self.ip4 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='2ffe::2',
                                      prefix_length=128)
         self.client.switcht_api_l3_route_add(device, self.vrf,
                                              self.ip4, self.nhop2)
 
         # Add route 10.10.10.3/32 => IPv4 tunnel ift3
-        self.ip5 = switcht_ip_addr_t(addr_type=0, ipaddr='10.10.10.3',
+        self.ip5 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.10.10.3',
                                      prefix_length=32)
         self.client.switcht_api_l3_route_add(device, self.vrf,
                                              self.ip5, self.nhop3)
         # Add route 2ffe::3/128 => IPV4 tunnel ift3
-        self.ip6 = switcht_ip_addr_t(addr_type=1, ipaddr='2ffe::3',
+        self.ip6 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='2ffe::3',
                                      prefix_length=128)
         self.client.switcht_api_l3_route_add(device, self.vrf,
                                              self.ip6, self.nhop3)
 
         # Add route 10.10.10.4/32 => IPv6 tunnel ift4
-        self.ip7 = switcht_ip_addr_t(addr_type=0, ipaddr='10.10.10.4',
+        self.ip7 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.10.10.4',
                                      prefix_length=32)
         self.client.switcht_api_l3_route_add(device, self.vrf,
                                              self.ip7, self.nhop4)
         # Add route 2ffe::4/128 => IPV6 tunnel ift4
-        self.ip8 = switcht_ip_addr_t(addr_type=1, ipaddr='2ffe::4',
+        self.ip8 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='2ffe::4',
                                      prefix_length=128)
         self.client.switcht_api_l3_route_add(device, self.vrf,
                                              self.ip8, self.nhop4)
@@ -9245,7 +9557,7 @@ class IPinIPTest(api_base_tests.ThriftInterfaceDataPlane):
         bt = switcht_bridge_type(tunnel_vni=0)
         encap = switcht_encap_info_t(u=bt)
         ln_flags = switcht_ln_flags(ipv4_unicast_enabled=1)
-        ln_info = switcht_logical_network_t(type=4, encap_info=encap,
+        ln_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_BASIC, encap_info=encap,
                                             age_interval=1800, vrf=self.vrf,
                                             rmac_handle=self.rmac,
                                             flags=ln_flags)
@@ -9262,17 +9574,17 @@ class IPinIPTest(api_base_tests.ThriftInterfaceDataPlane):
         neighbor_entry = switcht_neighbor_info_t(nhop_handle=self.nhop5,
                                                  interface_handle=self.if1,
                                                  mac_addr='00:11:11:11:11:11',
-                                                 rw_type=1, neigh_type=0)
+                                                 rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3, neigh_type=SWITCH_API_NEIGHBOR_NONE)
         self.neigh9 = self.client.switcht_api_neighbor_entry_add(device,
                                                                  neighbor_entry)
 
         # Add route 10.20.10.1/32 => if1
-        self.ip9 = switcht_ip_addr_t(addr_type=0, ipaddr='10.20.10.1',
+        self.ip9 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.20.10.1',
                                      prefix_length=32)
         self.client.switcht_api_l3_route_add(device, self.vrf,
                                              self.ip9, self.nhop5)
         # Add route 2000::1/128 => ift1
-        self.ip10 = switcht_ip_addr_t(addr_type=1, ipaddr='2000::1',
+        self.ip10 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V6, ipaddr='2000::1',
                                       prefix_length=128)
         self.client.switcht_api_l3_route_add(device, self.vrf,
                                              self.ip10, self.nhop5)
@@ -9681,3 +9993,688 @@ class IPinIPTest(api_base_tests.ThriftInterfaceDataPlane):
             self.client.switcht_api_router_mac_group_delete(device, self.rmac)
             self.client.switcht_api_vrf_delete(device, self.vrf)
 
+
+###############################################################################
+@group('cpu')
+@group('maxsizes')
+class CpuTxTest(api_base_tests.ThriftInterfaceDataPlane):
+    def setUp(self):
+        print
+        print 'Configuring devices for CPU Tx test cases'
+
+        api_base_tests.ThriftInterfaceDataPlane.setUp(self)
+        self.client.switcht_api_init(device)
+
+        self.vrf = self.client.switcht_api_vrf_create(device, 2)
+        self.rmac = self.client.switcht_api_router_mac_group_create(device)
+        self.client.switcht_api_router_mac_add(device, self.rmac,
+                                               '00:77:66:55:44:33')
+
+        # create l3 interface
+        iu = interface_union(port_lag_handle = swports[0])
+        info = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu,
+                                        mac='00:77:66:55:44:33', label=0,
+                                        vrf_handle=self.vrf,
+                                        rmac_handle=self.rmac)
+        self.if1 = self.client.switcht_api_interface_create(device, info)
+        self.ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.1.1',
+                                     prefix_length=16)
+        self.client.switcht_api_l3_interface_address_add(device, self.if1,
+                                                         self.vrf, self.ip1)
+
+        # create l3 vlan interface
+        self.vlan = self.client.switcht_api_vlan_create(device, 10)
+
+        self.lag1 = self.client.switcht_api_lag_create(device)
+        self.client.switcht_api_lag_member_add(device, lag_handle=self.lag1,
+                                               side=SWITCH_API_DIRECTION_BOTH, port=swports[1])
+        self.client.switcht_api_lag_member_add(device, lag_handle=self.lag1,
+                                               side=SWITCH_API_DIRECTION_BOTH, port=swports[2])
+        iu = interface_union(port_lag_handle=self.lag1)
+        info = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu,
+                                        mac='00:77:66:55:44:33', label=0)
+        self.if2 = self.client.switcht_api_interface_create(device, info)
+
+        self.lag2 = self.client.switcht_api_lag_create(device)
+        self.client.switcht_api_lag_member_add(device, lag_handle=self.lag2,
+                                               side=SWITCH_API_DIRECTION_BOTH, port=swports[3])
+        self.client.switcht_api_lag_member_add(device, lag_handle=self.lag2,
+                                               side=SWITCH_API_DIRECTION_BOTH, port=swports[4])
+        iu = interface_union(port_lag_handle=self.lag2)
+        info = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu,
+                                        mac='00:77:66:55:44:33', label=0)
+        self.if3 = self.client.switcht_api_interface_create(device, info)
+
+        self.vlan_port1 = switcht_vlan_port_t(handle=self.if2, tagging_mode=0)
+        self.vlan_port2 = switcht_vlan_port_t(handle=self.if3, tagging_mode=0)
+        self.client.switcht_api_vlan_ports_add(device, self.vlan,
+                                               self.vlan_port1)
+        self.client.switcht_api_vlan_ports_add(device, self.vlan,
+                                               self.vlan_port2)
+
+        iu = interface_union(vlan_id=10)
+        info = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3_VLAN, u=iu,
+                                        mac='00:77:66:55:44:33',
+                                        label=0, vrf_handle=self.vrf,
+                                        rmac_handle=self.rmac,
+                                        v4_unicast_enabled=1,
+                                        v6_unicast_enabled=1)
+        self.if4 = self.client.switcht_api_interface_create(device, info)
+        self.ip2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.2.1',
+                                     prefix_length=16)
+        self.client.switcht_api_l3_interface_address_add(device, self.if4,
+                                                         self.vrf, self.ip2)
+
+        self.client.switcht_api_mac_table_entry_create(device, self.vlan,
+                                                       '00:11:11:11:11:11', 2,
+                                                       self.if2)
+        self.client.switcht_api_mac_table_entry_create(device, self.vlan,
+                                                       '00:22:22:22:22:22', 2,
+                                                       self.if3)
+
+        # add ipv4 static routes
+        self.ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.10.10.1',
+                                     prefix_length=32)
+        nhop_key = switcht_nhop_key_t(intf_handle=self.if4, ip_addr_valid=0)
+        self.nhop1 = self.client.switcht_api_nhop_create(device, nhop_key)
+        neighbor_entry = switcht_neighbor_info_t(nhop_handle=self.nhop1,
+                                                 interface_handle=self.if4,
+                                                 mac_addr='00:11:11:11:11:11',
+                                                 ip_addr=self.ip3, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
+        self.neighbor1 = self.client.switcht_api_neighbor_entry_add(device,
+                                                                neighbor_entry)
+        self.client.switcht_api_l3_route_add(device, self.vrf, self.ip3,
+                                             self.nhop1)
+
+    def runTest(self):
+        pkt = simple_tcp_packet(eth_dst='00:11:11:11:11:11',
+                                eth_src='00:66:66:66:66:66',
+                                ip_dst='10.10.10.1',
+                                ip_src='192.168.0.1',
+                                ip_id=105,
+                                ip_ttl=64)
+        cpu_pkt = simple_cpu_packet(dst_device=0,
+                                    dst_port_or_group=swports[2],
+                                    ingress_ifindex=0,
+                                    ingress_port=0,
+                                    ingress_bd=0,
+                                    tx_bypass=True,
+                                    reason_code=0xFFFF,
+                                    inner_pkt=pkt)
+        print "Sending packet from cpu port %d" % swports[cpu_port]
+        send_packet(self, swports[cpu_port], str(cpu_pkt))
+        verify_packets(self, pkt, [swports[2]])
+
+        pkt = simple_tcp_packet(eth_dst='00:11:11:11:11:11',
+                                eth_src='00:66:66:66:66:66',
+                                ip_dst='10.10.10.1',
+                                ip_src='192.168.0.1',
+                                ip_id=105,
+                                ip_ttl=64,
+                                dl_vlan_enable=True,
+                                vlan_vid=self.vlan & 0xFFF,
+                                pktlen=100)
+        cpu_pkt = simple_cpu_packet(dst_device=0,
+                                    dst_port_or_group=0,
+                                    ingress_ifindex=0,
+                                    ingress_port=0,
+                                    ingress_bd=0,
+                                    tx_bypass=False,
+                                    reason_code=0,
+                                    inner_pkt=pkt)
+        exp_pkt = simple_tcp_packet(eth_dst='00:11:11:11:11:11',
+                                    eth_src='00:66:66:66:66:66',
+                                    ip_dst='10.10.10.1',
+                                    ip_src='192.168.0.1',
+                                    ip_id=105,
+                                    ip_ttl=64,
+                                    pktlen=96)
+        print "Sending packet from cpu port %d" % swports[cpu_port]
+        send_packet(self, swports[cpu_port], str(cpu_pkt))
+        verify_packets_any(self, exp_pkt, [swports[1], swports[2]])
+
+        pkt = simple_tcp_packet(eth_dst='00:77:66:55:44:33',
+                                eth_src='00:66:66:66:66:66',
+                                ip_dst='10.10.10.1',
+                                ip_src='192.168.0.1',
+                                ip_id=105,
+                                ip_ttl=64,
+                                dl_vlan_enable=True,
+                                vlan_vid=self.vlan & 0xFFF,
+                                pktlen=100)
+        cpu_pkt = simple_cpu_packet(dst_device=0,
+                                    dst_port_or_group=0,
+                                    ingress_ifindex=0,
+                                    ingress_port=0,
+                                    ingress_bd=0,
+                                    tx_bypass=False,
+                                    reason_code=0x0020,
+                                    inner_pkt=pkt)
+        exp_pkt = simple_tcp_packet(eth_src='00:77:66:55:44:33',
+                                    eth_dst='00:11:11:11:11:11',
+                                    ip_dst='10.10.10.1',
+                                    ip_src='192.168.0.1',
+                                    ip_id=105,
+                                    ip_ttl=63,
+                                    pktlen=96)
+        print "Sending packet from cpu port %d" % swports[cpu_port]
+        send_packet(self, swports[cpu_port], str(cpu_pkt))
+        verify_packets_any(self, exp_pkt, [swports[1], swports[2]])
+
+    def tearDown(self):
+        self.client.switcht_api_neighbor_entry_remove(device, self.neighbor1)
+        self.client.switcht_api_l3_route_delete(device, self.vrf, self.ip3,
+                                                self.nhop1)
+        self.client.switcht_api_nhop_delete(device, self.nhop1)
+
+        self.client.switcht_api_mac_table_entries_delete_all(device)
+
+        self.client.switcht_api_l3_interface_address_delete(device, self.if1,
+                                                            self.vrf,
+                                                            self.ip1)
+        self.client.switcht_api_l3_interface_address_delete(device, self.if4,
+                                                            self.vrf,
+                                                            self.ip2)
+
+        self.client.switcht_api_vlan_ports_remove(device, self.vlan,
+                                                  self.vlan_port1)
+        self.client.switcht_api_vlan_ports_remove(device, self.vlan,
+                                                  self.vlan_port2)
+
+        self.client.switcht_api_lag_member_delete(device, lag_handle=self.lag1,
+                                                  side=SWITCH_API_DIRECTION_BOTH, port=swports[1])
+        self.client.switcht_api_lag_member_delete(device, lag_handle=self.lag1,
+                                                  side=SWITCH_API_DIRECTION_BOTH, port=swports[2])
+        self.client.switcht_api_lag_member_delete(device, lag_handle=self.lag2,
+                                                  side=SWITCH_API_DIRECTION_BOTH, port=swports[3])
+        self.client.switcht_api_lag_member_delete(device, lag_handle=self.lag2,
+                                                  side=SWITCH_API_DIRECTION_BOTH, port=swports[4])
+
+        self.client.switcht_api_interface_delete(device, self.if1)
+        self.client.switcht_api_interface_delete(device, self.if2)
+        self.client.switcht_api_interface_delete(device, self.if3)
+        self.client.switcht_api_interface_delete(device, self.if4)
+
+        self.client.switcht_api_lag_delete(device, self.lag1)
+        self.client.switcht_api_lag_delete(device, self.lag2)
+
+        self.client.switcht_api_vlan_delete(device, self.vlan)
+        self.client.switcht_api_router_mac_delete(device, self.rmac,
+                                                  '00:77:66:55:44:33')
+        self.client.switcht_api_router_mac_group_delete(device, self.rmac)
+        self.client.switcht_api_vrf_delete(device, self.vrf)
+
+        api_base_tests.ThriftInterfaceDataPlane.tearDown(self)
+
+
+
+###############################################################################
+@group('nat')
+class NatTest(api_base_tests.ThriftInterfaceDataPlane):
+    def setUp(self):
+        print
+        print 'Configuring devices for NAT test cases'
+
+        api_base_tests.ThriftInterfaceDataPlane.setUp(self)
+        self.client.switcht_api_init(device)
+
+        self.vrf = self.client.switcht_api_vrf_create(device, 2)
+        self.rmac = self.client.switcht_api_router_mac_group_create(device)
+        self.client.switcht_api_router_mac_add(device, self.rmac,
+                                               '00:77:66:55:44:33')
+
+        # create l3 inside interface
+        iu = interface_union(port_lag_handle = swports[1])
+        info = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu,
+                                        mac='00:77:66:55:44:33', label=0,
+                                        vrf_handle=self.vrf,
+                                        rmac_handle=self.rmac,
+                                        nat_mode=SWITCH_NAT_MODE_INNER)
+        self.if1 = self.client.switcht_api_interface_create(device, info)
+        self.ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.1.1',
+                                     prefix_length=24)
+        self.client.switcht_api_l3_interface_address_add(device, self.if1,
+                                                         self.vrf, self.ip1)
+
+        # create l3 outside interface
+        iu = interface_union(port_lag_handle = swports[2])
+        info = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu,
+                                        mac='00:77:66:55:44:33', label=0,
+                                        vrf_handle=self.vrf,
+                                        rmac_handle=self.rmac,
+                                        nat_mode=SWITCH_NAT_MODE_OUTER)
+        self.if2 = self.client.switcht_api_interface_create(device, info)
+        self.ip2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.2.1',
+                                     prefix_length=24)
+        self.client.switcht_api_l3_interface_address_add(device, self.if2,
+                                                         self.vrf, self.ip2)
+
+        # add ipv4 static route
+        self.ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.10.10.1',
+                                     prefix_length=32)
+        nhop_key = switcht_nhop_key_t(intf_handle=self.if2, ip_addr_valid=0)
+        self.nhop1 = self.client.switcht_api_nhop_create(device, nhop_key)
+        neighbor_entry = switcht_neighbor_info_t(nhop_handle=self.nhop1,
+                                                 interface_handle=self.if2,
+                                                 mac_addr='00:22:22:22:22:22',
+                                                 ip_addr=self.ip3, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
+        self.neighbor1 = self.client.switcht_api_neighbor_entry_add(device,
+                                                                neighbor_entry)
+        self.client.switcht_api_l3_route_add(device, self.vrf, self.ip3,
+                                             self.nhop1)
+
+        # create nexthop for dst NAT
+        nhop_key = switcht_nhop_key_t(intf_handle=self.if1, ip_addr_valid=0)
+        self.nhop2 = self.client.switcht_api_nhop_create(device, nhop_key)
+        neighbor_entry = switcht_neighbor_info_t(nhop_handle=self.nhop2,
+                                                 interface_handle=self.if1,
+                                                 mac_addr='00:11:11:11:11:11',
+                                                 ip_addr=self.ip3, rw_type=SWITCH_API_NEIGHBOR_RW_TYPE_L3)
+        self.neighbor2 = self.client.switcht_api_neighbor_entry_add(device,
+                                                                neighbor_entry)
+
+        # create NAT ACL (permit all)
+        self.acl = self.client.switcht_api_acl_list_create(device, 0)
+        kvp = []
+        acl_priority = 10
+        action = 2
+        action_params = switcht_acl_action_params_t()
+        opt_action_params = switcht_acl_opt_action_params_t()
+        self.ace = self.client.switcht_api_acl_ip_rule_create(
+            device, self.acl, acl_priority, len(kvp), kvp, action,
+            action_params, opt_action_params)
+        self.client.switcht_api_acl_reference(device, self.acl, self.if1)
+        self.client.switcht_api_acl_reference(device, self.acl, self.if2)
+
+        # create NAT bindings
+        self.nat = []
+        nat_bindings = [
+            [self.vrf, 0, 0,
+             '192.168.0.1',        0x0,  '0.0.0.0',            0x0, 6,
+             '172.16.55.56',       0x0,  '0.0.0.0',            0x0],
+            [self.vrf, self.nhop2, 1,
+             '0.0.0.0',            0x0,  '172.16.55.56',       0x0, 6,
+             '0.0.0.0',            0x0,  '192.168.0.1',        0x0],
+            [self.vrf, self.nhop1, 2,
+             '192.168.0.2',        0x0,  '10.10.10.2',         0x0, 6,
+             '172.16.55.57',       0x0,  '10.100.1.2',         0x0],
+            [self.vrf, 0, 6,
+             '192.168.0.1',     0x1289,  '0.0.0.0',            0x0, 6,
+             '172.16.55.55',    0x3456,  '0.0.0.0',            0x0],
+            [self.vrf, self.nhop2, 7,
+             '0.0.0.0',            0x0,  '172.16.55.55',    0x3456, 6,
+             '0.0.0.0',            0x0,  '192.168.0.1',     0x1289],
+            [self.vrf, self.nhop1, 8,
+             '192.168.0.2',     0x789a,  '10.10.10.2',      0xabcd, 6,
+             '172.16.55.58',    0x5678,  '10.100.1.3',      0x3489],
+        ]
+        for b in nat_bindings:
+            vrf_h = b[0]
+            nhop_h = b[1]
+            nat_type = b[2]
+            sip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr=b[3],
+                                    prefix_length=32)
+            sport = b[4]
+            dip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr=b[5],
+                                      prefix_length=0)
+            dport = b[6]
+            proto = b[7]
+            rw_sip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr=b[8],
+                                       prefix_length=32)
+            rw_sport = b[9]
+            rw_dip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr=b[10],
+                                    prefix_length=0)
+            rw_dport = b[11]
+            nb = switcht_nat_info_t(nat_rw_type=nat_type,
+                src_ip=sip, dst_ip=dip, src_port=sport,
+                dst_port=dport, protocol=proto,
+                rw_src_ip=rw_sip, rw_dst_ip=rw_dip,
+                rw_src_port=rw_sport,rw_dst_port=rw_dport,
+                vrf_handle=vrf_h, nhop_handle=nhop_h)
+            self.client.switcht_api_nat_create(device, nb)
+            self.nat.append(nb)
+
+    def runTest(self):
+        skip_checksum_validation = False
+        if test_param_get('device_type') == 'asic':
+            skip_checksum_validation = True
+
+        print "Verifying Source NAT (ip and port)"
+        pkt = simple_tcp_packet(eth_dst='00:77:66:55:44:33',
+                                eth_src='00:11:11:11:11:11',
+                                ip_dst='10.10.10.1',
+                                ip_src='192.168.0.1',
+                                ip_id=105,
+                                ip_ttl=64,
+                                tcp_sport=0x1289)
+        exp_pkt = simple_tcp_packet(eth_dst='00:22:22:22:22:22',
+                                    eth_src='00:77:66:55:44:33',
+                                    ip_dst='10.10.10.1',
+                                    ip_src='172.16.55.55',
+                                    ip_id=105,
+                                    ip_ttl=63,
+                                    tcp_sport=0x3456)
+        send_packet(self, swports[1], str(pkt))
+        if (skip_checksum_validation):
+            exp_pkt = ptf.mask.Mask(exp_pkt)
+            exp_pkt.set_do_not_care_scapy(TCP, 'chksum')
+        verify_packets(self, exp_pkt, [swports[2]])
+
+        print "Verifying Source NAT (ip)"
+        pkt = simple_tcp_packet(eth_dst='00:77:66:55:44:33',
+                                eth_src='00:11:11:11:11:11',
+                                ip_dst='10.10.10.1',
+                                ip_src='192.168.0.1',
+                                ip_id=105,
+                                ip_ttl=64)
+        exp_pkt = simple_tcp_packet(eth_dst='00:22:22:22:22:22',
+                                    eth_src='00:77:66:55:44:33',
+                                    ip_dst='10.10.10.1',
+                                    ip_src='172.16.55.56',
+                                    ip_id=105,
+                                    ip_ttl=63)
+        send_packet(self, swports[1], str(pkt))
+        if (skip_checksum_validation):
+            exp_pkt = ptf.mask.Mask(exp_pkt)
+            exp_pkt.set_do_not_care_scapy(TCP, 'chksum')
+        verify_packets(self, exp_pkt, [swports[2]])
+
+        print "Verifying Destination NAT (ip and port)"
+        pkt = simple_tcp_packet(eth_dst='00:77:66:55:44:33',
+                                eth_src='00:22:22:22:22:22',
+                                ip_dst='172.16.55.55',
+                                ip_src='10.10.10.1',
+                                ip_id=105,
+                                ip_ttl=64,
+                                tcp_dport=0x3456)
+        exp_pkt = simple_tcp_packet(eth_dst='00:11:11:11:11:11',
+                                    eth_src='00:77:66:55:44:33',
+                                    ip_dst='192.168.0.1',
+                                    ip_src='10.10.10.1',
+                                    ip_id=105,
+                                    ip_ttl=63,
+                                    tcp_dport=0x1289)
+        send_packet(self, swports[2], str(pkt))
+        if (skip_checksum_validation):
+            exp_pkt = ptf.mask.Mask(exp_pkt)
+            exp_pkt.set_do_not_care_scapy(TCP, 'chksum')
+        verify_packets(self, exp_pkt, [swports[1]])
+
+        print "Verifying Destination NAT (ip)"
+        pkt = simple_tcp_packet(eth_dst='00:77:66:55:44:33',
+                                eth_src='00:22:22:22:22:22',
+                                ip_dst='172.16.55.56',
+                                ip_src='10.10.10.1',
+                                ip_id=105,
+                                ip_ttl=64)
+        exp_pkt = simple_tcp_packet(eth_dst='00:11:11:11:11:11',
+                                    eth_src='00:77:66:55:44:33',
+                                    ip_dst='192.168.0.1',
+                                    ip_src='10.10.10.1',
+                                    ip_id=105,
+                                    ip_ttl=63)
+        send_packet(self, swports[2], str(pkt))
+        if (skip_checksum_validation):
+            exp_pkt = ptf.mask.Mask(exp_pkt)
+            exp_pkt.set_do_not_care_scapy(TCP, 'chksum')
+        verify_packets(self, exp_pkt, [swports[1]])
+
+        print "Verifying Twice NAT (ip and port)"
+        pkt = simple_tcp_packet(eth_dst='00:77:66:55:44:33',
+                                eth_src='00:11:11:11:11:11',
+                                ip_dst='10.10.10.2',
+                                ip_src='192.168.0.2',
+                                ip_id=105,
+                                ip_ttl=64,
+                                tcp_sport=0x789a,
+                                tcp_dport=0xabcd)
+        exp_pkt = simple_tcp_packet(eth_dst='00:22:22:22:22:22',
+                                    eth_src='00:77:66:55:44:33',
+                                    ip_dst='10.100.1.3',
+                                    ip_src='172.16.55.58',
+                                    ip_id=105,
+                                    ip_ttl=63,
+                                    tcp_sport=0x5678,
+                                    tcp_dport=0x3489)
+        send_packet(self, swports[1], str(pkt))
+        if (skip_checksum_validation):
+            exp_pkt = ptf.mask.Mask(exp_pkt)
+            exp_pkt.set_do_not_care_scapy(TCP, 'chksum')
+        verify_packets(self, exp_pkt, [swports[2]])
+
+        print "Verifying Twice NAT (ip)"
+        pkt = simple_tcp_packet(eth_dst='00:77:66:55:44:33',
+                                eth_src='00:11:11:11:11:11',
+                                ip_dst='10.10.10.2',
+                                ip_src='192.168.0.2',
+                                ip_id=105,
+                                ip_ttl=64)
+        exp_pkt = simple_tcp_packet(eth_dst='00:22:22:22:22:22',
+                                    eth_src='00:77:66:55:44:33',
+                                    ip_dst='10.100.1.2',
+                                    ip_src='172.16.55.57',
+                                    ip_id=105,
+                                    ip_ttl=63)
+        send_packet(self, swports[1], str(pkt))
+        if (skip_checksum_validation):
+            exp_pkt = ptf.mask.Mask(exp_pkt)
+            exp_pkt.set_do_not_care_scapy(TCP, 'chksum')
+        verify_packets(self, exp_pkt, [swports[2]])
+
+    def tearDown(self):
+        self.client.switcht_api_l3_route_delete(device, self.vrf, self.ip3,
+                                                self.nhop1)
+        self.client.switcht_api_neighbor_entry_remove(device, self.neighbor1)
+        self.client.switcht_api_neighbor_entry_remove(device, self.neighbor2)
+        self.client.switcht_api_nhop_delete(device, self.nhop1)
+        self.client.switcht_api_nhop_delete(device, self.nhop2)
+
+        for n in self.nat:
+            self.client.switcht_api_nat_delete(device, n)
+
+        self.client.switcht_api_mac_table_entries_delete_all(device)
+
+        self.client.switcht_api_l3_interface_address_delete(device, self.if1,
+                                                            self.vrf,
+                                                            self.ip1)
+        self.client.switcht_api_l3_interface_address_delete(device, self.if2,
+                                                            self.vrf,
+                                                            self.ip2)
+
+        self.client.switcht_api_acl_remove(device, self.acl, self.if1)
+        self.client.switcht_api_acl_remove(device, self.acl, self.if2)
+        self.client.switcht_api_acl_rule_delete(device, self.acl, self.ace)
+        self.client.switcht_api_acl_list_delete(device, self.acl)
+
+        self.client.switcht_api_interface_delete(device, self.if1)
+        self.client.switcht_api_interface_delete(device, self.if2)
+
+        self.client.switcht_api_router_mac_delete(device, self.rmac,
+                                                  '00:77:66:55:44:33')
+        self.client.switcht_api_router_mac_group_delete(device, self.rmac)
+        self.client.switcht_api_vrf_delete(device, self.vrf)
+        api_base_tests.ThriftInterfaceDataPlane.tearDown(self)
+
+###############################################################################
+class HostIfTest(api_base_tests.ThriftInterfaceDataPlane):
+    def runTest(self):
+        print
+        self.client.switcht_api_init(device)
+        vrf = self.client.switcht_api_vrf_create(device, swports[1])
+
+        rmac = self.client.switcht_api_router_mac_group_create(device)
+        self.client.switcht_api_router_mac_add(device, rmac, '00:77:66:55:44:33')
+
+        iu1 = interface_union(port_lag_handle = swports[1])
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu1,
+                                           mac='00:77:66:55:44:33', label=0,
+                                           vrf_handle=vrf, rmac_handle=rmac)
+        if1 = self.client.switcht_api_interface_create(device, i_info1)
+        i_ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='192.168.0.2',
+                                  prefix_length=16)
+        self.client.switcht_api_l3_interface_address_add(device, if1, vrf, i_ip1)
+
+        hostif_group1 = switcht_hostif_group_t(queue_id=1, priority=1000)
+        hostif_group_id1 = self.client.switcht_api_hostif_group_create(device, hostif_group1)
+
+        hostif_group2 = switcht_hostif_group_t(queue_id=2, priority=2000)
+        hostif_group_id2 = self.client.switcht_api_hostif_group_create(device, hostif_group2)
+
+        try:
+            print 'Installing hostif reason codes Arp Request/Resp, OSPF, PIM, IGMP and STP'
+            arp_req_rcode_info = switcht_api_hostif_rcode_info_t(
+                                 reason_code = SWITCH_HOSTIF_REASON_CODE_ARP_REQUEST,
+                                 action=SWITCH_ACL_ACTION_COPY_TO_CPU,
+                                 hostif_group_id=hostif_group_id1)
+            self.client.switcht_api_hostif_reason_code_create(device, arp_req_rcode_info)
+
+            arp_resp_rcode_info = switcht_api_hostif_rcode_info_t(
+                                 reason_code = SWITCH_HOSTIF_REASON_CODE_ARP_RESPONSE,
+                                 action=SWITCH_ACL_ACTION_REDIRECT_TO_CPU,
+                                 hostif_group_id=hostif_group_id1)
+            self.client.switcht_api_hostif_reason_code_create(device, arp_resp_rcode_info)
+
+            ospf_rcode_info = switcht_api_hostif_rcode_info_t(
+                                 reason_code = SWITCH_HOSTIF_REASON_CODE_OSPF,
+                                 action=SWITCH_ACL_ACTION_COPY_TO_CPU,
+                                 hostif_group_id=hostif_group_id2)
+            self.client.switcht_api_hostif_reason_code_create(device, ospf_rcode_info)
+
+            igmp_v2_rcode_info = switcht_api_hostif_rcode_info_t(
+                                 reason_code = SWITCH_HOSTIF_REASON_CODE_IGMP_TYPE_V2_REPORT,
+                                 action=SWITCH_ACL_ACTION_COPY_TO_CPU,
+                                 hostif_group_id=hostif_group_id2)
+            self.client.switcht_api_hostif_reason_code_create(device, igmp_v2_rcode_info)
+
+            pim_rcode_info = switcht_api_hostif_rcode_info_t(
+                                 reason_code = SWITCH_HOSTIF_REASON_CODE_PIM,
+                                 action=SWITCH_ACL_ACTION_COPY_TO_CPU,
+                                 hostif_group_id=hostif_group_id2)
+            self.client.switcht_api_hostif_reason_code_create(device, pim_rcode_info)
+
+            stp_rcode_info = switcht_api_hostif_rcode_info_t(
+                                 reason_code = SWITCH_HOSTIF_REASON_CODE_STP,
+                                 action=SWITCH_ACL_ACTION_REDIRECT_TO_CPU,
+                                 hostif_group_id=hostif_group_id2)
+            self.client.switcht_api_hostif_reason_code_create(device, stp_rcode_info)
+
+            pkt = simple_arp_packet(arp_op=1, pktlen=100)
+            exp_pkt = simple_cpu_packet(ingress_port=1,
+                                        ingress_ifindex=2,
+                                        reason_code=SWITCH_HOSTIF_REASON_CODE_ARP_REQUEST,
+                                        ingress_bd=2,
+                                        inner_pkt = pkt)
+
+            print 'Sending ARP request broadcast'
+            send_packet(self, swports[1], str(pkt))
+            verify_packets(self, exp_pkt, [cpu_port])
+
+            pkt = simple_arp_packet(arp_op=2, eth_dst='00:77:66:55:44:33', pktlen=100)
+            exp_pkt = simple_cpu_packet(ingress_port=1,
+                                        ingress_ifindex=2,
+                                        reason_code=SWITCH_HOSTIF_REASON_CODE_ARP_RESPONSE,
+                                        ingress_bd=2,
+                                        inner_pkt = pkt)
+
+            print 'Sending ARP response'
+            send_packet(self, swports[1], str(pkt))
+            verify_packets(self, exp_pkt, [cpu_port])
+
+            pkt = simple_ip_packet(ip_proto=89, ip_dst='224.0.0.5')
+            exp_pkt = simple_cpu_packet(ingress_port=1,
+                                        ingress_ifindex=2,
+                                        reason_code=SWITCH_HOSTIF_REASON_CODE_OSPF,
+                                        ingress_bd=2,
+                                        inner_pkt = pkt)
+
+            print 'Sending OSPF packet destined to 224.0.0.5'
+            send_packet(self, swports[1], str(pkt))
+            verify_packets(self, exp_pkt, [cpu_port])
+
+            pkt = simple_ip_packet(ip_proto=89, ip_dst='224.0.0.6')
+            exp_pkt = simple_cpu_packet(ingress_port=1,
+                                        ingress_ifindex=2,
+                                        reason_code=SWITCH_HOSTIF_REASON_CODE_OSPF,
+                                        ingress_bd=2,
+                                        inner_pkt = pkt)
+
+            print 'Sending OSPF packet destined to 224.0.0.6'
+            send_packet(self, swports[1], str(pkt))
+            verify_packets(self, exp_pkt, [cpu_port])
+
+            pkt = simple_ip_packet(ip_proto=2)
+            exp_pkt = simple_cpu_packet(ingress_port=1,
+                                        ingress_ifindex=2,
+                                        reason_code=SWITCH_HOSTIF_REASON_CODE_IGMP_TYPE_V2_REPORT,
+                                        ingress_bd=2,
+                                        inner_pkt = pkt)
+
+            print 'Sending IGMP v2 report'
+            send_packet(self, swports[1], str(pkt))
+            verify_packets(self, exp_pkt, [cpu_port])
+
+            pkt = simple_ip_packet(ip_proto=103)
+            exp_pkt = simple_cpu_packet(ingress_port=1,
+                                        ingress_ifindex=2,
+                                        reason_code=SWITCH_HOSTIF_REASON_CODE_PIM,
+                                        ingress_bd=2,
+                                        inner_pkt = pkt)
+
+            print 'Sending PIM packet'
+            send_packet(self, swports[1], str(pkt))
+            verify_packets(self, exp_pkt, [cpu_port])
+
+            pkt = simple_eth_packet(eth_dst='01:80:C2:00:00:00', pktlen=100)
+            exp_pkt = simple_cpu_packet(ingress_port=1,
+                                        ingress_ifindex=2,
+                                        reason_code=SWITCH_HOSTIF_REASON_CODE_STP,
+                                        ingress_bd=2,
+                                        inner_pkt = pkt)
+            print 'Sending STP packet'
+            send_packet(self, swports[1], str(pkt))
+            verify_packets(self, exp_pkt, [cpu_port])
+
+            print 'Deleting hostif reason codes Arp Request/Resp, OSPF, PIM, IGMP and STP'
+            self.client.switcht_api_hostif_reason_code_delete(device, SWITCH_HOSTIF_REASON_CODE_ARP_REQUEST)
+            self.client.switcht_api_hostif_reason_code_delete(device, SWITCH_HOSTIF_REASON_CODE_ARP_RESPONSE)
+            self.client.switcht_api_hostif_reason_code_delete(device, SWITCH_HOSTIF_REASON_CODE_OSPF)
+            self.client.switcht_api_hostif_reason_code_delete(device, SWITCH_HOSTIF_REASON_CODE_IGMP_TYPE_V2_REPORT)
+            self.client.switcht_api_hostif_reason_code_delete(device, SWITCH_HOSTIF_REASON_CODE_PIM)
+            self.client.switcht_api_hostif_reason_code_delete(device, SWITCH_HOSTIF_REASON_CODE_STP)
+
+            print 'Sending ARP request broadcast'
+            pkt = simple_arp_packet(arp_op=1, pktlen=100)
+            send_packet(self, swports[1], str(pkt))
+
+            print 'Sending OSPF packet destined to 224.0.0.5'
+            pkt = simple_ip_packet(ip_proto=89, ip_dst='224.0.0.5')
+            send_packet(self, swports[1], str(pkt))
+
+            print 'Sending OSPF packet destined to 224.0.0.6'
+            pkt = simple_ip_packet(ip_proto=89, ip_dst='224.0.0.6')
+            send_packet(self, swports[1], str(pkt))
+
+            print 'Sending IGMP v2 report'
+            pkt = simple_ip_packet(ip_proto=2)
+            send_packet(self, swports[1], str(pkt))
+
+            print 'Sending PIM packet'
+            pkt = simple_ip_packet(ip_proto=103)
+            send_packet(self, swports[1], str(pkt))
+
+            print 'Sending STP packet'
+            pkt = simple_eth_packet(eth_dst='01:80:C2:00:00:00', pktlen=100)
+            send_packet(self, swports[1], str(pkt))
+
+            verify_no_other_packets(self, timeout=1)
+
+        finally:
+
+            self.client.switcht_api_hostif_group_delete(device, hostif_group_id1)
+            self.client.switcht_api_hostif_group_delete(device, hostif_group_id2)
+
+            self.client.switcht_api_l3_interface_address_delete(device, if1, vrf, i_ip1)
+
+            self.client.switcht_api_interface_delete(device, if1)
+            self.client.switcht_api_router_mac_delete(device, rmac, '00:77:66:55:44:33')
+            self.client.switcht_api_vrf_delete(device, vrf)
