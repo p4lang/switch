@@ -33,7 +33,6 @@ switch_api_id_allocator *bd_stats_index = NULL;
 static void *switch_bd_array = NULL;
 switch_handle_t vlan_handle_list[SWITCH_API_MAX_VLANS];
 
-
 switch_status_t switch_bd_init(switch_device_t device) {
   bd_stats_index = switch_api_id_allocator_new(16 * 1024, FALSE);
   switch_handle_type_init(SWITCH_HANDLE_TYPE_BD, (16 * 1024));

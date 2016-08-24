@@ -225,23 +225,23 @@ void switch_egress_acl_entries_add(switch_device_t device) {
   switch_acl_egr_key_value_pair_t egr_acl_kvp[3];
 
   memset(&opt_action_params, 0, sizeof(switch_acl_opt_action_params_t));
-    // add copy to cpu rule for mtu check
-    memset(egr_acl_kvp, 0, sizeof(egr_acl_kvp));
-    egr_acl_kvp[0].field = SWITCH_ACL_EGR_L3_MTU_CHECK;
-    egr_acl_kvp[0].value.l3_mtu_check = 0;
-    egr_acl_kvp[0].mask.u.mask = 0xFFFF;
-    memset(&acl->action_params, 0, sizeof(switch_acl_action_params_t));
-    acl->action_params.cpu_redirect.reason_code =
-        SWITCH_HOSTIF_REASON_CODE_L3_MTU_ERROR;
-    switch_api_acl_rule_create(device,
-                               acl->acl_handle,
-                               acl->priority,
-                               acl->key_value_count,
-                               egr_acl_kvp,
-                               SWITCH_ACL_EGR_ACTION_REDIRECT_TO_CPU,
-                               &acl->action_params,
-                               &opt_action_params,
-                               &acl->ace_handle);
+  // add copy to cpu rule for mtu check
+  memset(egr_acl_kvp, 0, sizeof(egr_acl_kvp));
+  egr_acl_kvp[0].field = SWITCH_ACL_EGR_L3_MTU_CHECK;
+  egr_acl_kvp[0].value.l3_mtu_check = 0;
+  egr_acl_kvp[0].mask.u.mask = 0xFFFF;
+  memset(&acl->action_params, 0, sizeof(switch_acl_action_params_t));
+  acl->action_params.cpu_redirect.reason_code =
+      SWITCH_HOSTIF_REASON_CODE_L3_MTU_ERROR;
+  switch_api_acl_rule_create(device,
+                             acl->acl_handle,
+                             acl->priority,
+                             acl->key_value_count,
+                             egr_acl_kvp,
+                             SWITCH_ACL_EGR_ACTION_REDIRECT_TO_CPU,
+                             &acl->action_params,
+                             &opt_action_params,
+                             &acl->ace_handle);
 }
 
 switch_status_t switch_negative_mirroring_set(switch_device_t device,

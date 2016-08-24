@@ -343,8 +343,7 @@ switch_status_t switch_api_lag_member_delete(switch_device_t device,
         return SWITCH_STATUS_INVALID_PORT_NUMBER;
       }
       // part of lag
-      status =
-          switch_pd_ingress_port_mapping_table_add_entry(
+      status = switch_pd_ingress_port_mapping_table_add_entry(
           device, port_info->ifindex, port_info);
       port_info->lag_handle = 0;
       if (status != SWITCH_STATUS_SUCCESS) {
