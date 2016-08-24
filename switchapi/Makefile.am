@@ -4,7 +4,7 @@ SUBDIRS = third-party/tommyds
 
 # using AM_CPPFLAGS so it applies to all libraries
 
-AM_CPPFLAGS += -I$(srcdir)/inc
+AM_CPPFLAGS += -I$(srcdir)/include
 AM_CPPFLAGS += -I$(builddir)/src/gen-cpp
 AM_CPPFLAGS += -I$(srcdir)/third-party/tommyds/include
 AM_CPPFLAGS += -I$(top_srcdir)/p4src/includes
@@ -54,6 +54,8 @@ switchapi_sources = \
 $(BUILT_SOURCES) \
 src/switch_acl.c \
 src/switch_acl_int.h \
+src/switch_buffer.c \
+src/switch_buffer_int.h \
 src/switch_api_rpc_server.cpp \
 src/switch_api.thrift \
 src/switch_capability.c \
@@ -77,10 +79,14 @@ src/switch_lag.c \
 src/switch_lag_int.h \
 src/switch_log.c \
 src/switch_log.h \
+src/switch_lpm.c \
+src/switch_lpm_int.h \
 src/switch_mcast.c \
 src/switch_mcast_int.h \
 src/switch_mirror.c \
 src/switch_mirror_int.h \
+src/switch_nat.c \
+src/switch_nat_int.h \
 src/switch_neighbor.c \
 src/switch_neighbor_int.h \
 src/switch_nhop.c \
@@ -89,11 +95,23 @@ src/switch_packet.c \
 src/switch_packet_int.h \
 src/switch_pd.c \
 src/switch_pd.h \
+src/switch_pd_buffer.c \
+src/switch_pd_ppg.c \
+src/switch_pd_qos.c \
+src/switch_pd_queue.c \
 src/switch_pd_mcast.c \
+src/switch_pd_nat.c \
+src/switch_pd_types.h \
 src/switch_port.c \
 src/switch_port_int.h \
+src/switch_qos.c \
+src/switch_qos_int.h \
+src/switch_queue.c \
+src/switch_queue_int.h \
 src/switch_rmac.c \
 src/switch_rmac_int.h \
+src/switch_scheduler.c \
+src/switch_scheduler_int.h \
 src/switch_stp.c \
 src/switch_stp_int.h \
 src/switch_tunnel.c \
@@ -108,33 +126,37 @@ src/switch_vrf_int.h \
 src/switch_sflow_int.h \
 src/switch_sflow.c \
 src/thrift_cache.h \
-inc/switchapi/switch_acl.h \
-inc/switchapi/switch_base_types.h \
-inc/switchapi/switch_capability.h \
-inc/switchapi/switch_config.h \
-inc/switchapi/switch_handle.h \
-inc/switchapi/switch_hostif.h \
-inc/switchapi/switch_id.h \
-inc/switchapi/switch_interface.h \
-inc/switchapi/switch_l2.h \
-inc/switchapi/switch_l3.h \
-inc/switchapi/switch_lag.h \
-inc/switchapi/switch_mcast.h \
-inc/switchapi/switch_meter.h \
-inc/switchapi/switch_neighbor.h \
-inc/switchapi/switch_nhop.h \
-inc/switchapi/switch_port.h \
-inc/switchapi/switch_porting.h \
-inc/switchapi/switch_protocol.h \
-inc/switchapi/switch_rmac.h \
-inc/switchapi/switch_status.h \
-inc/switchapi/switch_stp.h \
-inc/switchapi/switch_tunnel.h \
-inc/switchapi/switch_utils.h \
-inc/switchapi/switch_vlan.h \
-inc/switchapi/switch_INT.h \
-inc/switchapi/switch_vrf.h \
-inc/switchapi/switch_sflow.h
+include/switchapi/switch_acl.h \
+include/switchapi/switch_base_types.h \
+include/switchapi/switch_buffer.h \
+include/switchapi/switch_capability.h \
+include/switchapi/switch_config.h \
+include/switchapi/switch_handle.h \
+include/switchapi/switch_hostif.h \
+include/switchapi/switch_id.h \
+include/switchapi/switch_interface.h \
+include/switchapi/switch_l2.h \
+include/switchapi/switch_l3.h \
+include/switchapi/switch_lag.h \
+include/switchapi/switch_mcast.h \
+include/switchapi/switch_meter.h \
+include/switchapi/switch_nat.h \
+include/switchapi/switch_neighbor.h \
+include/switchapi/switch_nhop.h \
+include/switchapi/switch_port.h \
+include/switchapi/switch_porting.h \
+include/switchapi/switch_protocol.h \
+include/switchapi/switch_qos.h \
+include/switchapi/switch_queue.h \
+include/switchapi/switch_rmac.h \
+include/switchapi/switch_status.h \
+include/switchapi/switch_stp.h \
+include/switchapi/switch_tunnel.h \
+include/switchapi/switch_utils.h \
+include/switchapi/switch_vlan.h \
+include/switchapi/switch_INT.h \
+include/switchapi/switch_vrf.h \
+include/switchapi/switch_sflow.h
 
 noinst_LTLIBRARIES =
 lib_LIBRARIES =

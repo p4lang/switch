@@ -148,6 +148,7 @@ static switch_status_t switch_acl_ip_set_fields_actions(
   switch_interface_info_t *intf_info = NULL;
   uint16_t bd_label = 0;
   uint16_t if_label = 0;
+  uint8_t nat_mode = SWITCH_NAT_MODE_NONE;
   switch_status_t status = SWITCH_STATUS_SUCCESS;
 
   if (interface_handle) {
@@ -168,6 +169,10 @@ static switch_status_t switch_acl_ip_set_fields_actions(
           break;
         default:
           return SWITCH_STATUS_INVALID_HANDLE;
+      }
+      status = switch_api_interface_nat_mode_get(interface_handle, &nat_mode);
+      if (status == SWITCH_STATUS_SUCCESS) {
+        p->opt_action_params.nat_mode = nat_mode;
       }
     }
   }
@@ -340,42 +345,6 @@ static switch_status_t switch_acl_ipv6_racl_set_fields_actions(
   return status;
 }
 
-static switch_status_t switch_acl_qos_set_fields_actions(
-    switch_device_t device,
-    switch_acl_rule_t *p,
-    switch_handle_t interface_handle,
-    p4_pd_entry_hdl_t *entry) {
-  switch_acl_qos_key_value_pair_t *qos_acl = NULL;
-  switch_interface_info_t *intf_info = NULL;
-  uint16_t bd_label = 0;
-  uint16_t if_label = 0;
-  switch_status_t status = SWITCH_STATUS_SUCCESS;
-
-  if (interface_handle) {
-    intf_info = switch_api_interface_get(interface_handle);
-    if (!intf_info) {
-      return SWITCH_STATUS_INVALID_INTERFACE;
-    }
-    switch (switch_handle_get_type(interface_handle)) {
-      case SWITCH_HANDLE_TYPE_INTERFACE:
-        if_label = handle_to_id(interface_handle);
-        break;
-      default:
-        return SWITCH_STATUS_INVALID_HANDLE;
-    }
-  }
-  qos_acl = (switch_acl_qos_key_value_pair_t *)p->fields;
-  status = switch_pd_qos_acl_table_add_entry(device,
-                                             if_label,
-                                             bd_label,
-                                             p->priority,
-                                             p->field_count,
-                                             qos_acl,
-                                             p->action,
-                                             entry);
-  return status;
-}
-
 static switch_status_t switch_acl_system_set_fields_actions(
     switch_device_t device,
     switch_acl_rule_t *p,
@@ -500,10 +469,6 @@ static switch_status_t acl_hw_set(switch_device_t device,
       status = switch_acl_mac_set_fields_actions(
           device, p, interface_handle, &entry);
       break;
-    case SWITCH_ACL_TYPE_QOS:
-      status = switch_acl_qos_set_fields_actions(
-          device, p, interface_handle, &entry);
-      break;
     case SWITCH_ACL_TYPE_EGRESS_SYSTEM:
       status = switch_acl_egr_set_fields_actions(
           device, p, interface_handle, &entry);
@@ -516,6 +481,11 @@ static switch_status_t acl_hw_set(switch_device_t device,
     // use the ace_handle from rule list in the interface entries
     JLI(hw_entry, intf->entries, ace_handle);
     *(unsigned long *)hw_entry = entry;
+  } else {
+    // if there is no interface, store hw handle with ace data
+    switch_acl_rule_t *rule = NULL;
+    rule = switch_ace_get(ace_handle);
+    rule->hw_entry = entry;
   }
   return status;
 }
@@ -527,6 +497,15 @@ static switch_status_t acl_hw_del(switch_device_t device,
   unsigned long *hw_entry = NULL;
   int ret = 0;
   switch_status_t status = SWITCH_STATUS_SUCCESS;
+
+  if (!intf) {
+    // in case there is no interface, hw handle is stored with ace
+    if (acl_info->type != SWITCH_ACL_TYPE_SYSTEM)
+      return SWITCH_STATUS_UNSUPPORTED_TYPE;
+
+    return switch_pd_system_acl_table_delete_entry(
+        device, switch_ace_get(ace_handle)->hw_entry);
+  }
 
   JLG(hw_entry, intf->entries, ace_handle);
   if (hw_entry) {
@@ -553,10 +532,6 @@ static switch_status_t acl_hw_del(switch_device_t device,
         break;
       case SWITCH_ACL_TYPE_MAC:
         status = switch_pd_mac_acl_table_delete_entry(
-            device, *(unsigned long *)hw_entry);
-        break;
-      case SWITCH_ACL_TYPE_QOS:
-        status = switch_pd_qos_acl_table_delete_entry(
             device, *(unsigned long *)hw_entry);
         break;
       case SWITCH_ACL_TYPE_EGRESS_SYSTEM:
@@ -771,6 +746,8 @@ switch_status_t switch_api_acl_rule_delete(switch_device_t device,
           acl_hw_del(device, acl_info, intf, ace_handle);
           node = node->next;
         }
+      } else {
+        acl_hw_del(device, acl_info, NULL, ace_handle);
       }
       if (p->fields) {
         switch_free(p->fields);
@@ -904,6 +881,17 @@ switch_status_t switch_api_acl_stats_get(switch_device_t device,
   status =
       switch_pd_acl_stats_get(device, handle_to_id(counter_handle), counter);
   return status;
+}
+
+switch_acl_type_t switch_acl_type_get(switch_device_t device,
+                                      switch_handle_t acl_handle) {
+  switch_acl_info_t *acl_info = NULL;
+  acl_info = switch_acl_get(acl_handle);
+  if (!acl_info) {
+    return 0;
+  }
+
+  return acl_info->type;
 }
 
 #ifdef __cplusplus

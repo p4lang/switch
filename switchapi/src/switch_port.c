@@ -17,11 +17,13 @@ limitations under the License.
 #include "switchapi/switch_base_types.h"
 #include "switchapi/switch_port.h"
 #include "switch_pd.h"
+#include "switch_log.h"
 #include "switch_port_int.h"
 
 static switch_port_info_t switch_port_info[SWITCH_API_MAX_PORTS];
 static switch_port_info_t null_port_info;
 static switch_port_info_t dummy_port_info;
+static void *switch_ppg_array;
 
 switch_status_t switch_port_init(switch_device_t device) {
   switch_port_info_t *port_info = NULL;
@@ -35,6 +37,12 @@ switch_status_t switch_port_init(switch_device_t device) {
     SWITCH_PORT_ID(port_info) = index;
     port_info->ifindex = index + 1;
     port_info->port_type = SWITCH_PORT_TYPE_NORMAL;
+    port_info->tc = SWITCH_QOS_DEFAULT_TC;
+    port_info->ingress_qos_group = 0;
+    port_info->egress_qos_group = 0;
+    port_info->tc_qos_group = 0;
+    port_info->trust_dscp = FALSE;
+    port_info->trust_pcp = FALSE;
     if (index == CPU_PORT_ID) {
       port_info->port_type = SWITCH_PORT_TYPE_CPU;
     }
@@ -48,19 +56,17 @@ switch_status_t switch_port_init(switch_device_t device) {
                                         &(port_info->lg_entry));
     port_info->hw_entry[0] = SWITCH_HW_INVALID_HANDLE;
     port_info->hw_entry[1] = SWITCH_HW_INVALID_HANDLE;
-    switch_pd_ingress_port_mapping_table_add_entry(device,
-                                                   SWITCH_PORT_ID(port_info),
-                                                   port_info->ifindex,
-                                                   port_info->port_type,
-                                                   port_info->hw_entry);
+    switch_pd_ingress_port_mapping_table_add_entry(
+        device, port_info->ifindex, port_info);
     port_info->eg_port_entry = SWITCH_HW_INVALID_HANDLE;
     switch_pd_egress_port_mapping_table_add_entry(device,
                                                   SWITCH_PORT_ID(port_info),
                                                   port_info->ifindex,
                                                   port_info->port_type,
+                                                  port_info->egress_qos_group,
                                                   &(port_info->eg_port_entry));
-#endif
     port_info->port_handle = id_to_handle(SWITCH_HANDLE_TYPE_PORT, index);
+#endif
   }
   return SWITCH_STATUS_SUCCESS;
 }
@@ -245,4 +251,466 @@ switch_status_t switch_api_storm_control_stats_get(
 bool switch_port_is_cpu_port(switch_handle_t port_hdl) {
   uint32_t port_id = handle_to_id(port_hdl);
   return port_id == CPU_PORT_ID;
+}
+
+switch_handle_t switch_ppg_handle_create() {
+  switch_handle_t ppg_handle;
+  _switch_handle_create(SWITCH_HANDLE_TYPE_PRIORITY_GROUP,
+                        switch_port_priority_group_t,
+                        switch_ppg_array,
+                        NULL,
+                        ppg_handle);
+  return ppg_handle;
+}
+
+switch_port_priority_group_t *switch_ppg_get(switch_handle_t ppg_handle) {
+  switch_port_priority_group_t *ppg_info = NULL;
+  _switch_handle_get(
+      switch_port_priority_group_t, switch_ppg_array, ppg_handle, ppg_info);
+  return ppg_info;
+}
+
+switch_status_t switch_ppg_handle_delete(switch_handle_t ppg_handle) {
+  _switch_handle_delete(
+      switch_port_priority_group_t, switch_ppg_array, ppg_handle);
+  return SWITCH_STATUS_SUCCESS;
+}
+
+switch_status_t switch_api_ppg_create(switch_device_t device,
+                                      switch_handle_t port_handle) {
+  switch_port_info_t *port_info = NULL;
+  switch_handle_t ppg_handle = SWITCH_API_INVALID_HANDLE;
+  switch_port_priority_group_t *ppg_info = NULL;
+  uint32_t index = 0;
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
+
+  port_info = switch_api_port_get_internal(port_handle);
+  if (!port_info) {
+    SWITCH_API_ERROR("invalid port handle");
+    return status;
+  }
+
+  for (index = 0; index < port_info->max_ppg; index++) {
+    ppg_handle = switch_ppg_handle_create();
+    ppg_info = switch_ppg_get(ppg_handle);
+    if (!ppg_info) {
+      SWITCH_API_ERROR("failed to allocate port_priority group");
+      return status;
+    }
+
+    ppg_info->port_handle = port_handle;
+    ppg_info->ppg_handle = ppg_handle;
+
+    status =
+        switch_pd_ppg_create(device, port_handle, &ppg_info->tm_ppg_handle);
+    if (status != SWITCH_STATUS_SUCCESS) {
+      SWITCH_API_ERROR("failed to allocate port_priority group");
+      return status;
+    }
+    port_info->ppg_handles[index] = ppg_handle;
+  }
+  return status;
+}
+
+switch_status_t switch_api_ppg_delete(switch_device_t device,
+                                      switch_handle_t port_handle) {
+  switch_port_info_t *port_info = NULL;
+  switch_handle_t ppg_handle = SWITCH_API_INVALID_HANDLE;
+  switch_port_priority_group_t *ppg_info = NULL;
+  uint32_t index = 0;
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
+
+  port_info = switch_api_port_get_internal(port_handle);
+  if (!port_info) {
+    SWITCH_API_ERROR("invalid port handle");
+    return status;
+  }
+
+  for (index = 0; index < port_info->max_ppg; index++) {
+    ppg_handle = port_info->ppg_handles[index];
+    ppg_info = switch_ppg_get(ppg_handle);
+    if (!ppg_info) {
+      SWITCH_API_ERROR("failed to allocate port_priority group");
+      return SWITCH_API_INVALID_HANDLE;
+    }
+
+    status = switch_pd_ppg_delete(device, ppg_handle);
+    switch_ppg_handle_delete(ppg_handle);
+    port_info->ppg_handles[index] = 0;
+  }
+
+  return status;
+}
+
+switch_status_t switch_api_ppg_get(switch_device_t device,
+                                   switch_handle_t port_handle,
+                                   uint8_t *num_ppg,
+                                   switch_handle_t *ppg_handles) {
+  switch_port_info_t *port_info = NULL;
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
+  uint32_t index = 0;
+
+  port_info = switch_api_port_get_internal(port_handle);
+  if (!port_info) {
+    SWITCH_API_ERROR("invalid port handle");
+    return SWITCH_STATUS_INVALID_HANDLE;
+  }
+
+  for (index = 0; index < port_info->max_ppg; index++) {
+    ppg_handles[index] = port_info->ppg_handles[index];
+  }
+  *num_ppg = port_info->max_ppg;
+
+  return status;
+}
+
+switch_status_t switch_api_port_cos_mapping(switch_device_t device,
+                                            switch_handle_t port_handle,
+                                            switch_handle_t ppg_handle,
+                                            uint8_t cos_bitmap) {
+  switch_port_priority_group_t *ppg_info = NULL;
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
+
+  ppg_info = switch_ppg_get(ppg_handle);
+  if (!ppg_info) {
+    SWITCH_API_ERROR("failed to allocate port_priority group");
+    return SWITCH_STATUS_INVALID_HANDLE;
+  }
+
+  status = switch_pd_port_ppg_tc_mapping(
+      device, ppg_info->tm_ppg_handle, cos_bitmap);
+  return status;
+}
+
+switch_status_t switch_api_ppg_lossless_enable(switch_device_t device,
+                                               switch_handle_t ppg_handle,
+                                               bool enable) {
+  switch_port_priority_group_t *ppg_info = NULL;
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
+
+  ppg_info = switch_ppg_get(ppg_handle);
+  if (!ppg_info) {
+    SWITCH_API_ERROR("failed to allocate port_priority group");
+    return SWITCH_STATUS_INVALID_HANDLE;
+  }
+
+  status =
+      switch_pd_ppg_lossless_enable(device, ppg_info->tm_ppg_handle, enable);
+  return status;
+}
+
+switch_status_t switch_api_port_qos_group_ingress_set(
+    switch_device_t device,
+    switch_handle_t port_handle,
+    switch_handle_t qos_handle) {
+  switch_port_info_t *port_info = NULL;
+  switch_qos_map_list_t *qos_map_list = NULL;
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
+
+  port_info = switch_api_port_get_internal(port_handle);
+  if (!port_info) {
+    SWITCH_API_ERROR("invalid port handle");
+    return SWITCH_STATUS_INVALID_HANDLE;
+  }
+
+  port_info->ingress_qos_group = 0;
+
+  if (qos_handle) {
+    qos_map_list = switch_qos_map_get(qos_handle);
+    if (!qos_map_list) {
+      SWITCH_API_ERROR("qos map get failed\n");
+      return SWITCH_API_INVALID_HANDLE;
+    }
+    port_info->ingress_qos_group = qos_map_list->qos_group;
+  }
+
+  status = switch_pd_ingress_port_mapping_table_add_entry(
+      device, port_info->ifindex, port_info);
+  if (status != SWITCH_STATUS_SUCCESS) {
+    SWITCH_API_ERROR("port qos group ingress set failed");
+  }
+  return status;
+}
+
+switch_status_t switch_api_port_qos_group_tc_set(switch_device_t device,
+                                                 switch_handle_t port_handle,
+                                                 switch_handle_t qos_handle) {
+  switch_port_info_t *port_info = NULL;
+  switch_qos_map_list_t *qos_map_list = NULL;
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
+
+  port_info = switch_api_port_get_internal(port_handle);
+  if (!port_info) {
+    SWITCH_API_ERROR("invalid port handle");
+    return SWITCH_STATUS_INVALID_HANDLE;
+  }
+
+  port_info->tc_qos_group = 0;
+
+  if (qos_handle) {
+    qos_map_list = switch_qos_map_get(qos_handle);
+    if (!qos_map_list) {
+      SWITCH_API_ERROR("qos map get failed\n");
+      return SWITCH_STATUS_INVALID_HANDLE;
+    }
+    port_info->tc_qos_group = qos_map_list->qos_group;
+  }
+
+  status = switch_pd_ingress_port_mapping_table_add_entry(
+      device, port_info->ifindex, port_info);
+  if (status != SWITCH_STATUS_SUCCESS) {
+    SWITCH_API_ERROR("port qos group tc set failed");
+  }
+  return status;
+}
+
+switch_status_t switch_api_port_qos_group_egress_set(
+    switch_device_t device,
+    switch_handle_t port_handle,
+    switch_handle_t qos_handle) {
+  switch_port_info_t *port_info = NULL;
+  switch_qos_map_list_t *qos_map_list = NULL;
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
+
+  port_info = switch_api_port_get_internal(port_handle);
+  if (!port_info) {
+    SWITCH_API_ERROR("invalid port handle");
+    return SWITCH_STATUS_INVALID_HANDLE;
+  }
+
+  port_info->egress_qos_group = 0;
+
+  if (qos_handle) {
+    qos_map_list = switch_qos_map_get(qos_handle);
+    if (!qos_map_list) {
+      SWITCH_API_ERROR("qos map get failed\n");
+      return SWITCH_STATUS_INVALID_HANDLE;
+    }
+    port_info->egress_qos_group = qos_map_list->qos_group;
+  }
+
+  status = switch_pd_egress_port_mapping_table_add_entry(
+      device,
+      SWITCH_PORT_ID(port_info),
+      port_info->ifindex,
+      port_info->port_type,
+      port_info->egress_qos_group,
+      &(port_info->eg_port_entry));
+  return status;
+}
+
+switch_status_t switch_api_port_tc_default_set(switch_device_t device,
+                                               switch_handle_t port_handle,
+                                               uint16_t tc) {
+  switch_port_info_t *port_info = NULL;
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
+
+  port_info = switch_api_port_get_internal(port_handle);
+  if (!port_info) {
+    SWITCH_API_ERROR("invalid port handle");
+    return SWITCH_STATUS_INVALID_HANDLE;
+  }
+
+  port_info->tc = tc;
+
+  status = switch_pd_ingress_port_mapping_table_add_entry(
+      device, port_info->ifindex, port_info);
+  if (status != SWITCH_STATUS_SUCCESS) {
+    SWITCH_API_ERROR("port tc default set failed");
+  }
+  return status;
+}
+
+switch_status_t switch_api_port_color_default_set(switch_device_t device,
+                                                  switch_handle_t port_handle,
+                                                  switch_color_t color) {
+  switch_port_info_t *port_info = NULL;
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
+
+  port_info = switch_api_port_get_internal(port_handle);
+  if (!port_info) {
+    SWITCH_API_ERROR("invalid port handle");
+    return SWITCH_STATUS_INVALID_HANDLE;
+  }
+
+  port_info->color = color;
+
+  status = switch_pd_ingress_port_mapping_table_add_entry(
+      device, port_info->ifindex, port_info);
+  if (status != SWITCH_STATUS_SUCCESS) {
+    SWITCH_API_ERROR("port color default set failed");
+  }
+  return status;
+}
+
+switch_status_t switch_api_port_trust_dscp_set(switch_device_t device,
+                                               switch_handle_t port_handle,
+                                               bool trust_dscp) {
+  switch_port_info_t *port_info = NULL;
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
+
+  port_info = switch_api_port_get_internal(port_handle);
+  if (!port_info) {
+    SWITCH_API_ERROR("invalid port handle");
+    return SWITCH_STATUS_INVALID_HANDLE;
+  }
+
+  if (port_info->trust_pcp && trust_dscp) {
+    SWITCH_API_ERROR("dscp trust cannot be enabled when pcp is enabled");
+    return SWITCH_STATUS_INVALID_ATTRIBUTE;
+  }
+
+  port_info->trust_dscp = trust_dscp;
+
+  status = switch_pd_ingress_port_mapping_table_add_entry(
+      device, port_info->ifindex, port_info);
+  if (status != SWITCH_STATUS_SUCCESS) {
+    SWITCH_API_ERROR("port trust dscp set failed");
+  }
+  return status;
+}
+
+switch_status_t switch_api_port_trust_pcp_set(switch_device_t device,
+                                              switch_handle_t port_handle,
+                                              bool trust_pcp) {
+  switch_port_info_t *port_info = NULL;
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
+
+  port_info = switch_api_port_get_internal(port_handle);
+  if (!port_info) {
+    SWITCH_API_ERROR("invalid port handle");
+    return SWITCH_STATUS_INVALID_HANDLE;
+  }
+
+  if (port_info->trust_dscp && trust_pcp) {
+    SWITCH_API_ERROR("pcp trust cannot be enabled when dscp is enabled");
+    return SWITCH_STATUS_INVALID_ATTRIBUTE;
+  }
+
+  port_info->trust_pcp = trust_pcp;
+
+  status = switch_pd_ingress_port_mapping_table_add_entry(
+      device, port_info->ifindex, port_info);
+  if (status != SWITCH_STATUS_SUCCESS) {
+    SWITCH_API_ERROR("port trust pcp set failed");
+  }
+  return status;
+}
+
+switch_status_t switch_api_ppg_guaranteed_limit_set(switch_device_t device,
+                                                    switch_handle_t ppg_handle,
+                                                    uint32_t num_bytes) {
+  switch_port_priority_group_t *ppg_info = NULL;
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
+
+  ppg_info = switch_ppg_get(ppg_handle);
+  if (!ppg_info) {
+    SWITCH_API_ERROR("failed to allocate port_priority group");
+    return SWITCH_STATUS_INVALID_HANDLE;
+  }
+
+  status = switch_pd_ppg_guaranteed_limit_set(
+      device, ppg_info->tm_ppg_handle, num_bytes);
+  return status;
+}
+
+switch_status_t switch_api_ppg_skid_limit_set(switch_device_t device,
+                                              switch_handle_t ppg_handle,
+                                              uint32_t num_bytes) {
+  switch_port_priority_group_t *ppg_info = NULL;
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
+
+  ppg_info = switch_ppg_get(ppg_handle);
+  if (!ppg_info) {
+    SWITCH_API_ERROR("failed to allocate port_priority group");
+    return SWITCH_STATUS_INVALID_HANDLE;
+  }
+
+  status =
+      switch_pd_ppg_skid_limit_set(device, ppg_info->tm_ppg_handle, num_bytes);
+  return status;
+}
+
+switch_status_t switch_api_ppg_skid_hysteresis_set(switch_device_t device,
+                                                   switch_handle_t ppg_handle,
+                                                   uint32_t num_bytes) {
+  switch_port_priority_group_t *ppg_info = NULL;
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
+
+  ppg_info = switch_ppg_get(ppg_handle);
+  if (!ppg_info) {
+    SWITCH_API_ERROR("failed to allocate port_priority group");
+    return SWITCH_STATUS_INVALID_HANDLE;
+  }
+
+  status = switch_pd_ppg_skid_hysteresis_set(
+      device, ppg_info->tm_ppg_handle, num_bytes);
+  return status;
+}
+
+switch_status_t switch_api_port_drop_limit_set(switch_device_t device,
+                                               switch_handle_t port_handle,
+                                               uint32_t num_bytes) {
+  switch_port_info_t *port_info = NULL;
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
+
+  port_info = switch_api_port_get_internal(port_handle);
+  if (!port_info) {
+    SWITCH_API_ERROR("invalid port handle");
+    return SWITCH_STATUS_INVALID_HANDLE;
+  }
+
+  status = switch_pd_port_drop_limit_set(device, port_handle, num_bytes);
+
+  return status;
+}
+
+switch_status_t switch_api_port_drop_hysteresis_set(switch_device_t device,
+                                                    switch_handle_t port_handle,
+                                                    uint32_t num_bytes) {
+  switch_port_info_t *port_info = NULL;
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
+
+  port_info = switch_api_port_get_internal(port_handle);
+  if (!port_info) {
+    SWITCH_API_ERROR("invalid port handle");
+    return SWITCH_STATUS_INVALID_HANDLE;
+  }
+
+  status = switch_pd_port_drop_hysteresis_set(device, port_handle, num_bytes);
+  return status;
+}
+
+switch_status_t switch_api_port_pfc_cos_mapping(switch_device_t device,
+                                                switch_handle_t port_handle,
+                                                uint8_t *cos_to_icos) {
+  switch_port_info_t *port_info = NULL;
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
+
+  port_info = switch_api_port_get_internal(port_handle);
+  if (!port_info) {
+    SWITCH_API_ERROR("invalid port handle");
+    return SWITCH_STATUS_INVALID_HANDLE;
+  }
+
+  status = switch_pd_port_pfc_cos_mapping(device, port_handle, cos_to_icos);
+  return status;
+}
+
+switch_status_t switch_api_port_flowcontrol_mode_set(
+    switch_device_t device,
+    switch_handle_t port_handle,
+    switch_flowcontrol_type_t flow_control) {
+  switch_port_info_t *port_info = NULL;
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
+
+  port_info = switch_api_port_get_internal(port_handle);
+  if (!port_info) {
+    SWITCH_API_ERROR("invalid port handle");
+    return SWITCH_STATUS_INVALID_HANDLE;
+  }
+
+  status =
+      switch_pd_port_flowcontrol_mode_set(device, port_handle, flow_control);
+  return status;
 }

@@ -20,6 +20,7 @@ limitations under the License.
 #include "switchapi/switch_base_types.h"
 #include "switchapi/switch_handle.h"
 #include "switchapi/switch_interface.h"
+#include "switch_pd_types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -51,6 +52,7 @@ typedef struct switch_interface_info_ {
   switch_handle_t hostif_handle;
   void *vlan_array;
   uint16_t vlan_count;
+  switch_direction_t direction;
 #ifdef SWITCH_PD
   p4_pd_entry_hdl_t nhop_type_entry;
   p4_pd_entry_hdl_t lag_group_entry;

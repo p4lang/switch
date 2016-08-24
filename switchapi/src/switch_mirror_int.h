@@ -14,8 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#include "switch_pd_types.h"
+
 #ifndef _SWITCH_MIRROR_INT_H_
 #define _SWITCH_MIRROR_INT_H_
+
+#include "switchapi/switch_mirror.h"
 
 typedef struct switch_mirror_info_ {
   switch_api_mirror_info_t api_mirror_info;

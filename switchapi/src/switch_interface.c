@@ -263,12 +263,6 @@ switch_status_t switch_api_interface_create_l3(
     }
   }
 
-  status = switch_interface_array_insert(port_lag_handle, intf_handle);
-  if (status != SWITCH_STATUS_SUCCESS) {
-    SWITCH_API_ERROR("interface array insert failed");
-    return status;
-  }
-
   ln_info = &ln_info_tmp;
   memset(ln_info, 0, sizeof(switch_logical_network_t));
   ln_info->type = SWITCH_LOGICAL_NETWORK_TYPE_L3;
@@ -289,9 +283,27 @@ switch_status_t switch_api_interface_create_l3(
   }
   ln_info->rmac_handle = api_intf_info->rmac_handle;
   intf_info->bd_handle = switch_api_logical_network_create(device, ln_info);
+
+  if (intf_info->bd_handle == SWITCH_API_INVALID_HANDLE) {
+    status = SWITCH_STATUS_INVALID_HANDLE;
+    SWITCH_API_ERROR(
+        "interface create failed. "
+        "bd allocation failed");
+    return status;
+  }
+
   switch_api_interface_ipv4_urpf_mode_set(intf_handle,
                                           api_intf_info->ipv4_urpf_mode);
+  switch_api_interface_nat_mode_set(intf_handle, api_intf_info->nat_mode);
   bd_info = switch_bd_get(intf_info->bd_handle);
+  if (!bd_info) {
+    status = SWITCH_STATUS_INVALID_HANDLE;
+    SWITCH_API_ERROR(
+        "interface create failed. "
+        "bd allocation failed");
+    return status;
+  }
+
   status = switch_pd_port_vlan_mapping_table_add_entry(
       device, vlan_id, 0, intf_info, bd_info->bd_entry, &(intf_info->pv_entry));
   if (status != SWITCH_STATUS_SUCCESS) {
@@ -312,6 +324,12 @@ switch_status_t switch_api_interface_create_l3(
                        intf_handle);
       return status;
     }
+  }
+
+  status = switch_interface_array_insert(port_lag_handle, intf_handle);
+  if (status != SWITCH_STATUS_SUCCESS) {
+    SWITCH_API_ERROR("interface array insert failed");
+    return status;
   }
 
   bd_info->l3_intf_handle = intf_handle;
@@ -861,6 +879,45 @@ switch_status_t switch_api_interface_ipv6_urpf_mode_get(
   }
 
   status = switch_bd_ipv6_urpf_mode_get(intf_info->bd_handle, value);
+  return status;
+}
+
+switch_status_t switch_api_interface_nat_mode_set(switch_handle_t intf_handle,
+                                                  uint8_t value) {
+  switch_interface_info_t *intf_info = NULL;
+  switch_api_interface_info_t *api_intf_info = NULL;
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
+
+  intf_info = switch_api_interface_get(intf_handle);
+  if (!intf_info) {
+    return SWITCH_STATUS_INVALID_INTERFACE;
+  }
+
+  api_intf_info = &intf_info->api_intf_info;
+  if (!SWITCH_INTF_IS_PORT_L3(intf_info)) {
+    return SWITCH_STATUS_INVALID_INTERFACE;
+  }
+
+  api_intf_info->nat_mode = value;
+  status = switch_bd_nat_mode_set(intf_info->bd_handle, value);
+  return status;
+}
+
+switch_status_t switch_api_interface_nat_mode_get(switch_handle_t intf_handle,
+                                                  uint8_t *value) {
+  switch_interface_info_t *intf_info = NULL;
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
+
+  intf_info = switch_api_interface_get(intf_handle);
+  if (!intf_info) {
+    return SWITCH_STATUS_INVALID_INTERFACE;
+  }
+
+  if (!SWITCH_INTF_IS_PORT_L3(intf_info)) {
+    return SWITCH_STATUS_INVALID_INTERFACE;
+  }
+
+  status = switch_bd_nat_mode_get(intf_info->bd_handle, value);
   return status;
 }
 

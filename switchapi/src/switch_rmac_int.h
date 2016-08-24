@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 #include <switchapi/switch_rmac.h>
+#include "switch_pd_types.h"
 
 #ifndef _switch_rmac_int_h_
 #define _switch_rmac_int_h_

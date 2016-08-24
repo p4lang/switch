@@ -43,6 +43,7 @@ typedef struct switchlink_db_interface_info_ {
   switchlink_handle_t bridge_h;
   switchlink_handle_t stp_h;
   switchlink_handle_t lag_h;
+  switchlink_handle_t vlan_member_h;
   switchlink_stp_state_t stp_state;
   switchlink_mac_addr_t mac_addr;
   struct interface_flags {

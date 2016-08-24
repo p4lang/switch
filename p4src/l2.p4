@@ -24,9 +24,10 @@ header_type l2_metadata_t {
         lkp_mac_da : 48;
         lkp_pkt_type : 3;
         lkp_mac_type : 16;
+        lkp_pcp: 3;
 
         l2_nexthop : 16;                       /* next hop from l2 */
-        l2_nexthop_type : 1;                   /* ecmp or nexthop */
+        l2_nexthop_type : 2;                   /* ecmp or nexthop */
         l2_redirect : 1;                       /* l2 redirect action */
         l2_src_miss : 1;                       /* l2 source miss */
         l2_src_move : IFINDEX_BIT_WIDTH;       /* l2 source interface mis-match */
@@ -104,7 +105,7 @@ action dmac_hit(ifindex) {
 }
 
 action dmac_multicast_hit(mc_index) {
-    modify_field(intrinsic_mcast_grp, mc_index);
+    modify_field(intrinsic_metadata.mcast_grp, mc_index);
 #ifdef FABRIC_ENABLE
     modify_field(fabric_metadata.dst_device, FABRIC_DEVICE_MULTICAST);
 #endif /* FABRIC_ENABLE */
@@ -158,7 +159,8 @@ table dmac {
 
 control process_mac {
 #ifndef L2_DISABLE
-    if (ingress_metadata.port_type == PORT_TYPE_NORMAL) {
+    if (DO_LOOKUP(SMAC_CHK) and
+        (ingress_metadata.port_type == PORT_TYPE_NORMAL)) {
         apply(smac);
     }
     if (DO_LOOKUP(L2)) {
@@ -239,7 +241,7 @@ action set_malformed_packet(drop_reason) {
 
 table validate_packet {
     reads {
-        l2_metadata.lkp_mac_sa mask 0x010000000000 : ternary;
+        l2_metadata.lkp_mac_sa : ternary;
         l2_metadata.lkp_mac_da : ternary;
         l3_metadata.lkp_ip_type : ternary;
         l3_metadata.lkp_ip_ttl : ternary;
@@ -262,7 +264,8 @@ table validate_packet {
 }
 
 control process_validate_packet {
-    if (ingress_metadata.drop_flag == FALSE) {
+    if (DO_LOOKUP(PKT_VALIDATION) and
+        (ingress_metadata.drop_flag == FALSE)) {
         apply(validate_packet);
     }
 }
@@ -296,8 +299,9 @@ control process_egress_bd_stats {
 #endif /* STATS_DISABLE */
 }
 
-action set_egress_bd_properties(smac_idx) {
+action set_egress_bd_properties(smac_idx, nat_mode) {
     modify_field(egress_metadata.smac_idx, smac_idx);
+    modify_field(nat_metadata.egress_nat_mode, nat_mode);
 }
 
 table egress_bd_map {

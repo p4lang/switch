@@ -84,7 +84,7 @@ control process_outer_multicast_rpf {
 /*****************************************************************************/
 #if !defined(TUNNEL_DISABLE) && !defined(MULTICAST_DISABLE)
 action outer_multicast_bridge_star_g_hit(mc_index) {
-    modify_field(intrinsic_mcast_grp, mc_index);
+    modify_field(intrinsic_metadata.mcast_grp, mc_index);
     modify_field(tunnel_metadata.tunnel_terminate, TRUE);
 #ifdef FABRIC_ENABLE
     modify_field(fabric_metadata.dst_device, FABRIC_DEVICE_MULTICAST);
@@ -92,7 +92,7 @@ action outer_multicast_bridge_star_g_hit(mc_index) {
 }
 
 action outer_multicast_bridge_s_g_hit(mc_index) {
-    modify_field(intrinsic_mcast_grp, mc_index);
+    modify_field(intrinsic_metadata.mcast_grp, mc_index);
     modify_field(tunnel_metadata.tunnel_terminate, TRUE);
 #ifdef FABRIC_ENABLE
     modify_field(fabric_metadata.dst_device, FABRIC_DEVICE_MULTICAST);
@@ -101,7 +101,7 @@ action outer_multicast_bridge_s_g_hit(mc_index) {
 
 action outer_multicast_route_sm_star_g_hit(mc_index, mcast_rpf_group) {
     modify_field(multicast_metadata.outer_mcast_mode, MCAST_MODE_SM);
-    modify_field(intrinsic_mcast_grp, mc_index);
+    modify_field(intrinsic_metadata.mcast_grp, mc_index);
     modify_field(multicast_metadata.outer_mcast_route_hit, TRUE);
     bit_xor(multicast_metadata.mcast_rpf_group, mcast_rpf_group,
             multicast_metadata.bd_mrpf_group);
@@ -112,7 +112,7 @@ action outer_multicast_route_sm_star_g_hit(mc_index, mcast_rpf_group) {
 
 action outer_multicast_route_bidir_star_g_hit(mc_index, mcast_rpf_group) {
     modify_field(multicast_metadata.outer_mcast_mode, MCAST_MODE_BIDIR);
-    modify_field(intrinsic_mcast_grp, mc_index);
+    modify_field(intrinsic_metadata.mcast_grp, mc_index);
     modify_field(multicast_metadata.outer_mcast_route_hit, TRUE);
 #ifdef OUTER_PIM_BIDIR_OPTIMIZATION
     bit_or(multicast_metadata.mcast_rpf_group, mcast_rpf_group,
@@ -126,7 +126,7 @@ action outer_multicast_route_bidir_star_g_hit(mc_index, mcast_rpf_group) {
 }
 
 action outer_multicast_route_s_g_hit(mc_index, mcast_rpf_group) {
-    modify_field(intrinsic_mcast_grp, mc_index);
+    modify_field(intrinsic_metadata.mcast_grp, mc_index);
     modify_field(multicast_metadata.outer_mcast_route_hit, TRUE);
     bit_xor(multicast_metadata.mcast_rpf_group, mcast_rpf_group,
             multicast_metadata.bd_mrpf_group);
@@ -542,7 +542,7 @@ control process_multicast {
 /* Multicast flooding                                                        */
 /*****************************************************************************/
 action set_bd_flood_mc_index(mc_index) {
-    modify_field(intrinsic_mcast_grp, mc_index);
+    modify_field(intrinsic_metadata.mcast_grp, mc_index);
 }
 
 table bd_flood {
@@ -592,7 +592,7 @@ action inner_replica_from_rid(bd, tunnel_index, tunnel_type, header_count) {
 
 table rid {
     reads {
-        egress_egress_rid : exact;
+        intrinsic_metadata.egress_rid: exact;
     }
     actions {
         nop;
@@ -621,7 +621,7 @@ table replica_type {
 
 control process_replication {
 #ifndef MULTICAST_DISABLE
-    if(egress_egress_rid != 0) {
+    if(intrinsic_metadata.egress_rid != 0) {
         /* set info from rid */
         apply(rid);
 

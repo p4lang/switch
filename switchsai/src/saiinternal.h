@@ -95,10 +95,13 @@ typedef struct _sai_api_service_t {
   sai_mirror_api_t mirror_api;
   sai_samplepacket_api_t samplepacket_api;
   sai_policer_api_t policer_api;
+  sai_buffer_api_t buffer_api;
+  sai_scheduler_api_t scheduler_api;
+  sai_scheduler_group_api_t scheduler_group_api;
   sai_ipmc_api_t ipmc_api;
   sai_l2mc_api_t l2mc_api;
+  sai_queue_api_t queue_api;
   sai_hash_api_t hash_api;
-  sai_buffer_api_t buffer_api;
   sai_udf_api_t udf_api;
 } sai_api_service_t;
 
@@ -126,14 +129,17 @@ sai_status_t sai_hash_initialize(sai_api_service_t *sai_api_service);
 sai_status_t sai_udf_initialize(sai_api_service_t *sai_api_service);
 sai_status_t sai_buffer_initialize(sai_api_service_t *sai_api_service);
 sai_status_t sai_policer_initialize(sai_api_service_t *sai_api_service);
+sai_status_t sai_scheduler_initialize(sai_api_service_t *sai_api_service);
+sai_status_t sai_scheduler_group_initialize(sai_api_service_t *sai_api_service);
+sai_status_t sai_qos_map_initialize(sai_api_service_t *sai_api_service);
 sai_status_t sai_ipmc_initialize(sai_api_service_t *sai_api_service);
 sai_status_t sai_l2mc_initialize(sai_api_service_t *sai_api_service);
-
-// maps SAI types to switchapi types
 
 char *sai_status_to_string(_In_ const sai_status_t status);
 
 char *sai_object_type_to_string(_In_ sai_object_type_t object_type);
+
+sai_status_t sai_switch_status_to_sai_status(_In_ const switch_status_t status);
 
 sai_status_t sai_ipv4_prefix_length(_In_ sai_ip4_t ip4,
                                     _Out_ uint32_t *prefix_length);

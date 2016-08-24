@@ -35,8 +35,6 @@ switch_status_t switch_mirror_init(switch_device_t device) {
   session_id_allocator =
       switch_api_id_allocator_new(SWITCH_MAX_MIRROR_SESSIONS / 32, FALSE);
 
-  // negative mirroring action
-  switch_pd_neg_mirror_add_entry(device);
   // keep this id allocated so it is not given to anyone else
   switch_mirror_set_and_create(SWITCH_NEGATIVE_MIRROR_SESSION_ID);
   switch_api_id_allocator_set(session_id_allocator,

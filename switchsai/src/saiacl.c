@@ -57,12 +57,12 @@ static sai_acl_table_match_qualifiers ip_acl = {
     -1,  // VLAN outer and inner
     SWITCH_ACL_IP_FIELD_L4_SOURCE_PORT,
     SWITCH_ACL_IP_FIELD_L4_DEST_PORT,  // l4 ports
-    -1,                                // ethertype
+    -1,
     SWITCH_ACL_IP_FIELD_IP_PROTO,
-    SWITCH_ACL_IP_FIELD_DSCP,
+    -1,                       // dscp
     -1,                       // ecn
     SWITCH_ACL_IP_FIELD_TTL,  // ttl
-    SWITCH_ACL_IP_FIELD_TOS,
+    -1,                       // tos
     SWITCH_ACL_IP_FIELD_IP_FLAGS,
     SWITCH_ACL_IP_FIELD_TCP_FLAGS,  // tcp flags
     -1,                             // ip type
@@ -91,12 +91,12 @@ static sai_acl_table_match_qualifiers ipv6_acl = {
     -1,  // VLAN outer and inner
     SWITCH_ACL_IPV6_FIELD_L4_SOURCE_PORT,
     SWITCH_ACL_IPV6_FIELD_L4_DEST_PORT,  // l4 ports
-    -1,                                  // ethertype
+    -1,
     SWITCH_ACL_IPV6_FIELD_IP_PROTO,
-    -1,                         // dscp
-    -1,                         // ecn
-    SWITCH_ACL_IPV6_FIELD_TTL,  // ttl
-    SWITCH_ACL_IPV6_FIELD_TOS,
+    -1,                               // dscp
+    -1,                               // ecn
+    SWITCH_ACL_IPV6_FIELD_TTL,        // ttl
+    -1,                               // tos
     -1,                               // ip flags
     SWITCH_ACL_IPV6_FIELD_TCP_FLAGS,  // tcp flags
     -1,                               // ip type
@@ -149,10 +149,8 @@ static sai_acl_table_match_qualifiers egress_acl = {
     -2,
     -2,
     -1,
-    SWITCH_ACL_EGR_DEST_PORT,
-    -1  // ports
-        -
-        1,
+    SWITCH_ACL_EGR_DEST_PORT,  // ports
+    -1,
     -1,
     -1,
     -1,
@@ -309,16 +307,8 @@ static sai_status_t sai_acl_xform_field_value(
           kvp->value.ttl = source->data.u8;
           kvp->mask.u.mask = source->mask.u8;
           break;
-        case SWITCH_ACL_IP_FIELD_DSCP:
-          kvp->value.dscp = source->data.u8;
-          kvp->mask.u.mask = source->mask.u8;
-          break;
         case SWITCH_ACL_IP_FIELD_IP_FLAGS:
           kvp->value.ip_flags = source->data.u8;
-          kvp->mask.u.mask = source->mask.u8;
-          break;
-        case SWITCH_ACL_IP_FIELD_TOS:
-          kvp->value.tos = source->data.u8;
           kvp->mask.u.mask = source->mask.u8;
           break;
         case SWITCH_ACL_IP_FIELD_IP_FRAGMENT:
@@ -351,12 +341,12 @@ static sai_status_t sai_acl_xform_field_value(
           (switch_acl_mac_key_value_pair_t *)dest;
       switch (field) {
         case SWITCH_ACL_MAC_FIELD_SOURCE_MAC:
-          memcpy(kvp->value.source_mac, source->data.mac, 6);
-          memcpy(kvp->mask.u.mac_mask, source->mask.mac, 6);
+          memcpy(kvp->value.source_mac.mac_addr, source->data.mac, 6);
+          memcpy(&kvp->mask.u.mask, source->mask.mac, 6);
           break;
         case SWITCH_ACL_MAC_FIELD_DEST_MAC:
-          memcpy(kvp->value.dest_mac, source->data.mac, 6);
-          memcpy(kvp->mask.u.mac_mask, source->mask.mac, 6);
+          memcpy(kvp->value.dest_mac.mac_addr, source->data.mac, 6);
+          memcpy(&kvp->mask.u.mask, source->mask.mac, 6);
           break;
         case SWITCH_ACL_MAC_FIELD_VLAN_PRI:
           kvp->value.vlan_pri = source->data.u8;

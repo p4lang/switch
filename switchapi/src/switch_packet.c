@@ -112,8 +112,6 @@ void switch_packet_tx_to_hw(switch_packet_header_t *packet_header,
 
   fabric_header->ether_type = htons(fabric_header->ether_type);
   fabric_header->dst_port_or_group = htons(fabric_header->dst_port_or_group);
-
-  cpu_header->reason_code |= SWITCH_BYPASS_SYSTEM_ACL;
   cpu_header->reason_code = htons(cpu_header->reason_code);
 
   memcpy(out_packet, packet, SWITCH_PACKET_HEADER_OFFSET);
@@ -257,7 +255,6 @@ void switch_packet_rx_to_host(switch_packet_header_t *packet_header,
   switch_packet_rx_entry_t rx_entry;
   int intf_fd = 0;
   switch_status_t status = SWITCH_STATUS_SUCCESS;
-  char *xform_packet = in_packet;
 
   cpu_header = &packet_header->cpu_header;
 
@@ -268,35 +265,21 @@ void switch_packet_rx_to_host(switch_packet_header_t *packet_header,
   rx_entry.reason_code = cpu_header->reason_code;
 
   status = switch_packet_rx_info_get(&rx_entry, &rx_info);
-  if (status == SWITCH_STATUS_SUCCESS) {
-    SWITCH_API_INFO("Rx packet reason_code 0x%x - send to fd %d, action %d\n",
-                    rx_entry.reason_code,
-                    rx_info->intf_fd,
-                    rx_info->vlan_action);
-    switch_packet_rx_transform(packet_header, in_packet, packet, &packet_size);
-    intf_fd = rx_info->intf_fd;
-  } else {
-    switch_handle_t hostif_handle = 0;
-    switch_hostif_info_t *hostif_info = NULL;
-    switch_handle_t port_handle = 0;
-    switch_port_info_t *port_info = NULL;
-
-    // Find the host interface from the ifIndex, by default
-    port_handle =
-        id_to_handle(SWITCH_HANDLE_TYPE_PORT, cpu_header->ingress_ifindex - 1);
-    port_info = switch_api_port_get_internal(port_handle);
-    if (!port_info) {
-      return;
-    }
-    hostif_handle = port_info->hostif_handle;
-    hostif_info = switch_hostif_get(hostif_handle);
-    if (!hostif_info) {
-      return;
-    }
-    intf_fd = hostif_info->intf_fd;
-    xform_packet = packet;
+  if (status != SWITCH_STATUS_SUCCESS) {
+    SWITCH_API_ERROR("failed to find fd. dropping packet");
+    return;
   }
-  if (write(intf_fd, xform_packet, packet_size) < 0) {
+
+  SWITCH_API_INFO("Rx packet reason_code 0x%x - send to fd %d, action %d\n",
+                  rx_entry.reason_code,
+                  rx_info->intf_fd,
+                  rx_info->vlan_action);
+
+  switch_packet_rx_transform(packet_header, in_packet, packet, &packet_size);
+
+  intf_fd = rx_info->intf_fd;
+
+  if (write(intf_fd, in_packet, packet_size) < 0) {
     perror("sendto host interface failed");
     return;
   }
@@ -371,7 +354,6 @@ void switch_packet_tx_switched(switch_packet_header_t *packet_header,
   switch_packet_tx_entry_t tx_entry;
   switch_packet_tx_info_t *tx_info = NULL;
   switch_status_t status;
-  char *xform_packet = packet;
 
   eth_header = (switch_ethernet_header_t *)in_packet;
   if (ntohs(eth_header->ether_type) == SWITCH_ETHERTYPE_DOT1Q) {
@@ -384,15 +366,14 @@ void switch_packet_tx_switched(switch_packet_header_t *packet_header,
   tx_entry.vlan_id = vlan_id1;
   status = switch_packet_tx_info_get(&tx_entry, &tx_info);
   if (status != SWITCH_STATUS_SUCCESS) {
-    //        SWITCH_API_ERROR("net filter tx not found. dropping packet");
-    //        return;
-    xform_packet = in_packet;
-  } else {
-    memset(packet, 0x0, SWITCH_PACKET_MAX_BUFFER_SIZE);
-    switch_packet_tx_bd_transform(
-        in_packet, in_packet_size, packet, &packet_size, tx_info);
+    SWITCH_API_ERROR("net filter tx not found. dropping packet");
+    return;
   }
-  switch_packet_tx_to_hw(packet_header, xform_packet, packet_size);
+
+  memset(packet, 0x0, SWITCH_PACKET_MAX_BUFFER_SIZE);
+  switch_packet_tx_bd_transform(
+      in_packet, in_packet_size, packet, &packet_size, tx_info);
+  switch_packet_tx_to_hw(packet_header, packet, packet_size);
 }
 
 void switch_packet_tx_from_host(int intf_fd) {
@@ -435,34 +416,27 @@ void switch_packet_tx_from_host(int intf_fd) {
 
     tx_entry.intf_fd = intf_fd;
     tx_entry.vlan_id = vlan_id1;
+    status = switch_packet_tx_info_get(&tx_entry, &tx_info);
+    if (status != SWITCH_STATUS_SUCCESS) {
+      SWITCH_API_ERROR("net filter tx not found. dropping packet");
+      continue;
+    }
 
     memset(&packet_header, 0x0, sizeof(packet_header));
     cpu_header = &packet_header.cpu_header;
     fabric_header = &packet_header.fabric_header;
 
-    status = switch_packet_tx_info_get(&tx_entry, &tx_info);
-    if (status != SWITCH_STATUS_SUCCESS) {
-      //            SWITCH_API_ERROR("net filter tx not found. dropping
-      //            packet");
-      //            continue;
+    if (tx_info->bypass_flags == SWITCH_BYPASS_ALL) {
       cpu_header->tx_bypass = TRUE;
-      fabric_header->dst_port_or_group =
-          handle_to_id(hostif_info->hostif.handle);
+      cpu_header->reason_code = tx_info->bypass_flags;
+      fabric_header->dst_port_or_group = tx_info->port;
       memcpy(packet, in_packet, in_packet_size);
       packet_size = in_packet_size;
     } else {
-      if (tx_info->bypass_flags == SWITCH_BYPASS_ALL) {
-        cpu_header->tx_bypass = TRUE;
-        cpu_header->reason_code = tx_info->bypass_flags;
-        fabric_header->dst_port_or_group = tx_info->port;
-        memcpy(packet, in_packet, in_packet_size);
-        packet_size = in_packet_size;
-      } else {
-        cpu_header->tx_bypass = FALSE;
-        cpu_header->reason_code = tx_info->bypass_flags;
-        switch_packet_tx_bd_transform(
-            in_packet, in_packet_size, packet, &packet_size, tx_info);
-      }
+      cpu_header->tx_bypass = FALSE;
+      cpu_header->reason_code = tx_info->bypass_flags;
+      switch_packet_tx_bd_transform(
+          in_packet, in_packet_size, packet, &packet_size, tx_info);
     }
 
     fabric_header = &packet_header.fabric_header;
@@ -679,12 +653,13 @@ int start_switch_api_packet_driver() {
 
 static bool switch_packet_tx_filter_match(switch_packet_tx_entry_t *tx_entry1,
                                           switch_packet_tx_entry_t *tx_entry2) {
-  // entry1 is the one stored in the filter list
-  // entry2 represents incoming packet, therefore all the valid
-  // bits and masks are used from entry1
+  /*
+   * entry1 is the one stored in the filter list
+   * entry2 represents incoming packet, therefore all the valid
+   * bits and masks are used from entry1
+   */
   if ((!tx_entry1->fd_valid || (tx_entry1->intf_fd == tx_entry2->intf_fd)) &&
       (!tx_entry1->vlan_valid || (tx_entry1->vlan_id == tx_entry2->vlan_id))) {
-    // priority is not be compared so matching entry can be found
     return TRUE;
   }
   return FALSE;
@@ -779,7 +754,8 @@ switch_status_t switch_api_packet_net_filter_tx_create(
   tx_info->port = handle_to_id(tx_action->port_handle);
 
   SWITCH_API_INFO(
-      "net_filter_tx_create: hostif 0x%x, vlan_id = %d, fd 0x%x, bypass 0x%x\n",
+      "net_filter_tx_create: hostif 0x%lx, vlan_id = %d, fd 0x%x, bypass "
+      "0x%x\n",
       tx_key->hostif_handle,
       tx_key->vlan_valid ? tx_key->vlan_id : 0xFFF,
       tx_entry.intf_fd,
@@ -977,8 +953,8 @@ switch_status_t switch_api_packet_net_filter_rx_create(
   }
 
   SWITCH_API_INFO(
-      "net_filter_rx_create: port 0x%x, port_lag_hdl = 0x%x, "
-      "if_bd_hdl 0x%x, rcode 0x%x, rcode_mask 0x%x "
+      "net_filter_rx_create: port 0x%lx, port_lag_hdl = 0x%lx, "
+      "if_bd_hdl 0x%lx, rcode 0x%x, rcode_mask 0x%x "
       "vlan_id %d, fd %d, action %d\n",
       rx_key->port_valid ? rx_key->port_handle : 0,
       rx_key->port_lag_valid ? rx_key->port_lag_handle : 0,

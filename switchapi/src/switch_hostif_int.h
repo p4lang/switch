@@ -20,6 +20,7 @@ limitations under the License.
 #include "switchapi/switch_base_types.h"
 #include "switchapi/switch_handle.h"
 #include "switchapi/switch_hostif.h"
+#include "switch_pd_types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,6 +31,8 @@ extern "C" {
 
 typedef struct switch_hostif_rcode_info_ {
   switch_handle_t acl_handle;
+  switch_handle_t system_acl_handle;
+  switch_handle_t system_ace_handle;
   switch_api_hostif_rcode_info_t rcode_api_info;
 } switch_hostif_rcode_info_t;
 
@@ -50,7 +53,7 @@ typedef enum switch_fabric_header_type_ {
 
 typedef struct __attribute__((__packed__)) switch_fabric_header_ {
   uint16_t ether_type;
-  uint8_t filter_mode : 1;
+  uint8_t pad1 : 1;
   uint8_t packet_version : 2;
   uint8_t header_version : 2;
   uint8_t packet_type : 3;
@@ -89,7 +92,6 @@ typedef struct switch_hostif_nhop_ {
 /*
  * Internal API's
  */
-
 void switch_packet_rx_transform(switch_packet_header_t *packet_header,
                                 char *transformed_packet,
                                 char *packet,
@@ -101,6 +103,9 @@ switch_status_t switch_packet_init(switch_device_t device);
 switch_status_t switch_api_hostif_rx_packet_from_hw(
     switch_packet_header_t *packet_header, char *packet, int packet_size);
 switch_hostif_info_t *switch_hostif_get(switch_handle_t hostif_handle);
+void switch_packet_tx_to_host(switch_hostif_info_t *hostif_info,
+                              char *packet,
+                              int packet_size);
 void switch_packet_rx_to_host(switch_packet_header_t *packet_header,
                               char *packet,
                               int packet_size);

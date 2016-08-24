@@ -225,6 +225,7 @@ switch_status_t switch_api_lag_member_add(switch_device_t device,
           port,
           lag_info->ifindex,
           port_info->port_type,
+          port_info->egress_qos_group,
           &port_info->eg_port_entry);
       if (status != SWITCH_STATUS_SUCCESS) {
         SWITCH_API_ERROR("failed to add egress port mapping entry");
@@ -239,12 +240,8 @@ switch_status_t switch_api_lag_member_add(switch_device_t device,
       if (!port_info) {
         return SWITCH_STATUS_INVALID_PORT_NUMBER;
       }
-      status =
-          switch_pd_ingress_port_mapping_table_add_entry(device,
-                                                         port,
-                                                         lag_info->ifindex,
-                                                         port_info->port_type,
-                                                         port_info->hw_entry);
+      status = switch_pd_ingress_port_mapping_table_add_entry(
+          device, lag_info->ifindex, port_info);
       port_info->lag_handle = lag_handle;
       if (status != SWITCH_STATUS_SUCCESS) {
         return status;
@@ -319,6 +316,7 @@ switch_status_t switch_api_lag_member_delete(switch_device_t device,
           port,
           port_info->ifindex,
           port_info->port_type,
+          port_info->egress_qos_group,
           &port_info->eg_port_entry);
       if (status != SWITCH_STATUS_SUCCESS) {
         SWITCH_API_ERROR("failed to add egress port mapping entry");
@@ -346,11 +344,8 @@ switch_status_t switch_api_lag_member_delete(switch_device_t device,
       }
       // part of lag
       status =
-          switch_pd_ingress_port_mapping_table_add_entry(device,
-                                                         port,
-                                                         port_info->ifindex,
-                                                         port_info->port_type,
-                                                         port_info->hw_entry);
+          switch_pd_ingress_port_mapping_table_add_entry(
+          device, port_info->ifindex, port_info);
       port_info->lag_handle = 0;
       if (status != SWITCH_STATUS_SUCCESS) {
         return status;

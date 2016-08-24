@@ -191,7 +191,8 @@ header_type erspan_header_t3_t {
         priority : 6;
         span_id : 10;
         timestamp : 32;
-        sgt_other : 32;
+        sgt       : 16;
+        ft_d_other: 16;
     }
 }
 
