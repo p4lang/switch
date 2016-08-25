@@ -41,6 +41,7 @@ sai_status_t sai_set_port_attribute(_In_ sai_object_id_t port_id,
   switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
   switch_handle_t vlan_handle = SWITCH_API_INVALID_HANDLE;
   switch_port_speed_t port_speed;
+  bool trust = FALSE;
 
   if (!attr) {
     status = SAI_STATUS_INVALID_PARAMETER;
@@ -59,7 +60,17 @@ sai_status_t sai_set_port_attribute(_In_ sai_object_id_t port_id,
         return status;
       }
       /* TBD: Default BD */
+      break;
 
+    case SAI_PORT_ATTR_QOS_DEFAULT_TC:
+      switch_status =
+          switch_api_port_tc_default_set(device, port_id, attr->value.u8);
+      status = sai_switch_status_to_sai_status(switch_status);
+      if (status != SAI_STATUS_SUCCESS) {
+        SAI_LOG_ERROR("failed to set default tc for port %d: %s",
+                      sai_status_to_string(status));
+        return status;
+      }
       break;
     case SAI_PORT_ATTR_GLOBAL_FLOW_CONTROL:
       // need for disabling ports on shutdown
@@ -83,6 +94,49 @@ sai_status_t sai_set_port_attribute(_In_ sai_object_id_t port_id,
           SAI_STATUS_SUCCESS) {
         SAI_LOG_ERROR("failed to set port %d speed: %s",
                       (port_id & 0xFFFF),
+                      sai_status_to_string(status));
+        return status;
+      }
+    case SAI_PORT_ATTR_QOS_DSCP_TO_TC_MAP:
+    case SAI_PORT_ATTR_QOS_DSCP_TO_COLOR_MAP:
+      trust = attr->value.oid != 0 ? TRUE : FALSE;
+      switch_status = switch_api_port_trust_dscp_set(device, port_id, trust);
+      status = sai_switch_status_to_sai_status(switch_status);
+      if (status != SAI_STATUS_SUCCESS) {
+        SAI_LOG_ERROR("failed to set dscp trust for port %d: %s",
+                      sai_status_to_string(status));
+        return status;
+      }
+      switch_status = switch_api_port_qos_group_ingress_set(
+          device, port_id, attr->value.oid);
+      status = sai_switch_status_to_sai_status(switch_status);
+      if (status != SAI_STATUS_SUCCESS) {
+        SAI_LOG_ERROR("failed to set ingress qos handle for port %d: %s",
+                      sai_status_to_string(status));
+        return status;
+      }
+
+      break;
+
+    case SAI_PORT_ATTR_QOS_TC_TO_QUEUE_MAP:
+    case SAI_PORT_ATTR_QOS_TC_TO_PRIORITY_GROUP_MAP:
+      switch_status =
+          switch_api_port_qos_group_tc_set(device, port_id, attr->value.oid);
+      status = sai_switch_status_to_sai_status(switch_status);
+      if (status != SAI_STATUS_SUCCESS) {
+        SAI_LOG_ERROR("failed to set ingress tc handle for port %d: %s",
+                      sai_status_to_string(status));
+        return status;
+      }
+      break;
+
+    case SAI_PORT_ATTR_QOS_TC_AND_COLOR_TO_DOT1P_MAP:
+    case SAI_PORT_ATTR_QOS_TC_AND_COLOR_TO_DSCP_MAP:
+      switch_status = switch_api_port_qos_group_egress_set(
+          device, port_id, attr->value.oid);
+      status = sai_switch_status_to_sai_status(switch_status);
+      if (status != SAI_STATUS_SUCCESS) {
+        SAI_LOG_ERROR("failed to set egress qos handle for port %d: %s",
                       sai_status_to_string(status));
         return status;
       }

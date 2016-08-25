@@ -179,8 +179,6 @@ sai_status_t sai_port_speed_to_switch_port_speed(
 switch_acl_action_t sai_packet_action_to_switch_packet_action(
     _In_ sai_packet_action_t action);
 
-// maps switchapi types to SAI types
-
 sai_status_t sai_switch_status_to_sai_status(_In_ const switch_status_t status);
 
 sai_status_t sai_switch_ip_addr_to_sai_ip_addr(

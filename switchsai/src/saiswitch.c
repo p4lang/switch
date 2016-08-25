@@ -89,6 +89,7 @@ sai_status_t sai_set_switch_attribute(_In_ const sai_attribute_t *attr) {
     return status;
   }
 
+  memset(&api_switch_info, 0x0, sizeof(api_switch_info));
   switch (attr->id) {
     case SAI_SWITCH_ATTR_SRC_MAC_ADDRESS:
       memcpy(&api_switch_info.switch_mac, &attr->value.mac, 6);
@@ -122,7 +123,7 @@ sai_status_t sai_get_switch_attribute(_In_ uint32_t attr_count,
   uint32_t index1 = 0, index2 = 0;
   sai_object_list_t *objlist = NULL;
   switch_api_capability_t api_switch_info;
-  sai_attribute_t *attribute;
+  sai_attribute_t attribute;
 
   if (!attr_list) {
     status = SAI_STATUS_INVALID_PARAMETER;
@@ -132,8 +133,8 @@ sai_status_t sai_get_switch_attribute(_In_ uint32_t attr_count,
 
   switch_api_capability_get(device, &api_switch_info);
   for (index1 = 0; index1 < attr_count; index1++) {
-    attribute = &attr_list[index1];
-    switch (attribute->id) {
+    attribute = attr_list[index1];
+    switch (attribute.id) {
       case SAI_SWITCH_ATTR_PORT_NUMBER:
         attr_list->value.u32 = api_switch_info.max_ports;
         break;
@@ -163,8 +164,7 @@ sai_status_t sai_get_switch_attribute(_In_ uint32_t attr_count,
           memcpy(&api_switch_info.switch_mac, def_mac, 6);
           mac_set = 1;
         }
-        memcpy(attribute->value.mac, &api_switch_info.switch_mac, 6);
-        //                    return SAI_STATUS_FAILURE;
+        memcpy(attribute.value.mac, &api_switch_info.switch_mac, 6);
         break;
       case SAI_SWITCH_ATTR_CPU_PORT:
         attr_list->value.oid = api_switch_info.port_list[64];

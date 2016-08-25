@@ -27,7 +27,7 @@
 #ifdef BMV2
 #include "bmpd/switch/pd/pd.h"
 #include "bm/pdfixed/pd_pre.h"
-#include <bm/pdfixed/pd_mirroring.h>
+#include "bm/pdfixed/pd_mirroring.h"
 #else
 #include "p4_sim/pd.h"
 #include "p4_sim/pd_pre.h"

@@ -118,6 +118,21 @@ struct sai_thrift_acl_action_data_t {
     2: sai_thrift_acl_parameter_t parameter;
 }
 
+struct sai_thrift_qos_map_params_t {
+    1: byte tc;
+    2: byte dscp;
+    3: byte dot1p;
+    4: byte prio;
+    5: byte pg;
+    6: byte queue_index;
+    7: i32 color;
+}
+
+struct sai_thrift_qos_map_list_t {
+    1: list<sai_thrift_qos_map_params_t> key;
+    2: list<sai_thrift_qos_map_params_t> data;
+}
+
 union sai_thrift_attribute_value_t {
     1:  bool booldata;
     2:  string chardata;
@@ -138,6 +153,7 @@ union sai_thrift_attribute_value_t {
     17: sai_thrift_vlan_list_t vlanlist;
     18: sai_thrift_acl_field_data_t aclfield;
     19: sai_thrift_acl_action_data_t aclaction;
+    20: sai_thrift_qos_map_list_t qosmap;
 }
 
 struct sai_thrift_attribute_t {
@@ -262,4 +278,46 @@ service switch_sai_rpc {
     list<i64> sai_thrift_get_policer_stats(
                              1: sai_thrift_object_id_t policer_id,
                              2: list<sai_thrift_policer_stat_counter_t> counter_ids)
+
+    //Buffer API
+    sai_thrift_object_id_t sai_thrift_create_buffer_pool(
+                            1: list<sai_thrift_attribute_t> thrift_attr_list);
+    sai_thrift_status_t sai_thrift_remove_buffer_pool(
+                            1: sai_thrift_object_id_t pool_id);
+    sai_thrift_object_id_t sai_thrift_create_buffer_profile(
+                            1: list<sai_thrift_attribute_t> thrift_attr_list);
+    sai_thrift_status_t sai_thrift_remove_buffer_profile(
+                            1: sai_thrift_object_id_t buffer_profile_id);
+    sai_thrift_status_t sai_thrift_set_ingress_priority_group_attribute(
+                            1: sai_thrift_object_id_t ingress_pg_id,
+                            2: sai_thrift_attribute_t thrift_attr);
+
+    //Scheduler API
+    sai_thrift_object_id_t sai_thrift_create_scheduler_profile(
+                            1: list<sai_thrift_attribute_t> thrift_attr_list);
+    sai_thrift_status_t sai_thrift_remove_scheduler_profile(
+                            1: sai_thrift_object_id_t scheduler_id);
+
+    //Scheduler Group API
+    sai_thrift_object_id_t sai_thrift_create_scheduler_group(
+                            1: list<sai_thrift_attribute_t> thrift_attr_list);
+    sai_thrift_status_t sai_thrift_remove_scheduler_group(
+                            1: sai_thrift_object_id_t scheduler_group_id);
+    sai_thrift_status_t sai_thrift_add_child_object_to_group(
+                            1: sai_thrift_object_id_t scheduler_group_id,
+                            2: list<sai_thrift_object_id_t> thrift_child_objects);
+    sai_thrift_status_t sai_thrift_remove_child_object_from_group(
+                            1: sai_thrift_object_id_t scheduler_group_id,
+                            2: list<sai_thrift_object_id_t> thrift_child_objects);
+
+    //Qos Maps
+    sai_thrift_object_id_t sai_thrift_create_qos_map(
+                            1: list<sai_thrift_attribute_t> thrift_attr_list);
+    sai_thrift_status_t sai_thrift_remove_qos_map(
+                            1: sai_thrift_object_id_t qos_map_id);
+
+    //Queue
+    sai_thrift_status_t sai_thrift_set_queue_attribute(
+                            1: sai_thrift_object_id_t queue_id,
+                            2: sai_thrift_attribute_t thrift_attr);
 }

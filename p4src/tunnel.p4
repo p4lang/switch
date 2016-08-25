@@ -41,9 +41,6 @@ header_type tunnel_metadata_t {
         egress_header_count: 4;                /* number of mpls header stack */
         inner_ip_proto : 8;                    /* Inner IP protocol */
         skip_encap_inner : 1;                  /* skip encap_process_inner */
-#ifdef INT_EP_ENABLE
-        erspan_t3_ft_d_other: 16;
-#endif
     }
 }
 metadata tunnel_metadata_t tunnel_metadata;
@@ -1250,15 +1247,6 @@ action f_insert_erspan_common_header() {
 
 action f_insert_erspan_t3_header() {
     f_insert_erspan_common_header();
-#ifdef INT_EP_ENABLE
-    // Take field values from mirror metadata for INT report
-    // frame type: ether (0b00000), ip (0b00010), int (0b10000)
-    // direction: ingress(0), egress(1)
-    modify_field(erspan_t3_header.ft_d_other,
-                 tunnel_metadata.erspan_t3_ft_d_other);
-#else
-    modify_field(erspan_t3_header.ft_d_other, 0);
-#endif
 }
 
 action ipv4_erspan_t3_rewrite() {

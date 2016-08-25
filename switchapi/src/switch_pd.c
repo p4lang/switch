@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#include "assert.h"
 #include "p4features.h"
 #include "switch_pd.h"
 #include "switch_log_int.h"

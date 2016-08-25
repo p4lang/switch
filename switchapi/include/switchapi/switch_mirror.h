@@ -20,9 +20,6 @@ limitations under the License.
 #include "switch_base_types.h"
 #include "switch_handle.h"
 #include "switch_tunnel.h"
-#ifdef BMV2
-#else
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,7 +35,7 @@ extern "C" {
 /** Mirror ID */
 typedef unsigned int switch_mirror_id_t;
 
-/** Mirror Session Type */
+/** Mirror Session type */
 typedef enum {
   SWITCH_MIRROR_SESSION_TYPE_SIMPLE,   /**< Simple Mirror session */
   SWITCH_MIRROR_SESSION_TYPE_TRUNCATE, /**< Truncate packet in session */
@@ -81,10 +78,9 @@ typedef struct switch_api_mirror_info_ {
  * MAX mirroring sessions supported
  */
 #define SWITCH_MAX_MIRROR_SESSIONS 1024
-
 /**
- * ID for cpu mirror session
- */
+* ID for cpu mirror session
+*/
 #define SWITCH_CPU_MIRROR_SESSION_ID 250
 
 /**

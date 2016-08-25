@@ -28,7 +28,7 @@ static void sai_route_entry_to_string(
   int len = 0;
   count = snprintf(entry_string,
                    SAI_MAX_ENTRY_STRING_LEN,
-                   "route: vrf %lx",
+                   "route: vrf %" PRIx64 "",
                    unicast_route_entry->vr_id);
   sai_ipprefix_to_string(unicast_route_entry->destination,
                          SAI_MAX_ENTRY_STRING_LEN - count,

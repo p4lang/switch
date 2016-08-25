@@ -245,8 +245,10 @@ sai_status_t sai_add_next_hop_to_group(_In_ sai_object_id_t next_hop_group_id,
                                        _In_ const sai_object_id_t *nexthops) {
   SAI_LOG_ENTER();
 
+  switch_handle_t *nh_list = NULL;
   sai_status_t status = SAI_STATUS_SUCCESS;
   switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
+  uint32_t i = 0;
 
   if (!nexthops) {
     status = SAI_STATUS_INVALID_PARAMETER;
@@ -257,10 +259,13 @@ sai_status_t sai_add_next_hop_to_group(_In_ sai_object_id_t next_hop_group_id,
   SAI_ASSERT(sai_object_type_query(next_hop_group_id) ==
              SAI_OBJECT_TYPE_NEXT_HOP_GROUP);
 
+  nh_list = SAI_MALLOC(sizeof(switch_handle_t) * next_hop_count);
+  if (!nh_list) return SAI_STATUS_NO_MEMORY;
+  for (i = 0; i < next_hop_count; i++) *(nh_list + i) = nexthops[i];
   switch_status = switch_api_ecmp_member_add(device,
                                              (switch_handle_t)next_hop_group_id,
                                              next_hop_count,
-                                             (switch_handle_t *)nexthops);
+                                             (switch_handle_t *)nh_list);
   status = sai_switch_status_to_sai_status(switch_status);
   if (status != SAI_STATUS_SUCCESS) {
     SAI_LOG_ERROR("failed to add next hop to group %lx : %s",
@@ -268,6 +273,7 @@ sai_status_t sai_add_next_hop_to_group(_In_ sai_object_id_t next_hop_group_id,
                   sai_status_to_string(status));
   }
 
+  SAI_FREE(nh_list);
   SAI_LOG_EXIT();
 
   return (sai_status_t)status;
@@ -292,8 +298,10 @@ sai_status_t sai_remove_next_hop_from_group(
     _In_ const sai_object_id_t *nexthops) {
   SAI_LOG_ENTER();
 
+  switch_handle_t *nh_list = NULL;
   sai_status_t status = SAI_STATUS_SUCCESS;
   switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
+  uint32_t i = 0;
 
   if (!nexthops) {
     status = SAI_STATUS_INVALID_PARAMETER;
@@ -304,11 +312,14 @@ sai_status_t sai_remove_next_hop_from_group(
   SAI_ASSERT(sai_object_type_query(next_hop_group_id) ==
              SAI_OBJECT_TYPE_NEXT_HOP_GROUP);
 
+  nh_list = SAI_MALLOC(sizeof(switch_handle_t) * next_hop_count);
+  if (!nh_list) return SAI_STATUS_NO_MEMORY;
+  for (i = 0; i < next_hop_count; i++) *(nh_list + i) = nexthops[i];
   switch_status =
       switch_api_ecmp_member_delete(device,
                                     (switch_handle_t)next_hop_group_id,
                                     next_hop_count,
-                                    (switch_handle_t *)nexthops);
+                                    (switch_handle_t *)nh_list);
   status = sai_switch_status_to_sai_status(switch_status);
   if (status != SAI_STATUS_SUCCESS) {
     SAI_LOG_ERROR("failed to remove next hop from group %lx : %s",
@@ -316,6 +327,7 @@ sai_status_t sai_remove_next_hop_from_group(
                   sai_status_to_string(status));
   }
 
+  SAI_FREE(nh_list);
   SAI_LOG_EXIT();
 
   return (sai_status_t)status;
