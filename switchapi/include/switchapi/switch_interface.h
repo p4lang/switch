@@ -338,12 +338,30 @@ switch_status_t switch_api_interface_get_vlan_handle(
 switch_status_t switch_api_interface_get_type(switch_handle_t intf_handle,
                                               switch_interface_type_t *type);
 
+/**
+ enable bd stats on interface
+ @param device device
+ @param intf_handle - Handle that uniquely identifies interface
+ */
 switch_status_t switch_api_l3_interface_bd_stats_enable(
     switch_device_t device, switch_handle_t intf_handle);
 
+/**
+ disable bd stats on interface
+ @param device device
+ @param intf_handle - Handle that uniquely identifies interface
+ */
 switch_status_t switch_api_l3_interface_bd_stats_disable(
     switch_device_t device, switch_handle_t intf_handle);
 
+/**
+ get stats on l3 interface
+ @param device device
+ @param intf_handle - Handle that uniquely identifies interface
+ @param count number of counters
+ @param counter_ids counter ids
+ @param counters counter return value
+ */
 switch_status_t switch_api_l3_interface_stats_get(
     switch_device_t device,
     switch_handle_t intf_handle,

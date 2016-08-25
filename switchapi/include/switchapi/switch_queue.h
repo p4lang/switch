@@ -31,18 +31,8 @@ extern "C" {
 // QUEUE
 /** QUEUE information */
 
+/** max number of queues */
 #define SWITCH_MAX_QUEUE 32
-
-typedef enum switch_qid_type_ {
-  SWITCH_QID_TYPE_REASON_CODE = 0,
-  SWITCH_QID_TYPE_TC = 1
-} switch_qid_type_t;
-
-typedef struct switch_qid_info_ {
-  switch_qid_type_t qid_type;
-  switch_tc_t tc;
-  switch_hostif_reason_code_t reason_code;
-} switch_qid_info_t;
 
 /**
  Allocate egress queue for port
@@ -79,17 +69,40 @@ switch_status_t switch_api_queues_get(switch_device_t device,
                                       uint32_t *num_queues,
                                       switch_handle_t *queue_handles);
 
+/**
+ enable color on queue
+ @param device device
+ @param port_handle port handle
+ @param queue_handle queue_handle
+ @param enable enable
+*/
 switch_status_t switch_api_queue_color_drop_enable(switch_device_t device,
                                                    switch_handle_t port_handle,
                                                    switch_handle_t queue_handle,
                                                    bool enable);
 
+/**
+ set color limit on queue
+ @param device device
+ @param port_handle port handle
+ @param queue_handle queue handle
+ @param color packet color
+ @param limit color limit
+*/
 switch_status_t switch_api_queue_color_limit_set(switch_device_t device,
                                                  switch_handle_t port_handle,
                                                  switch_handle_t queue_handle,
                                                  switch_color_t color,
                                                  uint32_t limit);
 
+/**
+ set queue color hysteresis
+ @param device device
+ @param port_handle port handle
+ @param queue_handle queue handle
+ @param color packet color
+ @param limit color limit
+*/
 switch_status_t switch_api_queue_color_hysteresis_set(
     switch_device_t device,
     switch_handle_t port_handle,
@@ -97,6 +110,13 @@ switch_status_t switch_api_queue_color_hysteresis_set(
     switch_color_t color,
     uint32_t limit);
 
+/**
+ set queue pfc cos mapping
+ @param device device
+ @param port_handle port handle
+ @param queue_handle queue handle
+ @param cos cos bitmap
+*/
 switch_status_t switch_api_queue_pfc_cos_mapping(switch_device_t device,
                                                  switch_handle_t port_handle,
                                                  switch_handle_t queue_handle,

@@ -27,7 +27,7 @@ limitations under the License.
 #ifdef __cplusplus
 extern "C" {
 #endif                                        /* __cplusplus */
-/** @defgroup Switching Meters Switching API
+/** @defgroup Meters API
  *  API functions listed to configure meters
  *  @{
  */  // begin of meters
@@ -54,8 +54,10 @@ typedef enum switch_meter_type_ {
   SWITCH_METER_TYPE_BYTES = 2,
 } switch_meter_type_t;
 
+/** shaper type */
 typedef switch_meter_type_t switch_shaper_type_t;
 
+/** Meter stat id */
 typedef enum switch_meter_stats_ {
   SWITCH_METER_STATS_GREEEN,
   SWITCH_METER_STATS_YELLOW,

@@ -64,31 +64,31 @@ switch_status_t switch_api_lag_delete(switch_device_t device,
  Link Aggregation Group member port add
  @param device device to use
  @param lag_handle handle of group returned on creation
- @param side allow rx and rx member add separately
+ @param direction allow rx and rx member add separately
  @param port port in the same device on which lag_handle was created
  */
 switch_status_t switch_api_lag_member_add(switch_device_t device,
                                           switch_handle_t lag_handle,
-                                          switch_direction_t side,
+                                          switch_direction_t direction, 
                                           switch_port_t port);
 
 /**
  Link Aggregation Group member port delete
  @param device device to use
  @param lag_handle handle of group returned on creation
- @param side control rx and tx members independently or both
+ @param direction control rx and tx members independently or both
  @param port port in the same device on which lag_handle was created
  */
 switch_status_t switch_api_lag_member_delete(switch_device_t device,
                                              switch_handle_t lag_handle,
-                                             switch_direction_t side,
+                                             switch_direction_t direction,
                                              switch_port_t port);
 
 /**
  Link Aggregation Group member add by handle
  @param device device to use
  @param lag_handle handle of group returned on creation
- @param side allow rx and rx member add separately
+ @param direction allow rx and rx member add separately
  @param port port in the same device on which lag_handle was created
  */
 switch_handle_t switch_api_lag_member_create(switch_device_t device,

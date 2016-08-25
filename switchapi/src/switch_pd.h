@@ -1078,14 +1078,6 @@ p4_pd_status_t switch_pd_ppg_skid_hysteresis_set(
     switch_tm_ppg_hdl_t tm_ppg_handle,
     uint32_t num_bytes);
 
-p4_pd_status_t switch_pd_queue_id_entry_add(switch_device_t device,
-                                            switch_qid_info_t *qid_info,
-                                            switch_qid_t qid,
-                                            p4_pd_entry_hdl_t *entry_hdl);
-
-p4_pd_status_t switch_pd_queue_id_entry_delete(switch_device_t device,
-                                               p4_pd_entry_hdl_t entry_hdl);
-
 p4_pd_status_t switch_pd_ppg_pool_usage_set(
     switch_device_t device,
     switch_tm_ppg_hdl_t tm_ppg_handle,

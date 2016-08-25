@@ -32,6 +32,7 @@ extern "C" {
 // QOS
 /** QOS information */
 
+/** qos map ingress type */
 typedef enum switch_qos_map_ingress_ {
   SWITCH_QOS_MAP_INGRESS_NONE = 0,
   SWITCH_QOS_MAP_INGRESS_DSCP_TO_TC = 1,
@@ -45,6 +46,7 @@ typedef enum switch_qos_map_ingress_ {
   SWITCH_QOS_MAP_INGRESS_TC_TO_ICOS_AND_QUEUE = 9
 } switch_qos_map_ingress_t;
 
+/** qos map egress type */
 typedef enum switch_qos_map_egress_ {
   SWITCH_QOS_MAP_EGRESS_NONE = 0,
   SWITCH_QOS_MAP_EGRESS_TC_TO_DSCP = 1,
@@ -55,18 +57,21 @@ typedef enum switch_qos_map_egress_ {
   SWITCH_QOS_MAP_EGRESS_TC_AND_COLOR_TO_PCP = 6
 } switch_qos_map_egress_t;
 
+/** switch qos map struct */
 typedef struct switch_qos_map_ {
-  uint8_t dscp;
-  uint8_t pcp;
-  uint16_t tc;
-  switch_color_t color;
-  uint8_t icos;
-  uint8_t qid;
+  uint8_t dscp;          /**< dscp */
+  uint8_t pcp;           /**< pcp */
+  uint16_t tc;           /**< traffic class */
+  switch_color_t color;  /**< packet color */
+  uint8_t icos;          /**< ingress cos */
+  uint8_t qid;           /**< queue id */
 } switch_qos_map_t;
 
 /**
  Create ingress qos map
  @param device device
+ @param map_type qos map type
+ @param num_entries number of qos map entries
  @param qos_map QOS map
 */
 switch_handle_t switch_api_qos_map_ingress_create(
@@ -86,6 +91,8 @@ switch_status_t switch_api_qos_map_ingress_delete(
 /**
  Create egress qos map
  @param device device
+ @param map_type qos map type
+ @param num_entries number of qos map entries
  @param qos_map QOS map
 */
 switch_handle_t switch_api_qos_map_egress_create(
@@ -105,6 +112,7 @@ switch_status_t switch_api_qos_map_egress_delete(
 /**
  Update qos map
  @param device device
+ @param num_entries number of qos map entries
  @param qos_map_handle Qos map handle
  @param qos_map QOS map
 */

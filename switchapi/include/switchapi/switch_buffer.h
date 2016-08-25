@@ -32,23 +32,24 @@ extern "C" {
 // Buffer
 /** Buffer information */
 
+/** Buffer threshold mode */
 typedef enum switch_buffer_threshold_mode_ {
   SWITCH_BUFFER_THRESHOLD_MODE_STATIC = 1,
   SWITCH_BUFFER_THRESHOLD_MODE_DYNAMIC = 2
 } switch_buffer_threshold_mode_t;
 
+/** Buffer profile struct */
 typedef struct switch_api_buffer_profile_ {
-  switch_buffer_threshold_mode_t threshold_mode;
-  switch_handle_t pool_handle;
-  uint32_t buffer_size;
-  uint32_t threshold;
-  uint32_t xoff_threshold;
-  uint32_t xon_threshold;
+  switch_buffer_threshold_mode_t threshold_mode;      /**< buffer threshold mode */
+  switch_handle_t pool_handle;                        /**< buffer pool handle */
+  uint32_t buffer_size;                               /**< buffer size */
+  uint32_t threshold;                                 /**< threshold limit */
+  uint32_t xoff_threshold;                            /**< xoff threshold */
+  uint32_t xon_threshold;                             /**< xon threashold */
 } switch_api_buffer_profile_t;
 
 /**
  Create a buffer pool
- NOTE: Maps to tm - bf_tm_set_app_pool_size
  @param device device
  @param direction direction (ingress or egress)
  @param pool_size size of the buffer pool
@@ -59,7 +60,6 @@ switch_handle_t switch_api_buffer_pool_create(switch_device_t device,
 
 /**
  Delete a buffer pool
- NOTE: No api. Setting pool size to 0 will delete ?
  @param device device
  @param pool_handle pool handle
 */
@@ -68,8 +68,6 @@ switch_status_t switch_api_buffer_pool_delete(switch_device_t device,
 
 /**
  Create switch buffer profile
- NOTE: Maps to bf_tm_set_ppg_app_pool_usage and
-       bf_tm_set_q_app_pool_usage
  @param device device
  @param buffer_info buffer profile info
 */
@@ -78,8 +76,6 @@ switch_handle_t switch_api_buffer_profile_create(
 
 /**
  Delete switch buffer profile
- NOTE: Maps to bf_tm_disable_ppg_app_pool_usage and
-       bf_tm_disable_q_app_pool_usage
  @param device device
  @param buffer_profile_handle buffer profile handle
 */
@@ -88,7 +84,6 @@ switch_status_t switch_api_buffer_profile_delete(
 
 /**
  Set buffer profile for a priority group
- NOTE: Maps to bf_tm_set_ppg_app_pool_usage
  @param device device
  @param pg_handle priority group handle
  @param buffer_profile_handle buffer profile handle
@@ -98,7 +93,7 @@ switch_status_t switch_api_priority_group_buffer_profile_set(
     switch_handle_t pg_handle,
     switch_handle_t buffer_profile_handle);
 
-/*
+/**
  Set skid buffer size
  @param device device
  @param buffer_size buffer size
@@ -106,9 +101,21 @@ switch_status_t switch_api_priority_group_buffer_profile_set(
 switch_status_t switch_api_buffer_skid_limit_set(switch_device_t device,
                                                  uint32_t buffer_size);
 
+/**
+ Set skid buffer size
+ @param device device
+ @param num_bytes number of bytes
+*/
 switch_status_t switch_api_buffer_skid_hysteresis_set(switch_device_t device,
                                                       uint32_t num_bytes);
 
+/**
+ set buffer pool pfc limit for a icos
+ @param device device
+ @param pool_handle pool handle
+ @param icos ingress cos
+ @param num_bytes number of bytes
+*/
 switch_status_t switch_api_buffer_pool_pfc_limit(switch_device_t device,
                                                  switch_handle_t pool_handle,
                                                  uint8_t icos,
@@ -125,15 +132,34 @@ switch_status_t switch_api_queue_buffer_profile_set(
     switch_handle_t queue_handle,
     switch_handle_t buffer_profile_handle);
 
+/**
+ enable color based drop on a pool
+ @param device device
+ @param pool_handle pool handle
+ @param enable enable/disable
+*/
 switch_status_t switch_api_buffer_pool_color_drop_enable(
     switch_device_t device, switch_handle_t pool_handle, bool enable);
 
+/**
+ buffer pool color limit set
+ @param device device
+ @param pool_handle pool handle
+ @param color packet color
+ @param num_bytes number of bytes
+*/
 switch_status_t switch_api_buffer_pool_color_limit_set(
     switch_device_t device,
     switch_handle_t pool_handle,
     switch_color_t color,
     uint32_t num_bytes);
 
+/**
+ pool color hystersis set
+ @param device device
+ @param color packet color
+ @param num_bytes number of bytes
+*/
 switch_status_t switch_api_buffer_pool_color_hysteresis_set(
     switch_device_t device, switch_color_t color, uint32_t num_bytes);
 

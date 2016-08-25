@@ -265,8 +265,8 @@ typedef struct switch_packet_tx_key_ {
   switch_handle_t hostif_handle; /**< hostif handle */
   bool vlan_valid;               /**< vlan valid */
   switch_vlan_t vlan_id;         /**< vlan id */
-  uint32_t priority;             /** net filter priority */
-} switch_packet_tx_key_t;
+  uint32_t priority;             /**< net filter priority */
+} switch_packet_tx_key_t; 
 
 /** Tx net filter ation */
 typedef struct switch_packet_tx_action_ {
@@ -313,11 +313,22 @@ switch_status_t switch_api_packet_net_filter_rx_create(
 switch_status_t switch_api_packet_net_filter_rx_delete(
     switch_device_t device, switch_packet_rx_key_t *rx_key);
 
+/**
+ create a meter for control plane policing
+ @param device device
+ @param api_meter_info meter struct
+ @param meter_handle return meter handle
+ */
 switch_status_t switch_api_hostif_meter_create(
     switch_device_t device,
     switch_api_meter_t *api_meter_info,
     switch_handle_t *meter_handle);
 
+/**
+ delete meter for control plane policing
+ @param device device
+ @param meter_handle meter handle
+*/
 switch_status_t switch_api_hostif_meter_delete(switch_device_t device,
                                                switch_handle_t meter_handle);
 

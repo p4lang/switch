@@ -38,6 +38,7 @@ extern "C" {
  *  @{
  */  // begin of Port
 
+/** Maximum number of port priority groups */
 #define SWITCH_MAX_PPG 32
 
 /** Port information */
@@ -68,6 +69,7 @@ typedef enum {
   SWITCH_API_PORT_SPEED_100G  /**< port speed 100G */
 } switch_port_speed_t;
 
+/** port flowcontrol type */
 typedef enum switch_flowcontrol_type_ {
   SWITCH_FLOWCONTROL_TYPE_NONE = 0,
   SWITCH_FLOWCONTROL_TYPE_PFC = 1,
@@ -307,20 +309,31 @@ switch_status_t switch_api_ppg_get(switch_device_t device,
                                    uint8_t *num_ppgs,
                                    switch_handle_t *ppg_handles);
 
+/**
+ port drop limit set
+ @param device device
+ @param port_handle port handle
+ @param num_bytes number of bytes
+*/
 switch_status_t switch_api_port_drop_limit_set(switch_device_t device,
                                                switch_handle_t port_handle,
                                                uint32_t num_bytes);
 
+/**
+ port drop hysteresis set
+ @param device device
+ @param port_handle port handle
+ @param num_bytes number of bytes
+*/
 switch_status_t switch_api_port_drop_hysteresis_set(switch_device_t device,
                                                     switch_handle_t port_handle,
                                                     uint32_t num_bytes);
 
 /**
  Set port to cos mapping in ingress
- NOTE: Maps to bf_tm_set_ppg_icos_mapping
  @param device device
  @param port_handle port handle
- @param pg_handle priority group handle
+ @param ppg_handle priority group handle
  @param cos_bitmap cos bitmap
 */
 switch_status_t switch_api_port_cos_mapping(switch_device_t device,
@@ -331,10 +344,8 @@ switch_status_t switch_api_port_cos_mapping(switch_device_t device,
 /**
  Set port cos and pfc cos mapping
  @param device device
- @param ppg_handle port priority group
- @param num_cos number of cos
- @param cos cos
- @param pfc_cos pfc cos
+ @param port_handle port handle
+ @param cos_to_icos cos to ingress cos bitmap
 */
 switch_status_t switch_api_port_pfc_cos_mapping(switch_device_t device,
                                                 switch_handle_t port_handle,
@@ -342,6 +353,7 @@ switch_status_t switch_api_port_pfc_cos_mapping(switch_device_t device,
 
 /**
  Enable port shaping
+ @param device device
  @param port_handle port handle
  @param shaper_type shaper type in bytes or packets
  @param burst_size burst size
@@ -361,52 +373,124 @@ switch_status_t switch_api_port_shaping_enable(switch_device_t device,
 switch_status_t switch_api_port_shaping_disable(switch_device_t device,
                                                 switch_handle_t port_handle);
 
+/**
+ enable dscp trust on port
+ @param device device
+ @param port_handle port handle
+ @param trust_dscp dscp trust
+*/
 switch_status_t switch_api_port_trust_dscp_set(switch_device_t device,
                                                switch_handle_t port_handle,
                                                bool trust_dscp);
 
+/**
+ enable pcp trust on port
+ @param device device
+ @param port_handle port handle
+ @param trust_pcp pcp trust
+*/
 switch_status_t switch_api_port_trust_pcp_set(switch_device_t device,
                                               switch_handle_t port_handle,
                                               bool trust_pcp);
 
+/**
+ enable lossless mode in port priority group
+ @param device device
+ @param ppg_handle ppg handle 
+ @param enable enable 
+*/
 switch_status_t switch_api_ppg_lossless_enable(switch_device_t device,
                                                switch_handle_t ppg_handle,
                                                bool enable);
 
+/**
+ set guaranteed limit on ppg
+ @param device device
+ @param ppg_handle ppg handle
+ @param num_bytes number of bytes
+*/
 switch_status_t switch_api_ppg_guaranteed_limit_set(switch_device_t device,
                                                     switch_handle_t ppg_handle,
                                                     uint32_t num_bytes);
 
+/**
+ set skid lmit on ppg
+ @param device device
+ @param ppg_handle ppg handle
+ @param num_bytes number of bytes
+*/
 switch_status_t switch_api_ppg_skid_limit_set(switch_device_t device,
                                               switch_handle_t ppg_handle,
                                               uint32_t num_bytes);
 
+/**
+ set hystersis lmit on ppg
+ @param device device
+ @param ppg_handle ppg handle
+ @param num_bytes number of bytes
+*/
 switch_status_t switch_api_ppg_skid_hysteresis_set(switch_device_t device,
                                                    switch_handle_t ppg_handle,
                                                    uint32_t num_bytes);
 
+/**
+ set ingress qos group on port
+ @param device device
+ @param port_handle port handle
+ @param qos_group qos group
+*/
 switch_status_t switch_api_port_qos_group_ingress_set(
     switch_device_t device,
     switch_handle_t port_handle,
     switch_handle_t qos_group);
 
+/**
+ set tc qos group on port
+ @param device device
+ @param port_handle port handle
+ @param qos_group qos group
+*/
 switch_status_t switch_api_port_qos_group_tc_set(switch_device_t device,
                                                  switch_handle_t port_handle,
                                                  switch_handle_t qos_group);
 
+/**
+ set egress qos group on port
+ @param device device
+ @param port_handle port handle
+ @param qos_group qos group
+*/
 switch_status_t switch_api_port_qos_group_egress_set(
     switch_device_t device,
     switch_handle_t port_handle,
     switch_handle_t qos_group);
 
+/**
+ set default tc on port
+ @param device device
+ @param port_handle port handle
+ @param tc traffic class
+*/
 switch_status_t switch_api_port_tc_default_set(switch_device_t device,
                                                switch_handle_t port_handle,
                                                uint16_t tc);
 
+/**
+ set default color on port
+ @param device device
+ @param port_handle port handle
+ @param color packet color
+*/
 switch_status_t switch_api_port_color_default_set(switch_device_t device,
                                                   switch_handle_t port_handle,
                                                   switch_color_t color);
 
+/**
+ set port flowcontrol mode
+ @param device device
+ @param port_handle port handle
+ @param flow_control flow control type
+*/
 switch_status_t switch_api_port_flowcontrol_mode_set(
     switch_device_t device,
     switch_handle_t port_handle,

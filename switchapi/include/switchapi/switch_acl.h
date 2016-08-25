@@ -391,7 +391,7 @@ typedef union switch_acl_action_params_ {
   struct {
     uint8_t reason_code; /**< drop reason code */
     uint8_t platform_id; /**< platform id */
-  } drop;
+  } drop;                /**< drop struct */ 
 } switch_acl_action_params_t;
 
 /** Acl optional action parameters */
@@ -405,7 +405,7 @@ typedef struct switch_acl_opt_action_params_ {
   uint16_t tc;                    /**< traffic class */
   switch_color_t color;           /**< packet color */
   uint8_t ingress_cos;            /**< ingress cos */
-  switch_qid_t queue_id;
+  switch_qid_t queue_id;          /**< queue id */
 } switch_acl_opt_action_params_t;
 
 /** Egress ACL field enum */
@@ -494,7 +494,8 @@ switch_status_t switch_api_acl_list_delete(switch_device_t device,
  @param key_value_count - key value pair count
  @param acl_kvp - pointer to multiple key value pair
  @param action - Acl action (permit/drop/redirect to cpu)
- @param action_params - optional action parameters
+ @param action_params - action parameters
+ @param opt_action_params - optional action parameters
  @param ace_handle - returned handle for the rule
 */
 switch_status_t switch_api_acl_rule_create(
@@ -588,6 +589,11 @@ switch_status_t switch_api_acl_stats_get(switch_device_t device,
                                          switch_handle_t counter_handle,
                                          switch_counter_t *counter);
 
+/**
+ get acl type 
+ @param device device
+ @param acl_handle acl handle
+*/
 switch_acl_type_t switch_acl_type_get(switch_device_t device,
                                       switch_handle_t acl_handle);
 

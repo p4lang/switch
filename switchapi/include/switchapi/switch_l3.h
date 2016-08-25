@@ -106,7 +106,7 @@ switch_status_t switch_api_l3_route_delete(switch_device_t device,
  @param device device
  @param vrf virtual domain identifier
  @param ip_addr IP address
- @param intf_handle pointer to return Nexthop  Handle
+ @param nhop_handle pointer to return Nexthop  Handle
 */
 switch_status_t switch_api_l3_route_lookup(switch_device_t device,
                                            switch_handle_t vrf,
@@ -193,7 +193,10 @@ switch_status_t switch_api_l3_v6_route_entries_get_by_vrf(
 switch_status_t switch_api_l3_routes_print_all(void);
 
 /**
-  Set L3 MTU
+ create mtu entry
+ @param device device
+ @param mtu_index mtu index
+ @param mtu mtu value
  */
 switch_status_t switch_api_mtu_create_entry(switch_device_t device,
                                             uint16_t mtu_index,
