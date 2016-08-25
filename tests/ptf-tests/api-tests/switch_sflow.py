@@ -175,7 +175,7 @@ class TestSflow_ingress_port(api_base_tests.ThriftInterfaceDataPlane):
                                           ingress_ifindex = 2,
                                           ingress_bd = 2,
                                           ingress_port = 1,
-                                          reason_code=0x217,
+                                          reason_code=0x4,
                                           sflow_sid=sflow_sid,
                                           inner_pkt=pkt)
 

@@ -37,5 +37,7 @@ Supported Features
 8. Host interface
 9. Ingress Policers
 10. Statistics: VLAN, ACL
+11. Qos (Quality of Service) - Buffers, Queues
+12. CoPP (Control Plane Policing)
 
 For the list of supported APIs and attributes, please refer to sai_support.pdf file in the doc directory.

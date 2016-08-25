@@ -119,8 +119,7 @@ switch_mcast_rid_t *switch_mcast_rid_insert_hash(
   return rid_info;
 }
 
-switch_status_t switch_mcast_rid_delete_hash(
-    switch_mcast_rid_key_t *rid_key) {
+switch_status_t switch_mcast_rid_delete_hash(switch_mcast_rid_key_t *rid_key) {
   switch_mcast_rid_t *rid_info = NULL;
   unsigned char key[SWITCH_MCAST_RID_HASH_KEY_SIZE];
   uint32_t len = 0;
