@@ -9,6 +9,7 @@ from mc_pd_rpc.ttypes import *
 
 default_entries = {}
 stats_enabled = 1
+nat_enabled = 1
 
 def port_to_pipe(port):
     return port >> 7
@@ -136,11 +137,10 @@ def populate_default_fabric_entries(client, sess_hdl, dev_tgt, ipv6_enabled=0,
         client.nat_flow_set_default_action_nop(sess_hdl, dev_tgt)
 
 def populate_default_entries(client, sess_hdl, dev_tgt, ipv6_enabled,
-    acl_enabled, tunnel_enabled, multicast_enabled):
+    acl_enabled, tunnel_enabled, multicast_enabled, int_enabled):
     index = 0
     action_spec = dc_set_config_parameters_action_spec_t(
-                                    action_enable_dod=0,
-                                    action_switch_id=0)
+                                    action_enable_dod=0)
     client.switch_config_params_set_default_action_set_config_parameters(
                                      sess_hdl, dev_tgt, action_spec)
     client.validate_outer_ethernet_set_default_action_set_valid_outer_unicast_packet_untagged(
@@ -178,17 +178,17 @@ def populate_default_entries(client, sess_hdl, dev_tgt, ipv6_enabled,
                                      sess_hdl, dev_tgt)
     client.storm_control_set_default_action_nop(
                                      sess_hdl, dev_tgt)
-        client.storm_control_stats_set_default_action_nop(
+    client.storm_control_stats_set_default_action_nop(
                                      sess_hdl, dev_tgt)
-        meter_spec = dc_bytes_meter_spec_t(
+    meter_spec = dc_bytes_meter_spec_t(
                              cir_kbps=0,
                              cburst_kbits=0,
                              pir_kbps=0,
                              pburst_kbits=0,
                              color_aware=False)
-        client.meter_index_set_default_action_nop(
+    client.meter_index_set_default_action_nop(
                                      sess_hdl, dev_tgt, meter_spec)
-        client.meter_action_set_default_action_meter_permit(
+    client.meter_action_set_default_action_meter_permit(
                                      sess_hdl, dev_tgt)
 
     client.vlan_decap_set_default_action_nop(
@@ -217,6 +217,14 @@ def populate_default_entries(client, sess_hdl, dev_tgt, ipv6_enabled,
                                      sess_hdl, dev_tgt)
     client.system_acl_set_default_action_nop(
                                      sess_hdl, dev_tgt)
+    client.adjust_lkp_fields_set_default_action_non_ip_lkp(
+                                     sess_hdl, dev_tgt)
+    match_spec = dc_adjust_lkp_fields_match_spec_t(ipv4_valid=1, ipv6_valid=0)
+    client.adjust_lkp_fields_table_add_with_ipv4_lkp(
+                                     sess_hdl, dev_tgt, match_spec)
+    match_spec = dc_adjust_lkp_fields_match_spec_t(ipv4_valid=0, ipv6_valid=1)
+    client.adjust_lkp_fields_table_add_with_ipv6_lkp(
+                                     sess_hdl, dev_tgt, match_spec)
     client.sflow_ingress_set_default_action_nop(
                                      sess_hdl, dev_tgt)
     client.sflow_ing_take_sample_set_default_action_nop(
@@ -280,6 +288,15 @@ def populate_default_entries(client, sess_hdl, dev_tgt, ipv6_enabled,
             client.ipv6_multicast_route_set_default_action_on_miss(
                                      sess_hdl, dev_tgt)
             client.ipv6_multicast_route_star_g_set_default_action_multicast_route_star_g_miss(
+                                     sess_hdl, dev_tgt)
+
+    client.egress_qos_map_set_default_action_nop(
+                                     sess_hdl, dev_tgt)
+    client.ingress_qos_map_dscp_set_default_action_nop(
+                                     sess_hdl, dev_tgt)
+    client.ingress_qos_map_pcp_set_default_action_nop(
+                                     sess_hdl, dev_tgt)
+    client.traffic_class_set_default_action_nop(
                                      sess_hdl, dev_tgt)
 
     if stats_enabled:
@@ -613,7 +630,6 @@ def program_ports(client, sess_hdl, dev_tgt, port_count):
                              match_spec, action_spec)
         action_spec = dc_set_ingress_port_properties_action_spec_t(
                              action_if_label=count,
-                             action_exclusion_id=count,
                              action_qos_group=0,
                              action_tc_qos_group=0,
                              action_tc=0,
@@ -665,7 +681,6 @@ def program_emulation_ports(client, sess_hdl, dev_tgt, port_count):
 
         action_spec = dc_set_ingress_port_properties_action_spec_t(
                              action_if_label=count,
-                             action_exclusion_id=count,
                              action_qos_group=0,
                              action_tc_qos_group=0,
                              action_tc=0,
