@@ -32,8 +32,8 @@ $(thrift_py_sources) \
 $(sai_ctypesgen)
 
 $(sai_ctypesgen) : $(thrift_py_sources)
-	$(CTYPESGEN) -I/usr/include -I$(srcdir)/submodules/SAI/inc \
-		$(srcdir)/submodules/SAI/inc/*.h -o $@
+	@$(CTYPESGEN) -I/usr/include -I$(srcdir)/submodules/SAI/inc \
+		$(srcdir)/submodules/SAI/inc/*.h -o $@ > /dev/null 2>&1
 
 # The recipe to invoke the thrift compiler is copied from:
 # http://www.gnu.org/software/automake/manual/html_node/Multiple-Outputs.html
