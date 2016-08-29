@@ -953,6 +953,16 @@ switch_status_t switch_pd_sflow_session_create(switch_device_t device,
 switch_status_t switch_pd_sflow_session_delete(switch_device_t device,
                                                switch_sflow_info_t *sflow_info);
 
+switch_status_t switch_pd_sflow_counter_read(
+    switch_device_t device,
+    switch_sflow_match_entry_t *match_entry,
+    switch_counter_t *sw_counter);
+
+switch_status_t switch_pd_sflow_counter_write(
+    switch_device_t device,
+    switch_sflow_match_entry_t *match_entry,
+    switch_counter_t val);
+
 #endif
 
 p4_pd_status_t switch_pd_stats_update(switch_device_t device);

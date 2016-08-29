@@ -8810,6 +8810,41 @@ switch_status_t switch_pd_sflow_session_delete(
   }
   return SWITCH_STATUS_SUCCESS;
 }
+
+switch_status_t switch_pd_sflow_counter_read(
+    switch_device_t device,
+    switch_sflow_match_entry_t *match_entry,
+    switch_counter_t *sw_counter) {
+  p4_pd_dev_target_t p4_pd_device;
+  p4_pd_device.device_id = device;
+  p4_pd_device.dev_pipe_id = PD_DEV_PIPE_ALL;
+  p4_pd_counter_value_t counter;
+  counter = p4_pd_dc_counter_read_sflow_ingress_session_pkt_counter(
+      g_sess_hdl,
+      p4_pd_device,
+      match_entry->ingress_sflow_ent_hdl,
+      COUNTER_READ_HW_SYNC);
+  sw_counter->num_packets = counter.packets;
+  sw_counter->num_bytes = counter.bytes;
+  return SWITCH_STATUS_SUCCESS;
+}
+
+switch_status_t switch_pd_sflow_counter_write(
+    switch_device_t device,
+    switch_sflow_match_entry_t *match_entry,
+    switch_counter_t val) {
+  p4_pd_dev_target_t p4_pd_device;
+  p4_pd_counter_value_t counter;
+
+  p4_pd_device.device_id = device;
+  p4_pd_device.dev_pipe_id = PD_DEV_PIPE_ALL;
+
+  counter.packets = val.num_packets;
+  counter.bytes = val.num_bytes;
+  return p4_pd_dc_counter_write_sflow_ingress_session_pkt_counter(
+      g_sess_hdl, p4_pd_device, match_entry->ingress_sflow_ent_hdl, counter);
+}
+
 #endif
 
 void switch_pd_stats_update_cb(int device, void *cookie) { return; }

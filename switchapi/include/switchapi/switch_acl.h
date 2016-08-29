@@ -391,7 +391,7 @@ typedef union switch_acl_action_params_ {
   struct {
     uint8_t reason_code; /**< drop reason code */
     uint8_t platform_id; /**< platform id */
-  } drop;                /**< drop struct */ 
+  } drop;                /**< drop struct */
 } switch_acl_action_params_t;
 
 /** Acl optional action parameters */
@@ -590,7 +590,7 @@ switch_status_t switch_api_acl_stats_get(switch_device_t device,
                                          switch_counter_t *counter);
 
 /**
- get acl type 
+ get acl type
  @param device device
  @param acl_handle acl handle
 */

@@ -69,7 +69,7 @@ switch_status_t switch_api_lag_delete(switch_device_t device,
  */
 switch_status_t switch_api_lag_member_add(switch_device_t device,
                                           switch_handle_t lag_handle,
-                                          switch_direction_t direction, 
+                                          switch_direction_t direction,
                                           switch_port_t port);
 
 /**

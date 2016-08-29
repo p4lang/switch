@@ -896,6 +896,17 @@ service switch_api_rpc {
                              2:switcht_handle_t sflow_handle
                              3:switcht_handle_t entry_hdl);
 
+    switcht_status_t switcht_api_sflow_session_sample_count_reset(
+                             1:switcht_device_t device,
+                             2:switcht_handle_t sflow_handle,
+                             3:switcht_handle_t entry_handle);
+
+    switcht_counter_t switcht_api_sflow_session_sample_count_get(
+                             1:switcht_device_t device,
+                             2:switcht_handle_t sflow_handle,
+                             3:switcht_handle_t entry_handle);
+
+
     /* PPG */
     switcht_status_t switcht_api_port_cos_mapping(
                              1: switcht_device_t device,

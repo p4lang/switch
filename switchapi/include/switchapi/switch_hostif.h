@@ -266,7 +266,7 @@ typedef struct switch_packet_tx_key_ {
   bool vlan_valid;               /**< vlan valid */
   switch_vlan_t vlan_id;         /**< vlan id */
   uint32_t priority;             /**< net filter priority */
-} switch_packet_tx_key_t; 
+} switch_packet_tx_key_t;
 
 /** Tx net filter ation */
 typedef struct switch_packet_tx_action_ {

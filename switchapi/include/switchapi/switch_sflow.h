@@ -14,7 +14,7 @@ extern "C" {
 
 /** Maximum sflow session */
 #define SWITCH_MAX_SFLOW_SESSIONS \
-  16                               // MAX_SFLOW_SESSIONS from p4_table_sizes.h
+  16  // MAX_SFLOW_SESSIONS from p4_table_sizes.h
 
 /** Maximum sflow access control entries */
 #define SWITCH_MAX_SFLOW_ACES 512  // MAX_SFLOW_SESSIONS from p4_table_sizes.h
@@ -29,11 +29,11 @@ typedef enum switch_sflow_match_field_ {
 } switch_sflow_match_field_t;
 
 /** sflow match values */
-typedef union switch_sflow_match_value_ { 
-  switch_handle_t port;       /**< port handle */
-  uint32_t vlan;              /**< vlan id */
-  uint32_t sip;               /**< source ip */
-  uint32_t dip;               /**< destination ip */
+typedef union switch_sflow_match_value_ {
+  switch_handle_t port; /**< port handle */
+  uint32_t vlan;        /**< vlan id */
+  uint32_t sip;         /**< source ip */
+  uint32_t dip;         /**< destination ip */
 } switch_sflow_match_value_t;
 
 /** sflow match mask - same as masks used for acl */
@@ -47,9 +47,9 @@ typedef union switch_sflow_match_mask_ {
 
 /** Egress acl key value pair */
 typedef struct switch_sflow_match_key_value_pair_ {
-  switch_sflow_match_field_t field;      /**< sflow match fields */
-  switch_sflow_match_value_t value;      /**< sflow match values */
-  switch_sflow_match_mask_t mask;        /**< sflow match masks */
+  switch_sflow_match_field_t field; /**< sflow match fields */
+  switch_sflow_match_value_t value; /**< sflow match values */
+  switch_sflow_match_mask_t mask;   /**< sflow match masks */
 } switch_sflow_match_key_value_pair_t;
 
 /** Sflow collector type */
@@ -65,13 +65,13 @@ typedef enum {
 
 /** sflow session struct */
 typedef struct switch_api_sflow_session_info_ {
-  uint32_t session_id;                                    /**< session id */
-  uint32_t timeout_usec;                                  /**< timeout 0 => 100us (default) */
-  uint32_t sample_rate;                                   /**< sampling rate 0 => every 10k pkts (default) */
-  uint32_t extract_len;                                   /**< extract length 0 => 80 (default) */ 
-  switch_handle_t egress_port_hdl;                        /**< egress port handle */
-  switch_sflow_collector_type_e collector_type;           /**< sflow collector type */
-  switch_sflow_sample_mode_e sample_mode;                 /**< sampling mode */
+  uint32_t session_id;   /**< session id */
+  uint32_t timeout_usec; /**< timeout 0 => 100us (default) */
+  uint32_t sample_rate;  /**< sampling rate 0 => every 10k pkts (default) */
+  uint32_t extract_len;  /**< extract length 0 => 80 (default) */
+  switch_handle_t egress_port_hdl;              /**< egress port handle */
+  switch_sflow_collector_type_e collector_type; /**< sflow collector type */
+  switch_sflow_sample_mode_e sample_mode;       /**< sampling mode */
 } switch_api_sflow_session_info_t;
 
 /**
@@ -93,7 +93,7 @@ switch_status_t switch_api_sflow_session_delete(switch_device_t device,
                                                 bool all_cleanup);
 
 /**
- sflow session attach 
+ sflow session attach
  @param device device
  @param sflow_hdl sflow handle
  @param direction direction
@@ -122,6 +122,18 @@ switch_status_t switch_api_sflow_session_attach(
 switch_status_t switch_api_sflow_session_detach(switch_device_t device,
                                                 switch_handle_t sflow_hdl,
                                                 switch_handle_t entry_hdl);
+
+switch_status_t switch_api_sflow_session_sample_count_get(
+    switch_device_t device,
+    switch_handle_t sflow_hdl,
+    switch_handle_t entry_hdl,
+    switch_counter_t *sample_pool);
+
+switch_status_t switch_api_sflow_session_sample_count_reset(
+    switch_device_t device,
+    switch_handle_t sflow_hdl,
+    switch_handle_t entry_hdl);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

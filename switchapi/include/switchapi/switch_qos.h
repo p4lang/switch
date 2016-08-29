@@ -59,12 +59,12 @@ typedef enum switch_qos_map_egress_ {
 
 /** switch qos map struct */
 typedef struct switch_qos_map_ {
-  uint8_t dscp;          /**< dscp */
-  uint8_t pcp;           /**< pcp */
-  uint16_t tc;           /**< traffic class */
-  switch_color_t color;  /**< packet color */
-  uint8_t icos;          /**< ingress cos */
-  uint8_t qid;           /**< queue id */
+  uint8_t dscp;         /**< dscp */
+  uint8_t pcp;          /**< pcp */
+  uint16_t tc;          /**< traffic class */
+  switch_color_t color; /**< packet color */
+  uint8_t icos;         /**< ingress cos */
+  uint8_t qid;          /**< queue id */
 } switch_qos_map_t;
 
 /**

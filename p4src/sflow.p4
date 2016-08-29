@@ -24,7 +24,7 @@ metadata sflow_meta_t sflow_metadata;
 
 counter sflow_ingress_session_pkt_counter {
     type : packets;
-    direct : sflow_ing_take_sample;
+    direct : sflow_ingress;
     saturating;
 }
 #endif
@@ -61,6 +61,7 @@ field_list sflow_cpu_info {
     cpu_info;
     sflow_metadata.sflow_session_id;
     i2e_metadata.mirror_session_id;
+    ingress_metadata.egress_ifindex;
 }
 
 action sflow_ing_pkt_to_cpu(sflow_i2e_mirror_id ) {
@@ -78,6 +79,8 @@ table sflow_ing_take_sample {
         nop;
         sflow_ing_pkt_to_cpu;
     }
+
+    size: MAX_SFLOW_SESSIONS;
 }
 #endif /*SFLOW_ENABLE */
 
@@ -100,6 +103,8 @@ action sflow_pkt_to_cpu(reason_code) {
     add_header(fabric_header_sflow);
     modify_field(fabric_header_sflow.sflow_session_id,
                  sflow_metadata.sflow_session_id);
+    modify_field(fabric_header_sflow.sflow_egress_ifindex,
+                 ingress_metadata.egress_ifindex);
     modify_field(fabric_metadata.reason_code, reason_code);
 }
 #endif

@@ -1664,6 +1664,31 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
                                 (switch_handle_t)((uint32_t)entry_handle));
   }
 
+  switcht_status_t switcht_api_sflow_session_sample_count_reset(
+                             const switcht_device_t device,
+                             const switcht_handle_t sflow_handle,
+                             const switcht_handle_t entry_handle) {
+      return switch_api_sflow_session_sample_count_reset(device,
+                              (switch_handle_t)((uint32_t)sflow_handle),
+                              (switch_handle_t)((uint32_t)entry_handle));
+  }
+
+  void switcht_api_sflow_session_sample_count_get(
+                             switcht_counter_t& _counter,
+                             const switcht_device_t device,
+                             const switcht_handle_t sflow_handle,
+                             const switcht_handle_t entry_handle) {
+    switch_counter_t counter;
+    printf("switcht_api_sflow_session_sample_count_get\n");
+    switch_api_sflow_session_sample_count_get(device,
+                              (switch_handle_t)((uint32_t)sflow_handle),
+                              (switch_handle_t)((uint32_t)entry_handle),
+                              &counter);
+
+    _counter.num_packets = counter.num_packets;
+    _counter.num_bytes = counter.num_bytes;
+  }
+
   switcht_status_t switcht_api_mac_table_set_learning_timeout(const switcht_device_t device, const int32_t timeout) {
     printf("switcht_api_mac_table_set_learning_timeout\n");
     return (switch_api_mac_table_set_learning_timeout(device, timeout));

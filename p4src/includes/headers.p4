@@ -526,6 +526,7 @@ header_type fabric_header_cpu_t {
 header_type fabric_header_sflow_t {
     fields {
         sflow_session_id  : 16;
+        sflow_egress_ifindex : 16;
     }
 }
 

@@ -41,16 +41,16 @@ typedef enum switch_scheduler_type_ {
 
 /** scheduler struct */
 typedef struct switch_scheduler_info_ {
-  switch_scheduler_type_t scheduler_type;     /**< scheduler type */
-  switch_shaper_type_t shaper_type;           /**< shaper type */
-  switch_handle_t queue_handle;               /**< queue handle */
-  uint32_t priority;                          /**< priority */
-  uint32_t rem_bw_priority;                   /**< remaining bandwidth priority */
-  uint16_t weight;                            /**< weight */
-  uint32_t min_burst_size;                    /**< minimum burst size */
-  uint32_t min_rate;                          /**< minimum rate */
-  uint32_t max_burst_size;                    /**< maximum burst size */
-  uint32_t max_rate;                          /**< maximum rate */
+  switch_scheduler_type_t scheduler_type; /**< scheduler type */
+  switch_shaper_type_t shaper_type;       /**< shaper type */
+  switch_handle_t queue_handle;           /**< queue handle */
+  uint32_t priority;                      /**< priority */
+  uint32_t rem_bw_priority;               /**< remaining bandwidth priority */
+  uint16_t weight;                        /**< weight */
+  uint32_t min_burst_size;                /**< minimum burst size */
+  uint32_t min_rate;                      /**< minimum rate */
+  uint32_t max_burst_size;                /**< maximum burst size */
+  uint32_t max_rate;                      /**< maximum rate */
 } switch_scheduler_info_t;
 
 /**
@@ -121,7 +121,7 @@ switch_status_t switch_api_queue_scheduling_dwrr_weight_set(
     switch_device_t device, switch_handle_t scheduler_handle, uint16_t weight);
 
 /**
- configure queue scheduler 
+ configure queue scheduler
  @param device device
  @param scheduler_handle scheduler handle
  @param pps packet per second
@@ -136,7 +136,7 @@ switch_status_t switch_api_queue_scheduling_guaranteed_shaping_set(
     uint32_t rate);
 
 /**
- configure queue remaining bandwidth scheduler 
+ configure queue remaining bandwidth scheduler
  @param device device
  @param scheduler_handle scheduler handle
  @param pps packet per second

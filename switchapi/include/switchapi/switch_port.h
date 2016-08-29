@@ -396,8 +396,8 @@ switch_status_t switch_api_port_trust_pcp_set(switch_device_t device,
 /**
  enable lossless mode in port priority group
  @param device device
- @param ppg_handle ppg handle 
- @param enable enable 
+ @param ppg_handle ppg handle
+ @param enable enable
 */
 switch_status_t switch_api_ppg_lossless_enable(switch_device_t device,
                                                switch_handle_t ppg_handle,

@@ -40,12 +40,12 @@ typedef enum switch_buffer_threshold_mode_ {
 
 /** Buffer profile struct */
 typedef struct switch_api_buffer_profile_ {
-  switch_buffer_threshold_mode_t threshold_mode;      /**< buffer threshold mode */
-  switch_handle_t pool_handle;                        /**< buffer pool handle */
-  uint32_t buffer_size;                               /**< buffer size */
-  uint32_t threshold;                                 /**< threshold limit */
-  uint32_t xoff_threshold;                            /**< xoff threshold */
-  uint32_t xon_threshold;                             /**< xon threashold */
+  switch_buffer_threshold_mode_t threshold_mode; /**< buffer threshold mode */
+  switch_handle_t pool_handle;                   /**< buffer pool handle */
+  uint32_t buffer_size;                          /**< buffer size */
+  uint32_t threshold;                            /**< threshold limit */
+  uint32_t xoff_threshold;                       /**< xoff threshold */
+  uint32_t xon_threshold;                        /**< xon threashold */
 } switch_api_buffer_profile_t;
 
 /**

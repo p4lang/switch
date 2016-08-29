@@ -26,12 +26,12 @@ limitations under the License.
 
 #ifdef __cplusplus
 extern "C" {
-#endif                                        /* __cplusplus */
+#endif                    /* __cplusplus */
 /** @defgroup Meters API
  *  API functions listed to configure meters
  *  @{
  */  // begin of meters
-                                              // meters
+                          // meters
 
 /** Meter mode */
 typedef enum switch_meter_mode_ {
