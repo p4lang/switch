@@ -90,15 +90,15 @@ sai_status_t sai_policer_attr_parse(_In_ const int attr_count,
         api_meter_info->pir = attribute->value.u64;
         break;
       case SAI_POLICER_ATTR_GREEN_PACKET_ACTION:
-        api_meter_info->action[SWITCH_METER_COLOR_GREEN] =
+        api_meter_info->action[SWITCH_COLOR_GREEN] =
             sai_packet_action_to_switch_packet_action(attribute->value.s32);
         break;
       case SAI_POLICER_ATTR_YELLOW_PACKET_ACTION:
-        api_meter_info->action[SWITCH_METER_COLOR_YELLOW] =
+        api_meter_info->action[SWITCH_COLOR_YELLOW] =
             sai_packet_action_to_switch_packet_action(attribute->value.s32);
         break;
       case SAI_POLICER_ATTR_RED_PACKET_ACTION:
-        api_meter_info->action[SWITCH_METER_COLOR_RED] =
+        api_meter_info->action[SWITCH_COLOR_RED] =
             sai_packet_action_to_switch_packet_action(attribute->value.s32);
         break;
     }

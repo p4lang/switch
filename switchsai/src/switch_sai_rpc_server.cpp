@@ -204,6 +204,16 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
               case SAI_PORT_ATTR_PORT_VLAN_ID:
                   attr_list[i].value.u16 = attribute.value.u16;
                   break;
+              case SAI_PORT_ATTR_QOS_DOT1P_TO_TC_MAP:
+              case SAI_PORT_ATTR_QOS_DSCP_TO_TC_MAP:
+              case SAI_PORT_ATTR_QOS_DOT1P_TO_COLOR_MAP:
+              case SAI_PORT_ATTR_QOS_DSCP_TO_COLOR_MAP:
+              case SAI_PORT_ATTR_QOS_TC_TO_QUEUE_MAP:
+              case SAI_PORT_ATTR_QOS_TC_TO_PRIORITY_GROUP_MAP:
+              case SAI_PORT_ATTR_QOS_TC_AND_COLOR_TO_DOT1P_MAP:
+              case SAI_PORT_ATTR_QOS_TC_AND_COLOR_TO_DSCP_MAP:
+                  attr_list[i].value.oid = attribute.value.oid;
+                  break;
               default:
                   break;
           }
@@ -527,6 +537,9 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
           switch (attribute.id) {
               case SAI_HOSTIF_TRAP_GROUP_ATTR_QUEUE:
                   attr_list[i].value.u32 = attribute.value.u32;
+                  break;
+              case SAI_HOSTIF_TRAP_GROUP_ATTR_POLICER:
+                  attr_list[i].value.oid = attribute.value.oid;
                   break;
           }
       }
@@ -1232,7 +1245,14 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
 
   sai_thrift_status_t sai_thrift_remove_hostif_trap(const sai_thrift_hostif_trap_id_t trap_id) {
     printf("sai_thrift_remove_hostif_trap\n");
-    return 0;
+    sai_status_t status = SAI_STATUS_SUCCESS;
+    sai_hostif_api_t *hostif_api = NULL;
+    status = sai_api_query(SAI_API_HOST_INTERFACE, (void **) &hostif_api);
+    if (status != SAI_STATUS_SUCCESS) {
+          return status;
+    }
+    status = hostif_api->set_trap_attribute((sai_hostif_trap_id_t) trap_id, NULL);
+    return status;
   }
 
   sai_thrift_status_t sai_thrift_set_hostif_trap(const sai_thrift_hostif_trap_id_t trap_id, const sai_thrift_attribute_t& thrift_attr) {
@@ -1756,6 +1776,432 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       free(counter_ids);
       free(counters);
       return;
+  }
+
+  void sai_thrift_parse_buffer_pool_attributes(const std::vector<sai_thrift_attribute_t> &thrift_attr_list, sai_attribute_t *attr_list) {
+      std::vector<sai_thrift_attribute_t>::const_iterator it = thrift_attr_list.begin();
+      sai_thrift_attribute_t attribute;
+      for(uint32_t i = 0; i < thrift_attr_list.size(); i++, it++) {
+          attribute = (sai_thrift_attribute_t)*it;
+          attr_list[i].id = attribute.id;
+          switch (attribute.id) {
+              case SAI_BUFFER_POOL_ATTR_SHARED_SIZE:
+                  attr_list[i].value.u32 = attribute.value.u32;
+                  break;
+              case SAI_BUFFER_POOL_ATTR_TYPE:
+                  attr_list[i].value.u8 = attribute.value.u8;
+                  break;
+              case SAI_BUFFER_POOL_ATTR_SIZE:
+                  attr_list[i].value.u32 = attribute.value.u32;
+                  break;
+              case SAI_BUFFER_POOL_ATTR_TH_MODE:
+                  attr_list[i].value.u8 = attribute.value.u8;
+                  break;
+          }
+      }
+  }
+
+  sai_thrift_object_id_t sai_thrift_create_buffer_pool(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
+      printf("sai_thrift_create_buffer_pool\n");
+      sai_status_t status = SAI_STATUS_SUCCESS;
+      sai_buffer_api_t *buffer_api;
+      sai_object_id_t pool_id = 0;
+      status = sai_api_query(SAI_API_BUFFERS, (void **) &buffer_api);
+      if (status != SAI_STATUS_SUCCESS) {
+          return status;
+      }
+      sai_attribute_t *attr_list = (sai_attribute_t *) malloc(sizeof(sai_attribute_t) * thrift_attr_list.size());
+      sai_thrift_parse_buffer_pool_attributes(thrift_attr_list, attr_list);
+      uint32_t attr_count = thrift_attr_list.size();
+      buffer_api->create_buffer_pool(&pool_id, attr_count, attr_list);
+      free(attr_list);
+      return pool_id;
+  }
+
+  sai_thrift_status_t sai_thrift_remove_buffer_pool(const sai_thrift_object_id_t pool_id) {
+      printf("sai_thrift_remove_buffer_pool\n");
+      sai_status_t status = SAI_STATUS_SUCCESS;
+      sai_buffer_api_t *buffer_api;
+      status = sai_api_query(SAI_API_BUFFERS, (void **) &buffer_api);
+      if (status != SAI_STATUS_SUCCESS) {
+          return status;
+      }
+      status = buffer_api->remove_buffer_pool(pool_id);
+      return status;
+  }
+
+  void sai_thrift_parse_buffer_profile_attributes(const std::vector<sai_thrift_attribute_t> &thrift_attr_list, sai_attribute_t *attr_list) {
+      std::vector<sai_thrift_attribute_t>::const_iterator it = thrift_attr_list.begin();
+      sai_thrift_attribute_t attribute;
+      for(uint32_t i = 0; i < thrift_attr_list.size(); i++, it++) {
+          attribute = (sai_thrift_attribute_t)*it;
+          attr_list[i].id = attribute.id;
+          switch (attribute.id) {
+              case SAI_BUFFER_PROFILE_ATTR_POOL_ID:
+                  attr_list[i].value.u64 = attribute.value.u64;
+                  break;
+              case SAI_BUFFER_PROFILE_ATTR_BUFFER_SIZE:
+                  attr_list[i].value.u32 = attribute.value.u32;
+                  break;
+              case SAI_BUFFER_PROFILE_ATTR_SHARED_DYNAMIC_TH:
+                  attr_list[i].value.u8 = attribute.value.u8;
+                  break;
+              case SAI_BUFFER_PROFILE_ATTR_SHARED_STATIC_TH:
+                  attr_list[i].value.u32 = attribute.value.u32;
+                  break;
+              case SAI_BUFFER_PROFILE_ATTR_XOFF_TH:
+                  attr_list[i].value.u32 = attribute.value.u32;
+                  break;
+              case SAI_BUFFER_PROFILE_ATTR_XON_TH:
+                  attr_list[i].value.u32 = attribute.value.u32;
+                  break;
+          }
+      }
+  }
+
+  sai_thrift_object_id_t sai_thrift_create_buffer_profile(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
+      printf("sai_thrift_create_buffer_profile\n");
+      sai_status_t status = SAI_STATUS_SUCCESS;
+      sai_buffer_api_t *buffer_api;
+      sai_object_id_t buffer_profile_id = 0;
+      status = sai_api_query(SAI_API_BUFFERS, (void **) &buffer_api);
+      if (status != SAI_STATUS_SUCCESS) {
+          return status;
+      }
+      sai_attribute_t *attr_list = (sai_attribute_t *) malloc(sizeof(sai_attribute_t) * thrift_attr_list.size());
+      sai_thrift_parse_buffer_profile_attributes(thrift_attr_list, attr_list);
+      uint32_t attr_count = thrift_attr_list.size();
+      buffer_api->create_buffer_profile(&buffer_profile_id, attr_count, attr_list);
+      free(attr_list);
+      return buffer_profile_id;
+  }
+
+  sai_thrift_status_t sai_thrift_remove_buffer_profile(const sai_thrift_object_id_t buffer_profile_id) {
+      printf("sai_thrift_remove_buffer_profile\n");
+      sai_status_t status = SAI_STATUS_SUCCESS;
+      sai_buffer_api_t *buffer_api;
+      status = sai_api_query(SAI_API_BUFFERS, (void **) &buffer_api);
+      if (status != SAI_STATUS_SUCCESS) {
+          return status;
+      }
+      status = buffer_api->remove_buffer_profile(buffer_profile_id);
+      return status;
+  }
+
+  sai_thrift_status_t sai_thrift_set_ingress_priority_group_attribute(
+          const sai_thrift_object_id_t ingress_pg_id,
+          const sai_thrift_attribute_t& thrift_attr) {
+      printf("sai_thrift_set_ingress_priority_group_attribute\n");
+      sai_status_t status = SAI_STATUS_SUCCESS;
+      sai_buffer_api_t *buffer_api;
+      status = sai_api_query(SAI_API_BUFFERS, (void **) &buffer_api);
+      if (status != SAI_STATUS_SUCCESS) {
+          return status;
+      }
+      sai_attribute_t attr;
+      memset(&attr, 0x0, sizeof(sai_attribute_t));
+      attr.id = thrift_attr.id;
+      attr.value.oid = thrift_attr.value.oid;
+
+      status = buffer_api->set_ingress_priority_group_attr(ingress_pg_id, &attr);
+      return status;
+  }
+
+  void sai_thrift_parse_scheduler_profile_attributes(
+          const std::vector<sai_thrift_attribute_t> &thrift_attr_list,
+          sai_attribute_t *attr_list) {
+      std::vector<sai_thrift_attribute_t>::const_iterator it = thrift_attr_list.begin();
+      sai_thrift_attribute_t attribute;
+      for(uint32_t i = 0; i < thrift_attr_list.size(); i++, it++) {
+          attribute = (sai_thrift_attribute_t)*it;
+          attr_list[i].id = attribute.id;
+          switch (attribute.id) {
+              case SAI_SCHEDULER_ATTR_SCHEDULING_ALGORITHM:
+                  attr_list[i].value.u8 = attribute.value.u8;
+                  break;
+              case SAI_SCHEDULER_ATTR_SCHEDULING_WEIGHT:
+                  attr_list[i].value.u8 = attribute.value.u8;
+                  break;
+              case SAI_SCHEDULER_ATTR_SHAPER_TYPE:
+                  attr_list[i].value.u8 = attribute.value.u8;
+                  break;
+              case SAI_SCHEDULER_ATTR_MIN_BANDWIDTH_RATE:
+                  attr_list[i].value.u64 = attribute.value.u64;
+                  break;
+              case SAI_SCHEDULER_ATTR_MIN_BANDWIDTH_BURST_RATE:
+                  attr_list[i].value.u64 = attribute.value.u64;
+                  break;
+              case SAI_SCHEDULER_ATTR_MAX_BANDWIDTH_RATE:
+                  attr_list[i].value.u64 = attribute.value.u64;
+                  break;
+              case SAI_SCHEDULER_ATTR_MAX_BANDWIDTH_BURST_RATE:
+                  attr_list[i].value.u64 = attribute.value.u64;
+                  break;
+              default:
+                  break;
+          }
+      }
+  }
+
+  sai_thrift_object_id_t sai_thrift_create_scheduler_profile(
+          const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
+      printf("sai_thrift_create_scheduler_profile\n");
+      sai_status_t status = SAI_STATUS_SUCCESS;
+      sai_scheduler_api_t *scheduler_api;
+      sai_object_id_t scheduler_id = 0;
+      status = sai_api_query(SAI_API_SCHEDULER, (void **) &scheduler_api);
+      if (status != SAI_STATUS_SUCCESS) {
+          return status;
+      }
+      sai_attribute_t *attr_list = (sai_attribute_t *) malloc(sizeof(sai_attribute_t) * thrift_attr_list.size());
+      sai_thrift_parse_scheduler_profile_attributes(thrift_attr_list, attr_list);
+      uint32_t attr_count = thrift_attr_list.size();
+      scheduler_api->create_scheduler_profile(&scheduler_id, attr_count, attr_list);
+      free(attr_list);
+      return scheduler_id;
+  }
+
+  sai_thrift_status_t sai_thrift_remove_scheduler_profile(
+          const sai_thrift_object_id_t scheduler_id) {
+      printf("sai_thrift_remove_scheduler_profile\n");
+      sai_status_t status = SAI_STATUS_SUCCESS;
+      sai_scheduler_api_t *scheduler_api;
+      status = sai_api_query(SAI_API_SCHEDULER, (void **) &scheduler_api);
+      if (status != SAI_STATUS_SUCCESS) {
+          return status;
+      }
+      status = scheduler_api->remove_scheduler_profile(scheduler_id);
+      return status;
+  }
+
+  void sai_thrift_parse_scheduler_group_attributes(
+          const std::vector<sai_thrift_attribute_t> &thrift_attr_list,
+          sai_attribute_t *attr_list) {
+      std::vector<sai_thrift_attribute_t>::const_iterator it = thrift_attr_list.begin();
+      sai_thrift_attribute_t attribute;
+      for(uint32_t i = 0; i < thrift_attr_list.size(); i++, it++) {
+          attribute = (sai_thrift_attribute_t)*it;
+          attr_list[i].id = attribute.id;
+          switch (attribute.id) {
+              case SAI_SCHEDULER_GROUP_ATTR_CHILD_COUNT:
+                  attr_list[i].value.u32 = attribute.value.u32;
+                  break;
+              case SAI_SCHEDULER_GROUP_ATTR_CHILD_LIST:
+                  break;
+              case SAI_SCHEDULER_GROUP_ATTR_PORT_ID:
+                  attr_list[i].value.oid = attribute.value.oid;
+                  break;
+              case SAI_SCHEDULER_GROUP_ATTR_LEVEL:
+                  attr_list[i].value.u8 = attribute.value.u8;
+                  break;
+              case SAI_SCHEDULER_GROUP_ATTR_SCHEDULER_PROFILE_ID:
+                  attr_list[i].value.oid = attribute.value.oid;
+                  break;
+          }
+      }
+  }
+
+  sai_thrift_object_id_t sai_thrift_create_scheduler_group(
+          const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
+      printf("sai_thrift_create_scheduler_group\n");
+      sai_status_t status = SAI_STATUS_SUCCESS;
+      sai_scheduler_group_api_t *scheduler_group_api;
+      sai_object_id_t scheduler_group_id = 0;
+      status = sai_api_query(SAI_API_SCHEDULER_GROUP, (void **) &scheduler_group_api);
+      if (status != SAI_STATUS_SUCCESS) {
+          return status;
+      }
+      sai_attribute_t *attr_list = (sai_attribute_t *) malloc(sizeof(sai_attribute_t) * thrift_attr_list.size());
+      sai_thrift_parse_scheduler_group_attributes(thrift_attr_list, attr_list);
+      uint32_t attr_count = thrift_attr_list.size();
+      scheduler_group_api->create_scheduler_group(&scheduler_group_id, attr_count, attr_list);
+      free(attr_list);
+      return scheduler_group_id;
+  }
+
+  sai_thrift_status_t sai_thrift_remove_scheduler_group(
+          const sai_thrift_object_id_t scheduler_group_id) {
+      printf("sai_thrift_remove_scheduler_group\n");
+      sai_status_t status = SAI_STATUS_SUCCESS;
+      sai_scheduler_group_api_t *scheduler_group_api;
+      status = sai_api_query(SAI_API_SCHEDULER_GROUP, (void **) &scheduler_group_api);
+      if (status != SAI_STATUS_SUCCESS) {
+          return status;
+      }
+      status = scheduler_group_api->remove_scheduler_group(scheduler_group_id);
+      return status;
+  }
+
+  sai_thrift_status_t sai_thrift_add_child_object_to_group(
+          const sai_thrift_object_id_t scheduler_group_id,
+          const std::vector<sai_thrift_object_id_t> & thrift_child_objects) {
+      printf("sai_thrift_add_child_object_to_group\n");
+      sai_status_t status = SAI_STATUS_SUCCESS;
+      sai_scheduler_group_api_t *scheduler_group_api;
+      sai_object_id_t *child_objects;
+      status = sai_api_query(SAI_API_SCHEDULER_GROUP, (void **) &scheduler_group_api);
+      if (status != SAI_STATUS_SUCCESS) {
+          return status;
+      }
+      child_objects = (sai_object_id_t *) malloc(sizeof(sai_object_id_t) * thrift_child_objects.size());
+      std::vector<sai_thrift_object_id_t>::const_iterator it2 = thrift_child_objects.begin();
+      for (uint32_t j = 0; j < thrift_child_objects.size(); j++, *it2++) {
+          child_objects[j] = (sai_object_id_t) *it2;
+      }
+      uint32_t attr_count = thrift_child_objects.size();
+      status = scheduler_group_api->add_child_object_to_group(
+                             scheduler_group_id,
+                             attr_count,
+                             child_objects);
+      free(child_objects);
+      return status;
+  }
+
+  sai_thrift_status_t sai_thrift_remove_child_object_from_group(
+          const sai_thrift_object_id_t scheduler_group_id,
+          const std::vector<sai_thrift_object_id_t> & thrift_child_objects) {
+      printf("sai_thrift_remove_child_object_from_group\n");
+      sai_status_t status = SAI_STATUS_SUCCESS;
+      sai_scheduler_group_api_t *scheduler_group_api;
+      sai_object_id_t *child_objects;
+      status = sai_api_query(SAI_API_SCHEDULER_GROUP, (void **) &scheduler_group_api);
+      if (status != SAI_STATUS_SUCCESS) {
+          return status;
+      }
+      child_objects = (sai_object_id_t *) malloc(sizeof(sai_object_id_t) * thrift_child_objects.size());
+      std::vector<sai_thrift_object_id_t>::const_iterator it2 = thrift_child_objects.begin();
+      for (uint32_t j = 0; j < thrift_child_objects.size(); j++, *it2++) {
+          child_objects[j] = (sai_object_id_t) *it2;
+      }
+      uint32_t attr_count = thrift_child_objects.size();
+      status = scheduler_group_api->remove_child_object_from_group(
+                             scheduler_group_id,
+                             attr_count,
+                             child_objects);
+      free(child_objects);
+      return status;
+  }
+
+  void sai_thrift_parse_qos_map_attributes(
+          const std::vector<sai_thrift_attribute_t> &thrift_attr_list,
+          sai_attribute_t *attr_list,
+          sai_qos_map_t **qos_map_list) {
+      std::vector<sai_thrift_attribute_t>::const_iterator it = thrift_attr_list.begin();
+      sai_thrift_attribute_t attribute;
+      sai_qos_map_type_t qos_map_type = (sai_qos_map_type_t) 0;
+      for(uint32_t i = 0; i < thrift_attr_list.size(); i++, it++) {
+          attribute = (sai_thrift_attribute_t)*it;
+          attr_list[i].id = attribute.id;
+          switch (attribute.id) {
+              case SAI_QOS_MAP_ATTR_TYPE:
+                  attr_list[i].value.s32 = attribute.value.s32;
+                  qos_map_type = (sai_qos_map_type_t) attribute.value.s32;
+                  break;
+              case SAI_QOS_MAP_ATTR_MAP_TO_VALUE_LIST:
+                  attr_list[i].value.qosmap.list = (sai_qos_map_t *) malloc(attribute.value.qosmap.key.size() * sizeof(sai_qos_map_t));
+                  attr_list[i].value.qosmap.count = attribute.value.qosmap.key.size();
+                  *qos_map_list = attr_list[i].value.qosmap.list;
+                  memset(attr_list[i].value.qosmap.list, 0x0, attribute.value.qosmap.key.size() * sizeof(sai_qos_map_t));
+                  std::vector<sai_thrift_qos_map_params_t>::const_iterator it1 = attribute.value.qosmap.key.begin();
+                  std::vector<sai_thrift_qos_map_params_t>::const_iterator it2 = attribute.value.qosmap.data.begin();
+                  for (uint32_t j = 0; j < attribute.value.qosmap.key.size(); j++, it1++, it2++) {
+                      sai_qos_map_params_t *key = &attr_list[i].value.qosmap.list[j].key;
+                      sai_qos_map_params_t *data = &attr_list[i].value.qosmap.list[j].value;
+                      const sai_thrift_qos_map_params_t thrift_key = (sai_thrift_qos_map_params_t) *it1;
+                      const sai_thrift_qos_map_params_t thrift_data = (sai_thrift_qos_map_params_t) *it2;
+
+                      switch (qos_map_type) {
+                          case SAI_QOS_MAP_DOT1P_TO_TC:
+                              key->dot1p = thrift_key.dot1p;
+                              data->tc = thrift_data.tc;
+                              break;
+                          case SAI_QOS_MAP_DOT1P_TO_COLOR:
+                              key->dot1p = thrift_key.dot1p;
+                              data->color = (sai_packet_color_t) thrift_data.color;
+                              break;
+                          case SAI_QOS_MAP_DSCP_TO_TC:
+                              key->dscp = thrift_key.dscp;
+                              data->tc = thrift_data.tc;
+                              break;
+                          case SAI_QOS_MAP_DSCP_TO_COLOR:
+                              key->dscp = thrift_key.dscp;
+                              data->color = (sai_packet_color_t) thrift_data.color;
+                              break;
+                          case SAI_QOS_MAP_TC_TO_QUEUE:
+                              key->tc = thrift_key.tc;
+                              data->queue_index = thrift_data.queue_index;
+                              break;
+                          case SAI_QOS_MAP_TC_AND_COLOR_TO_DSCP:
+                              key->tc = thrift_key.tc;
+                              key->color = (sai_packet_color_t) thrift_key.color;
+                              data->dscp = thrift_data.dscp;
+                              break;
+                          case SAI_QOS_MAP_TC_AND_COLOR_TO_DOT1P:
+                              key->tc = thrift_key.tc;
+                              key->color = (sai_packet_color_t) thrift_key.color;
+                              data->dot1p = thrift_data.dot1p;
+                              break;
+                          default:
+                              break;
+                      }
+                  }
+                  break;
+          }
+      }
+  }
+
+  sai_thrift_object_id_t sai_thrift_create_qos_map(
+          const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
+      printf("sai_thrift_create_qos_map\n");
+      sai_status_t status = SAI_STATUS_SUCCESS;
+      sai_qos_map_api_t *qos_api;
+      sai_object_id_t qos_map_id = 0;
+      sai_qos_map_t *qos_map_list = NULL;
+      status = sai_api_query(SAI_API_QOS_MAPS, (void **) &qos_api);
+      if (status != SAI_STATUS_SUCCESS) {
+          return status;
+      }
+      sai_attribute_t *attr_list = (sai_attribute_t *) malloc(sizeof(sai_attribute_t) * thrift_attr_list.size());
+      sai_thrift_parse_qos_map_attributes(thrift_attr_list, attr_list, &qos_map_list);
+      uint32_t attr_count = thrift_attr_list.size();
+      qos_api->create_qos_map(&qos_map_id, attr_count, attr_list);
+      if (qos_map_list) {
+          free(qos_map_list);
+      }
+      free(attr_list);
+      return qos_map_id;
+  }
+
+  sai_thrift_status_t sai_thrift_remove_qos_map(
+          const sai_thrift_object_id_t qos_map_id) {
+      printf("sai_thrift_remove_qos_map\n");
+      sai_status_t status = SAI_STATUS_SUCCESS;
+      sai_qos_map_api_t *qos_api;
+      status = sai_api_query(SAI_API_QOS_MAPS, (void **) &qos_api);
+      if (status != SAI_STATUS_SUCCESS) {
+          return status;
+      }
+      status = qos_api->remove_qos_map(qos_map_id);
+      return status;
+  }
+
+  sai_thrift_status_t sai_thrift_set_queue_attribute(
+          const sai_thrift_object_id_t queue_id,
+          const sai_thrift_attribute_t& thrift_attr) {
+      printf("sai_thrift_set_queue_attribute\n");
+      sai_status_t status = SAI_STATUS_SUCCESS;
+      sai_queue_api_t *queue_api;
+      status = sai_api_query(SAI_API_QUEUE, (void **) &queue_api);
+      if (status != SAI_STATUS_SUCCESS) {
+          return status;
+      }
+
+      sai_attribute_t attr;
+      memset(&attr, 0x0, sizeof(sai_attribute_t));
+      attr.id = thrift_attr.id;
+      attr.value.oid = thrift_attr.value.oid;
+      status = queue_api->set_queue_attribute(queue_id, &attr);
+      return status;
   }
 
 };

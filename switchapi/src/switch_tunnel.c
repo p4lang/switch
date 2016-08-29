@@ -62,6 +62,7 @@ switch_status_t switch_tunnel_free(switch_device_t device) {
 static void switch_tunnel_vtep_hash_key_init(uchar *key,
                                              switch_handle_t vrf,
                                              switch_ip_addr_t *ip_addr,
+                                             switch_encap_type_t encap_type,
                                              uint32_t *len,
                                              uint32_t *hash) {
   (*len) = 0;
@@ -79,6 +80,8 @@ static void switch_tunnel_vtep_hash_key_init(uchar *key,
   }
   key[*len] = ip_addr->prefix_len;
   (*len)++;
+  key[*len] = encap_type;
+  (*len)++;
   *hash = MurmurHash2(key, *len, 0x98761234);
 }
 
@@ -86,15 +89,17 @@ static inline int switch_vtep_hash_cmp(const void *key1, const void *key2) {
   return memcmp(key1, key2, SWITCH_VTEP_HASH_KEY_SIZE);
 }
 
-static uint16_t switch_tunnel_src_vtep_insert_hash(switch_handle_t vrf,
-                                                   switch_ip_addr_t *ip_addr) {
+static uint16_t switch_tunnel_src_vtep_insert_hash(
+    switch_handle_t vrf,
+    switch_encap_type_t encap_type,
+    switch_ip_addr_t *ip_addr) {
   switch_vtep_entry_t *vtep_entry = NULL;
   unsigned char key[SWITCH_VTEP_HASH_KEY_SIZE];
   unsigned int len = 0;
   uint32_t hash = 0;
   uint16_t src_vtep_index = 0;
 
-  switch_tunnel_vtep_hash_key_init(key, vrf, ip_addr, &len, &hash);
+  switch_tunnel_vtep_hash_key_init(key, vrf, ip_addr, encap_type, &len, &hash);
   vtep_entry = switch_malloc(sizeof(switch_vtep_entry_t), 1);
   if (!vtep_entry) {
     return src_vtep_index;
@@ -102,6 +107,7 @@ static uint16_t switch_tunnel_src_vtep_insert_hash(switch_handle_t vrf,
   memset(vtep_entry, 0, sizeof(switch_vtep_entry_t));
   src_vtep_index = switch_api_id_allocator_allocate(src_vtep_index_allocator);
   vtep_entry->vrf = vrf;
+  vtep_entry->encap_type = encap_type;
   memcpy(&vtep_entry->ip_addr, ip_addr, sizeof(switch_ip_addr_t));
   memcpy(vtep_entry->key, key, SWITCH_VTEP_HASH_KEY_SIZE);
   vtep_entry->entry_index = src_vtep_index;
@@ -111,14 +117,16 @@ static uint16_t switch_tunnel_src_vtep_insert_hash(switch_handle_t vrf,
 }
 
 static switch_status_t switch_tunnel_src_vtep_delete_hash(
-    switch_handle_t vrf, switch_ip_addr_t *ip_addr) {
+    switch_handle_t vrf,
+    switch_encap_type_t encap_type,
+    switch_ip_addr_t *ip_addr) {
   switch_vtep_entry_t *vtep_entry = NULL;
   unsigned char key[SWITCH_VTEP_HASH_KEY_SIZE];
   unsigned int len = 0;
   uint32_t hash = 0;
   switch_status_t status = SWITCH_STATUS_SUCCESS;
 
-  switch_tunnel_vtep_hash_key_init(key, vrf, ip_addr, &len, &hash);
+  switch_tunnel_vtep_hash_key_init(key, vrf, ip_addr, encap_type, &len, &hash);
   vtep_entry = tommy_hashtable_remove(
       &switch_src_vtep_table, switch_vtep_hash_cmp, key, hash);
   if (!vtep_entry) {
@@ -130,15 +138,17 @@ static switch_status_t switch_tunnel_src_vtep_delete_hash(
   return status;
 }
 
-static uint16_t switch_tunnel_src_vtep_search_hash(switch_handle_t vrf,
-                                                   switch_ip_addr_t *ip_addr) {
+static uint16_t switch_tunnel_src_vtep_search_hash(
+    switch_handle_t vrf,
+    switch_encap_type_t encap_type,
+    switch_ip_addr_t *ip_addr) {
   switch_vtep_entry_t *vtep_entry = NULL;
   unsigned char key[SWITCH_VTEP_HASH_KEY_SIZE];
   unsigned int len = 0;
   uint32_t hash;
   uint16_t src_vtep_index = 0;
 
-  switch_tunnel_vtep_hash_key_init(key, vrf, ip_addr, &len, &hash);
+  switch_tunnel_vtep_hash_key_init(key, vrf, ip_addr, encap_type, &len, &hash);
   vtep_entry = tommy_hashtable_search(
       &switch_src_vtep_table, switch_vtep_hash_cmp, key, hash);
 
@@ -148,15 +158,17 @@ static uint16_t switch_tunnel_src_vtep_search_hash(switch_handle_t vrf,
   return src_vtep_index;
 }
 
-static uint16_t switch_tunnel_dst_vtep_insert_hash(switch_handle_t vrf,
-                                                   switch_ip_addr_t *ip_addr) {
+static uint16_t switch_tunnel_dst_vtep_insert_hash(
+    switch_handle_t vrf,
+    switch_encap_type_t encap_type,
+    switch_ip_addr_t *ip_addr) {
   switch_vtep_entry_t *vtep_entry = NULL;
   unsigned char key[SWITCH_VTEP_HASH_KEY_SIZE];
   unsigned int len = 0;
   uint32_t hash;
   uint16_t dst_vtep_index = 0;
 
-  switch_tunnel_vtep_hash_key_init(key, vrf, ip_addr, &len, &hash);
+  switch_tunnel_vtep_hash_key_init(key, vrf, ip_addr, encap_type, &len, &hash);
   vtep_entry = switch_malloc(sizeof(switch_vtep_entry_t), 1);
   if (!vtep_entry) {
     return dst_vtep_index;
@@ -164,6 +176,7 @@ static uint16_t switch_tunnel_dst_vtep_insert_hash(switch_handle_t vrf,
   memset(vtep_entry, 0, sizeof(switch_vtep_entry_t));
   dst_vtep_index = switch_api_id_allocator_allocate(dst_vtep_index_allocator);
   vtep_entry->vrf = vrf;
+  vtep_entry->encap_type = encap_type;
   memcpy(&vtep_entry->ip_addr, ip_addr, sizeof(switch_ip_addr_t));
   memcpy(vtep_entry->key, key, SWITCH_VTEP_HASH_KEY_SIZE);
   vtep_entry->entry_index = dst_vtep_index;
@@ -173,14 +186,16 @@ static uint16_t switch_tunnel_dst_vtep_insert_hash(switch_handle_t vrf,
 }
 
 static switch_status_t switch_tunnel_dst_vtep_delete_hash(
-    switch_handle_t vrf, switch_ip_addr_t *ip_addr) {
+    switch_handle_t vrf,
+    switch_encap_type_t encap_type,
+    switch_ip_addr_t *ip_addr) {
   switch_vtep_entry_t *vtep_entry = NULL;
   unsigned char key[SWITCH_VTEP_HASH_KEY_SIZE];
   unsigned int len = 0;
   uint32_t hash = 0;
   switch_status_t status = SWITCH_STATUS_SUCCESS;
 
-  switch_tunnel_vtep_hash_key_init(key, vrf, ip_addr, &len, &hash);
+  switch_tunnel_vtep_hash_key_init(key, vrf, ip_addr, encap_type, &len, &hash);
   vtep_entry = tommy_hashtable_remove(
       &switch_dst_vtep_table, switch_vtep_hash_cmp, key, hash);
   if (!vtep_entry) {
@@ -192,15 +207,17 @@ static switch_status_t switch_tunnel_dst_vtep_delete_hash(
   return status;
 }
 
-static uint16_t switch_tunnel_dst_vtep_search_hash(switch_handle_t vrf,
-                                                   switch_ip_addr_t *ip_addr) {
+static uint16_t switch_tunnel_dst_vtep_search_hash(
+    switch_handle_t vrf,
+    switch_encap_type_t encap_type,
+    switch_ip_addr_t *ip_addr) {
   switch_vtep_entry_t *vtep_entry = NULL;
   unsigned char key[SWITCH_VTEP_HASH_KEY_SIZE];
   unsigned int len = 0;
   uint32_t hash = 0;
   uint16_t dst_vtep_index = 0;
 
-  switch_tunnel_vtep_hash_key_init(key, vrf, ip_addr, &len, &hash);
+  switch_tunnel_vtep_hash_key_init(key, vrf, ip_addr, encap_type, &len, &hash);
   vtep_entry = tommy_hashtable_search(
       &switch_dst_vtep_table, switch_vtep_hash_cmp, key, hash);
 
@@ -211,13 +228,15 @@ static uint16_t switch_tunnel_dst_vtep_search_hash(switch_handle_t vrf,
 }
 
 uint16_t switch_tunnel_src_vtep_index_get(switch_handle_t vrf,
+                                          switch_encap_type_t encap_type,
                                           switch_ip_addr_t *ip_addr) {
-  return switch_tunnel_src_vtep_search_hash(vrf, ip_addr);
+  return switch_tunnel_src_vtep_search_hash(vrf, encap_type, ip_addr);
 }
 
 uint16_t switch_tunnel_dst_vtep_index_get(switch_handle_t vrf,
+                                          switch_encap_type_t encap_type,
                                           switch_ip_addr_t *ip_addr) {
-  return switch_tunnel_dst_vtep_search_hash(vrf, ip_addr);
+  return switch_tunnel_dst_vtep_search_hash(vrf, encap_type, ip_addr);
 }
 
 static switch_status_t switch_tunnel_ip_encap_table_add_entries(
@@ -229,18 +248,72 @@ static switch_status_t switch_tunnel_ip_encap_table_add_entries(
   switch_status_t status = SWITCH_STATUS_SUCCESS;
   uint16_t src_vtep_index = 0;
   uint16_t dst_vtep_index = 0;
+  switch_encap_type_t encap_type = SWITCH_API_ENCAP_TYPE_NONE;
 
   ip_encap = &(SWITCH_INTF_TUNNEL_IP_ENCAP(intf_info));
   ip_encap_hdl = &intf_info->ip_encap_hdl;
+  encap_type = SWITCH_INTF_TUNNEL_ENCAP_TYPE(intf_info);
 
   /*
    * Allocate Src Vtep Rewrite Index
    */
-  src_vtep_index = switch_tunnel_src_vtep_search_hash(ip_encap->vrf_handle,
-                                                      &ip_encap->src_ip);
+  src_vtep_index = switch_tunnel_src_vtep_search_hash(
+      ip_encap->vrf_handle, encap_type, &ip_encap->src_ip);
   if (!src_vtep_index) {
-    src_vtep_index = switch_tunnel_src_vtep_insert_hash(ip_encap->vrf_handle,
-                                                        &ip_encap->src_ip);
+    src_vtep_index = switch_tunnel_src_vtep_insert_hash(
+        ip_encap->vrf_handle, encap_type, &ip_encap->src_ip);
+  } else {
+    SWITCH_API_ERROR("%s:%d: duplicate src vtep entry interface %lx",
+                     __FUNCTION__,
+                     __LINE__,
+                     intf_handle);
+    goto cleanup;
+  }
+
+  dst_vtep_index = switch_tunnel_dst_vtep_search_hash(
+      ip_encap->vrf_handle, encap_type, &ip_encap->dst_ip);
+  if (!dst_vtep_index) {
+    dst_vtep_index = switch_tunnel_dst_vtep_insert_hash(
+        ip_encap->vrf_handle, encap_type, &ip_encap->dst_ip);
+  } else {
+    SWITCH_API_ERROR("%s:%d: duplicate dst vtep entry interface %lx",
+                     __FUNCTION__,
+                     __LINE__,
+                     intf_handle);
+    goto cleanup;
+  }
+
+  if (intf_info->direction == SWITCH_API_DIRECTION_INGRESS ||
+      intf_info->direction == SWITCH_API_DIRECTION_BOTH) {
+#ifdef SWITCH_PD
+    status = switch_pd_src_vtep_table_add_entry(
+        device, ip_encap, intf_info->ifindex, &ip_encap_hdl->src_hw_entry);
+    if (status != SWITCH_STATUS_SUCCESS) {
+      SWITCH_API_ERROR(
+          "%s:%d: unable to add src vtep entry for "
+          "interface %lx",
+          __FUNCTION__,
+          __LINE__,
+          intf_handle);
+      goto cleanup;
+    }
+
+    status = switch_pd_dest_vtep_table_add_entry(
+        device, ip_encap, &ip_encap_hdl->dst_hw_entry);
+    if (status != SWITCH_STATUS_SUCCESS) {
+      SWITCH_API_ERROR(
+          "%s:%d: unable to add dest vtep entry for "
+          "interface %lx",
+          __FUNCTION__,
+          __LINE__,
+          intf_handle);
+      goto cleanup;
+    }
+#endif /* SWITCH_PD */
+  }
+
+  if (intf_info->direction == SWITCH_API_DIRECTION_EGRESS ||
+      intf_info->direction == SWITCH_API_DIRECTION_BOTH) {
 #ifdef SWITCH_PD
     status = switch_pd_tunnel_src_rewrite_table_add_entry(
         device, src_vtep_index, ip_encap, &ip_encap_hdl->src_rw_hw_entry);
@@ -253,18 +326,7 @@ static switch_status_t switch_tunnel_ip_encap_table_add_entries(
           intf_handle);
       goto cleanup;
     }
-#endif /* SWITCH_PD */
-  }
 
-  /*
-   * Allocate Dst Vtep Rewrite Index
-   */
-  dst_vtep_index = switch_tunnel_dst_vtep_search_hash(ip_encap->vrf_handle,
-                                                      &ip_encap->dst_ip);
-  if (!dst_vtep_index) {
-    dst_vtep_index = switch_tunnel_dst_vtep_insert_hash(ip_encap->vrf_handle,
-                                                        &ip_encap->dst_ip);
-#ifdef SWITCH_PD
     status = switch_pd_tunnel_dst_rewrite_table_add_entry(
         device, dst_vtep_index, ip_encap, &ip_encap_hdl->dst_rw_hw_entry);
     if (status != SWITCH_STATUS_SUCCESS) {
@@ -278,32 +340,6 @@ static switch_status_t switch_tunnel_ip_encap_table_add_entries(
     }
 #endif /* SWITCH_PD */
   }
-
-#ifdef SWITCH_PD
-  status = switch_pd_src_vtep_table_add_entry(
-      device, ip_encap, intf_info->ifindex, &ip_encap_hdl->src_hw_entry);
-  if (status != SWITCH_STATUS_SUCCESS) {
-    SWITCH_API_ERROR(
-        "%s:%d: unable to add src vtep entry for "
-        "interface %lx",
-        __FUNCTION__,
-        __LINE__,
-        intf_handle);
-    goto cleanup;
-  }
-
-  status = switch_pd_dest_vtep_table_add_entry(
-      device, ip_encap, &ip_encap_hdl->dst_hw_entry);
-  if (status != SWITCH_STATUS_SUCCESS) {
-    SWITCH_API_ERROR(
-        "%s:%d: unable to add dest vtep entry for "
-        "interface %lx",
-        __FUNCTION__,
-        __LINE__,
-        intf_handle);
-    goto cleanup;
-  }
-#endif /* SWITCH_PD */
 
   SWITCH_API_TRACE("%s:%d: Tunnel interface %lx created [%d : %d]",
                    __FUNCTION__,
@@ -323,14 +359,39 @@ static switch_status_t switch_tunnel_ip_encap_table_delete_entries(
   switch_ip_encap_t *ip_encap = NULL;
   switch_ip_encap_pd_hdl_t *ip_encap_hdl = NULL;
   switch_status_t status = SWITCH_STATUS_SUCCESS;
+  switch_encap_type_t encap_type = SWITCH_API_ENCAP_TYPE_NONE;
 
   ip_encap = &(SWITCH_INTF_TUNNEL_IP_ENCAP(intf_info));
   ip_encap_hdl = &intf_info->ip_encap_hdl;
+  encap_type = SWITCH_INTF_TUNNEL_ENCAP_TYPE(intf_info);
 
-  status = switch_tunnel_src_vtep_delete_hash(ip_encap->vrf_handle,
-                                              &ip_encap->src_ip);
+  status = switch_tunnel_src_vtep_delete_hash(
+      ip_encap->vrf_handle, encap_type, &ip_encap->src_ip);
+  if (status != SWITCH_STATUS_SUCCESS) {
+    SWITCH_API_ERROR(
+        "%s:%d: unable to delete src hash entry for "
+        "interface %lx",
+        __FUNCTION__,
+        __LINE__,
+        intf_handle);
+    goto cleanup;
+  }
+
+  status = switch_tunnel_dst_vtep_delete_hash(
+      ip_encap->vrf_handle, encap_type, &ip_encap->dst_ip);
+  if (status != SWITCH_STATUS_SUCCESS) {
+    SWITCH_API_ERROR(
+        "%s:%d: unable to delete dst hash entry for "
+        "interface %lx",
+        __FUNCTION__,
+        __LINE__,
+        intf_handle);
+    goto cleanup;
+  }
+
+  if (intf_info->direction == SWITCH_API_DIRECTION_BOTH ||
+      intf_info->direction == SWITCH_API_DIRECTION_EGRESS) {
 #ifdef SWITCH_PD
-  if (status == SWITCH_STATUS_SUCCESS) {
     status = switch_pd_tunnel_src_rewrite_table_delete_entry(
         device, ip_encap_hdl->src_rw_hw_entry);
     if (status != SWITCH_STATUS_SUCCESS) {
@@ -342,13 +403,7 @@ static switch_status_t switch_tunnel_ip_encap_table_delete_entries(
           intf_handle);
       goto cleanup;
     }
-  }
-#endif /* SWITCH_PD */
 
-  status = switch_tunnel_dst_vtep_delete_hash(ip_encap->vrf_handle,
-                                              &ip_encap->dst_ip);
-#ifdef SWITCH_PD
-  if (status == SWITCH_STATUS_SUCCESS) {
     status = switch_pd_tunnel_dst_rewrite_table_delete_entry(
         device, ip_encap_hdl->dst_rw_hw_entry);
     if (status != SWITCH_STATUS_SUCCESS) {
@@ -360,31 +415,34 @@ static switch_status_t switch_tunnel_ip_encap_table_delete_entries(
           intf_handle);
       goto cleanup;
     }
-  }
 #endif /* SWITCH_PD */
-
-#ifdef SWITCH_PD
-  status = switch_pd_src_vtep_table_delete_entry(
-      device, ip_encap, ip_encap_hdl->src_hw_entry);
-  if (status != SWITCH_STATUS_SUCCESS) {
-    SWITCH_API_ERROR(
-        "%s:%d: unable to delete src vtep entry for "
-        "interface %lx",
-        __FUNCTION__,
-        __LINE__,
-        intf_handle);
-    goto cleanup;
   }
-  status = switch_pd_dest_vtep_table_delete_entry(
-      device, ip_encap, ip_encap_hdl->dst_hw_entry);
-  if (status != SWITCH_STATUS_SUCCESS) {
-    SWITCH_API_ERROR(
-        "%s:%d: unable to delete dst vtep entry for "
-        "interface %lx",
-        __FUNCTION__,
-        __LINE__,
-        intf_handle);
-    goto cleanup;
+
+  if (intf_info->direction == SWITCH_API_DIRECTION_BOTH ||
+      intf_info->direction == SWITCH_API_DIRECTION_INGRESS) {
+#ifdef SWITCH_PD
+    status = switch_pd_src_vtep_table_delete_entry(
+        device, ip_encap, ip_encap_hdl->src_hw_entry);
+    if (status != SWITCH_STATUS_SUCCESS) {
+      SWITCH_API_ERROR(
+          "%s:%d: unable to delete src vtep entry for "
+          "interface %lx",
+          __FUNCTION__,
+          __LINE__,
+          intf_handle);
+      goto cleanup;
+    }
+    status = switch_pd_dest_vtep_table_delete_entry(
+        device, ip_encap, ip_encap_hdl->dst_hw_entry);
+    if (status != SWITCH_STATUS_SUCCESS) {
+      SWITCH_API_ERROR(
+          "%s:%d: unable to delete dst vtep entry for "
+          "interface %lx",
+          __FUNCTION__,
+          __LINE__,
+          intf_handle);
+      goto cleanup;
+    }
   }
 #endif /* SWITCH_PD */
 
@@ -498,6 +556,9 @@ switch_handle_t switch_api_tunnel_interface_create(
   switch_handle_t intf_handle = 0;
   switch_api_interface_info_t info;
   switch_interface_info_t *intf_info = NULL;
+  switch_encap_info_t *encap_info = NULL;
+  switch_encap_type_t encap_type = SWITCH_API_ENCAP_TYPE_NONE;
+  uint32_t tunnel_vni = 0;
   switch_status_t status = SWITCH_STATUS_SUCCESS;
 
   UNUSED(device);
@@ -514,7 +575,25 @@ switch_handle_t switch_api_tunnel_interface_create(
     return SWITCH_STATUS_NO_MEMORY;
   }
 
+  intf_info->direction = direction;
+
   if (tunnel_info->encap_mode == SWITCH_API_TUNNEL_ENCAP_MODE_IP) {
+    encap_type = SWITCH_INTF_TUNNEL_ENCAP_TYPE(intf_info);
+    if ((encap_type == SWITCH_API_ENCAP_TYPE_VXLAN) ||
+        (encap_type == SWITCH_API_ENCAP_TYPE_NVGRE) ||
+        (encap_type == SWITCH_API_ENCAP_TYPE_GENEVE)) {
+      encap_info = &(SWITCH_INTF_TUNNEL_ENCAP_INFO(intf_info));
+      tunnel_vni = switch_tunnel_get_tunnel_vni(encap_info);
+      if (!SWITCH_TUNNEL_VNI_VALID(tunnel_vni)) {
+        SWITCH_API_ERROR(
+            "%s:%d: failed to create tunnel interface!"
+            "invalid tunnel vni",
+            __FUNCTION__,
+            __LINE__);
+        switch_api_interface_delete(device, intf_handle);
+        return SWITCH_API_INVALID_HANDLE;
+      }
+    }
     status = switch_tunnel_ip_encap_table_add_entries(
         device, intf_handle, intf_info);
   }
@@ -658,37 +737,44 @@ switch_status_t switch_api_logical_network_member_add_basic(
     tunnel_vni = SWITCH_LN_TUNNEL_VNI(bd_info);
     tunnel_type = switch_tunnel_get_egress_tunnel_type(encap_type, ip_encap);
 #ifdef SWITCH_PD
-    status = switch_pd_tunnel_table_add_entry(device,
-                                              encap_type,
-                                              tunnel_vni,
-                                              ln_member->rid,
-                                              bd_info,
-                                              ip_encap,
-                                              handle_to_id(bd_handle),
-                                              ln_member->tunnel_hw_entry);
-    if (status != SWITCH_STATUS_SUCCESS) {
-      SWITCH_API_ERROR(
-          "%s:%d: unable to add tunnel entry for interface %lx ln %lx",
-          __FUNCTION__,
-          __LINE__,
-          intf_handle,
-          bd_handle);
-      goto cleanup;
+    if (intf_info->direction == SWITCH_API_DIRECTION_INGRESS ||
+        intf_info->direction == SWITCH_API_DIRECTION_BOTH) {
+      status = switch_pd_tunnel_table_add_entry(device,
+                                                encap_type,
+                                                tunnel_vni,
+                                                ln_member->rid,
+                                                bd_info,
+                                                ip_encap,
+                                                handle_to_id(bd_handle),
+                                                ln_member->tunnel_hw_entry);
+      if (status != SWITCH_STATUS_SUCCESS) {
+        SWITCH_API_ERROR(
+            "%s:%d: unable to add tunnel entry for interface %lx ln %lx",
+            __FUNCTION__,
+            __LINE__,
+            intf_handle,
+            bd_handle);
+        goto cleanup;
+      }
     }
-    status =
-        switch_pd_egress_vni_table_add_entry(device,
-                                             handle_to_id(bd_handle),
-                                             tunnel_vni,
-                                             tunnel_type,
-                                             &ln_member->egress_bd_hw_entry);
-    if (status != SWITCH_STATUS_SUCCESS) {
-      SWITCH_API_ERROR(
-          "%s:%d: unable to add egress bd map entry for interface %lx ln %lx",
-          __FUNCTION__,
-          __LINE__,
-          intf_handle,
-          bd_handle);
-      goto cleanup;
+
+    if (intf_info->direction == SWITCH_API_DIRECTION_EGRESS ||
+        intf_info->direction == SWITCH_API_DIRECTION_BOTH) {
+      status =
+          switch_pd_egress_vni_table_add_entry(device,
+                                               handle_to_id(bd_handle),
+                                               tunnel_vni,
+                                               tunnel_type,
+                                               &ln_member->egress_bd_hw_entry);
+      if (status != SWITCH_STATUS_SUCCESS) {
+        SWITCH_API_ERROR(
+            "%s:%d: unable to add egress bd map entry for interface %lx ln %lx",
+            __FUNCTION__,
+            __LINE__,
+            intf_handle,
+            bd_handle);
+        goto cleanup;
+      }
     }
 #endif
   } else {
@@ -807,38 +893,45 @@ switch_status_t switch_api_logical_network_member_add_enhanced(
 
 #ifdef SWITCH_PD
       ip_encap = &(SWITCH_INTF_TUNNEL_IP_ENCAP(intf_info));
-      status = switch_pd_tunnel_table_add_entry(device,
-                                                encap_type,
-                                                tunnel_vni,
-                                                ln_member->rid,
-                                                bd_info,
-                                                ip_encap,
-                                                handle_to_id(bd_handle),
-                                                ln_member->tunnel_hw_entry);
-      if (status != SWITCH_STATUS_SUCCESS) {
-        SWITCH_API_ERROR(
-            "%s:%d: unable to add tunnel entry for interface %lx ln %lx",
-            __FUNCTION__,
-            __LINE__,
-            intf_handle,
-            bd_handle);
-        goto cleanup;
+      if (intf_info->direction == SWITCH_API_DIRECTION_INGRESS ||
+          intf_info->direction == SWITCH_API_DIRECTION_BOTH) {
+        status = switch_pd_tunnel_table_add_entry(device,
+                                                  encap_type,
+                                                  tunnel_vni,
+                                                  ln_member->rid,
+                                                  bd_info,
+                                                  ip_encap,
+                                                  handle_to_id(bd_handle),
+                                                  ln_member->tunnel_hw_entry);
+        if (status != SWITCH_STATUS_SUCCESS) {
+          SWITCH_API_ERROR(
+              "%s:%d: unable to add tunnel entry for interface %lx ln %lx",
+              __FUNCTION__,
+              __LINE__,
+              intf_handle,
+              bd_handle);
+          goto cleanup;
+        }
       }
 
-      status =
-          switch_pd_egress_vni_table_add_entry(device,
-                                               handle_to_id(bd_handle),
-                                               tunnel_vni,
-                                               tunnel_type,
-                                               &ln_member->egress_bd_hw_entry);
-      if (status != SWITCH_STATUS_SUCCESS) {
-        SWITCH_API_ERROR(
-            "%s:%d: unable to add egress bd map entry for interface %lx ln %lx",
-            __FUNCTION__,
-            __LINE__,
-            intf_handle,
-            bd_handle);
-        goto cleanup;
+      if (intf_info->direction == SWITCH_API_DIRECTION_EGRESS ||
+          intf_info->direction == SWITCH_API_DIRECTION_BOTH) {
+        status = switch_pd_egress_vni_table_add_entry(
+            device,
+            handle_to_id(bd_handle),
+            tunnel_vni,
+            tunnel_type,
+            &ln_member->egress_bd_hw_entry);
+        if (status != SWITCH_STATUS_SUCCESS) {
+          SWITCH_API_ERROR(
+              "%s:%d: unable to add egress bd map entry for interface %lx ln "
+              "%lx",
+              __FUNCTION__,
+              __LINE__,
+              intf_handle,
+              bd_handle);
+          goto cleanup;
+        }
       }
     } else if (tunnel_info->encap_mode == SWITCH_API_TUNNEL_ENCAP_MODE_MPLS) {
       mpls_encap = &(SWITCH_INTF_TUNNEL_MPLS_ENCAP(intf_info));
@@ -937,29 +1030,35 @@ switch_status_t switch_api_logical_network_member_remove_basic(
 
   if (SWITCH_INTF_TYPE(intf_info) == SWITCH_API_INTERFACE_TUNNEL) {
 #ifdef SWITCH_PD
-    status =
-        switch_pd_tunnel_table_delete_entry(device, ln_member->tunnel_hw_entry);
-    if (status != SWITCH_STATUS_SUCCESS) {
-      SWITCH_API_ERROR(
-          "%s:%d: unable to delete tunnel entry for interface %lx ln %lx",
-          __FUNCTION__,
-          __LINE__,
-          intf_handle,
-          bd_handle);
-      goto cleanup;
+    if (intf_info->direction == SWITCH_API_DIRECTION_INGRESS ||
+        intf_info->direction == SWITCH_API_DIRECTION_BOTH) {
+      status = switch_pd_tunnel_table_delete_entry(device,
+                                                   ln_member->tunnel_hw_entry);
+      if (status != SWITCH_STATUS_SUCCESS) {
+        SWITCH_API_ERROR(
+            "%s:%d: unable to delete tunnel entry for interface %lx ln %lx",
+            __FUNCTION__,
+            __LINE__,
+            intf_handle,
+            bd_handle);
+        goto cleanup;
+      }
     }
 
-    status = switch_pd_egress_vni_table_delete_entry(
-        device, ln_member->egress_bd_hw_entry);
-    if (status != SWITCH_STATUS_SUCCESS) {
-      SWITCH_API_ERROR(
-          "%s:%d: unable to delete egress bd map entry for interface %lx ln "
-          "%lx",
-          __FUNCTION__,
-          __LINE__,
-          intf_handle,
-          bd_handle);
-      goto cleanup;
+    if (intf_info->direction == SWITCH_API_DIRECTION_EGRESS ||
+        intf_info->direction == SWITCH_API_DIRECTION_BOTH) {
+      status = switch_pd_egress_vni_table_delete_entry(
+          device, ln_member->egress_bd_hw_entry);
+      if (status != SWITCH_STATUS_SUCCESS) {
+        SWITCH_API_ERROR(
+            "%s:%d: unable to delete egress bd map entry for interface %lx ln "
+            "%lx",
+            __FUNCTION__,
+            __LINE__,
+            intf_handle,
+            bd_handle);
+        goto cleanup;
+      }
     }
 #endif
   } else {
@@ -1054,29 +1153,36 @@ switch_status_t switch_api_logical_network_member_remove_enhanced(
     tunnel_info = &(SWITCH_INTF_TUNNEL_INFO(intf_info));
     if (tunnel_info->encap_mode == SWITCH_API_TUNNEL_ENCAP_MODE_IP) {
 #ifdef SWITCH_PD
-      status = switch_pd_tunnel_table_delete_entry(device,
-                                                   ln_member->tunnel_hw_entry);
-      if (status != SWITCH_STATUS_SUCCESS) {
-        SWITCH_API_ERROR(
-            "%s:%d: unable to delete tunnel entry for interface %lx ln %lx",
-            __FUNCTION__,
-            __LINE__,
-            intf_handle,
-            bd_handle);
-        goto cleanup;
+      if (intf_info->direction == SWITCH_API_DIRECTION_INGRESS ||
+          intf_info->direction == SWITCH_API_DIRECTION_BOTH) {
+        status = switch_pd_tunnel_table_delete_entry(
+            device, ln_member->tunnel_hw_entry);
+        if (status != SWITCH_STATUS_SUCCESS) {
+          SWITCH_API_ERROR(
+              "%s:%d: unable to delete tunnel entry for interface %lx ln %lx",
+              __FUNCTION__,
+              __LINE__,
+              intf_handle,
+              bd_handle);
+          goto cleanup;
+        }
       }
 
-      status = switch_pd_egress_vni_table_delete_entry(
-          device, ln_member->egress_bd_hw_entry);
-      if (status != SWITCH_STATUS_SUCCESS) {
-        SWITCH_API_ERROR(
-            "%s:%d: unable to delete egress bd map entry for interface %lx ln "
-            "%lx",
-            __FUNCTION__,
-            __LINE__,
-            intf_handle,
-            bd_handle);
-        goto cleanup;
+      if (intf_info->direction == SWITCH_API_DIRECTION_EGRESS ||
+          intf_info->direction == SWITCH_API_DIRECTION_BOTH) {
+        status = switch_pd_egress_vni_table_delete_entry(
+            device, ln_member->egress_bd_hw_entry);
+        if (status != SWITCH_STATUS_SUCCESS) {
+          SWITCH_API_ERROR(
+              "%s:%d: unable to delete egress bd map entry for interface %lx "
+              "ln "
+              "%lx",
+              __FUNCTION__,
+              __LINE__,
+              intf_handle,
+              bd_handle);
+          goto cleanup;
+        }
       }
     } else if (tunnel_info->encap_mode == SWITCH_API_TUNNEL_ENCAP_MODE_MPLS) {
       mpls_encap = &(SWITCH_INTF_TUNNEL_MPLS_ENCAP(intf_info));
@@ -1252,6 +1358,13 @@ switch_tunnel_type_egress_t switch_tunnel_get_egress_tunnel_type(
         tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV4_NVGRE;
       } else {
         tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV6_NVGRE;
+      }
+      break;
+    case SWITCH_API_ENCAP_TYPE_ERSPAN_T3:
+      if (SWITCH_IP_ENCAP_SRC_IP_TYPE(ip_encap) == SWITCH_API_IP_ADDR_V4) {
+        tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV4_ERSPAN_T3;
+      } else {
+        tunnel_type = SWITCH_EGRESS_TUNNEL_TYPE_IPV6_ERSPAN_T3;
       }
       break;
     default:

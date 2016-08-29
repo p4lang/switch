@@ -175,14 +175,26 @@ class TestSflow_ingress_port(api_base_tests.ThriftInterfaceDataPlane):
                                           ingress_ifindex = 2,
                                           ingress_bd = 2,
                                           ingress_port = 1,
-                                          reason_code=0x217,
+                                          reason_code=0x4,
                                           sflow_sid=sflow_sid,
+                                          sflow_egress_port=3,
                                           inner_pkt=pkt)
 
         for i in range(0,1):
             send_packet(self, 1, str(pkt))
             verify_packet(self, exp_pkt, swports[2])
             verify_packet(self, exp_pkt_sflow, cpu_port)
+
+        print "Get sflow session sample pool count"
+        stats = self.client.switcht_api_sflow_session_sample_count_get(0, sflow1, flow_hdl1)
+        self.assertEqual(stats.num_packets, 1)
+        print stats
+
+        print "Reset sflow session sample pool count"
+        self.client.switcht_api_sflow_session_sample_count_reset(0, sflow1, flow_hdl1)
+        stats = self.client.switcht_api_sflow_session_sample_count_get(0, sflow1, flow_hdl1)
+        self.assertEqual(stats.num_packets, 0)
+        print stats
 
         print "Detach sflow Session"
         self.client.switcht_api_sflow_session_detach(device, sflow1, flow_hdl1)

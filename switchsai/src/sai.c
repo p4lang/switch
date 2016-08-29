@@ -144,10 +144,6 @@ sai_status_t sai_api_query(_In_ sai_api_t sai_api_id,
       *api_method_table = &sai_api_service.hash_api;
       break;
 
-    case SAI_API_BUFFERS:
-      *api_method_table = &sai_api_service.buffer_api;
-      break;
-
     case SAI_API_UDF:
       *api_method_table = &sai_api_service.udf_api;
       break;
@@ -162,6 +158,18 @@ sai_status_t sai_api_query(_In_ sai_api_t sai_api_id,
 
     case SAI_API_POLICER:
       *api_method_table = &sai_api_service.policer_api;
+      break;
+
+    case SAI_API_QUEUE:
+      *api_method_table = &sai_api_service.queue_api;
+      break;
+
+    case SAI_API_BUFFERS:
+      *api_method_table = &sai_api_service.buffer_api;
+      break;
+
+    case SAI_API_SCHEDULER:
+      *api_method_table = &sai_api_service.scheduler_api;
       break;
 
     default:
@@ -252,6 +260,24 @@ sai_object_type_t sai_object_type_query(_In_ sai_object_id_t sai_object_id) {
     case SWITCH_HANDLE_TYPE_METER:
       object_type = SAI_OBJECT_TYPE_POLICER;
       break;
+    case SWITCH_HANDLE_TYPE_SCHEDULER:
+      object_type = SAI_OBJECT_TYPE_SCHEDULER;
+      break;
+    case SWITCH_HANDLE_TYPE_QUEUE:
+      object_type = SAI_OBJECT_TYPE_QUEUE;
+      break;
+    case SWITCH_HANDLE_TYPE_BUFFER_POOL:
+      object_type = SAI_OBJECT_TYPE_BUFFER_POOL;
+      break;
+    case SWITCH_HANDLE_TYPE_BUFFER_PROFILE:
+      object_type = SAI_OBJECT_TYPE_BUFFER_PROFILE;
+      break;
+    case SWITCH_HANDLE_TYPE_QOS_MAP:
+      object_type = SAI_OBJECT_TYPE_QOS_MAPS;
+      break;
+    case SWITCH_HANDLE_TYPE_PRIORITY_GROUP:
+      object_type = SAI_OBJECT_TYPE_PRIORITY_GROUP;
+      break;
     default:
       object_type = SAI_OBJECT_TYPE_NULL;
       break;
@@ -291,10 +317,13 @@ sai_status_t sai_initialize() {
   sai_acl_initialize(&sai_api_service);
   sai_mirror_initialize(&sai_api_service);
   sai_policer_initialize(&sai_api_service);
+  sai_buffer_initialize(&sai_api_service);
+  sai_scheduler_initialize(&sai_api_service);
+  sai_scheduler_group_initialize(&sai_api_service);
+  sai_qos_map_initialize(&sai_api_service);
   sai_ipmc_initialize(&sai_api_service);
   sai_l2mc_initialize(&sai_api_service);
   sai_hash_initialize(&sai_api_service);
-  sai_buffer_initialize(&sai_api_service);
   sai_udf_initialize(&sai_api_service);
 
   SAI_LOG_EXIT();

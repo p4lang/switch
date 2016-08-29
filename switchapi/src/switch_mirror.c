@@ -35,8 +35,6 @@ switch_status_t switch_mirror_init(switch_device_t device) {
   session_id_allocator =
       switch_api_id_allocator_new(SWITCH_MAX_MIRROR_SESSIONS / 32, FALSE);
 
-  // negative mirroring action
-  switch_pd_neg_mirror_add_entry(device);
   // keep this id allocated so it is not given to anyone else
   switch_mirror_set_and_create(SWITCH_NEGATIVE_MIRROR_SESSION_ID);
   switch_api_id_allocator_set(session_id_allocator,
@@ -145,7 +143,7 @@ switch_handle_t switch_api_mirror_session_create(
           SWITCH_API_TRACE("%s:%d: failed to create encap interface\n",
                            __FUNCTION__,
                            __LINE__);
-          return SWITCH_API_INVALID_HANDLE;
+          goto error_return;
         }
         vlan_port.tagging_mode = 0;
         vlan_port.handle = intf_handle;
@@ -163,7 +161,7 @@ switch_handle_t switch_api_mirror_session_create(
           SWITCH_API_TRACE("%s:%d: failed to create encap interface\n",
                            __FUNCTION__,
                            __LINE__);
-          return SWITCH_API_INVALID_HANDLE;
+          goto error_return;
         }
 
         tunnel_info = &api_mirror_info->tunnel_info;
@@ -176,7 +174,7 @@ switch_handle_t switch_api_mirror_session_create(
           SWITCH_API_TRACE("failed to create tunnel interface %s:%d\n",
                            __FUNCTION__,
                            __LINE__);
-          return SWITCH_API_INVALID_HANDLE;
+          goto error_return;
         }
 
         memset(&nhop_key, 0, sizeof(switch_nhop_key_t));
@@ -187,7 +185,7 @@ switch_handle_t switch_api_mirror_session_create(
               "%s:%d: failed to create nhop for tunnel interface\n",
               __FUNCTION__,
               __LINE__);
-          return SWITCH_API_INVALID_HANDLE;
+          goto error_return;
         }
 
         ip_encap = &tunnel_info->u.ip_encap;
@@ -208,7 +206,7 @@ switch_handle_t switch_api_mirror_session_create(
               "%s:%d: failed to create inner neighbor for tunnel interface\n",
               __FUNCTION__,
               __LINE__);
-          return SWITCH_API_INVALID_HANDLE;
+          goto error_return;
         }
 
         memset(&api_neighbor, 0, sizeof(switch_api_neighbor_t));
@@ -224,7 +222,7 @@ switch_handle_t switch_api_mirror_session_create(
               "%s:%d failed to create inner neighbor for tunnel interface\n",
               __FUNCTION__,
               __LINE__);
-          return SWITCH_API_INVALID_HANDLE;
+          goto error_return;
         }
 
         mirror_info->intf_handle = intf_handle;
@@ -241,6 +239,7 @@ switch_handle_t switch_api_mirror_session_create(
     }
   }
 
+error_return:
   if (status != SWITCH_STATUS_SUCCESS) {
     switch_api_id_allocator_release(session_id_allocator,
                                     api_mirror_info->session_id);

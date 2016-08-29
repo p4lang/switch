@@ -18,8 +18,6 @@ limitations under the License.
 #include "saiinternal.h"
 #include <switchapi/switch_neighbor.h>
 #include <switchapi/switch_nhop.h>
-#include <switchapi/switch_l3.h>
-#include <../switchapi/src/switch_interface_int.h>
 #include <arpa/inet.h>
 
 static sai_api_t api_id = SAI_API_NEIGHBOR;
@@ -30,7 +28,7 @@ static void sai_neighbor_entry_to_string(
   int entry_length = 0;
   count = snprintf(entry_string,
                    SAI_MAX_ENTRY_STRING_LEN,
-                   "neighbor:  rif %lx",
+                   "neighbor:  rif %" PRIx64 "",
                    neighbor_entry->rif_id);
   sai_ipaddress_to_string(neighbor_entry->ip_address,
                           SAI_MAX_ENTRY_STRING_LEN - count,
@@ -80,7 +78,9 @@ static void sai_neighbor_entry_attribute_parse(
 
 static void sai_neighbor_entry_nexthop_get(
     switch_api_neighbor_t *api_neighbor) {
+  switch_ip_addr_t ip_addr;
   switch_nhop_key_t nhop_key;
+  memset(&ip_addr, 0, sizeof(switch_ip_addr_t));
   memset(&nhop_key, 0, sizeof(switch_nhop_key_t));
   nhop_key.intf_handle = api_neighbor->interface;
   memcpy(&nhop_key.ip_addr, &api_neighbor->ip_addr, sizeof(switch_ip_addr_t));

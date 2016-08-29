@@ -20,6 +20,8 @@ limitations under the License.
 #include "switchapi/switch_port.h"
 #include "switchapi/switch_mcast.h"
 #include "switchapi/switch_utils.h"
+#include "switch_tunnel_int.h"
+#include "switch_capability_int.h"
 #include "switch_pd.h"
 #include "switch_lag_int.h"
 #include "switch_log_int.h"
@@ -27,17 +29,13 @@ limitations under the License.
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
 switch_api_id_allocator *bd_stats_index = NULL;
 static void *switch_bd_array = NULL;
 switch_handle_t vlan_handle_list[SWITCH_API_MAX_VLANS];
-static tommy_hashtable switch_vlan_port_hash_table;
 
 switch_status_t switch_bd_init(switch_device_t device) {
   bd_stats_index = switch_api_id_allocator_new(16 * 1024, FALSE);
   switch_handle_type_init(SWITCH_HANDLE_TYPE_BD, (16 * 1024));
-  tommy_hashtable_init(&switch_vlan_port_hash_table,
-                       SWITCH_VLAN_PORT_HASH_TABLE_SIZE);
   return SWITCH_STATUS_SUCCESS;
 }
 
@@ -123,6 +121,7 @@ switch_handle_t switch_api_logical_network_create(
   switch_bd_info_t *bd_info = NULL;
   switch_handle_t handle;
   switch_status_t status = SWITCH_STATUS_SUCCESS;
+  uint32_t tunnel_vni = 0;
 
   handle = switch_bd_create();
   bd_info = switch_bd_get(handle);
@@ -134,8 +133,23 @@ switch_handle_t switch_api_logical_network_create(
                      switch_print_error(status));
     return SWITCH_API_INVALID_HANDLE;
   }
+
   memset(bd_info, 0, sizeof(switch_bd_info_t));
   memcpy(&bd_info->ln_info, ln_info, sizeof(switch_logical_network_t));
+
+  if (ln_info->type == SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_BASIC) {
+    tunnel_vni = SWITCH_LN_TUNNEL_VNI(bd_info);
+    if (!SWITCH_TUNNEL_VNI_VALID(tunnel_vni)) {
+      SWITCH_API_ERROR(
+          "%s:%d: failed to create tunnel interface!"
+          "invalid tunnel vni",
+          __FUNCTION__,
+          __LINE__);
+      switch_bd_delete(handle);
+      return SWITCH_API_INVALID_HANDLE;
+    }
+  }
+
   tommy_list_init(&(bd_info->members));
   switch_logical_network_mc_index_allocate(device, bd_info);
   bd_info->rid = switch_mcast_rid_allocate();
@@ -238,6 +252,13 @@ switch_handle_t switch_api_vlan_create(switch_device_t device,
   switch_bd_info_t *bd_info = NULL;
   switch_bd_info_t info;
   switch_handle_t handle;
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
+
+  status = switch_api_vlan_id_to_handle_get(vlan_id, &handle);
+  if (status == SWITCH_STATUS_SUCCESS && handle) {
+    SWITCH_API_ERROR("vlan already exists %lx", handle);
+    return handle;
+  }
 
   bd_info = &info;
   memset(&info, 0, sizeof(switch_bd_info_t));
@@ -260,6 +281,11 @@ switch_status_t switch_api_vlan_delete(switch_device_t device,
 
   if (!SWITCH_BD_HANDLE_VALID(vlan_handle)) {
     return SWITCH_STATUS_INVALID_HANDLE;
+  }
+
+  if (switch_api_default_vlan_internal() == vlan_handle) {
+    SWITCH_API_ERROR("vlan delete failed. cannot delete default vlan");
+    return SWITCH_STATUS_NOT_SUPPORTED;
   }
 
   bd_info = switch_bd_get(vlan_handle);
@@ -709,6 +735,35 @@ switch_status_t switch_bd_ipv6_urpf_mode_get(switch_handle_t bd_handle,
     return SWITCH_STATUS_INVALID_VLAN_ID;
   }
   *value = (uint64_t)bd_info->ipv6_urpf_mode;
+  return SWITCH_STATUS_SUCCESS;
+}
+
+switch_status_t switch_bd_nat_mode_set(switch_handle_t bd_handle,
+                                       uint8_t value) {
+  switch_bd_info_t *bd_info = NULL;
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
+  switch_device_t device = SWITCH_DEV_ID;
+
+  bd_info = switch_bd_get(bd_handle);
+  if (!bd_info) {
+    return SWITCH_STATUS_INVALID_VLAN_ID;
+  }
+
+  SWITCH_LN_NAT_MODE(bd_info) = value;
+  status =
+      switch_pd_egress_bd_map_table_update_entry(device, bd_handle, bd_info);
+  return status;
+}
+
+switch_status_t switch_bd_nat_mode_get(switch_handle_t bd_handle,
+                                       uint8_t *value) {
+  switch_bd_info_t *bd_info = NULL;
+
+  bd_info = switch_bd_get(bd_handle);
+  if (!bd_info) {
+    return SWITCH_STATUS_INVALID_VLAN_ID;
+  }
+  *value = SWITCH_LN_NAT_MODE(bd_info);
   return SWITCH_STATUS_SUCCESS;
 }
 

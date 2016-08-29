@@ -221,7 +221,7 @@ sai_status_t sai_get_next_hop_entry_attribute(
     return sai_switch_status_to_sai_status(switch_status);
   }
 
-  int index;
+  uint32_t index;
   sai_attribute_t *attribute;
   for (index = 0; index < attr_count; index++) {
     attribute = &attr_list[index];

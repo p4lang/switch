@@ -39,13 +39,14 @@ Supported Features
 14. Ingress Policers
 15. Lookup bypass in Cpu Tx path
 16. Netfilter Rx/Tx support
+17. QoS (Quality of Service) - Buffers, Queues
+18. Nat
+19. CoPP (Control Plance Policing)
 
 Upcoming Features
 -----------------
 
-1. NAT
-2. QoS
-3. VPLS
+1. VPLS
 
 Documentation
 -------------

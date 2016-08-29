@@ -2,8 +2,8 @@
  * Copyright 2015-present Barefoot Networks, Inc.
  */
 
-#include "tommyds/tommy.h"
 #include "switchapi/switch_sflow.h"
+#include "switch_pd_types.h"
 
 #ifndef _SWITCH_SFLOW_INT_H_
 #define _SWITCH_SFLOW_INT_H_

@@ -381,10 +381,8 @@ static void sai_mac_learn_notify_cb(switch_api_mac_entry_t *mac_entry) {
   attr_list[2].value.s32 = SAI_PACKET_ACTION_FORWARD;
   fdb_event.attr = attr_list;
   fdb_event.attr_count = 3;
+  sai_switch_notifications.on_fdb_event(1, &fdb_event);
 
-#if 0
-    sai_switch_notifications.on_fdb_event(1, &fdb_event);
-#endif
   SAI_LOG_EXIT();
 
   return;

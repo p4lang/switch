@@ -17,6 +17,7 @@ limitations under the License.
 #ifndef __SWITCHLINK_H__
 #define __SWITCHLINK_H__
 
+#include <stdlib.h>
 #define switchlink_malloc(x, c) malloc(x *c)
 #define switchlink_free(x) free(x)
 

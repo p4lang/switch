@@ -22,9 +22,9 @@ limitations under the License.
 #include "switch_vrf_int.h"
 #include "switch_nhop_int.h"
 #include "switch_mcast_int.h"
-#include "switch_pd.h"
 #include "switch_neighbor_int.h"
 #include "switch_lag_int.h"
+#include "switch_nat_int.h"
 #include "switch_stp_int.h"
 #include "switch_log_int.h"
 #include "switch_port_int.h"
@@ -32,6 +32,11 @@ limitations under the License.
 #include "switch_acl_int.h"
 #include "switch_mirror_int.h"
 #include "switch_meter_int.h"
+#include "switch_sflow_int.h"
+#include "switch_qos_int.h"
+#include "switch_buffer_int.h"
+#include "switch_queue_int.h"
+#include "switch_scheduler_int.h"
 #include "switch_pd.h"
 
 #include <string.h>
@@ -44,6 +49,24 @@ extern "C" {
 
 static int _api_lib_inited = 0;
 static int _dev_inited[SWITCH_MAX_DEVICE];
+
+typedef struct {
+  switch_handle_t acl_handle;
+  switch_handle_t ace_handle;
+  unsigned int priority;
+  unsigned int key_value_count;
+  switch_acl_system_key_value_pair_t acl_kvp[5];
+  switch_acl_action_params_t action_params;
+} switch_default_acl_t;
+
+static bool _switch_negative_mirroring = false;
+#define SWITCH_INGRESS_ACL_ENTRIES 8
+
+#define SWITCH_EGRESS_ACL_ENTRIES 2
+static switch_default_acl_t
+    _switch_system_acl_data[SWITCH_MAX_DEVICE][SWITCH_INGRESS_ACL_ENTRIES];
+static switch_default_acl_t
+    _switch_egress_acl_data[SWITCH_MAX_DEVICE][SWITCH_EGRESS_ACL_ENTRIES];
 
 extern unsigned int switch_max_configured_ports;
 
@@ -65,6 +88,7 @@ switch_status_t switch_api_lib_init(switch_device_t device) {
   switch_nhop_init(device);
   switch_mcast_init(device);
   switch_acl_init(device);
+  switch_nat_init(device);
   switch_stp_init(device);
   switch_tunnel_init(device);
   switch_mirror_init(device);
@@ -73,6 +97,11 @@ switch_status_t switch_api_lib_init(switch_device_t device) {
   switch_meter_init(device);
   switch_packet_init(device);
   switch_sflow_init(device);
+  switch_qos_init(device);
+  switch_buffer_init(device);
+  switch_queue_init(device);
+  switch_scheduler_init(device);
+  switch_packet_init(device);
 
   return SWITCH_STATUS_SUCCESS;
 }
@@ -121,6 +150,8 @@ switch_status_t switch_api_init_default_entries(switch_device_t device) {
   switch_pd_meter_index_table_add_default_entry(device);
   switch_pd_meter_action_table_add_default_entry(device);
   switch_pd_l3_rewrite_table_add_default_entry(device);
+  switch_pd_adjust_lkp_fields_table_add_default_entry(device);
+  switch_pd_qos_default_entry_add(device);
 
   SWITCH_API_TRACE("Programming init entries!!");
   switch_pd_learn_notify_table_add_init_entry(device);
@@ -137,8 +168,9 @@ switch_status_t switch_api_init_default_entries(switch_device_t device) {
   switch_pd_replica_type_table_init_entry(device);
   switch_pd_rewrite_multicast_table_init_entry(device);
   switch_pd_l3_rewrite_table_init_entry(device);
+  switch_pd_nat_init(device);
+
 #ifdef P4_INT_ENABLE
-  // Setup INT tables
   switch_pd_int_tables_init(device);
 #endif
   switch_pd_sflow_tables_init(device);
@@ -146,205 +178,204 @@ switch_status_t switch_api_init_default_entries(switch_device_t device) {
   return SWITCH_STATUS_SUCCESS;
 }
 
+void switch_system_acl_entries_delete(switch_device_t device) {
+  // go over the array, delete dynamic entries
+  switch_default_acl_t *acl = &_switch_system_acl_data[device][0];
+
+  for (int i = 0; i < SWITCH_INGRESS_ACL_ENTRIES; i++) {
+    switch_api_acl_rule_delete(device, acl->acl_handle, acl->ace_handle);
+    acl++;
+  }
+}
+
+void switch_system_acl_entries_add(switch_device_t device) {
+  switch_acl_action_t action;
+  switch_acl_opt_action_params_t opt_action_params;
+  switch_default_acl_t *acl = &_switch_system_acl_data[device][0];
+
+  memset(&opt_action_params, 0, sizeof(switch_acl_opt_action_params_t));
+  action = SWITCH_ACL_ACTION_DROP;
+
+  for (int i = 0; i < SWITCH_INGRESS_ACL_ENTRIES; i++) {
+    switch_api_acl_rule_create(device,
+                               acl->acl_handle,
+                               acl->priority,
+                               acl->key_value_count,
+                               acl->acl_kvp,
+                               action,
+                               &acl->action_params,
+                               &opt_action_params,
+                               &acl->ace_handle);
+    acl++;
+  }
+}
+
+void switch_egress_acl_entries_delete(switch_device_t device) {
+  switch_default_acl_t *acl = &_switch_egress_acl_data[device][0];
+
+  for (int i = 0; i < SWITCH_EGRESS_ACL_ENTRIES; i++) {
+    switch_api_acl_rule_delete(device, acl->acl_handle, acl->ace_handle);
+    acl++;
+  }
+}
+
+void switch_egress_acl_entries_add(switch_device_t device) {
+  switch_acl_opt_action_params_t opt_action_params;
+  switch_default_acl_t *acl = &_switch_egress_acl_data[device][0];
+  switch_acl_egr_key_value_pair_t egr_acl_kvp[3];
+
+  memset(&opt_action_params, 0, sizeof(switch_acl_opt_action_params_t));
+  // add copy to cpu rule for mtu check
+  memset(egr_acl_kvp, 0, sizeof(egr_acl_kvp));
+  egr_acl_kvp[0].field = SWITCH_ACL_EGR_L3_MTU_CHECK;
+  egr_acl_kvp[0].value.l3_mtu_check = 0;
+  egr_acl_kvp[0].mask.u.mask = 0xFFFF;
+  memset(&acl->action_params, 0, sizeof(switch_acl_action_params_t));
+  acl->action_params.cpu_redirect.reason_code =
+      SWITCH_HOSTIF_REASON_CODE_L3_MTU_ERROR;
+  switch_api_acl_rule_create(device,
+                             acl->acl_handle,
+                             acl->priority,
+                             acl->key_value_count,
+                             egr_acl_kvp,
+                             SWITCH_ACL_EGR_ACTION_REDIRECT_TO_CPU,
+                             &acl->action_params,
+                             &opt_action_params,
+                             &acl->ace_handle);
+}
+
+switch_status_t switch_negative_mirroring_set(switch_device_t device,
+                                              bool negative_mirroring) {
+  if (_switch_negative_mirroring == negative_mirroring)
+    return SWITCH_STATUS_ITEM_ALREADY_EXISTS;
+
+  _switch_negative_mirroring = negative_mirroring;
+
+  switch_system_acl_entries_delete(device);
+  switch_system_acl_entries_add(device);
+  switch_egress_acl_entries_delete(device);
+  switch_egress_acl_entries_add(device);
+
+  return SWITCH_STATUS_SUCCESS;
+}
+
 static switch_status_t switch_api_init_default_acl_entries(
     switch_device_t device) {
   switch_acl_system_key_value_pair_t acl_kvp[5];
-  switch_acl_egr_key_value_pair_t egr_acl_kvp[3];
   switch_acl_action_params_t action_params;
   switch_acl_opt_action_params_t opt_action_params;
   switch_handle_t acl_handle;
   switch_handle_t handle;
   int priority = 100;
+  switch_default_acl_t *dacl = &_switch_system_acl_data[device][0];
 
   memset(&opt_action_params, 0, sizeof(switch_acl_opt_action_params_t));
 
-  // system acl for acl copy + dropped packets
-  acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
-  memset(acl_kvp, 0, sizeof(acl_kvp));
-  acl_kvp[0].field = SWITCH_ACL_SYSTEM_FIELD_DROP;
-  acl_kvp[0].value.drop_flag = 1;
-  acl_kvp[0].mask.u.mask = 0xFF;
-  acl_kvp[1].field = SWITCH_ACL_SYSTEM_FIELD_ACL_COPY;
-  acl_kvp[1].value.acl_copy = true;
-  acl_kvp[1].mask.u.mask = 0xFF;
-  memset(&action_params, 0, sizeof(switch_acl_action_params_t));
-  switch_api_acl_rule_create(device,
-                             acl_handle,
-                             priority++,
-                             2,
-                             acl_kvp,
-                             SWITCH_ACL_ACTION_REDIRECT_TO_CPU,
-                             &action_params,
-                             &opt_action_params,
-                             &handle);
-
   // system acl for dropped packets
-  acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
-  memset(acl_kvp, 0, sizeof(acl_kvp));
-  acl_kvp[0].field = SWITCH_ACL_SYSTEM_FIELD_DROP;
-  acl_kvp[0].value.drop_flag = 1;
-  acl_kvp[0].mask.u.mask = 0xFF;
-  memset(&action_params, 0, sizeof(switch_acl_action_params_t));
-  switch_api_acl_rule_create(device,
-                             acl_handle,
-                             priority++,
-                             1,
-                             acl_kvp,
-                             SWITCH_ACL_ACTION_DROP,
-                             &action_params,
-                             &opt_action_params,
-                             &handle);
-
-  // mac sa is zero, drop
-  acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
-  memset(acl_kvp, 0, sizeof(acl_kvp));
-  acl_kvp[0].field = SWITCH_ACL_SYSTEM_FIELD_SOURCE_MAC;
-  acl_kvp[0].mask.u.mask = 0xFFFFFFFFFFFF;
-  memset(&action_params, 0, sizeof(switch_acl_action_params_t));
-  action_params.drop.reason_code = DROP_SRC_MAC_ZERO;
-  switch_api_acl_rule_create(device,
-                             acl_handle,
-                             priority++,
-                             1,
-                             acl_kvp,
-                             SWITCH_ACL_ACTION_DROP,
-                             &action_params,
-                             &opt_action_params,
-                             &handle);
+  dacl->acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
+  memset(dacl->acl_kvp, 0, sizeof(dacl->acl_kvp));
+  dacl->acl_kvp[0].field = SWITCH_ACL_SYSTEM_FIELD_DROP;
+  dacl->acl_kvp[0].value.drop_flag = 1;
+  dacl->acl_kvp[0].mask.u.mask = 0xFF;
+  dacl->priority = priority++;
+  dacl->key_value_count = 1;
+  memset(&dacl->action_params, 0, sizeof(switch_acl_action_params_t));
+  dacl++;
 
   // port vlan mapping miss, drop
-  acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
-  memset(acl_kvp, 0, sizeof(acl_kvp));
-  acl_kvp[0].field = SWITCH_ACL_SYSTEM_FIELD_PORT_VLAN_MAPPING_MISS;
-  acl_kvp[0].value.port_vlan_mapping_miss = 1;
-  acl_kvp[0].mask.u.mask = 0xFF;
-  memset(&action_params, 0, sizeof(switch_acl_action_params_t));
-  action_params.drop.reason_code = DROP_PORT_VLAN_MAPPING_MISS;
-  switch_api_acl_rule_create(device,
-                             acl_handle,
-                             priority++,
-                             1,
-                             acl_kvp,
-                             SWITCH_ACL_ACTION_DROP,
-                             &action_params,
-                             &opt_action_params,
-                             &handle);
+  dacl->acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
+  memset(dacl->acl_kvp, 0, sizeof(dacl->acl_kvp));
+  dacl->acl_kvp[0].field = SWITCH_ACL_SYSTEM_FIELD_PORT_VLAN_MAPPING_MISS;
+  dacl->acl_kvp[0].value.port_vlan_mapping_miss = 1;
+  dacl->acl_kvp[0].mask.u.mask = 0xFF;
+  dacl->priority = priority++;
+  dacl->key_value_count = 1;
+  memset(&dacl->action_params, 0, sizeof(switch_acl_action_params_t));
+  dacl->action_params.drop.reason_code = DROP_PORT_VLAN_MAPPING_MISS;
+  dacl++;
 
   // STP state == blocked, drop
-  acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
-  memset(acl_kvp, 0, sizeof(acl_kvp));
-  acl_kvp[0].field = SWITCH_ACL_SYSTEM_FIELD_STP_STATE;
-  acl_kvp[0].value.stp_state = SWITCH_PORT_STP_STATE_BLOCKING;
-  acl_kvp[0].mask.u.mask = 0xFF;
-  memset(&action_params, 0, sizeof(switch_acl_action_params_t));
-  action_params.drop.reason_code = DROP_STP_STATE_BLOCKING;
-  switch_api_acl_rule_create(device,
-                             acl_handle,
-                             priority++,
-                             1,
-                             acl_kvp,
-                             SWITCH_ACL_ACTION_DROP,
-                             &action_params,
-                             &opt_action_params,
-                             &handle);
+  dacl->acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
+  memset(dacl->acl_kvp, 0, sizeof(dacl->acl_kvp));
+  dacl->acl_kvp[0].field = SWITCH_ACL_SYSTEM_FIELD_STP_STATE;
+  dacl->acl_kvp[0].value.stp_state = SWITCH_PORT_STP_STATE_BLOCKING;
+  dacl->acl_kvp[0].mask.u.mask = 0xFF;
+  dacl->priority = priority++;
+  dacl->key_value_count = 1;
+  memset(&dacl->action_params, 0, sizeof(switch_acl_action_params_t));
+  dacl->action_params.drop.reason_code = DROP_STP_STATE_BLOCKING;
+  dacl++;
+
   // STP state == learning, drop
-  acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
-  memset(acl_kvp, 0, sizeof(acl_kvp));
-  acl_kvp[0].field = SWITCH_ACL_SYSTEM_FIELD_STP_STATE;
-  acl_kvp[0].value.stp_state = SWITCH_PORT_STP_STATE_LEARNING;
-  acl_kvp[0].mask.u.mask = 0xFF;
-  memset(&action_params, 0, sizeof(switch_acl_action_params_t));
-  action_params.drop.reason_code = DROP_STP_STATE_LEARNING;
-  switch_api_acl_rule_create(device,
-                             acl_handle,
-                             priority++,
-                             1,
-                             acl_kvp,
-                             SWITCH_ACL_ACTION_DROP,
-                             &action_params,
-                             &opt_action_params,
-                             &handle);
+  dacl->acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
+  memset(dacl->acl_kvp, 0, sizeof(dacl->acl_kvp));
+  dacl->acl_kvp[0].field = SWITCH_ACL_SYSTEM_FIELD_STP_STATE;
+  dacl->acl_kvp[0].value.stp_state = SWITCH_PORT_STP_STATE_LEARNING;
+  dacl->acl_kvp[0].mask.u.mask = 0xFF;
+  dacl->priority = priority++;
+  dacl->key_value_count = 1;
+  memset(&dacl->action_params, 0, sizeof(switch_acl_action_params_t));
+  dacl->action_params.drop.reason_code = DROP_STP_STATE_LEARNING;
+  dacl++;
 
   // ACL deny, drop
-  acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
-  memset(acl_kvp, 0, sizeof(acl_kvp));
-  acl_kvp[0].field = SWITCH_ACL_SYSTEM_FIELD_ACL_DENY;
-  acl_kvp[0].value.acl_deny = 1;
-  acl_kvp[0].mask.u.mask = 0xFF;
-  memset(&action_params, 0, sizeof(switch_acl_action_params_t));
-  action_params.drop.reason_code = DROP_ACL_DENY;
-  switch_api_acl_rule_create(device,
-                             acl_handle,
-                             priority++,
-                             1,
-                             acl_kvp,
-                             SWITCH_ACL_ACTION_DROP,
-                             &action_params,
-                             &opt_action_params,
-                             &handle);
+  dacl->acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
+  memset(dacl->acl_kvp, 0, sizeof(dacl->acl_kvp));
+  dacl->acl_kvp[0].field = SWITCH_ACL_SYSTEM_FIELD_ACL_DENY;
+  dacl->acl_kvp[0].value.acl_deny = 1;
+  dacl->acl_kvp[0].mask.u.mask = 0xFF;
+  dacl->priority = priority++;
+  dacl->key_value_count = 1;
+  memset(&dacl->action_params, 0, sizeof(switch_acl_action_params_t));
+  dacl->action_params.drop.reason_code = DROP_ACL_DENY;
+  dacl++;
 
   // URPF check fail, drop
-  acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
-  memset(acl_kvp, 0, sizeof(acl_kvp));
-  acl_kvp[0].field = SWITCH_ACL_SYSTEM_FIELD_URPF_CHECK;
-  acl_kvp[0].value.urpf_check_fail = 1;
-  acl_kvp[0].mask.u.mask = 0xFF;
-  memset(&action_params, 0, sizeof(switch_acl_action_params_t));
-  action_params.drop.reason_code = DROP_URPF_CHECK_FAIL;
-  switch_api_acl_rule_create(device,
-                             acl_handle,
-                             priority++,
-                             1,
-                             acl_kvp,
-                             SWITCH_ACL_ACTION_DROP,
-                             &action_params,
-                             &opt_action_params,
-                             &handle);
+  dacl->acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
+  memset(dacl->acl_kvp, 0, sizeof(dacl->acl_kvp));
+  dacl->acl_kvp[0].field = SWITCH_ACL_SYSTEM_FIELD_URPF_CHECK;
+  dacl->acl_kvp[0].value.urpf_check_fail = 1;
+  dacl->acl_kvp[0].mask.u.mask = 0xFF;
+  dacl->priority = priority++;
+  dacl->key_value_count = 1;
+  memset(&dacl->action_params, 0, sizeof(switch_acl_action_params_t));
+  dacl->action_params.drop.reason_code = DROP_URPF_CHECK_FAIL;
+  dacl++;
 
   // same if check fail, drop
-  acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
-  memset(acl_kvp, 0, sizeof(acl_kvp));
-  acl_kvp[0].field = SWITCH_ACL_SYSTEM_FIELD_IF_CHECK;
-  acl_kvp[0].value.if_check = 0;
-  acl_kvp[0].mask.u.mask = 0xFFFF;
-  acl_kvp[1].field = SWITCH_ACL_SYSTEM_FIELD_BD_CHECK;
-  acl_kvp[1].value.bd_check = 0;
-  acl_kvp[1].mask.u.mask = 0xFFFF;
-  acl_kvp[2].field = SWITCH_ACL_SYSTEM_FIELD_ROUTED;
-  acl_kvp[2].value.routed = 0;
-  acl_kvp[2].mask.u.mask = 0xFFFF;
-  acl_kvp[3].field = SWITCH_ACL_SYSTEM_FIELD_TUNNEL_IF_CHECK;
-  acl_kvp[3].value.tunnel_if_check = 0;
-  acl_kvp[3].mask.u.mask = 0xFFFF;
-  memset(&action_params, 0, sizeof(switch_acl_action_params_t));
-  action_params.drop.reason_code = DROP_SAME_IFINDEX;
-  switch_api_acl_rule_create(device,
-                             acl_handle,
-                             priority++,
-                             4,
-                             acl_kvp,
-                             SWITCH_ACL_ACTION_DROP,
-                             &action_params,
-                             &opt_action_params,
-                             &handle);
+  dacl->acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
+  memset(dacl->acl_kvp, 0, sizeof(dacl->acl_kvp));
+  dacl->acl_kvp[0].field = SWITCH_ACL_SYSTEM_FIELD_IF_CHECK;
+  dacl->acl_kvp[0].value.if_check = 0;
+  dacl->acl_kvp[0].mask.u.mask = 0xFFFF;
+  dacl->acl_kvp[1].field = SWITCH_ACL_SYSTEM_FIELD_BD_CHECK;
+  dacl->acl_kvp[1].value.bd_check = 0;
+  dacl->acl_kvp[1].mask.u.mask = 0xFFFF;
+  dacl->acl_kvp[2].field = SWITCH_ACL_SYSTEM_FIELD_ROUTED;
+  dacl->acl_kvp[2].value.routed = 0;
+  dacl->acl_kvp[2].mask.u.mask = 0xFFFF;
+  dacl->acl_kvp[3].field = SWITCH_ACL_SYSTEM_FIELD_TUNNEL_IF_CHECK;
+  dacl->acl_kvp[3].value.tunnel_if_check = 0;
+  dacl->acl_kvp[3].mask.u.mask = 0xFFFF;
+  dacl->priority = priority++;
+  dacl->key_value_count = 4;
+  memset(&dacl->action_params, 0, sizeof(switch_acl_action_params_t));
+  dacl->action_params.drop.reason_code = DROP_SAME_IFINDEX;
+  dacl++;
 
   // egress ifindex is drop ifindex, drop
-  acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
-  memset(acl_kvp, 0, sizeof(acl_kvp));
-  acl_kvp[0].field = SWITCH_ACL_SYSTEM_FIELD_EGRESS_IFINDEX;
-  acl_kvp[0].value.out_ifindex = switch_api_drop_ifindex();
-  acl_kvp[0].mask.u.mask = 0xFFFF;
-  memset(&action_params, 0, sizeof(switch_acl_action_params_t));
-  action_params.drop.reason_code = DROP_IFINDEX;
-  switch_api_acl_rule_create(device,
-                             acl_handle,
-                             priority++,
-                             1,
-                             acl_kvp,
-                             SWITCH_ACL_ACTION_DROP,
-                             &action_params,
-                             &opt_action_params,
-                             &handle);
+  dacl->acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
+  memset(dacl->acl_kvp, 0, sizeof(dacl->acl_kvp));
+  dacl->acl_kvp[0].field = SWITCH_ACL_SYSTEM_FIELD_EGRESS_IFINDEX;
+  dacl->acl_kvp[0].value.out_ifindex = switch_api_drop_ifindex();
+  dacl->acl_kvp[0].mask.u.mask = 0xFFFF;
+  dacl->priority = priority++;
+  dacl->key_value_count = 1;
+  memset(&dacl->action_params, 0, sizeof(switch_acl_action_params_t));
+  dacl->action_params.drop.reason_code = DROP_IFINDEX;
+  dacl++;
+
+  switch_system_acl_entries_add(device);
 
   // routed, ttl == 1, egress_ifindex == cpu, permit
   acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
@@ -459,23 +490,6 @@ static switch_status_t switch_api_init_default_acl_entries(
                              &opt_action_params,
                              &handle);
 
-  // acl_copy, copy to cpu
-  acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
-  memset(acl_kvp, 0, sizeof(acl_kvp));
-  acl_kvp[0].field = SWITCH_ACL_SYSTEM_FIELD_ACL_COPY;
-  acl_kvp[0].value.acl_copy = true;
-  acl_kvp[0].mask.u.mask = 0xFF;
-  memset(&action_params, 0, sizeof(switch_acl_action_params_t));
-  switch_api_acl_rule_create(device,
-                             acl_handle,
-                             priority++,
-                             1,
-                             acl_kvp,
-                             SWITCH_ACL_ACTION_COPY_TO_CPU,
-                             &action_params,
-                             &opt_action_params,
-                             &handle);
-
   // l3_copy to cpu
   acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
   memset(acl_kvp, 0, sizeof(acl_kvp));
@@ -493,51 +507,22 @@ static switch_status_t switch_api_init_default_acl_entries(
                              &opt_action_params,
                              &handle);
 
-  // Broadcast packet on routed interfaces, copy to cpu
-  acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
-  memset(acl_kvp, 0, sizeof(acl_kvp));
-  acl_kvp[0].field = SWITCH_ACL_SYSTEM_FIELD_DEST_MAC;
-  acl_kvp[0].value.dest_mac.mac_addr[0] = 0xFF;
-  acl_kvp[0].value.dest_mac.mac_addr[1] = 0xFF;
-  acl_kvp[0].value.dest_mac.mac_addr[2] = 0xFF;
-  acl_kvp[0].value.dest_mac.mac_addr[3] = 0xFF;
-  acl_kvp[0].value.dest_mac.mac_addr[4] = 0xFF;
-  acl_kvp[0].value.dest_mac.mac_addr[5] = 0xFF;
-  acl_kvp[0].mask.u.mask = 0xFFFFFFFFFFFF;
-  acl_kvp[1].field = SWITCH_ACL_SYSTEM_FIELD_IPV4_ENABLED;
-  acl_kvp[1].value.ipv4_enabled = 1;
-  acl_kvp[1].mask.u.mask = 0xFFFFFFFF;
-  memset(&action_params, 0, sizeof(switch_acl_action_params_t));
-  action_params.cpu_redirect.reason_code = 0;
-  switch_api_acl_rule_create(device,
-                             acl_handle,
-                             2000, /* keep priority lower than reason-codes */
-                             2,
-                             acl_kvp,
-                             SWITCH_ACL_ACTION_COPY_TO_CPU,
-                             &action_params,
-                             &opt_action_params,
-                             &handle);
-  // egress l3_mtu_check
-  acl_handle =
+  switch_default_acl_t *egr_acl = &_switch_egress_acl_data[device][0];
+  // set acl handler and priority for egress mtu check rule
+  egr_acl->acl_handle =
       switch_api_acl_list_create(device, SWITCH_ACL_TYPE_EGRESS_SYSTEM);
-  memset(egr_acl_kvp, 0, sizeof(egr_acl_kvp));
-  egr_acl_kvp[0].field = SWITCH_ACL_EGR_L3_MTU_CHECK;
-  egr_acl_kvp[0].value.l3_mtu_check = 0;
-  egr_acl_kvp[0].mask.u.mask = 0xFFFF;
-  memset(&action_params, 0, sizeof(switch_acl_action_params_t));
-  action_params.cpu_redirect.reason_code =
-      SWITCH_HOSTIF_REASON_CODE_L3_MTU_ERROR;
-  switch_api_acl_rule_create(device,
-                             acl_handle,
-                             priority++,
-                             1,
-                             egr_acl_kvp,
-                             SWITCH_ACL_EGR_ACTION_REDIRECT_TO_CPU,
-                             &action_params,
-                             &opt_action_params,
-                             &handle);
-  switch_api_acl_reference(device, acl_handle, 0);
+  egr_acl->priority = priority++;
+  egr_acl->key_value_count = 1;
+  switch_api_acl_reference(device, egr_acl->acl_handle, 0);
+  egr_acl++;
+
+  // set acl handler and priority for egress dod rule
+  egr_acl->acl_handle =
+      switch_api_acl_list_create(device, SWITCH_ACL_TYPE_EGRESS_SYSTEM);
+  egr_acl->priority = priority;
+  egr_acl->key_value_count = 1;
+  switch_egress_acl_entries_add(device);
+  switch_api_acl_reference(device, egr_acl->acl_handle, 0);
 
   return SWITCH_STATUS_SUCCESS;
 }

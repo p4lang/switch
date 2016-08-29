@@ -58,7 +58,6 @@ sai_status_t sai_create_hostif(_Out_ sai_object_id_t *hif_id,
         }
         break;
       case SAI_HOSTIF_ATTR_RIF_OR_PORT_ID:
-        hostif.handle = attribute->value.oid;
         break;
       case SAI_HOSTIF_ATTR_NAME:
         memcpy(hostif.intf_name, attribute->value.chardata, HOSTIF_NAME_SIZE);
@@ -209,9 +208,10 @@ sai_status_t sai_create_hostif_trap_group(
       case SAI_HOSTIF_TRAP_GROUP_ATTR_ADMIN_STATE:
         break;
       case SAI_HOSTIF_TRAP_GROUP_ATTR_QUEUE:
-        hostif_group.egress_queue = attribute->value.u32;
+        hostif_group.queue_id = attribute->value.u32;
         break;
       case SAI_HOSTIF_TRAP_GROUP_ATTR_POLICER:
+        hostif_group.policer_handle = attribute->value.oid;
         break;
     }
   }
@@ -586,8 +586,7 @@ sai_status_t sai_set_hostif_trap_attribute(_In_ sai_hostif_trap_id_t
   switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
 
   if (!attr) {
-    status = SAI_STATUS_INVALID_PARAMETER;
-    SAI_LOG_ERROR("null attribute list: %s", sai_status_to_string(status));
+    status = sai_remove_hostif_trap(hostif_trapid);
     return status;
   }
 
@@ -599,14 +598,14 @@ sai_status_t sai_set_hostif_trap_attribute(_In_ sai_hostif_trap_id_t
   switch (attr->id) {
     case SAI_HOSTIF_TRAP_ATTR_PACKET_ACTION:
       rcode_api_info.action =
-          switch_sai_action_to_switch_api_action(attr->value.s32);
+          switch_sai_action_to_switch_api_action(attr->value.u32);
       break;
     case SAI_HOSTIF_TRAP_ATTR_TRAP_PRIORITY:
-      rcode_api_info.priority = attr->value.s32;
+      rcode_api_info.priority = attr->value.u32;
       break;
     case SAI_HOSTIF_TRAP_ATTR_TRAP_CHANNEL:
       rcode_api_info.channel =
-          switch_sai_channel_to_switch_api_channel(attr->value.s32);
+          switch_sai_channel_to_switch_api_channel(attr->value.u32);
       break;
     case SAI_HOSTIF_TRAP_ATTR_TRAP_GROUP:
       rcode_api_info.hostif_group_id = attr->value.oid;
@@ -886,14 +885,10 @@ void sai_recv_hostif_packet_cb(switch_hostif_packet_t *hostif_packet) {
   attribute->value.oid = hostif_packet->handle;
   attr_count++;
 
-#if 0
-    if (sai_switch_notifications.on_packet_event) {
-        sai_switch_notifications.on_packet_event(hostif_packet->pkt,
-                                             hostif_packet->pkt_size,
-                                             attr_count,
-                                             attr_list);
-    }
-#endif
+  if (sai_switch_notifications.on_packet_event) {
+    sai_switch_notifications.on_packet_event(
+        hostif_packet->pkt, hostif_packet->pkt_size, attr_count, attr_list);
+  }
 
   SAI_LOG_EXIT();
 

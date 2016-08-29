@@ -19,6 +19,7 @@ limitations under the License.
 
 #include "switchapi/switch_base_types.h"
 #include "switchapi/switch_handle.h"
+#include "switch_pd_types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -41,6 +42,7 @@ typedef struct switch_acl_rule_ {
   unsigned int action_param_size;
   switch_acl_action_params_t action_params;
   switch_acl_opt_action_params_t opt_action_params;
+  p4_pd_entry_hdl_t hw_entry;
 } switch_acl_rule_t;
 
 switch_status_t switch_acl_init(switch_device_t device);

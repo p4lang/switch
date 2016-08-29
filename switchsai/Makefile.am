@@ -1,7 +1,7 @@
 ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS} -I m4
 
 AM_CPPFLAGS += -I$(srcdir)/submodules/SAI/inc
-AM_CPPFLAGS += -I$(top_srcdir)/switchapi/inc
+AM_CPPFLAGS += -I$(top_srcdir)/switchapi/include
 AM_CPPFLAGS += -I$(builddir)/src/gen-cpp
 AM_CPPFLAGS += -I$(top_srcdir)/switchapi/third-party/tommyds/include
 AM_CPPFLAGS += -I$(top_srcdir)/p4src/includes
@@ -32,8 +32,8 @@ $(thrift_py_sources) \
 $(sai_ctypesgen)
 
 $(sai_ctypesgen) : $(thrift_py_sources)
-	$(CTYPESGEN) -I/usr/include -I$(srcdir)/submodules/SAI/inc \
-		$(srcdir)/submodules/SAI/inc/*.h -o $@
+	@$(CTYPESGEN) -I/usr/include -I$(srcdir)/submodules/SAI/inc \
+		$(srcdir)/submodules/SAI/inc/*.h -o $@ > /dev/null 2>&1
 
 # The recipe to invoke the thrift compiler is copied from:
 # http://www.gnu.org/software/automake/manual/html_node/Multiple-Outputs.html
@@ -68,9 +68,9 @@ $(thrift_cpp_sources) $(thrift_py_sources) : switchsai.ts
 switchsai_sources = \
 $(thrift_cpp_sources) \
 src/saiacl.c \
-src/saibuffer.c \
 src/sai.c \
 src/sai_bmlib.c \
+src/saibuffer.c \
 src/saifdb.c \
 src/saihash.c \
 src/saihostintf.c \
@@ -85,9 +85,13 @@ src/sainexthopgroup.c \
 src/saiobject.c \
 src/saipolicer.c \
 src/saiport.c \
+src/saiqosmaps.c \
+src/saiqueue.c \
 src/sairoute.c \
 src/sairouter.c \
 src/sairouterintf.c \
+src/saischeduler.c \
+src/saischedulergroup.c \
 src/saistp.c \
 src/saiswitch.c \
 src/saiudf.c \

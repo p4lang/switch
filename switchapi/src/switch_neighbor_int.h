@@ -17,6 +17,7 @@ limitations under the License.
 #include "switchapi/switch_base_types.h"
 #include "switchapi/switch_handle.h"
 #include "switchapi/switch_neighbor.h"
+#include "switch_pd_types.h"
 
 #ifdef __cplusplus
 extern "C" {

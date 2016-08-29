@@ -9,6 +9,7 @@ from mc_pd_rpc.ttypes import *
 
 default_entries = {}
 stats_enabled = 1
+nat_enabled = 1
 
 def port_to_pipe(port):
     return port >> 7
@@ -86,7 +87,6 @@ def populate_default_fabric_entries(client, sess_hdl, dev_tgt, ipv6_enabled=0,
         client.ip_acl_set_default_action_nop(sess_hdl, dev_tgt)
         client.ipv4_racl_set_default_action_nop(sess_hdl, dev_tgt)
         client.egress_acl_set_default_action_nop(sess_hdl, dev_tgt)
-        client.qos_set_default_action_nop(sess_hdl, dev_tgt)
     client.validate_packet_set_default_action_nop(sess_hdl, dev_tgt)
     if tunnel_enabled:
         client.outer_rmac_set_default_action_on_miss(sess_hdl, dev_tgt)
@@ -96,7 +96,8 @@ def populate_default_fabric_entries(client, sess_hdl, dev_tgt, ipv6_enabled=0,
         client.tunnel_dst_rewrite_set_default_action_nop(sess_hdl, dev_tgt)
         client.tunnel_smac_rewrite_set_default_action_nop(sess_hdl, dev_tgt)
         client.tunnel_dmac_rewrite_set_default_action_nop(sess_hdl, dev_tgt)
-
+        client.tunnel_miss_set_default_action_tunnel_lookup_miss(
+            sess_hdl, dev_tgt)
     if ipv6_enabled and tunnel_enabled:
         client.ipv6_src_vtep_set_default_action_nop(sess_hdl, dev_tgt)
         client.ipv6_dest_vtep_set_default_action_nop(sess_hdl, dev_tgt)
@@ -104,16 +105,16 @@ def populate_default_fabric_entries(client, sess_hdl, dev_tgt, ipv6_enabled=0,
         client.ipv6_acl_set_default_action_nop(sess_hdl, dev_tgt)
         client.ipv6_racl_set_default_action_nop(sess_hdl, dev_tgt)
     match_spec = dc_compute_ipv4_hashes_match_spec_t(
-        ingress_metadata_drop_flag=0)
+        ethernet_valid=1)
     client.compute_ipv4_hashes_table_add_with_compute_lkp_ipv4_hash(
         sess_hdl, dev_tgt, match_spec)
     if ipv6_enabled == 1:
         match_spec = dc_compute_ipv6_hashes_match_spec_t(
-            ingress_metadata_drop_flag=0)
+            ethernet_valid=1)
         client.compute_ipv6_hashes_table_add_with_compute_lkp_ipv6_hash(
             sess_hdl, dev_tgt, match_spec)
     match_spec = dc_compute_non_ip_hashes_match_spec_t(
-        ingress_metadata_drop_flag=0)
+        ethernet_valid=1)
     client.compute_non_ip_hashes_table_add_with_compute_lkp_non_ip_hash(
         sess_hdl, dev_tgt, match_spec)
     client.egress_vni_set_default_action_nop(sess_hdl, dev_tgt)
@@ -129,6 +130,11 @@ def populate_default_fabric_entries(client, sess_hdl, dev_tgt, ipv6_enabled=0,
     if stats_enabled:
         client.ingress_bd_stats_set_default_action_update_ingress_bd_stats(
             sess_hdl, dev_tgt)
+    if nat_enabled:
+        client.nat_twice_set_default_action_on_miss(sess_hdl, dev_tgt)
+        client.nat_dst_set_default_action_on_miss(sess_hdl, dev_tgt)
+        client.nat_src_set_default_action_on_miss(sess_hdl, dev_tgt)
+        client.nat_flow_set_default_action_nop(sess_hdl, dev_tgt)
 
 def populate_default_entries(client, sess_hdl, dev_tgt, ipv6_enabled,
     acl_enabled, tunnel_enabled, multicast_enabled, int_enabled):
@@ -175,11 +181,11 @@ def populate_default_entries(client, sess_hdl, dev_tgt, ipv6_enabled,
     client.storm_control_stats_set_default_action_nop(
                                      sess_hdl, dev_tgt)
     meter_spec = dc_bytes_meter_spec_t(
-                                     cir_kbps=0,
-                                     cburst_kbits=0,
-                                     pir_kbps=0,
-                                     pburst_kbits=0,
-                                     color_aware=False)
+                             cir_kbps=0,
+                             cburst_kbits=0,
+                             pir_kbps=0,
+                             pburst_kbits=0,
+                             color_aware=False)
     client.meter_index_set_default_action_nop(
                                      sess_hdl, dev_tgt, meter_spec)
     client.meter_action_set_default_action_meter_permit(
@@ -191,7 +197,7 @@ def populate_default_entries(client, sess_hdl, dev_tgt, ipv6_enabled,
                                      sess_hdl, dev_tgt)
     client.rewrite_set_default_action_set_l2_rewrite(
                                      sess_hdl, dev_tgt)
-    action_spec = dc_egress_port_type_normal_action_spec_t(action_ifindex=0)
+    action_spec = dc_egress_port_type_normal_action_spec_t(action_ifindex=0, action_qos_group=0)
     client.egress_port_mapping_set_default_action_egress_port_type_normal(
                                      sess_hdl, dev_tgt, action_spec)
     client.mtu_set_default_action_mtu_miss(
@@ -211,6 +217,14 @@ def populate_default_entries(client, sess_hdl, dev_tgt, ipv6_enabled,
                                      sess_hdl, dev_tgt)
     client.system_acl_set_default_action_nop(
                                      sess_hdl, dev_tgt)
+    client.adjust_lkp_fields_set_default_action_non_ip_lkp(
+                                     sess_hdl, dev_tgt)
+    match_spec = dc_adjust_lkp_fields_match_spec_t(ipv4_valid=1, ipv6_valid=0)
+    client.adjust_lkp_fields_table_add_with_ipv4_lkp(
+                                     sess_hdl, dev_tgt, match_spec)
+    match_spec = dc_adjust_lkp_fields_match_spec_t(ipv4_valid=0, ipv6_valid=1)
+    client.adjust_lkp_fields_table_add_with_ipv6_lkp(
+                                     sess_hdl, dev_tgt, match_spec)
     client.sflow_ingress_set_default_action_nop(
                                      sess_hdl, dev_tgt)
     client.sflow_ing_take_sample_set_default_action_nop(
@@ -222,8 +236,6 @@ def populate_default_entries(client, sess_hdl, dev_tgt, ipv6_enabled,
         client.ipv4_racl_set_default_action_nop(
                                      sess_hdl, dev_tgt)
         client.egress_acl_set_default_action_nop(
-                                     sess_hdl, dev_tgt)
-        client.qos_set_default_action_nop(
                                      sess_hdl, dev_tgt)
         client.acl_stats_set_default_action_acl_stats_update(
                                      sess_hdl, dev_tgt)
@@ -250,9 +262,10 @@ def populate_default_entries(client, sess_hdl, dev_tgt, ipv6_enabled,
                                      sess_hdl, dev_tgt)
 
     if multicast_enabled:
-        client.outer_ipv4_multicast_set_default_action_on_miss(
+        if tunnel_enabled:
+            client.outer_ipv4_multicast_set_default_action_on_miss(
                                      sess_hdl, dev_tgt)
-        client.outer_ipv4_multicast_star_g_set_default_action_nop(
+            client.outer_ipv4_multicast_star_g_set_default_action_nop(
                                      sess_hdl, dev_tgt)
         client.ipv4_multicast_bridge_set_default_action_on_miss(
                                      sess_hdl, dev_tgt)
@@ -263,9 +276,10 @@ def populate_default_entries(client, sess_hdl, dev_tgt, ipv6_enabled,
         client.ipv4_multicast_route_star_g_set_default_action_multicast_route_star_g_miss(
                                      sess_hdl, dev_tgt)
         if ipv6_enabled:
-            client.outer_ipv6_multicast_set_default_action_on_miss(
+            if tunnel_enabled:
+                client.outer_ipv6_multicast_set_default_action_on_miss(
                                      sess_hdl, dev_tgt)
-            client.outer_ipv6_multicast_star_g_set_default_action_nop(
+                client.outer_ipv6_multicast_star_g_set_default_action_nop(
                                      sess_hdl, dev_tgt)
             client.ipv6_multicast_bridge_set_default_action_on_miss(
                                      sess_hdl, dev_tgt)
@@ -274,6 +288,15 @@ def populate_default_entries(client, sess_hdl, dev_tgt, ipv6_enabled,
             client.ipv6_multicast_route_set_default_action_on_miss(
                                      sess_hdl, dev_tgt)
             client.ipv6_multicast_route_star_g_set_default_action_multicast_route_star_g_miss(
+                                     sess_hdl, dev_tgt)
+
+    client.egress_qos_map_set_default_action_nop(
+                                     sess_hdl, dev_tgt)
+    client.ingress_qos_map_dscp_set_default_action_nop(
+                                     sess_hdl, dev_tgt)
+    client.ingress_qos_map_pcp_set_default_action_nop(
+                                     sess_hdl, dev_tgt)
+    client.traffic_class_set_default_action_nop(
                                      sess_hdl, dev_tgt)
 
     if stats_enabled:
@@ -292,6 +315,12 @@ def populate_default_entries(client, sess_hdl, dev_tgt, ipv6_enabled,
         client.int_meta_header_update_set_default_action_int_update_total_hop_cnt(sess_hdl,
                                                                                   dev_tgt)
         client.int_outer_encap_set_default_action_nop(sess_hdl, dev_tgt)
+
+    if nat_enabled:
+        client.nat_twice_set_default_action_on_miss(sess_hdl, dev_tgt)
+        client.nat_dst_set_default_action_on_miss(sess_hdl, dev_tgt)
+        client.nat_src_set_default_action_on_miss(sess_hdl, dev_tgt)
+        client.nat_flow_set_default_action_nop(sess_hdl, dev_tgt)
 
 def delete_default_entries(client, sess_hdl, dev_id):
     return
@@ -317,6 +346,8 @@ def populate_init_fabric_entries(client, sess_hdl, dev_tgt, inner_rmac_group,
         l3_metadata_rmac_hit_mask=1,
         l3_metadata_fib_hit=1,
         l3_metadata_fib_hit_mask=1,
+        nat_metadata_nat_hit=0,
+        nat_metadata_nat_hit_mask=0,
         l2_metadata_lkp_pkt_type=0,
         l2_metadata_lkp_pkt_type_mask=0,
         l3_metadata_lkp_ip_type=0,
@@ -347,6 +378,8 @@ def populate_init_fabric_entries(client, sess_hdl, dev_tgt, inner_rmac_group,
         l3_metadata_rmac_hit_mask=0,
         l3_metadata_fib_hit=0,
         l3_metadata_fib_hit_mask=0,
+        nat_metadata_nat_hit=0,
+        nat_metadata_nat_hit_mask=0,
         l2_metadata_lkp_pkt_type=0,
         l2_metadata_lkp_pkt_type_mask=0,
         l3_metadata_lkp_ip_type=0,
@@ -442,6 +475,8 @@ def populate_init_entries(client, sess_hdl, dev_tgt, rewrite_index, rmac,
                             l3_metadata_fib_hit_mask=1,
                             l3_metadata_rmac_hit=0,
                             l3_metadata_rmac_hit_mask=0,
+                            nat_metadata_nat_hit=0,
+                            nat_metadata_nat_hit_mask=0,
                             l2_metadata_lkp_pkt_type=0,
                             l2_metadata_lkp_pkt_type_mask=0,
                             l3_metadata_lkp_ip_type=0,
@@ -473,6 +508,8 @@ def populate_init_entries(client, sess_hdl, dev_tgt, rewrite_index, rmac,
                             l3_metadata_fib_hit_mask=0,
                             l3_metadata_rmac_hit=0,
                             l3_metadata_rmac_hit_mask=0,
+                            nat_metadata_nat_hit=0,
+                            nat_metadata_nat_hit_mask=0,
                             l2_metadata_lkp_pkt_type=0,
                             l2_metadata_lkp_pkt_type_mask=0,
                             l3_metadata_lkp_ip_type=0,
@@ -546,18 +583,6 @@ def populate_init_entries(client, sess_hdl, dev_tgt, rewrite_index, rmac,
         ret.append(client.outer_rmac_table_add_with_outer_rmac_hit(
                             sess_hdl, dev_tgt,
                             match_spec))
-        match_spec = dc_tunnel_miss_match_spec_t(
-                            ipv4_valid=1,
-                            ipv6_valid=0)
-        ret.append(client.tunnel_miss_table_add_with_ipv4_tunnel_lookup_miss(
-                            sess_hdl, dev_tgt,
-                            match_spec))
-        match_spec = dc_tunnel_miss_match_spec_t(
-                            ipv4_valid=0,
-                            ipv6_valid=1)
-        ret.append(client.tunnel_miss_table_add_with_ipv6_tunnel_lookup_miss(
-                            sess_hdl, dev_tgt,
-                            match_spec))
     return ret
 
 def delete_init_entries(client, sess_hdl, dev, ret_list, tunnel_enabled):
@@ -604,9 +629,15 @@ def program_ports(client, sess_hdl, dev_tgt, port_count):
                              sess_hdl, dev_tgt,
                              match_spec, action_spec)
         action_spec = dc_set_ingress_port_properties_action_spec_t(
-                                             action_if_label=count)
+                             action_if_label=count,
+                             action_qos_group=0,
+                             action_tc_qos_group=0,
+                             action_tc=0,
+                             action_color=0,
+                             action_trust_dscp=0,
+                             action_trust_pcp=0)
         port2_hdl = client.ingress_port_properties_table_add_with_set_ingress_port_properties(
-                                             sess_hdl, dev_tgt, match_spec, action_spec)
+                             sess_hdl, dev_tgt, match_spec, action_spec)
 
         action_spec = dc_set_lag_port_action_spec_t(
                               action_port=count)
@@ -621,13 +652,16 @@ def program_ports(client, sess_hdl, dev_tgt, port_count):
                              match_spec, mbr_hdl)
         match_spec = dc_egress_port_mapping_match_spec_t(
                              standard_metadata_egress_port=count)
-        action_spec = dc_egress_port_type_normal_action_spec_t(action_ifindex=count)
+        action_spec = dc_egress_port_type_normal_action_spec_t(
+                             action_ifindex=count,
+                             action_qos_group=0)
         egress_hdl = client.egress_port_mapping_table_add_with_egress_port_type_normal(
                              sess_hdl,
                              dev_tgt,
                              match_spec,
                              action_spec)
-        ret.append({ 'port': port_hdl, 'port2' : port2_hdl, 'mbr' : mbr_hdl, 'lag' : lag_hdl, 'egress' : egress_hdl})
+        ret.append({ 'port': port_hdl, 'port2': port2_hdl, 'mbr' : mbr_hdl,
+                    'lag' : lag_hdl, 'egress' : egress_hdl})
         count = count + 1
     return ret
 
@@ -646,9 +680,15 @@ def program_emulation_ports(client, sess_hdl, dev_tgt, port_count):
                              match_spec, action_spec)
 
         action_spec = dc_set_ingress_port_properties_action_spec_t(
-                                             action_if_label=count)
+                             action_if_label=count,
+                             action_qos_group=0,
+                             action_tc_qos_group=0,
+                             action_tc=0,
+                             action_color=0,
+                             action_trust_dscp=0,
+                             action_trust_pcp=0)
         port2_hdl = client.ingress_port_properties_table_add_with_set_ingress_port_properties(
-                                             sess_hdl, dev_tgt, match_spec, action_spec)
+                             sess_hdl, dev_tgt, match_spec, action_spec)
 
         action_spec = dc_set_lag_port_action_spec_t(
                               action_port=count)
@@ -663,13 +703,16 @@ def program_emulation_ports(client, sess_hdl, dev_tgt, port_count):
                               match_spec, mbr_hdl)
         match_spec = dc_egress_port_mapping_match_spec_t(
                              eg_intr_md_egress_port=count)
-        action_spec = dc_egress_port_type_normal_action_spec_t(action_ifindex=count)
+        action_spec = dc_egress_port_type_normal_action_spec_t(
+                             action_ifindex=count,
+                             action_qos_group=0)
         egress_hdl = client.egress_port_mapping_table_add_with_egress_port_type_normal(
                              sess_hdl,
                              dev_tgt,
                              match_spec,
                              action_spec)
-        ret.append({ 'port': port_hdl, 'port2' : port2_hdl, 'mbr' : mbr_hdl, 'lag' : lag_hdl, 'egress' : egress_hdl})
+        ret.append({ 'port': port_hdl, 'port2': port2_hdl, 'mbr' : mbr_hdl,
+                    'lag' : lag_hdl, 'egress' : egress_hdl})
         count = count + 1
     return ret
 
@@ -682,6 +725,7 @@ def add_ports(client, sess_hdl, dev_tgt, port_list, port_type, l2xid):
             standard_metadata_ingress_port=i)
         action_spec = dc_set_ifindex_action_spec_t(
             action_ifindex=ifindex,
+            action_if_label=0,
             action_port_type=port_type)
         client.ingress_port_mapping_table_add_with_set_ifindex(
             sess_hdl, dev_tgt, match_spec, action_spec)
@@ -696,7 +740,9 @@ def add_ports(client, sess_hdl, dev_tgt, port_list, port_type, l2xid):
         match_spec = dc_egress_port_mapping_match_spec_t(
            standard_metadata_egress_port=i)
         if port_type == PortType.Normal:
-            action_spec = dc_egress_port_type_normal_action_spec_t(action_ifindex=ifindex)
+            action_spec = dc_egress_port_type_normal_action_spec_t(
+                             action_ifindex=count,
+                             action_qos_group=0)
             client.egress_port_mapping_table_add_with_egress_port_type_normal(
                 sess_hdl, dev_tgt, match_spec, action_spec)
         elif port_type == PortType.Fabric:
@@ -788,7 +834,7 @@ def program_vlan(client, sess_hdl, dev_tgt, vrf, inner_rmac_group,
 def program_egress_bd_map(client, sess_hdl, dev_tgt, smac_index, vlan):
     match_spec = dc_egress_bd_map_match_spec_t(egress_metadata_bd=vlan)
     action_spec = dc_set_egress_bd_properties_action_spec_t(
-        action_smac_idx=smac_index)
+        action_smac_idx=smac_index, action_nat_mode=0)
     client.egress_bd_map_table_add_with_set_egress_bd_properties(
         sess_hdl, dev_tgt, match_spec, action_spec)
 
@@ -1368,7 +1414,8 @@ def program_egress_bd_properties(client, sess_hdl, dev_tgt, bd, rewrite_index):
     match_spec = dc_egress_bd_map_match_spec_t(
                                 egress_metadata_bd=bd)
     action_spec = dc_set_egress_bd_properties_action_spec_t(
-                                action_smac_idx=rewrite_index)
+                                action_smac_idx=rewrite_index,
+                                action_nat_mode=0)
     hdl = client.egress_bd_map_table_add_with_set_egress_bd_properties(
                                 sess_hdl, dev_tgt, match_spec, action_spec)
     return hdl

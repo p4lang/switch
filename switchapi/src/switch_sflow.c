@@ -1,5 +1,5 @@
 /*
-Copyright 2016-present Barefoot Networks, Inc.
+Copyright 2013-present Barefoot Networks, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -12,10 +12,8 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
- */
-
-#include <Judy.h>
-#include "tommyds/tommy.h"
+*/
+#include "assert.h"
 #include "switchapi/switch_base_types.h"
 #include "switchapi/switch_status.h"
 #include "switchapi/switch_mirror.h"
@@ -378,6 +376,62 @@ switch_status_t switch_api_sflow_session_detach(switch_device_t device,
   }
   status = switch_pd_sflow_match_table_delete(device, match_entry);
   switch_sflow_ace_handle_delete(entry_hdl);
+  return status;
+#else
+  (void)device;
+  (void)sflow_hdl;
+  (void)entry_hdl;
+  return SWITCH_STATUS_FAILURE;
+#endif  // P4_SFLOW_ENABLE
+}
+
+switch_status_t switch_api_sflow_session_sample_count_get(
+    switch_device_t device,
+    switch_handle_t sflow_hdl,
+    switch_handle_t entry_hdl,
+    switch_counter_t *sample_pool) {
+#ifdef P4_SFLOW_ENABLE
+  switch_sflow_match_entry_t *match_entry = NULL;
+  switch_status_t status = SWITCH_STATUS_FAILURE;
+  switch_sflow_info_t *sflow_info;
+
+  sflow_info = switch_sflow_info_get(sflow_hdl);
+  if (!sflow_info) {
+    return SWITCH_STATUS_INVALID_HANDLE;
+  }
+  if ((match_entry = switch_sflow_ace_entry_get(entry_hdl)) == NULL) {
+    return SWITCH_STATUS_INVALID_HANDLE;
+  }
+  status = switch_pd_sflow_counter_read(device, match_entry, sample_pool);
+  return status;
+
+#else
+  (void)device;
+  (void)sflow_hdl;
+  (void)entry_hdl;
+  return SWITCH_STATUS_FAILURE;
+#endif  // P4_SFLOW_ENABLE
+}
+
+switch_status_t switch_api_sflow_session_sample_count_reset(
+    switch_device_t device,
+    switch_handle_t sflow_hdl,
+    switch_handle_t entry_hdl) {
+#ifdef P4_SFLOW_ENABLE
+  switch_sflow_match_entry_t *match_entry = NULL;
+  switch_status_t status = SWITCH_STATUS_FAILURE;
+  switch_sflow_info_t *sflow_info;
+  switch_counter_t val;
+
+  sflow_info = switch_sflow_info_get(sflow_hdl);
+  if (!sflow_info) {
+    return SWITCH_STATUS_INVALID_HANDLE;
+  }
+  if ((match_entry = switch_sflow_ace_entry_get(entry_hdl)) == NULL) {
+    return SWITCH_STATUS_INVALID_HANDLE;
+  }
+  memset(&val, 0, sizeof(val));
+  status = switch_pd_sflow_counter_write(device, match_entry, val);
   return status;
 #else
   (void)device;

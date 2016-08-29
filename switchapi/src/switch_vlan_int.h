@@ -66,6 +66,7 @@ typedef struct switch_bd_info_ {
 
   switch_urpf_mode_t ipv4_urpf_mode;
   switch_urpf_mode_t ipv6_urpf_mode;
+  uint8_t nat_mode;
   uint16_t bd_label;
   switch_bd_stats_t *ingress_bd_stats;
   switch_bd_stats_t *egress_bd_stats;
@@ -112,6 +113,8 @@ typedef struct switch_vlan_port_info_ {
 #define SWITCH_LN_MLD_SNOOPING_ENABLED(ln) \
   ln->ln_info.flags.mld_snooping_enabled
 
+#define SWITCH_LN_NAT_MODE(ln) ln->nat_mode
+
 #define SWITCH_LN_VLAN_ID(ln) ln->ln_info.encap_info.u.vlan_id
 
 #define SWITCH_LN_LEARN_ENABLED(ln) ln->ln_info.flags.learn_enabled
@@ -157,6 +160,10 @@ switch_status_t switch_bd_ipv6_urpf_mode_set(switch_handle_t bd_handle,
                                              uint64_t value);
 switch_status_t switch_bd_ipv6_urpf_mode_get(switch_handle_t bd_handle,
                                              uint64_t *value);
+switch_status_t switch_bd_nat_mode_set(switch_handle_t bd_handle,
+                                       uint8_t value);
+switch_status_t switch_bd_nat_mode_get(switch_handle_t bd_handle,
+                                       uint8_t *value);
 switch_status_t switch_bd_router_mac_handle_set(switch_handle_t bd_handle,
                                                 switch_handle_t rmac_handle);
 switch_status_t switch_api_vlan_xlate_add(switch_device_t device,

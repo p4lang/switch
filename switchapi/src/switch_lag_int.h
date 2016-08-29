@@ -17,6 +17,7 @@ limitations under the License.
 #include "switchapi/switch_id.h"
 #include "switchapi/switch_handle.h"
 #include "switchapi/switch_lag.h"
+#include "switch_pd_types.h"
 
 #ifndef _switch_lag_internal_h_
 #define _switch_lag_internal_h_

@@ -26,6 +26,7 @@ extern "C" {
 #include <switchapi/switch_status.h>
 #include <switchapi/switch_tunnel.h>
 #include <switchapi/switch_stp.h>
+#include <switchapi/switch_nat.h>
 #include <switchapi/switch_vrf.h>
 #include <switchapi/switch_hostif.h>
 #include <switchapi/switch_protocol.h>
@@ -33,18 +34,24 @@ extern "C" {
 #include <switchapi/switch_neighbor.h>
 #include <switchapi/switch_mirror.h>
 #include <switchapi/switch_meter.h>
+#include <switchapi/switch_qos.h>
+#include <switchapi/switch_queue.h>
+#include <switchapi/switch_INT.h>
 #include "switch_interface_int.h"
 #include "switch_hostif_int.h"
 #include "switch_vlan_int.h"
 #include "switch_l2_int.h"
 #include "switch_l3_int.h"
 #include "switch_mcast_int.h"
+#include "switch_nat_int.h"
 #include "switch_port_int.h"
 #include "switch_rmac_int.h"
 #include "switch_defines.h"
 #include "switch_mirror_int.h"
 #include "switch_meter_int.h"
 #include "switch_sflow_int.h"
+#include "switch_buffer_int.h"
+#include "switch_qos_int.h"
 
 #define SWITCH_MAX_DEVICE 32
 
@@ -310,10 +317,8 @@ p4_pd_status_t switch_pd_egress_vlan_xlate_table_delete_entry(
 
 p4_pd_status_t switch_pd_ingress_port_mapping_table_add_entry(
     switch_device_t device,
-    switch_port_t port_id,
     switch_ifindex_t ifindex,
-    switch_port_type_t port_type,
-    p4_pd_entry_hdl_t *entry_hdl);
+    switch_port_info_t *port_info);
 
 p4_pd_status_t switch_pd_ingress_port_mapping_table_delete_entry(
     switch_device_t device, p4_pd_entry_hdl_t *entry_hdl);
@@ -323,20 +328,12 @@ p4_pd_status_t switch_pd_egress_port_mapping_table_add_entry(
     switch_port_t port_id,
     switch_ifindex_t ifindex,
     switch_port_type_t port_type,
+    switch_qos_group_t qos_group,
     p4_pd_entry_hdl_t *entry_hdl);
 
 p4_pd_status_t switch_pd_egress_port_mapping_table_delete_entry(
     switch_device_t device, p4_pd_entry_hdl_t entry_hdl);
 
-p4_pd_status_t switch_pd_egress_port_mapping_table_add_entry(
-    switch_device_t device,
-    switch_port_t port_id,
-    switch_ifindex_t ifindex,
-    switch_port_type_t port_type,
-    p4_pd_entry_hdl_t *entry_hdl);
-
-p4_pd_status_t switch_pd_egress_port_mapping_table_delete_entry(
-    switch_device_t device, p4_pd_entry_hdl_t entry_hdl);
 /*
  * Rewrite table
  */
@@ -410,6 +407,25 @@ p4_pd_status_t switch_pd_smac_rewrite_table_add_entry(
 
 p4_pd_status_t switch_pd_smac_rewrite_table_delete_entry(
     switch_device_t device, switch_smac_entry_t *smac_entry);
+
+p4_pd_status_t switch_pd_nat_init(switch_device_t device);
+
+p4_pd_status_t switch_pd_nat_table_add_entry(switch_device_t device,
+                                             switch_interface_info_t *intf_info,
+                                             switch_nat_info_t *nat_info,
+                                             p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t switch_pd_nat_table_delete_entry(switch_device_t device,
+                                                switch_nat_info_t *nat_info,
+                                                p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t switch_pd_nat_rewrite_table_add_entry(
+    switch_device_t device,
+    switch_nat_info_t *nat_info,
+    p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t switch_pd_nat_rewrite_table_delete_entry(
+    switch_device_t device, p4_pd_entry_hdl_t entry_hdl);
 
 p4_pd_status_t switch_pd_cpu_rewrite_add_entry(switch_device_t device,
                                                switch_port_t port_id);
@@ -610,19 +626,6 @@ p4_pd_status_t switch_pd_mac_acl_table_add_entry(
 p4_pd_status_t switch_pd_mac_acl_table_delete_entry(
     switch_device_t device, p4_pd_entry_hdl_t entry_hdl);
 
-p4_pd_status_t switch_pd_qos_acl_table_add_entry(
-    switch_device_t device,
-    uint16_t if_label,
-    uint16_t bd_label,
-    uint16_t priority,
-    unsigned int count,
-    switch_acl_qos_key_value_pair_t *qos_acl,
-    switch_acl_mac_action_t action,
-    p4_pd_entry_hdl_t *entry_hdl);
-
-p4_pd_status_t switch_pd_qos_acl_table_delete_entry(
-    switch_device_t device, p4_pd_entry_hdl_t entry_hdl);
-
 p4_pd_status_t switch_pd_system_acl_table_add_entry(
     switch_device_t device,
     uint16_t if_label,
@@ -758,6 +761,9 @@ p4_pd_status_t switch_pd_tunnel_src_rewrite_table_add_default_entry(
 p4_pd_status_t switch_pd_tunnel_dst_rewrite_table_add_default_entry(
     switch_device_t device);
 
+p4_pd_status_t switch_pd_adjust_lkp_fields_table_add_default_entry(
+    switch_device_t device);
+
 p4_pd_status_t switch_pd_tunnel_table_add_default_entry(switch_device_t device);
 
 p4_pd_status_t switch_pd_bd_stats_table_add_default_entry(
@@ -830,12 +836,17 @@ p4_pd_status_t switch_pd_mirror_table_entry_delete(
 switch_status_t switch_pd_mirror_table_add_default_entry(
     switch_device_t device);
 
-switch_status_t switch_pd_neg_mirror_add_entry(switch_device_t device);
+switch_status_t switch_pd_mtu_table_add_ipv4_check(switch_device_t device,
+                                                   uint16_t mtu_index,
+                                                   uint32_t mtu);
+
+switch_status_t switch_pd_mtu_table_add_ipv6_check(switch_device_t device,
+                                                   uint16_t mtu_index,
+                                                   uint32_t mtu);
 
 p4_pd_status_t p4_pd_complete_operations(p4_pd_sess_hdl_t shdl);
 
-p4_pd_status_t p4_pd_client_init(p4_pd_sess_hdl_t *sess_hdl,
-                                 uint32_t max_txn_size);
+p4_pd_status_t p4_pd_client_init(p4_pd_sess_hdl_t *sess_hdl);
 
 #ifdef P4_INT_TRANSIT_ENABLE
 // INT APIs
@@ -942,6 +953,16 @@ switch_status_t switch_pd_sflow_session_create(switch_device_t device,
 switch_status_t switch_pd_sflow_session_delete(switch_device_t device,
                                                switch_sflow_info_t *sflow_info);
 
+switch_status_t switch_pd_sflow_counter_read(
+    switch_device_t device,
+    switch_sflow_match_entry_t *match_entry,
+    switch_counter_t *sw_counter);
+
+switch_status_t switch_pd_sflow_counter_write(
+    switch_device_t device,
+    switch_sflow_match_entry_t *match_entry,
+    switch_counter_t val);
+
 #endif
 
 p4_pd_status_t switch_pd_stats_update(switch_device_t device);
@@ -961,6 +982,197 @@ p4_pd_status_t switch_pd_egress_bd_stats_table_delete_entry(
 p4_pd_status_t switch_pd_acl_stats_get(switch_device_t device,
                                        uint16_t acl_stats_index,
                                        switch_counter_t *acl_counter);
+
+switch_status_t switch_pd_ingress_pool_init(
+    switch_device_t device, switch_buffer_pool_info_t *pool_info);
+
+switch_status_t switch_pd_egress_pool_init(
+    switch_device_t device, switch_buffer_pool_info_t *pool_info);
+
+p4_pd_status_t switch_pd_buffer_pool_set(switch_device_t device,
+                                         switch_pd_pool_id_t pool_id,
+                                         uint32_t pool_size);
+
+p4_pd_status_t switch_pd_buffer_pool_color_drop_enable(
+    switch_device_t device, switch_pd_pool_id_t pool_id, bool enable);
+
+p4_pd_status_t switch_pd_buffer_pool_pfc_limit(switch_device_t device,
+                                               switch_pd_pool_id_t pool_id,
+                                               uint8_t icos,
+                                               uint32_t num_bytes);
+
+p4_pd_status_t switch_pd_buffer_skid_limit_set(switch_device_t device,
+                                               uint32_t num_bytes);
+
+p4_pd_status_t switch_pd_buffer_skid_hysteresis_set(switch_device_t device,
+                                                    uint32_t num_bytes);
+
+p4_pd_status_t switch_pd_buffer_pool_color_limit_set(
+    switch_device_t device,
+    switch_pd_pool_id_t pool_id,
+    switch_color_t color,
+    uint32_t num_bytes);
+
+switch_status_t switch_pd_buffer_pool_color_hysteresis_set(
+    switch_device_t device, switch_color_t color, uint32_t num_bytes);
+
+p4_pd_status_t switch_pd_qos_default_entry_add(switch_device_t device);
+
+p4_pd_status_t switch_pd_qos_map_ingress_entry_add(
+    switch_device_t device,
+    switch_qos_map_ingress_t qos_map_type,
+    switch_qos_group_t qos_group_id,
+    switch_qos_map_t *qos_map,
+    p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t switch_pd_qos_map_ingress_entry_delete(
+    switch_device_t device,
+    switch_qos_map_ingress_t qos_map_type,
+    p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t switch_pd_qos_map_egress_entry_add(
+    switch_device_t device,
+    switch_qos_map_egress_t qos_map_type,
+    switch_qos_group_t qos_group_id,
+    switch_qos_map_t *qos_map,
+    p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t switch_pd_qos_map_egress_entry_delete(
+    switch_device_t device,
+    switch_qos_map_egress_t qos_map_type,
+    p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t switch_pd_port_drop_limit_set(switch_device_t device,
+                                             switch_handle_t port_handle,
+                                             uint32_t num_bytes);
+
+p4_pd_status_t switch_pd_port_drop_hysteresis_set(switch_device_t device,
+                                                  switch_handle_t port_handle,
+                                                  uint32_t num_bytes);
+
+p4_pd_status_t switch_pd_port_pfc_cos_mapping(switch_device_t device,
+                                              switch_handle_t port_handle,
+                                              uint8_t *cos_to_icos);
+
+p4_pd_status_t switch_pd_port_flowcontrol_mode_set(
+    switch_device_t device,
+    switch_handle_t port_handle,
+    switch_flowcontrol_type_t flow_control);
+
+p4_pd_status_t switch_pd_ppg_create(switch_device_t device,
+                                    switch_handle_t port_handle,
+                                    switch_tm_ppg_hdl_t *ppg_handle);
+
+p4_pd_status_t switch_pd_ppg_delete(switch_device_t device,
+                                    switch_tm_ppg_hdl_t ppg_handle);
+
+p4_pd_status_t switch_pd_port_ppg_tc_mapping(switch_device_t device,
+                                             switch_tm_ppg_hdl_t tm_ppg_handle,
+                                             uint8_t icos_bmp);
+
+p4_pd_status_t switch_pd_ppg_lossless_enable(switch_device_t device,
+                                             switch_tm_ppg_hdl_t tm_ppg_handle,
+                                             bool enable);
+
+p4_pd_status_t switch_pd_ppg_guaranteed_limit_set(
+    switch_device_t device,
+    switch_tm_ppg_hdl_t tm_ppg_handle,
+    uint32_t num_bytes);
+
+p4_pd_status_t switch_pd_ppg_skid_limit_set(switch_device_t device,
+                                            switch_tm_ppg_hdl_t tm_ppg_handle,
+                                            uint32_t num_bytes);
+
+p4_pd_status_t switch_pd_ppg_skid_hysteresis_set(
+    switch_device_t device,
+    switch_tm_ppg_hdl_t tm_ppg_handle,
+    uint32_t num_bytes);
+
+p4_pd_status_t switch_pd_ppg_pool_usage_set(
+    switch_device_t device,
+    switch_tm_ppg_hdl_t tm_ppg_handle,
+    switch_pd_pool_id_t pool_id,
+    switch_api_buffer_profile_t *buffer_profile_info,
+    bool enable);
+
+p4_pd_status_t switch_pd_queue_pool_usage_set(
+    switch_device_t device,
+    switch_handle_t port_handle,
+    switch_qid_t qid,
+    switch_pd_pool_id_t pool_id,
+    switch_api_buffer_profile_t *buffer_profile_info,
+    bool enable);
+
+p4_pd_status_t switch_pd_queue_color_drop_enable(switch_device_t device,
+                                                 switch_handle_t port_handle,
+                                                 switch_qid_t queue_id,
+                                                 bool enable);
+
+p4_pd_status_t switch_pd_queue_color_limit_set(switch_device_t device,
+                                               switch_handle_t port_handle,
+                                               switch_qid_t queue_id,
+                                               switch_color_t color,
+                                               uint32_t limit);
+
+p4_pd_status_t switch_pd_queue_color_hysteresis_set(switch_device_t device,
+                                                    switch_handle_t port_handle,
+                                                    switch_qid_t queue_id,
+                                                    switch_color_t color,
+                                                    uint32_t limit);
+
+p4_pd_status_t switch_pd_queue_pfc_cos_mapping(switch_device_t device,
+                                               switch_handle_t port_handle,
+                                               switch_qid_t queue_id,
+                                               uint8_t cos);
+
+p4_pd_status_t switch_pd_queue_port_mapping(switch_device_t device,
+                                            switch_handle_t port_handle,
+                                            uint8_t queue_count,
+                                            uint8_t *queue_mapping);
+
+p4_pd_status_t switch_pd_queue_scheduling_enable(switch_device_t device,
+                                                 switch_handle_t port_handle,
+                                                 switch_qid_t queue_id,
+                                                 bool enable);
+
+p4_pd_status_t switch_pd_queue_scheduling_strict_priority_set(
+    switch_device_t device,
+    switch_handle_t port_handle,
+    switch_qid_t queue_id,
+    uint32_t priority);
+
+p4_pd_status_t switch_pd_queue_scheduling_remaining_bw_priority_set(
+    switch_device_t device,
+    switch_handle_t port_handle,
+    switch_qid_t queue_id,
+    uint32_t priority);
+
+p4_pd_status_t switch_pd_queue_scheduling_dwrr_weight_set(
+    switch_device_t device,
+    switch_handle_t port_handle,
+    switch_qid_t queue_id,
+    uint16_t weight);
+
+p4_pd_status_t switch_pd_queue_scheduling_guaranteed_shaping_set(
+    switch_device_t device,
+    switch_handle_t port_handle,
+    switch_qid_t queue_id,
+    bool pps,
+    uint32_t burst_size,
+    uint32_t rate);
+
+p4_pd_status_t switch_pd_queue_scheduling_dwrr_shaping_set(
+    switch_device_t device,
+    switch_handle_t port_handle,
+    switch_qid_t queue_id,
+    bool pps,
+    uint32_t burst_size,
+    uint32_t rate);
+
+p4_pd_status_t switch_pd_hostif_meter_set(switch_device_t device,
+                                          uint16_t meter_id,
+                                          switch_meter_info_t *meter_info,
+                                          bool enable);
 
 #ifdef __cplusplus
 }

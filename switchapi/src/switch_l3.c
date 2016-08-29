@@ -23,6 +23,7 @@ limitations under the License.
 #include "switch_pd.h"
 #include "switch_nhop_int.h"
 #include "switch_l3_int.h"
+#include "switch_lpm_int.h"
 #include "switch_hostif_int.h"
 #include "switch_log_int.h"
 #include "arpa/inet.h"
@@ -37,8 +38,11 @@ static tommy_hashtable switch_l3_hash_table;
 static void *switch_vrf_v4_routes = NULL;
 static void *switch_vrf_v6_routes = NULL;
 
+static void *switch_vrf_v4_lpm_tries = NULL;
+static void *switch_vrf_v6_lpm_tries = NULL;
+
 static inline unsigned int prefix_to_v4_mask(unsigned int prefix) {
-  return (0xFFFFFFFF << (32 - prefix)) & 0xFFFFFFFF;
+  return (prefix ? ((0xFFFFFFFF << (32 - prefix)) & 0xFFFFFFFF) : 0);
 }
 
 static void prefix_to_v6_mask(unsigned int prefix, uint8_t *mask) {
@@ -50,6 +54,13 @@ static void prefix_to_v6_mask(unsigned int prefix, uint8_t *mask) {
   if (i != 8) {
     mask[i] = (0xFF << (128 - prefix)) & 0xFF;
   }
+}
+
+static inline bool switch_l3_host_entry(switch_ip_addr_t *ip_addr) {
+  if (ip_addr->type == SWITCH_API_IP_ADDR_V4)
+    return ip_addr->prefix_len == SWITCH_IPV4_PREFIX_LENGTH ? TRUE : FALSE;
+  else
+    return ip_addr->prefix_len == SWITCH_IPV6_PREFIX_LENGTH ? TRUE : FALSE;
 }
 
 switch_status_t switch_l3_init(switch_device_t device) {
@@ -184,6 +195,116 @@ static switch_status_t switch_l3_remove_from_vrf_list(
   return status;
 }
 
+static switch_status_t switch_l3_insert_into_lpm_trie(
+    switch_handle_t vrf,
+    switch_ip_addr_t *ip_addr,
+    switch_l3_hash_t *hash_entry) {
+  switch_lpm_trie_t *lpm_trie = NULL;
+  void *temp = NULL;
+  size_t key_width_bytes;
+  char *prefix;
+  uint32_t v4addr;
+
+  if (ip_addr->type == SWITCH_API_IP_ADDR_V4) {
+    JLG(temp, switch_vrf_v4_lpm_tries, vrf);
+    key_width_bytes = 4;
+    v4addr = htonl(ip_addr->ip.v4addr);
+    prefix = (char *)(&v4addr);
+  } else {
+    JLG(temp, switch_vrf_v6_lpm_tries, vrf);
+    key_width_bytes = 16;
+    prefix = (char *)(ip_addr->ip.v6addr);
+  }
+
+  if (!temp) {
+    lpm_trie = switch_lpm_trie_create(key_width_bytes, TRUE);
+    if (!lpm_trie) {
+      SWITCH_API_ERROR("%s:%d: No memory!", __FUNCTION__, __LINE__);
+      return SWITCH_STATUS_NO_MEMORY;
+    }
+
+    if (ip_addr->type == SWITCH_API_IP_ADDR_V4) {
+      JLI(temp, switch_vrf_v4_lpm_tries, vrf);
+    } else {
+      JLI(temp, switch_vrf_v6_lpm_tries, vrf);
+    }
+    *(unsigned long *)temp = (unsigned long)(lpm_trie);
+  }
+
+  lpm_trie = (switch_lpm_trie_t *)(*(unsigned long *)temp);
+  switch_lpm_trie_insert(
+      lpm_trie, prefix, ip_addr->prefix_len, (unsigned long)hash_entry);
+
+  return SWITCH_STATUS_SUCCESS;
+}
+
+static switch_status_t switch_l3_remove_from_lpm_trie(
+    switch_handle_t vrf, switch_ip_addr_t *ip_addr) {
+  switch_lpm_trie_t *lpm_trie = NULL;
+  void *temp = NULL;
+  char *prefix;
+  uint32_t v4addr;
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
+
+  if (ip_addr->type == SWITCH_API_IP_ADDR_V4) {
+    JLG(temp, switch_vrf_v4_lpm_tries, vrf);
+    v4addr = htonl(ip_addr->ip.v4addr);
+    prefix = (char *)(&v4addr);
+  } else {
+    JLG(temp, switch_vrf_v6_lpm_tries, vrf);
+    prefix = (char *)(ip_addr->ip.v6addr);
+  }
+
+  if (!temp) {
+    SWITCH_API_ERROR(
+        "%s:%d: No LPM trie for this vrf %u!", __FUNCTION__, __LINE__, vrf);
+    return SWITCH_STATUS_ITEM_NOT_FOUND;
+  }
+
+  lpm_trie = (switch_lpm_trie_t *)(*(unsigned long *)temp);
+  switch_lpm_trie_delete(lpm_trie, prefix, ip_addr->prefix_len);
+  if (switch_lpm_trie_size(lpm_trie) == 0) {
+    if (ip_addr->type == SWITCH_API_IP_ADDR_V4) {
+      JLD(status, switch_vrf_v4_lpm_tries, vrf);
+    } else {
+      JLD(status, switch_vrf_v6_lpm_tries, vrf);
+    }
+  }
+
+  return status;
+}
+
+static switch_l3_hash_t *switch_l3_lookup_lpm_trie(switch_handle_t vrf,
+                                                   switch_ip_addr_t *ip_addr) {
+  switch_lpm_trie_t *lpm_trie = NULL;
+  void *temp = NULL;
+  switch_l3_hash_t *hash_entry;
+  char *prefix;
+  uint32_t v4addr;
+
+  if (ip_addr->type == SWITCH_API_IP_ADDR_V4) {
+    JLG(temp, switch_vrf_v4_lpm_tries, vrf);
+    v4addr = htonl(ip_addr->ip.v4addr);
+    prefix = (char *)(&v4addr);
+  } else {
+    JLG(temp, switch_vrf_v6_lpm_tries, vrf);
+    prefix = (char *)(ip_addr->ip.v6addr);
+  }
+
+  if (!temp) {
+    SWITCH_API_ERROR(
+        "%s:%d: No LPM trie for this vrf %u!", __FUNCTION__, __LINE__, vrf);
+    return NULL;
+  }
+
+  lpm_trie = (switch_lpm_trie_t *)(*(unsigned long *)temp);
+  if (switch_lpm_trie_lookup(lpm_trie, prefix, (unsigned long *)(&hash_entry)))
+    return hash_entry;
+
+  SWITCH_API_ERROR("%s: hash_entry not found.\n", __FUNCTION__);
+  return NULL;
+}
+
 static switch_l3_hash_t *switch_l3_insert_hash(switch_handle_t vrf,
                                                switch_ip_addr_t *ip_addr,
                                                switch_handle_t interface) {
@@ -191,6 +312,7 @@ static switch_l3_hash_t *switch_l3_insert_hash(switch_handle_t vrf,
   unsigned char key[SWITCH_L3_HASH_KEY_SIZE];
   unsigned int len = 0;
   uint32_t hash;
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
 
   switch_l3_hash_key_init(key, vrf, ip_addr, &len, &hash);
   hash_entry = switch_malloc(sizeof(switch_l3_hash_t), 1);
@@ -199,6 +321,15 @@ static switch_l3_hash_t *switch_l3_insert_hash(switch_handle_t vrf,
   }
   memcpy(hash_entry->key, key, SWITCH_L3_HASH_KEY_SIZE);
   hash_entry->path_count = 1;
+
+  if (!switch_l3_host_entry(ip_addr)) {
+    status = switch_l3_insert_into_lpm_trie(vrf, ip_addr, hash_entry);
+    if (status != SWITCH_STATUS_SUCCESS) {
+      switch_free(hash_entry);
+      return NULL;
+    }
+  }
+
   tommy_hashtable_insert(
       &switch_l3_hash_table, &(hash_entry->node), hash_entry, hash);
   switch_l3_insert_into_vrf_list(hash_entry);
@@ -216,6 +347,10 @@ static switch_status_t switch_l3_delete_hash(switch_handle_t vrf,
   unsigned int len = 0;
   uint32_t hash;
   switch_status_t status = SWITCH_STATUS_SUCCESS;
+
+  if (!switch_l3_host_entry(ip_addr)) {
+    switch_l3_remove_from_lpm_trie(vrf, ip_addr);
+  }
 
   switch_l3_hash_key_init(key, vrf, ip_addr, &len, &hash);
   hash_entry = tommy_hashtable_remove(
@@ -235,6 +370,81 @@ static switch_l3_hash_t *switch_l3_search_hash(switch_handle_t vrf,
   switch_l3_hash_t *hash_entry = tommy_hashtable_search(
       &switch_l3_hash_table, switch_l3_hash_cmp, key, hash);
   return hash_entry;
+}
+
+switch_status_t switch_api_l3_route_lookup(switch_device_t device,
+                                           switch_handle_t vrf,
+                                           switch_ip_addr_t *ip_addr,
+                                           switch_handle_t *nhop_handle) {
+  switch_l3_hash_t *hash_entry = NULL;
+  switch_nhop_info_t *nhop_info = NULL;
+
+  if (switch_l3_host_entry(ip_addr)) {
+    // host entry, first search hash
+    hash_entry = switch_l3_search_hash(vrf, ip_addr);
+  }
+
+  if (!hash_entry) {
+    // try LPM lookup
+    hash_entry = switch_l3_lookup_lpm_trie(vrf, ip_addr);
+  }
+
+  if (!hash_entry) {
+    *nhop_handle = SWITCH_API_INVALID_HANDLE;
+    return SWITCH_STATUS_ITEM_NOT_FOUND;
+  }
+
+  nhop_info = switch_nhop_get(hash_entry->nhop_handle);
+  if (!nhop_info) {
+    SWITCH_API_ERROR("%s:%d: Invalid nexthop!", __FUNCTION__, __LINE__);
+    *nhop_handle = SWITCH_API_INVALID_HANDLE;
+    return SWITCH_STATUS_ITEM_NOT_FOUND;
+  }
+
+  *nhop_handle = hash_entry->nhop_handle;
+  return SWITCH_STATUS_SUCCESS;
+}
+
+switch_status_t switch_api_l3_route_nhop_intf_get(
+    switch_device_t device,
+    switch_handle_t vrf,
+    switch_ip_addr_t *ip_addr,
+    switch_handle_t *intf_handle) {
+  switch_nhop_info_t *nhop_info = NULL;
+  switch_spath_info_t *spath_info = NULL;
+  switch_interface_info_t *intf_info = NULL;
+  switch_handle_t nhop_handle = SWITCH_API_INVALID_HANDLE;
+  switch_status_t status;
+
+  *intf_handle = SWITCH_API_INVALID_HANDLE;
+
+  status = switch_api_l3_route_lookup(device, vrf, ip_addr, &nhop_handle);
+  if (status != SWITCH_STATUS_SUCCESS) {
+    return SWITCH_STATUS_ITEM_NOT_FOUND;
+  }
+
+  nhop_info = switch_nhop_get(nhop_handle);
+  if (!nhop_info) {
+    return SWITCH_STATUS_ITEM_NOT_FOUND;
+  }
+
+  if (nhop_info->type != SWITCH_NHOP_INDEX_TYPE_ONE_PATH) {
+    return SWITCH_STATUS_ITEM_NOT_FOUND;
+  }
+
+  spath_info = &(SWITCH_NHOP_SPATH_INFO(nhop_info));
+  if (!spath_info) {
+    return SWITCH_STATUS_ITEM_NOT_FOUND;
+  }
+
+  // additional check if intf_handle is valid
+  intf_info = switch_api_interface_get(spath_info->nhop_key.intf_handle);
+  if (!intf_info) {
+    return SWITCH_STATUS_ITEM_NOT_FOUND;
+  }
+
+  *intf_handle = spath_info->nhop_key.intf_handle;
+  return SWITCH_STATUS_SUCCESS;
 }
 
 switch_status_t switch_api_l3_interface_address_add(
@@ -335,6 +545,7 @@ switch_status_t switch_api_l3_route_add(switch_device_t device,
 
   hash_entry = switch_l3_search_hash(vrf, ip_addr);
   if (hash_entry) {
+    hash_entry->nhop_handle = nhop_handle;
 #ifdef SWITCH_PD
     status = switch_pd_ip_fib_update_entry(device,
                                            handle_to_id(vrf),
@@ -609,6 +820,12 @@ switch_status_t switch_api_init_default_route_entries(
   assert(ret == SWITCH_STATUS_SUCCESS);
 
   return SWITCH_STATUS_SUCCESS;
+}
+
+switch_status_t switch_api_mtu_create_entry(switch_device_t device,
+                                            uint16_t mtu_index,
+                                            uint32_t mtu) {
+  return switch_pd_mtu_table_add_ipv4_check(device, mtu_index, mtu);
 }
 
 #ifdef __cplusplus

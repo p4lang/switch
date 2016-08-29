@@ -18,6 +18,7 @@ from ptf.testutils import *
 from ptf.thriftutils import *
 
 from switch_api_thrift.ttypes import  *
+from switch_api_thrift.switch_api_headers import  *
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(this_dir, '..'))
@@ -57,7 +58,7 @@ class L3Multicast(api_base_tests.ThriftInterfaceDataPlane):
 
         # port 0: access port in vlan 10
         iu1 = interface_union(port_lag_handle=swports[0])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1,
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1,
                                            mac='00:77:66:55:44:33', label=0)
         self.if1 = self.client.switcht_api_interface_create(device, i_info1)
         self.pv1 = switcht_vlan_port_t(handle=self.if1, tagging_mode=0)
@@ -65,7 +66,7 @@ class L3Multicast(api_base_tests.ThriftInterfaceDataPlane):
 
         # port 1: trunk port; allowed vlans: 10, 100, 200
         iu2 = interface_union(port_lag_handle=swports[1])
-        i_info2 = switcht_interface_info_t(device=0, type=3, u=iu2,
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_TRUNK, u=iu2,
                                            mac='00:77:66:55:44:33', label=0)
         self.if2 = self.client.switcht_api_interface_create(device, i_info2)
         self.pv2 = switcht_vlan_port_t(handle=self.if2, tagging_mode=0)
@@ -75,7 +76,7 @@ class L3Multicast(api_base_tests.ThriftInterfaceDataPlane):
 
         # port 2: access port in vlan 100
         iu3 = interface_union(port_lag_handle=swports[2])
-        i_info3 = switcht_interface_info_t(device=0, type=2, u=iu3,
+        i_info3 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu3,
                                            mac='00:77:66:55:44:33', label=0)
         self.if3 = self.client.switcht_api_interface_create(device, i_info3)
         self.pv3 = switcht_vlan_port_t(handle=self.if3, tagging_mode=0)
@@ -83,35 +84,35 @@ class L3Multicast(api_base_tests.ThriftInterfaceDataPlane):
 
         # port 3: routed port
         iu4 = interface_union(port_lag_handle = swports[3])
-        i_info4 = switcht_interface_info_t(device=0, type=4, u=iu4,
+        i_info4 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu4,
                                            mac='00:77:66:55:44:33', label=0,
                                            vrf_handle=self.vrf,
                                            rmac_handle=self.rmac,
                                            v4_multicast_enabled=1,
                                            v6_multicast_enabled=1)
         self.if4 = self.client.switcht_api_interface_create(device, i_info4)
-        self.ip4 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.250.1',
+        self.ip4 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.250.1',
                                      prefix_length=24)
         self.client.switcht_api_l3_interface_address_add(device, self.if4,
                                                          self.vrf, self.ip4)
 
         # port 4: routed port
         iu5 = interface_union(port_lag_handle = swports[4])
-        i_info5 = switcht_interface_info_t(device=0, type=4, u=iu5,
+        i_info5 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3, u=iu5,
                                            mac='00:77:66:55:44:33', label=0,
                                            vrf_handle=self.vrf,
                                            rmac_handle=self.rmac,
                                            v4_multicast_enabled=1,
                                            v6_multicast_enabled=1)
         self.if5 = self.client.switcht_api_interface_create(device, i_info5)
-        self.ip5 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.251.1',
+        self.ip5 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.251.1',
                                      prefix_length=24)
         self.client.switcht_api_l3_interface_address_add(device, self.if5,
                                                          self.vrf, self.ip5)
 
         # port 5: trunk port; allowed vlans: 10, 100, 200
         iu6 = interface_union(port_lag_handle=swports[5])
-        i_info6 = switcht_interface_info_t(device=0, type=3, u=iu6,
+        i_info6 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_TRUNK, u=iu6,
                                            mac='00:77:66:55:44:33', label=0)
         self.if6 = self.client.switcht_api_interface_create(device, i_info6)
         self.pv6 = switcht_vlan_port_t(handle=self.if6, tagging_mode=0)
@@ -121,7 +122,7 @@ class L3Multicast(api_base_tests.ThriftInterfaceDataPlane):
 
         # port 6: trunk port; allowed vlans: 10, 100, 200
         iu7 = interface_union(port_lag_handle=swports[6])
-        i_info7 = switcht_interface_info_t(device=0, type=3, u=iu7,
+        i_info7 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_TRUNK, u=iu7,
                                            mac='00:77:66:55:44:33', label=0)
         self.if7 = self.client.switcht_api_interface_create(device, i_info7)
         self.pv7 = switcht_vlan_port_t(handle=self.if7, tagging_mode=0)
@@ -131,7 +132,7 @@ class L3Multicast(api_base_tests.ThriftInterfaceDataPlane):
 
         # port 7: trunk port; allowed vlans: 10, 100, 200
         iu8 = interface_union(port_lag_handle=swports[7])
-        i_info8 = switcht_interface_info_t(device=0, type=3, u=iu8,
+        i_info8 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_TRUNK, u=iu8,
                                            mac='00:77:66:55:44:33', label=0)
         self.if8 = self.client.switcht_api_interface_create(device, i_info8)
         self.pv8 = switcht_vlan_port_t(handle=self.if8, tagging_mode=0)
@@ -141,7 +142,7 @@ class L3Multicast(api_base_tests.ThriftInterfaceDataPlane):
 
         # Create L3 virtual interface for vlan 10
         iu = interface_union(vlan_id=10)
-        i_info = switcht_interface_info_t(device=0, type=5, u=iu,
+        i_info = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L3_VLAN, u=iu,
                                           mac='00:77:66:55:44:33',
                                           label=0, vrf_handle=self.vrf,
                                           rmac_handle=self.rmac,
@@ -150,14 +151,16 @@ class L3Multicast(api_base_tests.ThriftInterfaceDataPlane):
                                           v4_multicast_enabled=1,
                                           v6_multicast_enabled=1)
         self.if20 = self.client.switcht_api_interface_create(device, i_info)
-        self.ip20 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.10.1',
+        self.ip20 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.10.1',
                                       prefix_length=24)
         self.client.switcht_api_l3_interface_address_add(device, self.if20,
                                                          self.vrf, self.ip20)
 
         # Create L3 virtual interface for vlan 100
         iu = interface_union(vlan_id=100)
-        i_info = switcht_interface_info_t(device=0, type=5, u=iu,
+        i_info = switcht_interface_info_t(device=0,
+                                          type=SWITCH_API_INTERFACE_L3_VLAN,
+                                          u=iu,
                                           mac='00:77:66:55:44:33',
                                           label=0, vrf_handle=self.vrf,
                                           rmac_handle=self.rmac,
@@ -166,14 +169,16 @@ class L3Multicast(api_base_tests.ThriftInterfaceDataPlane):
                                           v4_multicast_enabled=1,
                                           v6_multicast_enabled=1)
         self.if21 = self.client.switcht_api_interface_create(device, i_info)
-        self.ip21 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.100.1',
+        self.ip21 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.100.1',
                                       prefix_length=24)
         self.client.switcht_api_l3_interface_address_add(device, self.if21,
                                                          self.vrf, self.ip21)
 
         # Create L3 virtual interface for vlan 200
         iu = interface_union(vlan_id=200)
-        i_info = switcht_interface_info_t(device=0, type=5, u=iu,
+        i_info = switcht_interface_info_t(device=0,
+                                          type=SWITCH_API_INTERFACE_L3_VLAN,
+                                          u=iu,
                                           mac='00:77:66:55:44:33',
                                           label=0, vrf_handle=self.vrf,
                                           rmac_handle=self.rmac,
@@ -182,7 +187,7 @@ class L3Multicast(api_base_tests.ThriftInterfaceDataPlane):
                                           v4_multicast_enabled=1,
                                           v6_multicast_enabled=1)
         self.if22 = self.client.switcht_api_interface_create(device, i_info)
-        self.ip22 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.200.1',
+        self.ip22 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.200.1',
                                       prefix_length=24)
         self.client.switcht_api_l3_interface_address_add(device, self.if22,
                                                          self.vrf, self.ip22)
@@ -190,7 +195,8 @@ class L3Multicast(api_base_tests.ThriftInterfaceDataPlane):
         # logical network
         ln_flags = switcht_ln_flags(ipv4_unicast_enabled=1,
                                     ipv4_multicast_enabled=1)
-        ln_info = switcht_logical_network_t(type=5, age_interval=1800,
+        ln_info = switcht_logical_network_t(type=SWITCH_LOGICAL_NETWORK_TYPE_ENCAP_ENHANCED,
+                                            age_interval=1800,
                                             vrf=self.vrf,
                                             rmac_handle=self.rmac,
                                             flags=ln_flags)
@@ -199,19 +205,20 @@ class L3Multicast(api_base_tests.ThriftInterfaceDataPlane):
 
         # tunnel interface
         udp = switcht_udp_t(src_port=0, dst_port=4789)
-        src_ip = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.10.1',
+        src_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.10.1',
                                    prefix_length=32)
-        dst_ip = switcht_ip_addr_t(addr_type=0, ipaddr='235.0.2.2',
+        dst_ip = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='235.0.2.2',
                                    prefix_length=32)
         vxlan = switcht_vxlan_id_t(vnid=0x5768)
         bt = switcht_bridge_type(vxlan_info=vxlan)
-        encap_info = switcht_encap_info_t(encap_type=3, u=bt)
+        encap_info = switcht_encap_info_t(encap_type=SWITCH_API_ENCAP_TYPE_VXLAN, u=bt)
         udp_tcp = switcht_udp_tcp_t(udp=udp)
         ip_encap =  switcht_ip_encap_t(vrf=self.vrf, src_ip=src_ip,
                                        dst_ip=dst_ip, ttl=60, proto=17,
                                        u=udp_tcp)
         tunnel_encap = switcht_tunnel_encap_t(ip_encap=ip_encap)
-        iu = switcht_tunnel_info_t(encap_mode=0, tunnel_encap=tunnel_encap,
+        iu = switcht_tunnel_info_t(encap_mode=SWITCH_API_TUNNEL_ENCAP_MODE_IP,
+                                   tunnel_encap=tunnel_encap,
                                    encap_info=encap_info, out_if=self.if5)
         self.tif1 = self.client.switcht_api_tunnel_interface_create(device,
                                                                     0, iu)
@@ -268,9 +275,9 @@ class L3Multicast(api_base_tests.ThriftInterfaceDataPlane):
                                                      self.route_ports)
 
         # create a ip multicast route (10.0.10.5,230.1.1.5)
-        self.msrc_ip1 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.10.5',
+        self.msrc_ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.10.5',
                                          prefix_length=32)
-        self.mgrp_ip1 = switcht_ip_addr_t(addr_type=0, ipaddr='230.1.1.5',
+        self.mgrp_ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='230.1.1.5',
                                          prefix_length=32)
         rpflist = [ self.vlan1 ]
         self.client.switcht_api_multicast_mroute_add(device, self.mch1,
@@ -280,9 +287,9 @@ class L3Multicast(api_base_tests.ThriftInterfaceDataPlane):
                                                      rpflist, len(rpflist))
 
         # create (outer) ip multicast route (*,235.0.2.2)
-        self.msrc_ip2 = switcht_ip_addr_t(addr_type=0, ipaddr='0.0.0.0',
+        self.msrc_ip2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='0.0.0.0',
                                           prefix_length=0)
-        self.mgrp_ip2 = switcht_ip_addr_t(addr_type=0, ipaddr='235.0.2.2',
+        self.mgrp_ip2 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='235.0.2.2',
                                           prefix_length=32)
         rpflist = [ self.if5 ]
         self.client.switcht_api_multicast_mroute_add(device, 0,
@@ -292,9 +299,9 @@ class L3Multicast(api_base_tests.ThriftInterfaceDataPlane):
                                                      rpflist, len(rpflist))
 
         # create (inner) ip multicast route (*,230.1.1.6)
-        self.msrc_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='0.0.0.0',
+        self.msrc_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='0.0.0.0',
                                          prefix_length=0)
-        self.mgrp_ip3 = switcht_ip_addr_t(addr_type=0, ipaddr='230.1.1.6',
+        self.mgrp_ip3 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='230.1.1.6',
                                          prefix_length=32)
         rpflist = [ self.ln1 ]
         self.client.switcht_api_multicast_mroute_add(device, self.mch1,
@@ -451,7 +458,7 @@ class L3Multicast(api_base_tests.ThriftInterfaceDataPlane):
         p2 = [swports[2], [pkt1]]
         p5 = [swports[5], [pkt]]
         p7 = [swports[7], [pkt]]
-        p64 = [swports[64], [cpu_pkt]]
+        p64 = [swports[cpu_port], [cpu_pkt]]
         verify_multiple_packets_on_ports(self, [p1, p2, p5, p7, p64])
 
         print "IPv4 multicast (tunneled packet)"
@@ -638,7 +645,7 @@ class L3MulticastBidir(api_base_tests.ThriftInterfaceDataPlane):
 
         # port 0: access port in vlan 10
         iu1 = interface_union(port_lag_handle=swports[0])
-        i_info1 = switcht_interface_info_t(device=0, type=2, u=iu1,
+        i_info1 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu1,
                                            mac='00:77:66:55:44:33', label=0)
         self.if1 = self.client.switcht_api_interface_create(device, i_info1)
         self.pv1 = switcht_vlan_port_t(handle=self.if1, tagging_mode=0)
@@ -646,7 +653,7 @@ class L3MulticastBidir(api_base_tests.ThriftInterfaceDataPlane):
 
         # port 1: trunk port; allowed vlans: 10, 100, 200
         iu2 = interface_union(port_lag_handle=swports[1])
-        i_info2 = switcht_interface_info_t(device=0, type=3, u=iu2,
+        i_info2 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_TRUNK, u=iu2,
                                            mac='00:77:66:55:44:33', label=0)
         self.if2 = self.client.switcht_api_interface_create(device, i_info2)
         self.pv2 = switcht_vlan_port_t(handle=self.if2, tagging_mode=0)
@@ -656,7 +663,7 @@ class L3MulticastBidir(api_base_tests.ThriftInterfaceDataPlane):
 
         # port 2: access port in vlan 100
         iu3 = interface_union(port_lag_handle=swports[2])
-        i_info3 = switcht_interface_info_t(device=0, type=2, u=iu3,
+        i_info3 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_ACCESS, u=iu3,
                                            mac='00:77:66:55:44:33', label=0)
         self.if3 = self.client.switcht_api_interface_create(device, i_info3)
         self.pv3 = switcht_vlan_port_t(handle=self.if3, tagging_mode=0)
@@ -664,7 +671,7 @@ class L3MulticastBidir(api_base_tests.ThriftInterfaceDataPlane):
 
         # port 5: trunk port; allowed vlans: 10, 100, 200
         iu6 = interface_union(port_lag_handle=swports[5])
-        i_info6 = switcht_interface_info_t(device=0, type=3, u=iu6,
+        i_info6 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_TRUNK, u=iu6,
                                            mac='00:77:66:55:44:33', label=0)
         self.if6 = self.client.switcht_api_interface_create(device, i_info6)
         self.pv6 = switcht_vlan_port_t(handle=self.if6, tagging_mode=0)
@@ -674,7 +681,7 @@ class L3MulticastBidir(api_base_tests.ThriftInterfaceDataPlane):
 
         # port 6: trunk port; allowed vlans: 10, 100, 200
         iu7 = interface_union(port_lag_handle=swports[6])
-        i_info7 = switcht_interface_info_t(device=0, type=3, u=iu7,
+        i_info7 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_TRUNK, u=iu7,
                                            mac='00:77:66:55:44:33', label=0)
         self.if7 = self.client.switcht_api_interface_create(device, i_info7)
         self.pv7 = switcht_vlan_port_t(handle=self.if7, tagging_mode=0)
@@ -684,7 +691,7 @@ class L3MulticastBidir(api_base_tests.ThriftInterfaceDataPlane):
 
         # port 7: trunk port; allowed vlans: 10, 100, 200
         iu8 = interface_union(port_lag_handle=swports[7])
-        i_info8 = switcht_interface_info_t(device=0, type=3, u=iu8,
+        i_info8 = switcht_interface_info_t(device=0, type=SWITCH_API_INTERFACE_L2_VLAN_TRUNK, u=iu8,
                                            mac='00:77:66:55:44:33', label=0)
         self.if8 = self.client.switcht_api_interface_create(device, i_info8)
         self.pv8 = switcht_vlan_port_t(handle=self.if8, tagging_mode=0)
@@ -694,7 +701,9 @@ class L3MulticastBidir(api_base_tests.ThriftInterfaceDataPlane):
 
         # Create L3 virtual interface for vlan 10
         iu = interface_union(vlan_id=10)
-        i_info = switcht_interface_info_t(device=0, type=5, u=iu,
+        i_info = switcht_interface_info_t(device=0,
+                                          type=SWITCH_API_INTERFACE_L3_VLAN,
+                                          u=iu,
                                           mac='00:77:66:55:44:33',
                                           label=0, vrf_handle=self.vrf,
                                           rmac_handle=self.rmac,
@@ -703,14 +712,16 @@ class L3MulticastBidir(api_base_tests.ThriftInterfaceDataPlane):
                                           v4_multicast_enabled=1,
                                           v6_multicast_enabled=1)
         self.if20 = self.client.switcht_api_interface_create(device, i_info)
-        self.ip20 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.10.1',
+        self.ip20 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.10.1',
                                       prefix_length=24)
         self.client.switcht_api_l3_interface_address_add(device, self.if20,
                                                          self.vrf, self.ip20)
 
         # Create L3 virtual interface for vlan 100
         iu = interface_union(vlan_id=100)
-        i_info = switcht_interface_info_t(device=0, type=5, u=iu,
+        i_info = switcht_interface_info_t(device=0,
+                                          type=SWITCH_API_INTERFACE_L3_VLAN,
+                                          u=iu,
                                           mac='00:77:66:55:44:33',
                                           label=0, vrf_handle=self.vrf,
                                           rmac_handle=self.rmac,
@@ -719,14 +730,16 @@ class L3MulticastBidir(api_base_tests.ThriftInterfaceDataPlane):
                                           v4_multicast_enabled=1,
                                           v6_multicast_enabled=1)
         self.if21 = self.client.switcht_api_interface_create(device, i_info)
-        self.ip21 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.100.1',
+        self.ip21 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.100.1',
                                       prefix_length=24)
         self.client.switcht_api_l3_interface_address_add(device, self.if21,
                                                          self.vrf, self.ip21)
 
         # Create L3 virtual interface for vlan 200
         iu = interface_union(vlan_id=200)
-        i_info = switcht_interface_info_t(device=0, type=5, u=iu,
+        i_info = switcht_interface_info_t(device=0,
+                                          type=SWITCH_API_INTERFACE_L3_VLAN,
+                                          u=iu,
                                           mac='00:77:66:55:44:33',
                                           label=0, vrf_handle=self.vrf,
                                           rmac_handle=self.rmac,
@@ -735,7 +748,7 @@ class L3MulticastBidir(api_base_tests.ThriftInterfaceDataPlane):
                                           v4_multicast_enabled=1,
                                           v6_multicast_enabled=1)
         self.if22 = self.client.switcht_api_interface_create(device, i_info)
-        self.ip22 = switcht_ip_addr_t(addr_type=0, ipaddr='10.0.200.1',
+        self.ip22 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='10.0.200.1',
                                       prefix_length=24)
         self.client.switcht_api_l3_interface_address_add(device, self.if22,
                                                          self.vrf, self.ip22)
@@ -774,9 +787,9 @@ class L3MulticastBidir(api_base_tests.ThriftInterfaceDataPlane):
                                                      self.route_ports)
 
         # create a ip multicast route (*,230.1.1.5)
-        self.msrc_ip1 = switcht_ip_addr_t(addr_type=0, ipaddr='0.0.0.0',
+        self.msrc_ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='0.0.0.0',
                                          prefix_length=0)
-        self.mgrp_ip1 = switcht_ip_addr_t(addr_type=0, ipaddr='230.1.1.5',
+        self.mgrp_ip1 = switcht_ip_addr_t(addr_type=SWITCH_API_IP_ADDR_V4, ipaddr='230.1.1.5',
                                          prefix_length=32)
         rpid = [ ~0x0002 & 0xFFFF ]
         self.client.switcht_api_multicast_mroute_add(device, self.mch1,

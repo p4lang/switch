@@ -120,6 +120,7 @@ static void interface_create(switchlink_db_interface_info_t *intf) {
       return;
     }
     ifinfo.bridge_h = intf->bridge_h;
+    ifinfo.vlan_member_h = intf->vlan_member_h;
     switchlink_db_interface_update(intf->ifindex, &ifinfo);
   }
 

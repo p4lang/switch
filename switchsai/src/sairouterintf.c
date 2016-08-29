@@ -263,7 +263,7 @@ sai_status_t sai_get_router_interface_attribute(
     return status;
   }
 
-  int index;
+  uint32_t index;
   uint64_t value;
   switch_status_t switch_status = -1;
   sai_attribute_t *attribute;

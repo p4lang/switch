@@ -52,7 +52,7 @@ static sai_object_id_t s_cpu_port;
 static uint16_t s_max_ports = 0;
 
 static inline uint32_t ipv4_prefix_len_to_mask(uint32_t prefix_len) {
-  return (((uint32_t)0xFFFFFFFF) << (32 - prefix_len));
+  return (prefix_len ? (((uint32_t)0xFFFFFFFF) << (32 - prefix_len)) : 0);
 }
 
 static inline struct in6_addr ipv6_prefix_len_to_mask(uint32_t prefix_len) {
@@ -489,7 +489,6 @@ int switchlink_stp_state_update(switchlink_db_interface_info_t *intf) {
 
 int switchlink_add_interface_to_bridge(switchlink_db_interface_info_t *intf) {
   sai_status_t status = SAI_STATUS_SUCCESS;
-  switchlink_handle_t vlan_member_h = 0;
   sai_attribute_t attr_list[3];
   memset(attr_list, 0, sizeof(attr_list));
 
@@ -499,20 +498,14 @@ int switchlink_add_interface_to_bridge(switchlink_db_interface_info_t *intf) {
   attr_list[1].value.oid = intf->intf_h;
   attr_list[2].id = SAI_VLAN_MEMBER_ATTR_TAGGING_MODE;
   attr_list[2].value.s32 = SAI_VLAN_PORT_UNTAGGED;
-  status = vlan_api->create_vlan_member(&vlan_member_h, 3, attr_list);
+  status = vlan_api->create_vlan_member(&intf->vlan_member_h, 3, attr_list);
   return ((status == SAI_STATUS_SUCCESS) ? 0 : -1);
 }
 
 int switchlink_del_interface_from_bridge(switchlink_db_interface_info_t *intf,
                                          switchlink_handle_t old_bridge_h) {
   sai_status_t status = SAI_STATUS_SUCCESS;
-  switchlink_handle_t vlan_member_h = 0;
-  /*
-   * 25 is vlan member handle type in switchapi.
-   * vlan_member_h has to be stored as a bridge member in switchlink
-   */
-  vlan_member_h = (intf->intf_h & 0xFFF) | (old_bridge_h << 12) | (25 << 27);
-  status = vlan_api->remove_vlan_member(vlan_member_h);
+  status = vlan_api->remove_vlan_member(intf->vlan_member_h);
   return ((status == SAI_STATUS_SUCCESS) ? 0 : -1);
 }
 

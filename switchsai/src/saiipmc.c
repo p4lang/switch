@@ -28,7 +28,7 @@ static void sai_ipmc_entry_to_string(_In_ const sai_ipmc_entry_t *ipmc_entry,
   int len = 0;
   count = snprintf(entry_string,
                    SAI_MAX_ENTRY_STRING_LEN,
-                   "route: vrf %lx (",
+                   "route: vrf %" PRIx64 " (",
                    ipmc_entry->vr_id);
   if (count > SAI_MAX_ENTRY_STRING_LEN) {
     return;

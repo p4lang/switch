@@ -237,7 +237,6 @@ void switchlink_linux_mac_update(switchlink_mac_addr_t mac_addr,
 
   status = switchlink_db_interface_get_ifindex(intf_h, &ifindex);
   if (status != SWITCHLINK_DB_STATUS_SUCCESS) {
-    assert(false);
     return;
   }
 

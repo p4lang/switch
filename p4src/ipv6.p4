@@ -39,7 +39,7 @@ metadata ipv6_metadata_t ipv6_metadata;
 /*****************************************************************************/
 action set_valid_outer_ipv6_packet() {
     modify_field(l3_metadata.lkp_ip_type, IPTYPE_IPV6);
-    modify_field(l3_metadata.lkp_ip_tc, ipv6.trafficClass);
+    modify_field(l3_metadata.lkp_dscp, ipv6.trafficClass);
     modify_field(l3_metadata.lkp_ip_version, ipv6.version);
 }
 

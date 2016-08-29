@@ -344,6 +344,7 @@ switch_status_t switch_api_neighbor_entry_add_tunnel_rewrite(
   switch_tunnel_info_t *tunnel_info = NULL;
   switch_ip_addr_t *src_ip = NULL;
   switch_ip_addr_t *dst_ip = NULL;
+  switch_encap_type_t encap_type = SWITCH_API_ENCAP_TYPE_NONE;
 
   neighbor = &neighbor_info->neighbor;
   intf_info = switch_api_interface_get(neighbor->interface);
@@ -359,12 +360,15 @@ switch_status_t switch_api_neighbor_entry_add_tunnel_rewrite(
   if (tunnel_info->encap_mode == SWITCH_API_TUNNEL_ENCAP_MODE_IP) {
     ip_encap = &(SWITCH_INTF_TUNNEL_IP_ENCAP(intf_info));
     vrf_handle = ip_encap->vrf_handle;
+    encap_type = SWITCH_INTF_TUNNEL_ENCAP_TYPE(intf_info);
 
     src_ip = &ip_encap->src_ip;
-    sip_index = switch_tunnel_src_vtep_index_get(vrf_handle, src_ip);
+    sip_index =
+        switch_tunnel_src_vtep_index_get(vrf_handle, encap_type, src_ip);
 
     dst_ip = &ip_encap->dst_ip;
-    dip_index = switch_tunnel_dst_vtep_index_get(vrf_handle, dst_ip);
+    dip_index =
+        switch_tunnel_dst_vtep_index_get(vrf_handle, encap_type, dst_ip);
 
     status = switch_pd_tunnel_rewrite_table_add_entry(
         device,

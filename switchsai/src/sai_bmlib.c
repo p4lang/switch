@@ -182,7 +182,6 @@ extern int bmv2_model_init();
 sai_status_t sai_api_initialize(uint64_t flags,
                                 const service_method_table_t *services) {
   sai_status_t status = SAI_STATUS_SUCCESS;
-  /* unsigned int num_ports = 32; */
   UNUSED(services);
   if (!initialized) {
     SAI_LOG_WARN("Initializing device");

@@ -38,12 +38,14 @@ from switch_sai_thrift.sai_headers import  *
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(this_dir, '..'))
+from common.utils import *
 from common.sai_utils import *
 
 from erspan3 import *
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
 
+cpu_port=64
 switch_inited=0
 port_list = []
 table_attr_list = []
@@ -968,7 +970,6 @@ class L2FloodTest(sai_base_test.ThriftInterfaceDataPlane):
         vlan_member1 = sai_thrift_create_vlan_member(self.client, vlan_id, port1, SAI_VLAN_PORT_UNTAGGED)
         vlan_member2 = sai_thrift_create_vlan_member(self.client, vlan_id, port2, SAI_VLAN_PORT_UNTAGGED)
         vlan_member3 = sai_thrift_create_vlan_member(self.client, vlan_id, port3, SAI_VLAN_PORT_UNTAGGED)
-        print vlan_member1, vlan_member2, vlan_member3
 
         pkt = simple_tcp_packet(eth_dst='00:11:11:11:11:11',
                                 eth_src='00:22:22:22:22:22',
@@ -2066,8 +2067,6 @@ class EgressERSpanMirrorTest(sai_base_test.ThriftInterfaceDataPlane):
             self.client.sai_thrift_remove_vlan_member(vlan_member2)
             self.client.sai_thrift_delete_vlan(vlan_id)
 
-from switch_sai_thrift.sai_headers import SAI_VLAN_STAT_IN_OCTETS, SAI_VLAN_STAT_IN_UCAST_PKTS, SAI_VLAN_STAT_OUT_UCAST_PKTS
-
 class L2VlanStatsTest(sai_base_test.ThriftInterfaceDataPlane):
     def runTest(self):
         print
@@ -2384,3 +2383,189 @@ class PortGetSetTest(sai_base_test.ThriftInterfaceDataPlane):
     def runTest(self):
         pass
 
+class HostIfTest(sai_base_test.ThriftInterfaceDataPlane):
+    def runTest(self):
+        print
+        switch_init(self.client)
+        port1 = port_list[1]
+        v4_enabled = 1
+        v6_enabled = 1
+        mac_valid = 0
+        mac = ''
+        l2_qid = 1
+        l2_policer = 2
+        l3_qid = 3
+        l3_policer = 4
+
+        vr_id = sai_thrift_create_virtual_router(self.client, v4_enabled, v6_enabled)
+
+        rif_id1 = sai_thrift_create_router_interface(self.client, vr_id, 1, port1, 0, v4_enabled, v6_enabled, mac)
+
+        l2_trap_group = sai_thrift_create_hostif_trap_group(self.client, l2_qid, l2_policer)
+        l3_trap_group = sai_thrift_create_hostif_trap_group(self.client, l3_qid, l3_policer)
+
+        try:
+            sai_thrift_create_hostif_trap(
+                       self.client,
+                       SAI_HOSTIF_TRAP_ID_ARP_REQUEST,
+                       SAI_PACKET_ACTION_TRAP,
+                       1000, SAI_HOSTIF_TRAP_CHANNEL_CB,
+                       l2_trap_group)
+
+            sai_thrift_create_hostif_trap(
+                       self.client,
+                       SAI_HOSTIF_TRAP_ID_ARP_RESPONSE,
+                       SAI_PACKET_ACTION_TRAP,
+                       1001,
+                       SAI_HOSTIF_TRAP_CHANNEL_CB,
+                       l2_trap_group)
+
+            sai_thrift_create_hostif_trap(
+                       self.client,
+                       SAI_HOSTIF_TRAP_ID_STP,
+                       SAI_PACKET_ACTION_TRAP,
+                       1002,
+                       SAI_HOSTIF_TRAP_CHANNEL_CB,
+                       l2_trap_group)
+
+            sai_thrift_create_hostif_trap(
+                       self.client,
+                       SAI_HOSTIF_TRAP_ID_OSPF,
+                       SAI_PACKET_ACTION_LOG,
+                       1003,
+                       SAI_HOSTIF_TRAP_CHANNEL_CB,
+                       l3_trap_group)
+
+            sai_thrift_create_hostif_trap(
+                       self.client,
+                       SAI_HOSTIF_TRAP_ID_PIM,
+                       SAI_PACKET_ACTION_LOG,
+                       1004,
+                       SAI_HOSTIF_TRAP_CHANNEL_CB,
+                       l3_trap_group)
+
+            sai_thrift_create_hostif_trap(
+                       self.client,
+                       SAI_HOSTIF_TRAP_ID_IGMP_TYPE_V2_REPORT,
+                       SAI_PACKET_ACTION_LOG,
+                       1004,
+                       SAI_HOSTIF_TRAP_CHANNEL_CB,
+                       l3_trap_group)
+
+            pkt = simple_arp_packet(arp_op=1, pktlen=100)
+            exp_pkt = simple_cpu_packet(ingress_port=1,
+                                        ingress_ifindex=2,
+                                        reason_code=0x201,
+                                        ingress_bd=2,
+                                        inner_pkt = pkt)
+
+            print 'Sending ARP request broadcast'
+            send_packet(self, 1, str(pkt))
+            verify_packets(self, exp_pkt, [cpu_port])
+
+            pkt = simple_arp_packet(arp_op=2, eth_dst='00:77:66:55:44:33', pktlen=100)
+            exp_pkt = simple_cpu_packet(ingress_port=1,
+                                        ingress_ifindex=2,
+                                        reason_code=0x202,
+                                        ingress_bd=2,
+                                        inner_pkt = pkt)
+
+            print 'Sending ARP response'
+            send_packet(self, 1, str(pkt))
+            verify_packets(self, exp_pkt, [cpu_port])
+
+            pkt = simple_ip_packet(ip_proto=89, ip_dst='224.0.0.5')
+            exp_pkt = simple_cpu_packet(ingress_port=1,
+                                        ingress_ifindex=2,
+                                        reason_code=0x204,
+                                        ingress_bd=2,
+                                        inner_pkt = pkt)
+
+            print 'Sending OSPF packet destined to 224.0.0.5'
+            send_packet(self, 1, str(pkt))
+            verify_packets(self, exp_pkt, [cpu_port])
+
+            pkt = simple_ip_packet(ip_proto=89, ip_dst='224.0.0.6')
+            exp_pkt = simple_cpu_packet(ingress_port=1,
+                                        ingress_ifindex=2,
+                                        reason_code=0x204,
+                                        ingress_bd=2,
+                                        inner_pkt = pkt)
+
+            print 'Sending OSPF packet destined to 224.0.0.6'
+            send_packet(self, 1, str(pkt))
+            verify_packets(self, exp_pkt, [cpu_port])
+
+            pkt = simple_ip_packet(ip_proto=2)
+            exp_pkt = simple_cpu_packet(ingress_port=1,
+                                        ingress_ifindex=2,
+                                        reason_code=0x108,
+                                        ingress_bd=2,
+                                        inner_pkt = pkt)
+
+            print 'Sending IGMP v2 report'
+            send_packet(self, 1, str(pkt))
+            verify_packets(self, exp_pkt, [cpu_port])
+
+            pkt = simple_ip_packet(ip_proto=103)
+            exp_pkt = simple_cpu_packet(ingress_port=1,
+                                        ingress_ifindex=2,
+                                        reason_code=0x205,
+                                        ingress_bd=2,
+                                        inner_pkt = pkt)
+
+            print 'Sending PIM packet'
+            send_packet(self, 1, str(pkt))
+            verify_packets(self, exp_pkt, [cpu_port])
+
+            pkt = simple_eth_packet(eth_dst='01:80:C2:00:00:00', pktlen=100)
+            exp_pkt = simple_cpu_packet(ingress_port=1,
+                                        ingress_ifindex=2,
+                                        reason_code=0x100,
+                                        ingress_bd=2,
+                                        inner_pkt = pkt)
+            print 'Sending STP packet'
+            send_packet(self, 1, str(pkt))
+            verify_packets(self, exp_pkt, [cpu_port])
+
+            print 'Deleting hostif reason codes Arp Request/Resp, OSPF, PIM, IGMP and STP'
+            self.client.sai_thrift_remove_hostif_trap(SAI_HOSTIF_TRAP_ID_ARP_REQUEST)
+            self.client.sai_thrift_remove_hostif_trap(SAI_HOSTIF_TRAP_ID_ARP_RESPONSE)
+            self.client.sai_thrift_remove_hostif_trap(SAI_HOSTIF_TRAP_ID_STP)
+            self.client.sai_thrift_remove_hostif_trap(SAI_HOSTIF_TRAP_ID_OSPF)
+            self.client.sai_thrift_remove_hostif_trap(SAI_HOSTIF_TRAP_ID_PIM)
+            self.client.sai_thrift_remove_hostif_trap(SAI_HOSTIF_TRAP_ID_IGMP_TYPE_V2_REPORT)
+
+            print 'Sending ARP request broadcast'
+            pkt = simple_arp_packet(arp_op=1, pktlen=100)
+            send_packet(self, 1, str(pkt))
+
+            print 'Sending OSPF packet destined to 224.0.0.5'
+            pkt = simple_ip_packet(ip_proto=89, ip_dst='224.0.0.5')
+            send_packet(self, 1, str(pkt))
+
+            print 'Sending OSPF packet destined to 224.0.0.6'
+            pkt = simple_ip_packet(ip_proto=89, ip_dst='224.0.0.6')
+            send_packet(self, 1, str(pkt))
+
+            print 'Sending IGMP v2 report'
+            pkt = simple_ip_packet(ip_proto=2)
+            send_packet(self, 1, str(pkt))
+
+            print 'Sending PIM packet'
+            pkt = simple_ip_packet(ip_proto=103)
+            send_packet(self, 1, str(pkt))
+
+            print 'Sending STP packet'
+            pkt = simple_eth_packet(eth_dst='01:80:C2:00:00:00', pktlen=100)
+            send_packet(self, 1, str(pkt))
+
+            verify_no_other_packets(self, timeout=1)
+
+        finally:
+            self.client.sai_thrift_remove_hostif_trap_group(l2_trap_group)
+            self.client.sai_thrift_remove_hostif_trap_group(l3_trap_group)
+
+            self.client.sai_thrift_remove_router_interface(rif_id1)
+
+            self.client.sai_thrift_remove_virtual_router(vr_id)

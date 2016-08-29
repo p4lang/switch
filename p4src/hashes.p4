@@ -166,7 +166,9 @@ table compute_other_hashes {
 control process_hashes {
     if (((tunnel_metadata.tunnel_terminate == FALSE) and valid(ipv4)) or
         ((tunnel_metadata.tunnel_terminate == TRUE) and valid(inner_ipv4))) {
+#ifndef IPV4_DISABLE
         apply(compute_ipv4_hashes);
+#endif /* IPV4_DISABLE */
     }
 #ifndef IPV6_DISABLE
     else {
@@ -176,7 +178,9 @@ control process_hashes {
         }
 #endif /* IPV6_DISABLE */
         else {
+#ifndef L2_DISABLE
             apply(compute_non_ip_hashes);
+#endif /* L2_DISABLE */
         }
 #ifndef IPV6_DISABLE
     }

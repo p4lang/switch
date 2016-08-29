@@ -67,6 +67,11 @@ switch_nhop_info_t *switch_nhop_get(switch_handle_t nhop_handle) {
   return nhop_info;
 }
 
+switch_status_t switch_nhop_delete(switch_handle_t handle) {
+  _switch_handle_delete(switch_nhop_info_t, switch_nhop_array, handle);
+  return SWITCH_STATUS_SUCCESS;
+}
+
 switch_status_t switch_api_nhop_set(switch_device_t device,
                                     switch_handle_t handle,
                                     switch_nhop_key_t *nhop_key) {
@@ -97,11 +102,6 @@ switch_status_t switch_api_nhop_get(switch_device_t device,
       return SWITCH_STATUS_NOT_SUPPORTED;
   }
 
-  return SWITCH_STATUS_SUCCESS;
-}
-
-switch_status_t switch_nhop_delete(switch_handle_t handle) {
-  _switch_handle_delete(switch_nhop_info_t, switch_nhop_array, handle);
   return SWITCH_STATUS_SUCCESS;
 }
 
