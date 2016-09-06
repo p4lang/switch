@@ -19,15 +19,13 @@ limitations under the License.
 
 /* Global configuration parameters for a switch */
 typedef struct switch_config_param_ {
-    bool    enable_dod;         /* Enable Deflect-on-drop feature */
-    /* Add more global information - such as switch-id etc in future */
+  bool enable_dod; /* Enable Deflect-on-drop feature */
+  /* Add more global information - such as switch-id etc in future */
 } switch_config_param_t;
 
-switch_config_param_t *
-switch_config_params_get (switch_device_t device);
-void
-switch_config_params_init (switch_device_t device);
-void
-switch_config_action_populate(switch_device_t device,
-                    p4_pd_dc_set_config_parameters_action_spec_t *action_sw_cfg);
-#endif // _switch_config_int_
+switch_config_param_t *switch_config_params_get(switch_device_t device);
+void switch_config_params_init(switch_device_t device);
+void switch_config_action_populate(
+    switch_device_t device,
+    p4_pd_dc_set_config_parameters_action_spec_t *action_sw_cfg);
+#endif  // _switch_config_int_

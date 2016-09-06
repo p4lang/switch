@@ -88,6 +88,7 @@ class FabricCpuSflowHeader(Packet):
     name = "Fabric Cpu Sflow Header"
     fields_desc = [
         XShortField("sflow_sid", 0),
+        XShortField("sflow_egress_port", 0),
     ]
 
 class FabricPayloadHeader(Packet):
@@ -137,6 +138,7 @@ def simple_cpu_packet(header_version = 0,
                       ingress_port = 1,
                       reason_code = 0,
                       sflow_sid = 0,
+                      sflow_egress_port = 0,
                       inner_pkt = None):
 
     ether = Ether(str(inner_pkt))
@@ -165,7 +167,7 @@ def simple_cpu_packet(header_version = 0,
     pkt = (str(ether)[:14]) / fabric_header / fabric_cpu_header
 
     if sflow_sid:
-        pkt = pkt / FabricCpuSflowHeader(sflow_sid = sflow_sid)
+        pkt = pkt / FabricCpuSflowHeader(sflow_sid = sflow_sid, sflow_egress_port = sflow_egress_port)
 
     pkt = pkt / fabric_payload_header
 
@@ -314,6 +316,7 @@ def entropy_hash(pkt, layer='ipv4'):
         buf = ''
     else:
         buf = ''
-    h = socket.htons(crc16_regular(buff.decode('hex')))
+    # h = socket.htons(crc16_regular(buff.decode('hex')))
+    h = crc16_regular(buff.decode('hex'))
     return h
 

@@ -19,7 +19,7 @@ limitations under the License.
  */
  header_type meter_metadata_t {
      fields {
-         meter_color : 2;                /* meter color */
+         packet_color : 2;               /* packet color */
          meter_index : 16;               /* meter index */
      }
  }
@@ -45,7 +45,7 @@ counter meter_stats {
 
 table meter_action {
     reads {
-        meter_metadata.meter_color : exact;
+        meter_metadata.packet_color : exact;
         meter_metadata.meter_index : exact;
     }
 
@@ -59,7 +59,7 @@ table meter_action {
 meter meter_index {
     type : bytes;
     direct : meter_index;
-    result : meter_metadata.meter_color;
+    result : meter_metadata.packet_color;
 }
 
 table meter_index {

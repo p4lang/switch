@@ -100,6 +100,8 @@ limitations under the License.
 #define PORT_TYPE_FABRIC                       1
 #define PORT_TYPE_CPU                          2
 
+#define DEFAULT_INGRESS_COS                    0
+
 /* BYPASS LOOKUP */
 #define BYPASS_L2                              0x0001
 #define BYPASS_L3                              0x0002
@@ -107,6 +109,8 @@ limitations under the License.
 #define BYPASS_QOS                             0x0008
 #define BYPASS_METER                           0x0010
 #define BYPASS_SYSTEM_ACL                      0x0020
+#define BYPASS_PKT_VALIDATION                  0x0040
+#define BYPASS_SMAC_CHK                        0x0080
 #define BYPASS_ALL                             0xFFFF
 
 #define DO_LOOKUP(l) \

@@ -28,44 +28,36 @@ limitations under the License.
 /* switch global configuration parameters */
 static switch_config_param_t switch_config[SWITCH_MAX_DEVICE];
 
-switch_config_param_t *
-switch_config_params_get(switch_device_t device)
-{
-    return &switch_config[device];
+switch_config_param_t *switch_config_params_get(switch_device_t device) {
+  return &switch_config[device];
 }
 
-void
-switch_config_params_init (switch_device_t device)
-{
-    memset(switch_config_params_get(device), 0, sizeof(switch_config_param_t));
-    /* Add default configuration parameters here */
-    /* each config parameters becomes an action routine parameter so these are
-     * limited
-     */
-    return;
+void switch_config_params_init(switch_device_t device) {
+  memset(switch_config_params_get(device), 0, sizeof(switch_config_param_t));
+  /* Add default configuration parameters here */
+  /* each config parameters becomes an action routine parameter so these are
+   * limited
+   */
+  return;
 }
 
-void
-switch_config_param_set_dod(switch_device_t device, bool dod)
-{
-    switch_config_params_get(device)->enable_dod = dod;
-    return;
+void switch_config_param_set_dod(switch_device_t device, bool dod) {
+  switch_config_params_get(device)->enable_dod = dod;
+  return;
 }
 
-
-void
-switch_config_action_populate(switch_device_t device,
-                    p4_pd_dc_set_config_parameters_action_spec_t *action_sw_cfg)
-{
-    action_sw_cfg->action_enable_dod = switch_config_params_get(device)->enable_dod;
-    /* Add more parameters here */
-    return;
+void switch_config_action_populate(
+    switch_device_t device,
+    p4_pd_dc_set_config_parameters_action_spec_t *action_sw_cfg) {
+  action_sw_cfg->action_enable_dod =
+      switch_config_params_get(device)->enable_dod;
+  /* Add more parameters here */
+  return;
 }
 
 /* exported APIs */
-switch_status_t
-switch_api_set_deflect_on_drop(switch_device_t device, bool dod)
-{
-    switch_config_param_set_dod(device, dod);
-    return  switch_pd_switch_config_params_update(device);
+switch_status_t switch_api_set_deflect_on_drop(switch_device_t device,
+                                               bool dod) {
+  switch_config_param_set_dod(device, dod);
+  return switch_pd_switch_config_params_update(device);
 }

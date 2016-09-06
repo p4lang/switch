@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 #include <switchapi/switch_rmac.h>
+#include "switch_pd_types.h"
 
 #ifndef _switch_rmac_int_h_
 #define _switch_rmac_int_h_
@@ -26,32 +27,31 @@ extern "C" {
 #define SWITCH_SMAC_REWRITE_HASH_TABLE_SIZE 1024
 
 typedef struct switch_rmac_node_ {
-    switch_mac_addr_t mac;
-    tommy_node node;
+  switch_mac_addr_t mac;
+  tommy_node node;
 #ifdef SWITCH_PD
-    p4_pd_entry_hdl_t outer_rmac_entry;
-    p4_pd_entry_hdl_t inner_rmac_entry;
+  p4_pd_entry_hdl_t outer_rmac_entry;
+  p4_pd_entry_hdl_t inner_rmac_entry;
 #endif
 } switch_rmac_entry_t;
 
-typedef struct switch_rmac_info_ {
-    tommy_list rmac_list;
-} switch_rmac_info_t;
+typedef struct switch_rmac_info_ { tommy_list rmac_list; } switch_rmac_info_t;
 
 typedef struct switch_smac_entry_ {
-    switch_mac_addr_t mac;
-    uint16_t smac_index;
-    uint16_t ref_count;
-    tommy_hashtable_node node;
+  switch_mac_addr_t mac;
+  uint16_t smac_index;
+  uint16_t ref_count;
+  tommy_hashtable_node node;
 #ifdef SWITCH_PD
-    p4_pd_entry_hdl_t hw_smac_entry;
+  p4_pd_entry_hdl_t hw_smac_entry;
 #endif
 } switch_smac_entry_t;
 
 // Internal API Declarations
 switch_status_t switch_router_mac_init(switch_device_t device);
 switch_status_t switch_router_mac_free(switch_device_t device);
-switch_rmac_info_t * switch_api_rmac_info_get_internal(switch_handle_t rmac_handle);
+switch_rmac_info_t *switch_api_rmac_info_get_internal(
+    switch_handle_t rmac_handle);
 
 switch_status_t switch_smac_rewrite_add_entry(switch_mac_addr_t *mac);
 switch_status_t switch_smac_rewrite_delete_entry(switch_mac_addr_t *mac);

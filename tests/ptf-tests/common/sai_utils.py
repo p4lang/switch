@@ -39,6 +39,20 @@ switch_inited=0
 port_list = []
 table_attr_list = []
 
+def sai_thrift_create_vlan_member(client, vlan_id, port, tagging_mode):
+    attribute1_value = sai_thrift_attribute_value_t(u16=vlan_id)
+    attribute1 = sai_thrift_attribute_t(id=SAI_VLAN_MEMBER_ATTR_VLAN_ID,
+                                            value=attribute1_value)
+    attribute2_value = sai_thrift_attribute_value_t(oid=port)
+    attribute2 = sai_thrift_attribute_t(id=SAI_VLAN_MEMBER_ATTR_PORT_ID,
+                                            value=attribute2_value)
+    attribute3_value = sai_thrift_attribute_value_t(s32=tagging_mode)
+    attribute3 = sai_thrift_attribute_t(id=SAI_VLAN_MEMBER_ATTR_TAGGING_MODE,
+                                            value=attribute3_value)
+    attr_list = [attribute1, attribute2, attribute3]
+    vlan_member = client.sai_thrift_create_vlan_member(thrift_attr_list=attr_list)
+    return vlan_member
+
 def sai_thrift_create_fdb(client, vlan_id, mac, port, mac_action):
     fdb_entry = sai_thrift_fdb_entry_t(mac_address=mac, vlan_id=vlan_id)
     #value 0 represents static entry, id=0, represents entry type
@@ -246,12 +260,12 @@ def sai_thrift_create_stp_entry(client, vlan_list):
     stp_id = client.sai_thrift_create_stp_entry(stp_attr_list)
     return stp_id
 
-def sai_thrift_create_hostif_trap_group(client, queue_id, priority):
-    attribute1_value = sai_thrift_attribute_value_t(u32=priority)
-    attribute1 = sai_thrift_attribute_t(id=SAI_HOSTIF_TRAP_GROUP_ATTR_PRIO,
+def sai_thrift_create_hostif_trap_group(client, queue_id, policer_id):
+    attribute1_value = sai_thrift_attribute_value_t(u32=queue_id)
+    attribute1 = sai_thrift_attribute_t(id=SAI_HOSTIF_TRAP_GROUP_ATTR_QUEUE,
                                         value=attribute1_value)
-    attribute2_value = sai_thrift_attribute_value_t(u32=queue_id)
-    attribute2 = sai_thrift_attribute_t(id=SAI_HOSTIF_TRAP_GROUP_ATTR_QUEUE,
+    attribute2_value = sai_thrift_attribute_value_t(oid=policer_id)
+    attribute2 = sai_thrift_attribute_t(id=SAI_HOSTIF_TRAP_GROUP_ATTR_POLICER,
                                         value=attribute2_value)
     attr_list = [attribute1, attribute2]
     trap_group_id = client.sai_thrift_create_hostif_trap_group(thrift_attr_list=attr_list)
@@ -571,6 +585,7 @@ def sai_thrift_get_vlan_stats(client, vlan_id, ingress=True, egress=True):
     counter_ids = []
     if ingress:
         counter_ids.append(SAI_VLAN_STAT_IN_OCTETS)
+        counter_ids.append(SAI_VLAN_STAT_IN_PACKETS)
         counter_ids.append(SAI_VLAN_STAT_IN_UCAST_PKTS)
         counter_ids.append(SAI_VLAN_STAT_IN_NON_UCAST_PKTS)
         counter_ids.append(SAI_VLAN_STAT_IN_DISCARDS)
@@ -578,6 +593,7 @@ def sai_thrift_get_vlan_stats(client, vlan_id, ingress=True, egress=True):
         counter_ids.append(SAI_VLAN_STAT_IN_UNKNOWN_PROTOS)
     if egress:
         counter_ids.append(SAI_VLAN_STAT_OUT_OCTETS)
+        counter_ids.append(SAI_VLAN_STAT_OUT_PACKETS)
         counter_ids.append(SAI_VLAN_STAT_OUT_UCAST_PKTS)
         counter_ids.append(SAI_VLAN_STAT_OUT_NON_UCAST_PKTS)
         counter_ids.append(SAI_VLAN_STAT_OUT_DISCARDS)
@@ -714,3 +730,85 @@ def sai_thrift_get_policer_stats(client, policer_id):
 
     attr_value_list = client.sai_thrift_get_policer_stats(policer_id, attr_list)
     return attr_value_list
+
+def sai_thrift_create_qos_map(client, map_type, key_list, data_list):
+    qos_map_key_list = []
+    qos_map_data_list = []
+    attr_list = []
+
+    attribute1_value = sai_thrift_attribute_value_t(s32=map_type)
+    attribute1 = sai_thrift_attribute_t(id=SAI_QOS_MAP_ATTR_TYPE,
+                                        value=attribute1_value)
+    attr_list.append(attribute1)
+
+    if (map_type == SAI_QOS_MAP_DOT1P_TO_TC):
+        for i in key_list:
+            qos_map_key = sai_thrift_qos_map_params_t(dot1p=i)
+            qos_map_key_list.append(qos_map_key)
+        for j in data_list:
+            qos_map_data = sai_thrift_qos_map_params_t(tc=j)
+            qos_map_data_list.append(qos_map_data)
+    elif (map_type == SAI_QOS_MAP_DSCP_TO_TC):
+        for i in key_list:
+            qos_map_key = sai_thrift_qos_map_params_t(dscp=i)
+            qos_map_key_list.append(qos_map_key)
+        for j in data_list:
+            qos_map_data = sai_thrift_qos_map_params_t(tc=j)
+            qos_map_data_list.append(qos_map_data)
+    elif (map_type == SAI_QOS_MAP_DOT1P_TO_COLOR):
+        for i in key_list:
+            qos_map_key = sai_thrift_qos_map_params_t(dot1p=i)
+            qos_map_key_list.append(qos_map_key)
+        for j in data_list:
+            qos_map_data = sai_thrift_qos_map_params_t(color=j)
+            qos_map_data_list.append(qos_map_data)
+    elif (map_type == SAI_QOS_MAP_DSCP_TO_COLOR):
+        for i in key_list:
+            qos_map_key = sai_thrift_qos_map_params_t(dscp=i)
+            qos_map_key_list.append(qos_map_key)
+        for j in data_list:
+            qos_map_data = sai_thrift_qos_map_params_t(color=j)
+            qos_map_data_list.append(qos_map_data)
+    elif (map_type == SAI_QOS_MAP_TC_TO_QUEUE):
+        for i in key_list:
+            qos_map_key = sai_thrift_qos_map_params_t(tc=i)
+            qos_map_key_list.append(qos_map_key)
+        for j in data_list:
+            qos_map_data = sai_thrift_qos_map_params_t(queue_index=j)
+            qos_map_data_list.append(qos_map_data)
+    elif (map_type == SAI_QOS_MAP_TC_AND_COLOR_TO_DOT1P):
+        for i in key_list:
+            qos_map_key = sai_thrift_qos_map_params_t(tc=i[0], color=i[1])
+            qos_map_key_list.append(qos_map_key)
+        for j in data_list:
+            qos_map_data = sai_thrift_qos_map_params_t(dot1p=j)
+            qos_map_data_list.append(qos_map_data)
+    elif (map_type == SAI_QOS_MAP_TC_AND_COLOR_TO_DSCP):
+        for i in key_list:
+            qos_map_key = sai_thrift_qos_map_params_t(tc=i[0], color=i[1])
+            qos_map_key_list.append(qos_map_key)
+        for j in data_list:
+            qos_map_data = sai_thrift_qos_map_params_t(dscp=j)
+            qos_map_data_list.append(qos_map_data)
+
+    qos_map_list = sai_thrift_qos_map_list_t(key=qos_map_key_list, data=qos_map_data_list)
+    attribute2_value = sai_thrift_attribute_value_t(qosmap=qos_map_list)
+    attribute2 = sai_thrift_attribute_t(id=SAI_QOS_MAP_ATTR_MAP_TO_VALUE_LIST,
+                                        value=attribute2_value)
+    attr_list.append(attribute2)
+
+    qos_map_id = client.sai_thrift_create_qos_map(attr_list)
+    return qos_map_id
+
+def sai_thrift_set_port_attribute(client, port_id, id, value):
+    if (id == SAI_PORT_ATTR_QOS_DOT1P_TO_TC_MAP or
+        id == SAI_PORT_ATTR_QOS_DOT1P_TO_COLOR_MAP or
+        id == SAI_PORT_ATTR_QOS_DSCP_TO_TC_MAP or
+        id == SAI_PORT_ATTR_QOS_DSCP_TO_COLOR_MAP or
+        id == SAI_PORT_ATTR_QOS_TC_TO_QUEUE_MAP or
+        id == SAI_PORT_ATTR_QOS_TC_AND_COLOR_TO_DOT1P_MAP or
+        id == SAI_PORT_ATTR_QOS_TC_AND_COLOR_TO_DSCP_MAP):
+        attribute_value = sai_thrift_attribute_value_t(oid=value)
+        attribute = sai_thrift_attribute_t(id=id, value=attribute_value)
+        client.sai_thrift_set_port_attribute(port_id, attribute)
+

@@ -47,8 +47,10 @@ Running switch in bmv2 without p4factory
 You can now run `switch.p4` in bmv2 without cloning `p4factory`. In order to do
 this you first need to install [bmv2]
 (https://github.com/p4lang/behavioral-model) and its compiler [p4c-bmv2]
-(https://github.com/p4lang/p4c-bm) on your system. Additionally, if you plan on
-running the tests for `switch.p4`, please make sure you install [PTF]
+(https://github.com/p4lang/p4c-bm) on your system. Note that when running
+`./configure` for bmv2, you need to provide the `--with-pdfixed` option, as
+switch requires the PD library. Additionally, if you plan on running the tests
+for `switch.p4`, please make sure you install [PTF]
 (https://github.com/p4lang/ptf) with `sudo python setup.py install`.
 
 Once this is done, you can follow this steps:
