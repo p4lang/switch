@@ -163,6 +163,13 @@ static void switch_packet_rx_from_hw() {
     if (packet_header->cpu_header.reason_code ==
         SWITCH_HOSTIF_REASON_CODE_NULL_DROP)
       continue;
+    if (packet_header->cpu_header.reason_code ==
+        SWITCH_HOSTIF_REASON_CODE_SFLOW_SAMPLE) {
+        packet_header->sflow_header.sflow_session_id = 
+           ntohs(packet_header->sflow_header.sflow_session_id);
+        packet_header->sflow_header.sflow_egress_ifindex = 
+           ntohs(packet_header->sflow_header.sflow_egress_ifindex);
+    }
     packet_header->cpu_header.ingress_port =
         ntohs(packet_header->cpu_header.ingress_port);
     packet_header->cpu_header.ingress_ifindex =

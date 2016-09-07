@@ -73,9 +73,15 @@ typedef struct __attribute__((__packed__)) switch_cpu_header_ {
   uint16_t reason_code;
 } switch_cpu_header_t;
 
+typedef struct __attribute__((__packed__)) switch_sflow_header_ {
+    uint16_t sflow_session_id;
+    uint16_t sflow_egress_ifindex;
+} switch_sflow_header_t;
+
 typedef struct __attribute__((__packed__)) switch_packet_header_ {
   switch_fabric_header_t fabric_header;
   switch_cpu_header_t cpu_header;
+  switch_sflow_header_t sflow_header;
 } switch_packet_header_t;
 
 typedef struct switch_hostif_nhop_ {
