@@ -23,7 +23,6 @@ limitations under the License.
  */
 header_type security_metadata_t {
     fields {
-        storm_control_color : 1;               /* 0 : pass, 1 : fail */
         ipsg_enabled : 1;                      /* is ip source guard feature enabled */
         ipsg_check_fail : 1;                   /* ipsg check failed */
     }
@@ -43,8 +42,8 @@ counter storm_control_stats {
 
 table storm_control_stats {
     reads {
-        meter_metadata.meter_color: exact;
-        ingress_input_port: exact;
+        meter_metadata.packet_color: exact;
+        standard_metadata.ingress_port : exact;
     }
     actions {
         nop;
@@ -57,7 +56,7 @@ table storm_control_stats {
 meter storm_control_meter {
     type : bytes;
     static : storm_control;
-    result : meter_metadata.meter_color;
+    result : meter_metadata.packet_color;
     instance_count : STORM_CONTROL_METER_TABLE_SIZE;
 }
 #endif /* METER_DISABLE */
@@ -65,14 +64,14 @@ meter storm_control_meter {
 action set_storm_control_meter(meter_idx) {
 #ifndef METER_DISABLE
     execute_meter(storm_control_meter, meter_idx,
-                  meter_metadata.meter_color);
+                  meter_metadata.packet_color);
     modify_field(meter_metadata.meter_index, meter_idx);
 #endif /* METER_DISABLE */
 }
 
 table storm_control {
     reads {
-        ingress_input_port : exact;
+        standard_metadata.ingress_port : exact;
         l2_metadata.lkp_pkt_type : ternary;
     }
     actions {

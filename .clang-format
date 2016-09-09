@@ -1,0 +1,8 @@
+---
+Language:        Cpp
+BasedOnStyle:  Google
+BinPackArguments: false
+BinPackParameters: false
+DerivePointerAlignment: false
+PointerAlignment: Right
+...

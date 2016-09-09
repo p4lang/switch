@@ -40,3 +40,9 @@ table mirror {
     }
     size : MIRROR_SESSIONS_TABLE_SIZE;
 }
+
+control process_mirroring {
+#ifndef MIRROR_DISABLE
+    apply(mirror);
+#endif /* MIRROR_DISABLE */
+}

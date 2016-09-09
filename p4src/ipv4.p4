@@ -38,7 +38,7 @@ metadata ipv4_metadata_t ipv4_metadata;
 /*****************************************************************************/
 action set_valid_outer_ipv4_packet() {
     modify_field(l3_metadata.lkp_ip_type, IPTYPE_IPV4);
-    modify_field(l3_metadata.lkp_ip_tc, ipv4.diffserv);
+    modify_field(l3_metadata.lkp_dscp, ipv4.diffserv);
     modify_field(l3_metadata.lkp_ip_version, ipv4.version);
 }
 
@@ -51,11 +51,7 @@ table validate_outer_ipv4_packet {
     reads {
         ipv4.version : ternary;
         ipv4.ttl : ternary;
-#ifndef __TARGET_BMV2__
         ipv4.srcAddr mask 0xFF000000 : ternary;
-#else
-        ipv4.srcAddr : ternary;
-#endif
     }
     actions {
         set_valid_outer_ipv4_packet;

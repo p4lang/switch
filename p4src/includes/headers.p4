@@ -191,7 +191,8 @@ header_type erspan_header_t3_t {
         priority : 6;
         span_id : 10;
         timestamp : 32;
-        sgt_other : 32;
+        sgt       : 16;
+        ft_d_other: 16;
     }
 }
 
@@ -525,6 +526,7 @@ header_type fabric_header_cpu_t {
 header_type fabric_header_sflow_t {
     fields {
         sflow_session_id  : 16;
+        sflow_egress_ifindex : 16;
     }
 }
 
