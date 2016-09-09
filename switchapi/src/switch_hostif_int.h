@@ -74,14 +74,17 @@ typedef struct __attribute__((__packed__)) switch_cpu_header_ {
 } switch_cpu_header_t;
 
 typedef struct __attribute__((__packed__)) switch_sflow_header_ {
-    uint16_t sflow_session_id;
-    uint16_t sflow_egress_ifindex;
+  uint16_t sflow_session_id;
+  uint16_t sflow_egress_ifindex;
 } switch_sflow_header_t;
+
+typedef union __attribute__((__packed__)) switch_opt_header_ {
+  switch_sflow_header_t sflow_header;
+} switch_opt_header_t;
 
 typedef struct __attribute__((__packed__)) switch_packet_header_ {
   switch_fabric_header_t fabric_header;
   switch_cpu_header_t cpu_header;
-  switch_sflow_header_t sflow_header;
 } switch_packet_header_t;
 
 typedef struct switch_hostif_nhop_ {
@@ -107,7 +110,10 @@ switch_status_t switch_hostif_init(switch_device_t device);
 switch_status_t switch_hostif_free(switch_device_t device);
 switch_status_t switch_packet_init(switch_device_t device);
 switch_status_t switch_api_hostif_rx_packet_from_hw(
-    switch_packet_header_t *packet_header, char *packet, int packet_size);
+    switch_packet_header_t *packet_header,
+    switch_opt_header_t *opt_header,
+    char *packet,
+    int packet_size);
 switch_hostif_info_t *switch_hostif_get(switch_handle_t hostif_handle);
 void switch_packet_tx_to_host(switch_hostif_info_t *hostif_info,
                               char *packet,

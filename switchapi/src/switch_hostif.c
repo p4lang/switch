@@ -1182,7 +1182,10 @@ const char *switch_api_hostif_code_string(
 }
 
 switch_status_t switch_api_hostif_rx_packet_from_hw(
-    switch_packet_header_t *packet_header, char *packet, int packet_size) {
+    switch_packet_header_t *packet_header,
+    switch_opt_header_t *opt_header,
+    char *packet,
+    int packet_size) {
   switch_cpu_header_t *cpu_header = NULL;
   switch_sflow_header_t *sflow_header = NULL;
   switch_hostif_rcode_info_t *rcode_info = NULL;
@@ -1216,9 +1219,9 @@ switch_status_t switch_api_hostif_rx_packet_from_hw(
         id_to_handle(SWITCH_HANDLE_TYPE_PORT, cpu_header->ingress_port);
 
     if (cpu_header->reason_code == SWITCH_HOSTIF_REASON_CODE_SFLOW_SAMPLE) {
-        sflow_header = &packet_header->sflow_header;
-        hostif_packet.sflow_session_id = sflow_header->sflow_session_id;
-        hostif_packet.egress_ifindex = sflow_header->sflow_egress_ifindex;
+      sflow_header = &opt_header->sflow_header;
+      hostif_packet.sflow_session_id = sflow_header->sflow_session_id;
+      hostif_packet.egress_ifindex = sflow_header->sflow_egress_ifindex;
     }
 
     if (SWITCH_IS_LAG_IFINDEX(cpu_header->ingress_ifindex)) {
