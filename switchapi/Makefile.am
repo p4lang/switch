@@ -86,7 +86,7 @@ src/switch_pd_queue.c \
 src/switch_pd_types.h \
 src/switch_port.c \
 src/switch_port_int.h \
-src/switch_qos.x \
+src/switch_qos.c \
 src/switch_qos_int.h \
 src/switch_queue.c \
 src/switch_queue_int.h \
