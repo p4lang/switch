@@ -19,6 +19,7 @@ limitations under the License.
 #include <switchapi/switch_vlan.h>
 #include <switchapi/switch_capability.h>
 
+extern sai_object_id_t sai_hostif_get_default();
 static sai_api_t api_id = SAI_API_SWITCH;
 sai_switch_notification_t sai_switch_notifications;
 
@@ -182,7 +183,10 @@ sai_status_t sai_get_switch_attribute(
             case SAI_SWITCH_ATTR_DEFAULT_VIRTUAL_ROUTER_ID:
                 attr_list->value.oid = switch_api_default_vrf_internal();
                 break;
-        }
+	    case SAI_SWITCH_ATTR_DEFAULT_TRAP_GROUP:
+                attr_list->value.oid = sai_hostif_get_default();
+		break;
+	}
     }
 
     SAI_LOG_EXIT();

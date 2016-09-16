@@ -20,7 +20,17 @@ limitations under the License.
 #include <switchapi/switch_handle.h>
 #include <switchapi/switch_hostif.h>
 
+extern switch_status_t
+switch_api_interface_get_port_handle(switch_handle_t intf_handle,
+                                     switch_handle_t *port_handle);
 static sai_api_t api_id = SAI_API_VLAN;
+#define VLAN_MEMBER_HANDLE_FROM_PORT_VLAN(port_id, vlan_id) (0 | (port_id & \
+                                                                      0xFFF) | \
+                                                                 (vlan_id << 12) \
+                                                                 | \
+                                                                 (SWITCH_HANDLE_TYPE_VLAN_MEMBER \
+                                                                  << \
+                                                                  HANDLE_TYPE_SHIFT))
 
 /*
 * Routine Description:
@@ -158,6 +168,12 @@ sai_status_t sai_get_vlan_entry_attribute(
         _In_ uint32_t attr_count,
         _Inout_ sai_attribute_t *attr_list) {
 
+    unsigned int i=0;
+    switch_handle_t vlan_handle = 0;
+    switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
+    short unsigned int mbr_count=0;
+    switch_vlan_interface_t *mbrs=NULL;
+
     SAI_LOG_ENTER();
 
     sai_status_t status = SAI_STATUS_SUCCESS;
@@ -167,6 +183,33 @@ sai_status_t sai_get_vlan_entry_attribute(
         SAI_LOG_ERROR("null attribute list: %s",
                       sai_status_to_string(status));
         return status;
+    }
+
+    switch_status = switch_api_vlan_id_to_handle_get((switch_vlan_t) vlan_id, &vlan_handle);
+    
+    for(i=0;i<attr_count;i++) {
+      switch(attr_list[i].id) {
+        // Handle list of members associated with VLAN
+        case SAI_VLAN_ATTR_MEMBER_LIST:
+          switch_status = switch_api_vlan_interfaces_get(device,
+                                                         vlan_handle,
+                                                         &mbr_count,
+                                                         &mbrs);
+	  if(switch_status == SWITCH_STATUS_SUCCESS) {
+		  for(short unsigned int j=0;j<mbr_count;j++) {
+			  switch_handle_t port_handle=0;
+			  switch_handle_t vlan_member_id=0;
+			  // locate the port from interface and create the object ID of the
+			  // member handle
+			  switch_api_interface_get_port_handle(mbrs[j].intf_handle,
+					  &port_handle);
+			  vlan_member_id = VLAN_MEMBER_HANDLE_FROM_PORT_VLAN(port_handle, vlan_id);
+			  attr_list[i].value.objlist.list[j] = vlan_member_id;
+		  }
+		  attr_list[i].value.objlist.count = mbr_count;
+	  }
+          break;
+      }
     }
 
     SAI_LOG_EXIT();
@@ -258,7 +301,7 @@ sai_status_t sai_create_vlan_member(
     }
 
     // make it from port and vlan (no storage of handle)
-    *vlan_member_id =  0 | (port_id & 0xFFF) | (vlan_id << 12) | (SWITCH_HANDLE_TYPE_VLAN_MEMBER << HANDLE_TYPE_SHIFT);
+    *vlan_member_id = VLAN_MEMBER_HANDLE_FROM_PORT_VLAN(port_id, vlan_id);
 
     SAI_LOG_EXIT();
 

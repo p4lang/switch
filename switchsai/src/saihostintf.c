@@ -19,6 +19,11 @@ limitations under the License.
 #include <switchapi/switch_hostif.h>
 
 static sai_api_t api_id = SAI_API_HOST_INTERFACE;
+static sai_object_id_t default_hostif_trap_group_id = 0;
+
+sai_object_id_t sai_hostif_get_default() {
+	return default_hostif_trap_group_id;
+}
 
 /*
 * Routine Description:
@@ -952,8 +957,14 @@ sai_hostif_api_t hostif_api = {
 };
 
 sai_status_t sai_hostif_initialize(sai_api_service_t *sai_api_service) {
+    switch_hostif_group_t hostif_group;
     SAI_LOG_DEBUG("Initializing host interface");
     sai_api_service->hostif_api = hostif_api;
     switch_api_hostif_register_rx_callback(device, &sai_recv_hostif_packet_cb);
+    // create the default trap group
+    memset(&hostif_group, 0, sizeof(hostif_group));
+    hostif_group.priority = 1000;
+    hostif_group.egress_queue = 0;
+    default_hostif_trap_group_id = switch_api_hostif_group_create(device, &hostif_group);
     return SAI_STATUS_SUCCESS;
 }
