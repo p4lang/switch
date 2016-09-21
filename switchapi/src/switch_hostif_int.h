@@ -71,6 +71,7 @@ typedef struct __attribute__((__packed__)) switch_cpu_header_ {
   uint16_t ingress_ifindex;
   uint16_t ingress_bd;
   uint16_t reason_code;
+  uint16_t mcast_grp;
 } switch_cpu_header_t;
 
 typedef struct __attribute__((__packed__)) switch_packet_header_ {
