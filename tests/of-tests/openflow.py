@@ -215,7 +215,7 @@ def setup_pre(mc, sess_hdl, dev_tgt):
     mc.mc_associate_node(sess_hdl, dev_tgt.dev_id, mgrp_hdl, node_hdl)
 
 def setup(self):
-        sess_hdl = self.conn_mgr.client_init(16)
+        sess_hdl = self.conn_mgr.client_init()
         dev_tgt = DevTarget_t(0, hex_to_i16(0xFFFF))
         setup_default_table_configurations(self.client, sess_hdl, dev_tgt)
         setup_pre(self.mc, sess_hdl, dev_tgt)

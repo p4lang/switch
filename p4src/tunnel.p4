@@ -321,8 +321,6 @@ action ipv4_lkp() {
     modify_field(l3_metadata.lkp_ip_ttl, ipv4.ttl);
     modify_field(l3_metadata.lkp_l4_sport, l3_metadata.lkp_outer_l4_sport);
     modify_field(l3_metadata.lkp_l4_dport, l3_metadata.lkp_outer_l4_dport);
-
-    modify_field(intrinsic_metadata.mcast_grp, 0);
 }
 
 action ipv6_lkp() {
@@ -334,15 +332,11 @@ action ipv6_lkp() {
     modify_field(l3_metadata.lkp_ip_ttl, ipv6.hopLimit);
     modify_field(l3_metadata.lkp_l4_sport, l3_metadata.lkp_outer_l4_sport);
     modify_field(l3_metadata.lkp_l4_dport, l3_metadata.lkp_outer_l4_dport);
-
-    modify_field(intrinsic_metadata.mcast_grp, 0);
 }
 
 action non_ip_lkp() {
     modify_field(l2_metadata.lkp_mac_sa, ethernet.srcAddr);
     modify_field(l2_metadata.lkp_mac_da, ethernet.dstAddr);
-
-    modify_field(intrinsic_metadata.mcast_grp, 0);
 }
 
 table adjust_lkp_fields {

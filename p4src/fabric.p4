@@ -40,6 +40,7 @@ action terminate_cpu_packet() {
     modify_field(standard_metadata.egress_spec,
                  fabric_header.dstPortOrGroup);
     modify_field(egress_metadata.bypass, fabric_header_cpu.txBypass);
+    modify_field(intrinsic_metadata.mcast_grp, fabric_header_cpu.mcast_grp);
 
     modify_field(ethernet.etherType, fabric_payload_header.etherType);
     remove_header(fabric_header);
