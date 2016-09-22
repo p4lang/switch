@@ -81,7 +81,8 @@ class FabricCpuHeader(Packet):
         XShortField("ingress_ifindex", 0),
         XShortField("ingress_bd", 0),
 
-        XShortField("reason_code", 0)
+        XShortField("reason_code", 0),
+        XShortField("mcast_grp", 0)
     ]
 
 class FabricCpuSflowHeader(Packet):
@@ -133,6 +134,7 @@ def simple_cpu_packet(header_version = 0,
                       dst_port_or_group = 0,
                       ingress_ifindex = 1,
                       ingress_bd = 0,
+                      mcast_grp = 0,
                       egress_queue = 0,
                       tx_bypass = False,
                       ingress_port = 1,
@@ -160,7 +162,8 @@ def simple_cpu_packet(header_version = 0,
                                         ingress_port = ingress_port,
                                         ingress_ifindex = ingress_ifindex,
                                         ingress_bd = ingress_bd,
-                                        reason_code = reason_code)
+                                        reason_code = reason_code,
+                                        mcast_grp = mcast_grp)
 
     fabric_payload_header = FabricPayloadHeader(ether_type = eth_type)
 
