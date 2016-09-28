@@ -109,6 +109,10 @@ limitations under the License.
 #define P4_INT_ENABLE
 #endif
 
+#ifdef SFLOW_ENABLE
+#define P4_SFLOW_ENABLE
+#endif
+
 #ifdef EGRESS_ACL_ENABLE
 #define P4_EGRESS_ACL_ENABLE
 #endif

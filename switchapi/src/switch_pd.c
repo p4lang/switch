@@ -826,7 +826,7 @@ p4_pd_status_t switch_pd_src_vtep_table_add_entry(
     memset(&v4_action_spec, 0, sizeof(p4_pd_dc_src_vtep_hit_action_spec_t));
 
     v4_match_spec.l3_metadata_vrf = handle_to_id(ip_encap->vrf_handle);
-    v4_match_spec.ipv4_srcAddr = SWITCH_IP_ENCAP_IPV4_SRC_IP(ip_encap);
+    v4_match_spec.ipv4_srcAddr = SWITCH_IP_ENCAP_IPV4_DST_IP(ip_encap);
     v4_match_spec.tunnel_metadata_ingress_tunnel_type =
         switch_tunnel_get_ingress_tunnel_type(ip_encap);
     v4_action_spec.action_ifindex = ifindex;
@@ -844,7 +844,7 @@ p4_pd_status_t switch_pd_src_vtep_table_add_entry(
 
     v6_match_spec.l3_metadata_vrf = handle_to_id(ip_encap->vrf_handle);
     memcpy(
-        &v6_match_spec.ipv6_srcAddr, SWITCH_IP_ENCAP_IPV6_SRC_IP(ip_encap), 16);
+        &v6_match_spec.ipv6_srcAddr, SWITCH_IP_ENCAP_IPV6_DST_IP(ip_encap), 16);
     v6_match_spec.tunnel_metadata_ingress_tunnel_type =
         switch_tunnel_get_ingress_tunnel_type(ip_encap);
     v6_action_spec.action_ifindex = ifindex;
@@ -894,7 +894,7 @@ p4_pd_status_t switch_pd_dest_vtep_table_add_entry(
     p4_pd_dc_ipv4_dest_vtep_match_spec_t v4_match_spec;
     memset(&v4_match_spec, 0, sizeof(p4_pd_dc_ipv4_dest_vtep_match_spec_t));
     v4_match_spec.l3_metadata_vrf = handle_to_id(ip_encap->vrf_handle);
-    v4_match_spec.ipv4_dstAddr = SWITCH_IP_ENCAP_IPV4_DST_IP(ip_encap);
+    v4_match_spec.ipv4_dstAddr = SWITCH_IP_ENCAP_IPV4_SRC_IP(ip_encap);
     v4_match_spec.tunnel_metadata_ingress_tunnel_type =
         switch_tunnel_get_ingress_tunnel_type(ip_encap);
     status = p4_pd_dc_ipv4_dest_vtep_table_add_with_set_tunnel_termination_flag(
@@ -906,7 +906,7 @@ p4_pd_status_t switch_pd_dest_vtep_table_add_entry(
     memset(&v6_match_spec, 0, sizeof(p4_pd_dc_ipv6_dest_vtep_match_spec_t));
     v6_match_spec.l3_metadata_vrf = handle_to_id(ip_encap->vrf_handle);
     memcpy(
-        &v6_match_spec.ipv6_dstAddr, SWITCH_IP_ENCAP_IPV6_DST_IP(ip_encap), 16);
+        &v6_match_spec.ipv6_dstAddr, SWITCH_IP_ENCAP_IPV6_SRC_IP(ip_encap), 16);
     v6_match_spec.tunnel_metadata_ingress_tunnel_type =
         switch_tunnel_get_ingress_tunnel_type(ip_encap);
     status = p4_pd_dc_ipv6_dest_vtep_table_add_with_set_tunnel_termination_flag(
@@ -9138,13 +9138,13 @@ switch_status_t switch_pd_sflow_session_delete(
   if (sflow_info->mirror_table_ent_hdl != SWITCH_API_INVALID_HANDLE) {
     p4_pd_dc_mirror_table_delete(
         g_sess_hdl, device, sflow_info->mirror_table_ent_hdl);
-    sflow_info->mirror_table_ent_hdl = SWITCH_API_INVALID_HANDLE;
+    sflow_info->mirror_table_ent_hdl = SWITCH_HW_INVALID_HANDLE;
     op_started = true;
   }
   if (sflow_info->ing_take_sample_table_ent_hdl != SWITCH_API_INVALID_HANDLE) {
     p4_pd_dc_sflow_ing_take_sample_table_delete(
         g_sess_hdl, device, sflow_info->ing_take_sample_table_ent_hdl);
-    sflow_info->ing_take_sample_table_ent_hdl = SWITCH_API_INVALID_HANDLE;
+    sflow_info->ing_take_sample_table_ent_hdl = SWITCH_HW_INVALID_HANDLE;
     op_started = true;
   }
   if (op_started) {
