@@ -593,6 +593,7 @@ action decap_vxlan_inner_non_ip() {
     remove_header(vxlan);
     remove_header(ipv4);
     remove_header(ipv6);
+    remove_header(inner_ethernet);
 }
 
 action decap_genv_inner_ipv4() {
@@ -618,6 +619,7 @@ action decap_genv_inner_non_ip() {
     remove_header(genv);
     remove_header(ipv4);
     remove_header(ipv6);
+    remove_header(inner_ethernet);
 }
 
 #ifndef NVGRE_DISABLE
@@ -647,6 +649,7 @@ action decap_nvgre_inner_non_ip() {
     remove_header(gre);
     remove_header(ipv4);
     remove_header(ipv6);
+    remove_header(inner_ethernet);
 }
 #endif
 
@@ -1041,6 +1044,8 @@ action f_insert_vxlan_header() {
 
     modify_field(udp.srcPort, hash_metadata.entropy_hash);
     modify_field(udp.dstPort, UDP_PORT_VXLAN);
+    modify_field(l3_metadata.egress_l4_sport, hash_metadata.entropy_hash);
+    modify_field(l3_metadata.egress_l4_dport, UDP_PORT_VXLAN);
     modify_field(udp.checksum, 0);
     add(udp.length_, egress_metadata.payload_length, 30);
 
@@ -1071,6 +1076,8 @@ action f_insert_genv_header() {
 
     modify_field(udp.srcPort, hash_metadata.entropy_hash);
     modify_field(udp.dstPort, UDP_PORT_GENV);
+    modify_field(l3_metadata.egress_l4_sport, hash_metadata.entropy_hash);
+    modify_field(l3_metadata.egress_l4_dport, UDP_PORT_GENV);
     modify_field(udp.checksum, 0);
     add(udp.length_, egress_metadata.payload_length, 30);
 

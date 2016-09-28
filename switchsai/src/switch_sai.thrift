@@ -133,6 +133,11 @@ struct sai_thrift_qos_map_list_t {
     2: list<sai_thrift_qos_map_params_t> data;
 }
 
+struct sai_thrift_range_t {
+    1: i32 min;
+    2: i32 max;
+}
+
 union sai_thrift_attribute_value_t {
     1:  bool booldata;
     2:  string chardata;
@@ -154,6 +159,8 @@ union sai_thrift_attribute_value_t {
     18: sai_thrift_acl_field_data_t aclfield;
     19: sai_thrift_acl_action_data_t aclaction;
     20: sai_thrift_qos_map_list_t qosmap;
+    21: sai_thrift_range_t s32range;
+    22: sai_thrift_range_t u32range;
 }
 
 struct sai_thrift_attribute_t {
@@ -267,6 +274,9 @@ service switch_sai_rpc {
     list<sai_thrift_attribute_value_t> sai_thrift_get_acl_counter_attribute(
                              1: sai_thrift_object_id_t acl_counter_id,
                              2: list<i32> thrift_attr_ids);
+
+    sai_thrift_object_id_t sai_thrift_create_acl_range(1: list<sai_thrift_attribute_t> thrift_attr_list);
+    sai_thrift_status_t sai_thrift_delete_acl_range(1: sai_thrift_object_id_t acl_range_id);
 
     // Mirror API
     sai_thrift_object_id_t sai_thrift_create_mirror_session(1: list<sai_thrift_attribute_t> thrift_attr_list);

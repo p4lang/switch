@@ -78,7 +78,7 @@ typedef i32 switcht_handle_type_t
 
 typedef byte switcht_device_t
 typedef i32 switcht_vrf_id_t
-typedef i32 switcht_handle_t
+typedef i64 switcht_handle_t
 typedef string switcht_mac_addr_t
 typedef i32 switcht_port_t
 typedef i16 switcht_vlan_t
@@ -527,6 +527,11 @@ struct switcht_scheduler_info_t {
     9: i32 max_rate;
 }
 
+struct switcht_range_t {
+    1: i32 start_value;
+    2: i32 end_value;
+}
+
 service switch_api_rpc {
     /* init */
     switcht_status_t switcht_api_init(1:switcht_device_t device);
@@ -702,7 +707,10 @@ service switch_api_rpc {
     switcht_status_t switcht_api_nat_delete(1:switcht_device_t device, 2:switcht_nat_info_t nat_info);
 
     /* ACL API */
-    switcht_handle_t switcht_api_acl_list_create(1:switcht_device_t device, 2:switcht_acl_type_t type);
+    switcht_handle_t switcht_api_acl_list_create(
+                             1:switcht_device_t device,
+                             2:switcht_direction_t direction,
+                             3:switcht_acl_type_t type);
     switcht_status_t switcht_api_acl_list_delete(1:switcht_device_t device, 2:switcht_handle_t handle);
     switcht_handle_t switcht_api_acl_mac_rule_create(
                              1:switcht_device_t device,
@@ -796,6 +804,18 @@ service switch_api_rpc {
     switcht_counter_t switcht_api_acl_stats_get(
                              1: switcht_device_t device,
                              2: switcht_handle_t counter_handle);
+    switcht_handle_t switcht_api_acl_range_create(
+                             1: switcht_device_t device,
+                             2: switcht_direction_t direction,
+                             3: byte range_type,
+                             4: switcht_range_t range);
+    switcht_status_t switcht_api_acl_range_update(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t range_handle,
+                             3: switcht_range_t range);
+    switcht_status_t switcht_api_acl_range_delete(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t range_handle);
 
     /* HOSTIF API */
     switcht_handle_t switcht_api_hostif_group_create(1:switcht_device_t device, 2:switcht_hostif_group_t hostif_group);
@@ -883,7 +903,7 @@ service switch_api_rpc {
 
     switcht_status_t switcht_api_sflow_session_delete(1:switcht_device_t device, 2:switcht_handle_t sflow_hdl, 3:bool all_cleanup);
 
-    switcht_status_t switcht_api_sflow_session_attach(
+    switcht_handle_t switcht_api_sflow_session_attach(
                              1:switcht_device_t device,
                              2:switcht_handle_t sflow_handle,
                              3:switcht_direction_t direction,

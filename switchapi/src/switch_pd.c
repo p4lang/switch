@@ -2608,6 +2608,7 @@ p4_pd_status_t switch_pd_egress_bd_map_table_add_entry(
   match_spec.egress_metadata_bd = handle_to_id(bd_handle);
   action_spec.action_smac_idx = bd_info->smac_index;
   action_spec.action_nat_mode = SWITCH_LN_NAT_MODE(bd_info);
+  action_spec.action_bd_label = handle_to_id(bd_info->ln_info.bd_label);
 
   status = p4_pd_dc_egress_bd_map_table_add_with_set_egress_bd_properties(
       g_sess_hdl,
@@ -2633,6 +2634,7 @@ p4_pd_status_t switch_pd_egress_bd_map_table_update_entry(
   match_spec.egress_metadata_bd = handle_to_id(bd_handle);
   action_spec.action_smac_idx = bd_info->smac_index;
   action_spec.action_nat_mode = SWITCH_LN_NAT_MODE(bd_info);
+  action_spec.action_bd_label = handle_to_id(bd_info->ln_info.bd_label);
 
   status = p4_pd_dc_egress_bd_map_table_modify_with_set_egress_bd_properties(
       g_sess_hdl, device, bd_info->egress_bd_entry, &action_spec);
@@ -2816,7 +2818,7 @@ p4_pd_status_t switch_pd_ingress_port_mapping_table_add_entry(
   action1_spec.action_port_type = port_info->port_type;
 
   match2_spec.standard_metadata_ingress_port = SWITCH_PORT_ID(port_info);
-  action2_spec.action_if_label = SWITCH_PORT_ID(port_info);
+  action2_spec.action_if_label = SWITCH_PORT_ID(port_info) + 1;
   action2_spec.action_qos_group = port_info->ingress_qos_group;
   action2_spec.action_tc_qos_group = port_info->tc_qos_group;
   action2_spec.action_tc = port_info->tc;
@@ -2888,6 +2890,7 @@ p4_pd_status_t switch_pd_egress_port_mapping_table_add_entry(
       memset(&action_spec, 0, sizeof(action_spec));
       action_spec.action_ifindex = ifindex;
       action_spec.action_qos_group = qos_group;
+      action_spec.action_if_label = port_id + 1;
       status =
           p4_pd_dc_egress_port_mapping_table_add_with_egress_port_type_normal(
               g_sess_hdl, p4_pd_device, &match_spec, &action_spec, entry_hdl);
@@ -2911,6 +2914,7 @@ p4_pd_status_t switch_pd_egress_port_mapping_table_add_entry(
       memset(&action_spec, 0, sizeof(action_spec));
       action_spec.action_ifindex = ifindex;
       action_spec.action_qos_group = qos_group;
+      action_spec.action_if_label = port_id + 1;
       status =
           p4_pd_dc_egress_port_mapping_table_modify_with_egress_port_type_normal(
               g_sess_hdl, device, *entry_hdl, &action_spec);
@@ -4074,7 +4078,9 @@ p4_pd_status_t switch_pd_system_acl_table_add_entry(
 }
 
 p4_pd_status_t switch_pd_system_acl_table_delete_entry(
-    switch_device_t device, p4_pd_entry_hdl_t entry_hdl) {
+    switch_device_t device,
+    switch_direction_t direction,
+    p4_pd_entry_hdl_t entry_hdl) {
   p4_pd_status_t status = 0;
   p4_pd_dc_system_acl_table_delete(g_sess_hdl, device, entry_hdl);
   return status;
@@ -4499,25 +4505,21 @@ p4_pd_status_t switch_pd_ipv4_acl_table_add_entry(
         match_spec.l3_metadata_lkp_ip_proto = ip_acl[i].value.ip_proto;
         match_spec.l3_metadata_lkp_ip_proto_mask = ip_acl[i].mask.u.mask & 0xFF;
         break;
-      case SWITCH_ACL_IP_FIELD_L4_SOURCE_PORT:
-        match_spec.l3_metadata_lkp_l4_sport = ip_acl[i].value.l4_source_port;
-        match_spec.l3_metadata_lkp_l4_sport_mask =
-            ip_acl[i].mask.u.mask & 0xFFFF;
+      case SWITCH_ACL_IP_FIELD_L4_SOURCE_PORT_RANGE:
+        match_spec.acl_metadata_ingress_src_port_range_id =
+            handle_to_id(ip_acl[i].value.sport_range_handle);
         break;
-      case SWITCH_ACL_IP_FIELD_L4_DEST_PORT:
-        match_spec.l3_metadata_lkp_l4_dport = ip_acl[i].value.l4_dest_port;
-        match_spec.l3_metadata_lkp_l4_dport_mask =
-            ip_acl[i].mask.u.mask & 0xFFFF;
+      case SWITCH_ACL_IP_FIELD_L4_DEST_PORT_RANGE:
+        match_spec.acl_metadata_ingress_dst_port_range_id =
+            handle_to_id(ip_acl[i].value.dport_range_handle);
         break;
       case SWITCH_ACL_IP_FIELD_ICMP_TYPE:
-        match_spec.l3_metadata_lkp_l4_sport |= ip_acl[i].value.icmp_type << 8;
-        match_spec.l3_metadata_lkp_l4_sport_mask |=
-            (ip_acl[i].mask.u.mask & 0xFF) << 8;
+        match_spec.acl_metadata_ingress_src_port_range_id =
+            handle_to_id(ip_acl[i].value.sport_range_handle);
         break;
       case SWITCH_ACL_IP_FIELD_ICMP_CODE:
-        match_spec.l3_metadata_lkp_l4_sport |= ip_acl[i].value.icmp_code;
-        match_spec.l3_metadata_lkp_l4_sport_mask |=
-            ip_acl[i].mask.u.mask & 0xFF;
+        match_spec.acl_metadata_ingress_src_port_range_id =
+            handle_to_id(ip_acl[i].value.sport_range_handle);
         break;
       case SWITCH_ACL_IP_FIELD_TCP_FLAGS:
         match_spec.tcp_flags = ip_acl[i].value.tcp_flags;
@@ -4644,11 +4646,113 @@ p4_pd_status_t switch_pd_ipv4_acl_table_add_entry(
   return status;
 }
 
+p4_pd_status_t switch_pd_egress_ipv4_acl_table_add_entry(
+    switch_device_t device,
+    uint16_t if_label,
+    uint16_t bd_label,
+    uint16_t priority,
+    unsigned int count,
+    switch_acl_ip_key_value_pair_t *ip_acl,
+    switch_acl_ip_action_t action,
+    switch_acl_action_params_t *action_params,
+    switch_acl_opt_action_params_t *opt_action_params,
+    p4_pd_entry_hdl_t *entry_hdl) {
+  p4_pd_status_t status = 0;
+#ifdef P4_EGRESS_ACL_ENABLE
+#if !defined(P4_ACL_DISABLE) && !defined(P4_IPV4_DISABLE)
+  p4_pd_dev_target_t p4_pd_device;
+  p4_pd_dc_egress_ip_acl_match_spec_t match_spec;
+  unsigned int i = 0;
+
+  p4_pd_device.device_id = device;
+  p4_pd_device.dev_pipe_id = SWITCH_DEV_PIPE_ID;
+
+  memset(&match_spec, 0, sizeof(match_spec));
+
+  if (if_label) {
+    match_spec.acl_metadata_egress_if_label = if_label;
+    match_spec.acl_metadata_egress_if_label_mask = 0xFFFF;
+  }
+  if (bd_label) {
+    match_spec.acl_metadata_egress_bd_label = bd_label;
+    match_spec.acl_metadata_egress_bd_label_mask = 0xFFFF;
+  }
+
+  for (i = 0; i < count; i++) {
+    switch (ip_acl[i].field) {
+      case SWITCH_ACL_IP_FIELD_IPV4_SRC:
+        match_spec.ipv4_srcAddr = ip_acl[i].value.ipv4_source;
+        match_spec.ipv4_srcAddr_mask = ip_acl[i].mask.u.mask & 0xFFFFFFFF;
+        break;
+      case SWITCH_ACL_IP_FIELD_IPV4_DEST:
+        match_spec.ipv4_dstAddr = ip_acl[i].value.ipv4_dest;
+        match_spec.ipv4_dstAddr_mask = ip_acl[i].mask.u.mask & 0xFFFFFFFF;
+        break;
+      case SWITCH_ACL_IP_FIELD_IP_PROTO:
+        match_spec.ipv4_protocol = ip_acl[i].value.ip_proto;
+        match_spec.ipv4_protocol_mask = ip_acl[i].mask.u.mask & 0xFF;
+        break;
+      case SWITCH_ACL_IP_FIELD_L4_SOURCE_PORT_RANGE:
+        match_spec.acl_metadata_egress_src_port_range_id =
+            handle_to_id(ip_acl[i].value.sport_range_handle);
+        break;
+      case SWITCH_ACL_IP_FIELD_L4_DEST_PORT_RANGE:
+        match_spec.acl_metadata_egress_dst_port_range_id =
+            handle_to_id(ip_acl[i].value.dport_range_handle);
+        break;
+      default:
+        break;
+    }
+  }
+  switch (action) {
+    case SWITCH_ACL_ACTION_DROP: {
+      p4_pd_dc_egress_acl_deny_action_spec_t action_spec;
+      memset(&action_spec, 0, sizeof(action_spec));
+      action_spec.action_acl_copy_reason =
+          action_params->cpu_redirect.reason_code;
+      status =
+          p4_pd_dc_egress_ip_acl_table_add_with_egress_acl_deny(g_sess_hdl,
+                                                                p4_pd_device,
+                                                                &match_spec,
+                                                                priority,
+                                                                &action_spec,
+                                                                entry_hdl);
+    } break;
+    case SWITCH_ACL_ACTION_PERMIT: {
+      p4_pd_dc_egress_acl_permit_action_spec_t action_spec;
+      memset(&action_spec, 0, sizeof(action_spec));
+      action_spec.action_acl_copy_reason =
+          action_params->cpu_redirect.reason_code;
+      status =
+          p4_pd_dc_egress_ip_acl_table_add_with_egress_acl_permit(g_sess_hdl,
+                                                                  p4_pd_device,
+                                                                  &match_spec,
+                                                                  priority,
+                                                                  &action_spec,
+                                                                  entry_hdl);
+    } break;
+    default:
+      break;
+  }
+#endif /* P4_ACL_DISABLE && P4_IPV4_DISABLE */
+#endif /* P4_EGRESS_ACL_ENABLE */
+  p4_pd_complete_operations(g_sess_hdl);
+  return status;
+}
+
 p4_pd_status_t switch_pd_ipv4_acl_table_delete_entry(
-    switch_device_t device, p4_pd_entry_hdl_t entry_hdl) {
+    switch_device_t device,
+    switch_direction_t direction,
+    p4_pd_entry_hdl_t entry_hdl) {
   p4_pd_status_t status = 0;
 #if !defined(P4_IPV4_DISABLE) && !defined(P4_ACL_DISABLE)
-  p4_pd_dc_ip_acl_table_delete(g_sess_hdl, device, entry_hdl);
+  if (direction == SWITCH_API_DIRECTION_INGRESS) {
+    status = p4_pd_dc_ip_acl_table_delete(g_sess_hdl, device, entry_hdl);
+  } else {
+#ifdef P4_EGRESS_ACL_ENABLE
+    status = p4_pd_dc_egress_ip_acl_table_delete(g_sess_hdl, device, entry_hdl);
+#endif /* P4_EGRESS_ACL_ENABLE */
+  }
 #endif /* P4_IPV4_DISABLE & P4_ACL_DISABLE */
   p4_pd_complete_operations(g_sess_hdl);
   return status;
@@ -4714,25 +4818,21 @@ p4_pd_status_t switch_pd_ipv6_acl_table_add_entry(
         match_spec.l3_metadata_lkp_ip_proto_mask =
             ipv6_acl[i].mask.u.mask.u.addr8[0] & 0xFF;
         break;
-      case SWITCH_ACL_IPV6_FIELD_L4_SOURCE_PORT:
-        match_spec.l3_metadata_lkp_l4_sport = ipv6_acl[i].value.l4_source_port;
-        match_spec.l3_metadata_lkp_l4_sport_mask =
-            ipv6_acl[i].mask.u.mask.u.addr16[0] & 0xFFFF;
+      case SWITCH_ACL_IPV6_FIELD_L4_SOURCE_PORT_RANGE:
+        match_spec.acl_metadata_ingress_src_port_range_id =
+            handle_to_id(ipv6_acl[i].value.sport_range_handle);
         break;
-      case SWITCH_ACL_IPV6_FIELD_L4_DEST_PORT:
-        match_spec.l3_metadata_lkp_l4_dport = ipv6_acl[i].value.l4_dest_port;
-        match_spec.l3_metadata_lkp_l4_dport_mask =
-            ipv6_acl[i].mask.u.mask.u.addr16[0] & 0xFFFF;
+      case SWITCH_ACL_IPV6_FIELD_L4_DEST_PORT_RANGE:
+        match_spec.acl_metadata_ingress_dst_port_range_id =
+            handle_to_id(ipv6_acl[i].value.dport_range_handle);
         break;
       case SWITCH_ACL_IPV6_FIELD_ICMP_TYPE:
-        match_spec.l3_metadata_lkp_l4_sport |= ipv6_acl[i].value.icmp_type << 8;
-        match_spec.l3_metadata_lkp_l4_sport_mask |=
-            (ipv6_acl[i].mask.u.mask.u.addr8[0] & 0xFF) << 8;
+        match_spec.acl_metadata_ingress_src_port_range_id =
+            handle_to_id(ipv6_acl[i].value.sport_range_handle);
         break;
       case SWITCH_ACL_IPV6_FIELD_ICMP_CODE:
-        match_spec.l3_metadata_lkp_l4_sport |= ipv6_acl[i].value.icmp_code;
-        match_spec.l3_metadata_lkp_l4_sport_mask |=
-            ipv6_acl[i].mask.u.mask.u.addr8[0] & 0xFF;
+        match_spec.acl_metadata_ingress_src_port_range_id =
+            handle_to_id(ipv6_acl[i].value.sport_range_handle);
         break;
       case SWITCH_ACL_IPV6_FIELD_TCP_FLAGS:
         match_spec.tcp_flags = ipv6_acl[i].value.tcp_flags;
@@ -4826,11 +4926,120 @@ p4_pd_status_t switch_pd_ipv6_acl_table_add_entry(
   return status;
 }
 
-p4_pd_status_t switch_pd_ipv6_acl_table_delete_entry(
-    switch_device_t device, p4_pd_entry_hdl_t entry_hdl) {
+p4_pd_status_t switch_pd_egress_ipv6_acl_table_add_entry(
+    switch_device_t device,
+    uint16_t if_label,
+    uint16_t bd_label,
+    uint16_t priority,
+    unsigned int count,
+    switch_acl_ipv6_key_value_pair_t *ipv6_acl,
+    switch_acl_ipv6_action_t action,
+    switch_acl_action_params_t *action_params,
+    switch_acl_opt_action_params_t *opt_action_params,
+    p4_pd_entry_hdl_t *entry_hdl) {
   p4_pd_status_t status = 0;
 #if !defined(P4_IPV6_DISABLE) && !defined(P4_ACL_DISABLE)
-  p4_pd_dc_ipv6_acl_table_delete(g_sess_hdl, device, entry_hdl);
+#ifdef P4_EGRESS_ACL_ENABLE
+  p4_pd_dev_target_t p4_pd_device;
+  p4_pd_dc_egress_ipv6_acl_match_spec_t match_spec;
+  unsigned int i = 0;
+
+  p4_pd_device.device_id = device;
+  p4_pd_device.dev_pipe_id = SWITCH_DEV_PIPE_ID;
+
+  memset(&match_spec, 0, sizeof(match_spec));
+
+  if (if_label) {
+    match_spec.acl_metadata_egress_if_label = if_label;
+    match_spec.acl_metadata_egress_if_label_mask = 0xFFFF;
+  }
+  if (bd_label) {
+    match_spec.acl_metadata_egress_bd_label = bd_label;
+    match_spec.acl_metadata_egress_bd_label_mask = 0xFFFF;
+  }
+
+  for (i = 0; i < count; i++) {
+    switch (ipv6_acl[i].field) {
+      case SWITCH_ACL_IPV6_FIELD_IPV6_SRC:
+        memcpy(
+            match_spec.ipv6_srcAddr, ipv6_acl[i].value.ipv6_source.u.addr8, 16);
+        memcpy(
+            match_spec.ipv6_srcAddr_mask, ipv6_acl[i].mask.u.mask.u.addr8, 16);
+        break;
+      case SWITCH_ACL_IPV6_FIELD_IPV6_DEST:
+        memcpy(
+            match_spec.ipv6_dstAddr, ipv6_acl[i].value.ipv6_dest.u.addr8, 16);
+        memcpy(
+            match_spec.ipv6_dstAddr_mask, ipv6_acl[i].mask.u.mask.u.addr8, 16);
+        break;
+      case SWITCH_ACL_IPV6_FIELD_IP_PROTO:
+        match_spec.ipv6_nextHdr = ipv6_acl[i].value.ip_proto;
+        match_spec.ipv6_nextHdr_mask =
+            ipv6_acl[i].mask.u.mask.u.addr8[0] & 0xFF;
+        break;
+      case SWITCH_ACL_IPV6_FIELD_L4_SOURCE_PORT_RANGE:
+        match_spec.acl_metadata_egress_src_port_range_id =
+            handle_to_id(ipv6_acl[i].value.sport_range_handle);
+        break;
+      case SWITCH_ACL_IPV6_FIELD_L4_DEST_PORT_RANGE:
+        match_spec.acl_metadata_egress_dst_port_range_id =
+            handle_to_id(ipv6_acl[i].value.dport_range_handle);
+        break;
+      default:
+        break;
+    }
+  }
+  switch (action) {
+    case SWITCH_ACL_ACTION_DROP: {
+      p4_pd_dc_egress_acl_deny_action_spec_t action_spec;
+      memset(&action_spec, 0, sizeof(action_spec));
+      action_spec.action_acl_copy_reason =
+          action_params->cpu_redirect.reason_code;
+      status =
+          p4_pd_dc_egress_ipv6_acl_table_add_with_egress_acl_deny(g_sess_hdl,
+                                                                  p4_pd_device,
+                                                                  &match_spec,
+                                                                  priority,
+                                                                  &action_spec,
+                                                                  entry_hdl);
+    } break;
+    case SWITCH_ACL_ACTION_PERMIT: {
+      p4_pd_dc_egress_acl_permit_action_spec_t action_spec;
+      memset(&action_spec, 0, sizeof(action_spec));
+      action_spec.action_acl_copy_reason =
+          action_params->cpu_redirect.reason_code;
+      status = p4_pd_dc_egress_ipv6_acl_table_add_with_egress_acl_permit(
+          g_sess_hdl,
+          p4_pd_device,
+          &match_spec,
+          priority,
+          &action_spec,
+          entry_hdl);
+    } break;
+    default:
+      break;
+  }
+
+#endif /* P4_EGRESS_ACL_ENABLE */
+#endif /* P4_IPV6_DISABLE && P4_ACL_DISABLE */
+  p4_pd_complete_operations(g_sess_hdl);
+  return status;
+}
+
+p4_pd_status_t switch_pd_ipv6_acl_table_delete_entry(
+    switch_device_t device,
+    switch_direction_t direction,
+    p4_pd_entry_hdl_t entry_hdl) {
+  p4_pd_status_t status = 0;
+#if !defined(P4_IPV6_DISABLE) && !defined(P4_ACL_DISABLE)
+  if (direction == SWITCH_API_DIRECTION_INGRESS) {
+    status = p4_pd_dc_ipv6_acl_table_delete(g_sess_hdl, device, entry_hdl);
+  } else {
+#ifdef P4_EGRESS_ACL_ENABLE
+    status =
+        p4_pd_dc_egress_ipv6_acl_table_delete(g_sess_hdl, device, entry_hdl);
+#endif /* P4_EGRESS_ACL_ENABLE */
+  }
 #endif /* P4_IPV6_DISABLE & P4_ACL_DISABLE */
   p4_pd_complete_operations(g_sess_hdl);
   return status;
@@ -4887,15 +5096,13 @@ p4_pd_status_t switch_pd_ipv4_racl_table_add_entry(
         match_spec.l3_metadata_lkp_ip_proto_mask =
             ip_racl[i].mask.u.mask & 0xFF;
         break;
-      case SWITCH_ACL_IP_RACL_FIELD_L4_SOURCE_PORT:
-        match_spec.l3_metadata_lkp_l4_sport = ip_racl[i].value.l4_source_port;
-        match_spec.l3_metadata_lkp_l4_sport_mask =
-            ip_racl[i].mask.u.mask & 0xFFFF;
+      case SWITCH_ACL_IP_RACL_FIELD_L4_SOURCE_PORT_RANGE:
+        match_spec.acl_metadata_ingress_src_port_range_id =
+            handle_to_id(ip_racl[i].value.sport_range_handle);
         break;
-      case SWITCH_ACL_IP_RACL_FIELD_L4_DEST_PORT:
-        match_spec.l3_metadata_lkp_l4_dport = ip_racl[i].value.l4_dest_port;
-        match_spec.l3_metadata_lkp_l4_dport_mask =
-            ip_racl[i].mask.u.mask & 0xFFFF;
+      case SWITCH_ACL_IP_RACL_FIELD_L4_DEST_PORT_RANGE:
+        match_spec.acl_metadata_ingress_dst_port_range_id =
+            handle_to_id(ip_racl[i].value.dport_range_handle);
         break;
       default:
         break;
@@ -4980,7 +5187,9 @@ p4_pd_status_t switch_pd_ipv4_racl_table_add_entry(
 }
 
 p4_pd_status_t switch_pd_ipv4_racl_table_delete_entry(
-    switch_device_t device, p4_pd_entry_hdl_t entry_hdl) {
+    switch_device_t device,
+    switch_direction_t direction,
+    p4_pd_entry_hdl_t entry_hdl) {
   p4_pd_status_t status = 0;
 #if !defined(P4_IPV4_DISABLE) && !defined(P4_ACL_DISABLE)
   p4_pd_dc_ipv4_racl_table_delete(g_sess_hdl, device, entry_hdl);
@@ -5034,15 +5243,13 @@ p4_pd_status_t switch_pd_ipv6_racl_table_add_entry(
         match_spec.l3_metadata_lkp_ip_proto_mask =
             ipv6_racl[i].mask.u.mask.u.addr8[0] & 0xFF;
         break;
-      case SWITCH_ACL_IPV6_RACL_FIELD_L4_SOURCE_PORT:
-        match_spec.l3_metadata_lkp_l4_sport = ipv6_racl[i].value.l4_source_port;
-        match_spec.l3_metadata_lkp_l4_sport_mask =
-            ipv6_racl[i].mask.u.mask.u.addr16[0] & 0xFFFF;
+      case SWITCH_ACL_IPV6_RACL_FIELD_L4_SOURCE_PORT_RANGE:
+        match_spec.acl_metadata_ingress_src_port_range_id =
+            handle_to_id(ipv6_racl[i].value.sport_range_handle);
         break;
-      case SWITCH_ACL_IPV6_RACL_FIELD_L4_DEST_PORT:
-        match_spec.l3_metadata_lkp_l4_dport = ipv6_racl[i].value.l4_dest_port;
-        match_spec.l3_metadata_lkp_l4_dport_mask =
-            ipv6_racl[i].mask.u.mask.u.addr16[0] & 0xFFFF;
+      case SWITCH_ACL_IPV6_RACL_FIELD_L4_DEST_PORT_RANGE:
+        match_spec.acl_metadata_ingress_dst_port_range_id =
+            handle_to_id(ipv6_racl[i].value.dport_range_handle);
         break;
       default:
         break;
@@ -5126,7 +5333,9 @@ p4_pd_status_t switch_pd_ipv6_racl_table_add_entry(
 }
 
 p4_pd_status_t switch_pd_ipv6_racl_table_delete_entry(
-    switch_device_t device, p4_pd_entry_hdl_t entry_hdl) {
+    switch_device_t device,
+    switch_direction_t direction,
+    p4_pd_entry_hdl_t entry_hdl) {
   p4_pd_status_t status = 0;
 #if !defined(P4_IPV6_DISABLE) && !defined(P4_ACL_DISABLE)
   p4_pd_dc_ipv6_racl_table_delete(g_sess_hdl, device, entry_hdl);
@@ -5266,11 +5475,111 @@ p4_pd_status_t switch_pd_mac_acl_table_add_entry(
   return status;
 }
 
-p4_pd_status_t switch_pd_mac_acl_table_delete_entry(
-    switch_device_t device, p4_pd_entry_hdl_t entry_hdl) {
+p4_pd_status_t switch_pd_egress_mac_acl_table_add_entry(
+    switch_device_t device,
+    uint16_t if_label,
+    uint16_t bd_label,
+    uint16_t priority,
+    unsigned int count,
+    switch_acl_mac_key_value_pair_t *mac_acl,
+    switch_acl_mac_action_t action,
+    switch_acl_action_params_t *action_params,
+    switch_acl_opt_action_params_t *opt_action_params,
+    p4_pd_entry_hdl_t *entry_hdl) {
   p4_pd_status_t status = 0;
 #if !defined(P4_L2_DISABLE) && !defined(P4_ACL_DISABLE)
-  p4_pd_dc_mac_acl_table_delete(g_sess_hdl, device, entry_hdl);
+#ifdef P4_EGRESS_ACL_ENABLE
+  p4_pd_dev_target_t p4_pd_device;
+  p4_pd_dc_egress_mac_acl_match_spec_t match_spec;
+  unsigned int i = 0;
+
+  p4_pd_device.device_id = device;
+  p4_pd_device.dev_pipe_id = SWITCH_DEV_PIPE_ID;
+
+  memset(&match_spec, 0, sizeof(p4_pd_dc_mac_acl_match_spec_t));
+
+  if (if_label) {
+    match_spec.acl_metadata_egress_if_label = if_label;
+    match_spec.acl_metadata_egress_if_label_mask = 0xFFFF;
+  }
+  if (bd_label) {
+    match_spec.acl_metadata_egress_bd_label = bd_label;
+    match_spec.acl_metadata_egress_bd_label_mask = 0xFFFF;
+  }
+  for (i = 0; i < count; i++) {
+    switch (mac_acl[i].field) {
+      case SWITCH_ACL_MAC_FIELD_ETH_TYPE:
+        match_spec.ethernet_etherType = mac_acl[i].value.eth_type;
+        match_spec.ethernet_etherType_mask = mac_acl[i].mask.u.mask16 & 0xFFFF;
+        break;
+      case SWITCH_ACL_MAC_FIELD_SOURCE_MAC:
+        memcpy(match_spec.ethernet_srcAddr,
+               mac_acl[i].value.source_mac.mac_addr,
+               ETH_LEN);
+        memcpy(
+            match_spec.ethernet_srcAddr_mask, &mac_acl[i].mask.u.mask, ETH_LEN);
+        break;
+      case SWITCH_ACL_MAC_FIELD_DEST_MAC:
+        memcpy(match_spec.ethernet_dstAddr,
+               mac_acl[i].value.dest_mac.mac_addr,
+               ETH_LEN);
+        memcpy(
+            match_spec.ethernet_dstAddr_mask, &mac_acl[i].mask.u.mask, ETH_LEN);
+        break;
+      default:
+        break;
+    }
+  }
+  switch (action) {
+    case SWITCH_ACL_ACTION_DROP: {
+      p4_pd_dc_egress_acl_deny_action_spec_t action_spec;
+      memset(&action_spec, 0, sizeof(action_spec));
+      action_spec.action_acl_copy_reason =
+          action_params->cpu_redirect.reason_code;
+      status =
+          p4_pd_dc_egress_mac_acl_table_add_with_egress_acl_deny(g_sess_hdl,
+                                                                 p4_pd_device,
+                                                                 &match_spec,
+                                                                 priority,
+                                                                 &action_spec,
+                                                                 entry_hdl);
+    } break;
+    case SWITCH_ACL_ACTION_PERMIT: {
+      p4_pd_dc_egress_acl_permit_action_spec_t action_spec;
+      memset(&action_spec, 0, sizeof(action_spec));
+      action_spec.action_acl_copy_reason =
+          action_params->cpu_redirect.reason_code;
+      status =
+          p4_pd_dc_egress_mac_acl_table_add_with_egress_acl_permit(g_sess_hdl,
+                                                                   p4_pd_device,
+                                                                   &match_spec,
+                                                                   priority,
+                                                                   &action_spec,
+                                                                   entry_hdl);
+    } break;
+    default:
+      break;
+  }
+#endif /* P4_EGRESS_ACL_ENABLE */
+#endif /* P4_L2_DISABLE && P4_ACL_DISABLE */
+  p4_pd_complete_operations(g_sess_hdl);
+  return status;
+}
+
+p4_pd_status_t switch_pd_mac_acl_table_delete_entry(
+    switch_device_t device,
+    switch_direction_t direction,
+    p4_pd_entry_hdl_t entry_hdl) {
+  p4_pd_status_t status = 0;
+#if !defined(P4_L2_DISABLE) && !defined(P4_ACL_DISABLE)
+  if (direction == SWITCH_API_DIRECTION_INGRESS) {
+    status = p4_pd_dc_mac_acl_table_delete(g_sess_hdl, device, entry_hdl);
+  } else {
+#ifdef P4_EGRESS_ACL_ENABLE
+    status =
+        p4_pd_dc_egress_mac_acl_table_delete(g_sess_hdl, device, entry_hdl);
+#endif /* P4_EGRESS_ACL_ENABLE */
+  }
 #endif /* P4_L2_DISABLE & P4_ACL_DISABLE */
   p4_pd_complete_operations(g_sess_hdl);
   return status;
@@ -5294,12 +5603,12 @@ p4_pd_status_t switch_pd_egr_acl_table_add_entry(
 #ifndef P4_ACL_DISABLE
   unsigned int i;
   p4_pd_dev_target_t p4_pd_device;
-  p4_pd_dc_egress_acl_match_spec_t match_spec;
+  p4_pd_dc_egress_system_acl_match_spec_t match_spec;
 
   p4_pd_device.device_id = device;
   p4_pd_device.dev_pipe_id = SWITCH_DEV_PIPE_ID;
 
-  memset(&match_spec, 0, sizeof(p4_pd_dc_egress_acl_match_spec_t));
+  memset(&match_spec, 0, sizeof(p4_pd_dc_egress_system_acl_match_spec_t));
   for (i = 0; i < count; i++) {
     switch (egr_acl[i].field) {
       case SWITCH_ACL_EGR_DEST_PORT: {
@@ -5316,42 +5625,53 @@ p4_pd_status_t switch_pd_egr_acl_table_add_entry(
         match_spec.l3_metadata_l3_mtu_check = egr_acl[i].value.l3_mtu_check;
         match_spec.l3_metadata_l3_mtu_check_mask = 0xFFFF;
       } break;
+      case SWITCH_ACL_EGR_ACL_DENY: {
+        match_spec.acl_metadata_acl_deny = egr_acl[i].value.acl_deny;
+        match_spec.acl_metadata_acl_deny_mask = 0xFF;
+      } break;
       default:
         break;
     }
   }
 
   switch (action) {
-    case SWITCH_ACL_EGR_ACTION_NOP:
-      status = p4_pd_dc_egress_acl_table_add_with_nop(
+    case SWITCH_ACL_EGR_ACTION_PERMIT: {
+      status = p4_pd_dc_egress_system_acl_table_add_with_nop(
           g_sess_hdl, p4_pd_device, &match_spec, priority, entry_hdl);
-      break;
+    } break;
+    case SWITCH_ACL_EGR_ACTION_DROP: {
+      status = p4_pd_dc_egress_system_acl_table_add_with_drop_packet(
+          g_sess_hdl, p4_pd_device, &match_spec, priority, entry_hdl);
+    } break;
     case SWITCH_ACL_EGR_ACTION_SET_MIRROR: {
 #if !defined(P4_MIRROR_DISABLE)
       p4_pd_dc_egress_mirror_action_spec_t action_spec;
       action_spec.action_session_id =
           handle_to_id(opt_action_params->mirror_handle);
-      status = p4_pd_dc_egress_acl_table_add_with_egress_mirror(g_sess_hdl,
-                                                                p4_pd_device,
-                                                                &match_spec,
-                                                                priority,
-                                                                &action_spec,
-                                                                entry_hdl);
+      status =
+          p4_pd_dc_egress_system_acl_table_add_with_egress_mirror(g_sess_hdl,
+                                                                  p4_pd_device,
+                                                                  &match_spec,
+                                                                  priority,
+                                                                  &action_spec,
+                                                                  entry_hdl);
       break;
 #endif /* P4_MIRROR_DISABLE */
     }
     case SWITCH_ACL_EGR_ACTION_REDIRECT_TO_CPU: {
-      p4_pd_dc_egress_redirect_to_cpu_action_spec_t action_spec;
+      p4_pd_dc_egress_redirect_to_cpu_with_reason_action_spec_t action_spec;
       action_spec.action_reason_code = action_params->cpu_redirect.reason_code;
-      status = p4_pd_dc_egress_acl_table_add_with_egress_redirect_to_cpu(
-          g_sess_hdl,
-          p4_pd_device,
-          &match_spec,
-          priority,
-          &action_spec,
-          entry_hdl);
+      status =
+          p4_pd_dc_egress_system_acl_table_add_with_egress_redirect_to_cpu_with_reason(
+              g_sess_hdl,
+              p4_pd_device,
+              &match_spec,
+              priority,
+              &action_spec,
+              entry_hdl);
       break;
     }
+
     default:
       break;
   }
@@ -5362,10 +5682,13 @@ p4_pd_status_t switch_pd_egr_acl_table_add_entry(
 }
 
 p4_pd_status_t switch_pd_egr_acl_table_delete_entry(
-    switch_device_t device, p4_pd_entry_hdl_t entry_hdl) {
+    switch_device_t device,
+    switch_direction_t direction,
+    p4_pd_entry_hdl_t entry_hdl) {
   p4_pd_status_t status = 0;
 #ifndef P4_ACL_DISABLE
-  status = p4_pd_dc_egress_acl_table_delete(g_sess_hdl, device, entry_hdl);
+  status =
+      p4_pd_dc_egress_system_acl_table_delete(g_sess_hdl, device, entry_hdl);
   p4_pd_complete_operations(g_sess_hdl);
 #endif /* P4_ACL_DISABLE */
   return status;
@@ -6073,6 +6396,25 @@ p4_pd_status_t switch_pd_acl_table_add_default_entry(switch_device_t device) {
 #endif /* P4_ACL_DISABLE */
 #endif /* P4_STATS_DISABLE */
 
+#ifndef P4_ACL_DISABLE
+#ifdef P4_EGRESS_ACL_ENABLE
+
+  status = p4_pd_dc_egress_mac_acl_set_default_action_nop(
+      g_sess_hdl, p4_pd_device, &entry_hdl);
+
+#ifndef P4_IPV4_DISABLE
+  status = p4_pd_dc_egress_ip_acl_set_default_action_nop(
+      g_sess_hdl, p4_pd_device, &entry_hdl);
+#endif /* P4_IPV4_DISABLE */
+
+#ifndef P4_IPV6_DISABLE
+  status = p4_pd_dc_egress_ipv6_acl_set_default_action_nop(
+      g_sess_hdl, p4_pd_device, &entry_hdl);
+#endif /* P4_IPV6_DISABLE */
+
+#endif /* P4_EGRESS_ACL_ENABLE */
+#endif /* P4_ACL_DISABLE */
+
   p4_pd_complete_operations(g_sess_hdl);
   return status;
 }
@@ -6362,7 +6704,7 @@ p4_pd_status_t switch_pd_egress_acl_add_default_entry(switch_device_t device) {
   p4_pd_device.device_id = device;
   p4_pd_device.dev_pipe_id = SWITCH_DEV_PIPE_ID;
 
-  status = p4_pd_dc_egress_acl_set_default_action_nop(
+  status = p4_pd_dc_egress_system_acl_set_default_action_nop(
       g_sess_hdl, p4_pd_device, &entry_hdl);
 #endif /* P4_ACL_DISABLE */
   p4_pd_complete_operations(g_sess_hdl);
@@ -8926,6 +9268,275 @@ p4_pd_status_t switch_pd_hostif_meter_set(switch_device_t device,
   }
 
 #endif /* P4_METER_DISABLE */
+
+  return status;
+}
+
+p4_pd_status_t switch_pd_range_entry_add(switch_device_t device,
+                                         switch_direction_t direction,
+                                         uint16_t range_id,
+                                         switch_range_type_t range_type,
+                                         switch_range_t *range,
+                                         p4_pd_entry_hdl_t *entry_hdl) {
+  p4_pd_status_t status = 0;
+
+#ifndef P4_ACL_RANGE_DISABLE
+
+  p4_pd_dev_target_t p4_pd_device;
+
+  p4_pd_device.device_id = device;
+  p4_pd_device.dev_pipe_id = SWITCH_DEV_PIPE_ID;
+
+  switch (range_type) {
+    case SWITCH_RANGE_TYPE_SRC_PORT: {
+      if (direction == SWITCH_API_DIRECTION_INGRESS) {
+        p4_pd_dc_ingress_l4_src_port_match_spec_t match_spec;
+        p4_pd_dc_set_ingress_src_port_range_id_action_spec_t action_spec;
+        memset(&match_spec, 0x0, sizeof(match_spec));
+        memset(&action_spec, 0x0, sizeof(action_spec));
+        match_spec.l3_metadata_lkp_l4_sport_start = range->start_value;
+        match_spec.l3_metadata_lkp_l4_sport_end = range->end_value;
+        action_spec.action_range_id = range_id;
+        status =
+            p4_pd_dc_ingress_l4_src_port_table_add_with_set_ingress_src_port_range_id(
+                g_sess_hdl,
+                p4_pd_device,
+                &match_spec,
+                1000,
+                &action_spec,
+                entry_hdl);
+      } else {
+#ifdef P4_EGRESS_ACL_ENABLE
+        p4_pd_dc_egress_l4_src_port_match_spec_t match_spec;
+        p4_pd_dc_set_egress_src_port_range_id_action_spec_t action_spec;
+        memset(&match_spec, 0x0, sizeof(match_spec));
+        memset(&action_spec, 0x0, sizeof(action_spec));
+        match_spec.l3_metadata_egress_l4_sport_start = range->start_value;
+        match_spec.l3_metadata_egress_l4_sport_end = range->end_value;
+        action_spec.action_range_id = range_id;
+        status =
+            p4_pd_dc_egress_l4_src_port_table_add_with_set_egress_src_port_range_id(
+                g_sess_hdl,
+                p4_pd_device,
+                &match_spec,
+                1000,
+                &action_spec,
+                entry_hdl);
+#endif /* P4_EGRESS_ACL_ENABLE */
+      }
+    } break;
+
+    case SWITCH_RANGE_TYPE_DST_PORT: {
+      if (direction == SWITCH_API_DIRECTION_INGRESS) {
+        p4_pd_dc_ingress_l4_dst_port_match_spec_t match_spec;
+        p4_pd_dc_set_ingress_dst_port_range_id_action_spec_t action_spec;
+        memset(&match_spec, 0x0, sizeof(match_spec));
+        memset(&action_spec, 0x0, sizeof(action_spec));
+        match_spec.l3_metadata_lkp_l4_dport_start = range->start_value;
+        match_spec.l3_metadata_lkp_l4_dport_end = range->end_value;
+        action_spec.action_range_id = range_id;
+        status =
+            p4_pd_dc_ingress_l4_dst_port_table_add_with_set_ingress_dst_port_range_id(
+                g_sess_hdl,
+                p4_pd_device,
+                &match_spec,
+                1000,
+                &action_spec,
+                entry_hdl);
+      } else {
+#ifdef P4_EGRESS_ACL_ENABLE
+        p4_pd_dc_egress_l4_dst_port_match_spec_t match_spec;
+        p4_pd_dc_set_egress_dst_port_range_id_action_spec_t action_spec;
+        memset(&match_spec, 0x0, sizeof(match_spec));
+        memset(&action_spec, 0x0, sizeof(action_spec));
+        match_spec.l3_metadata_egress_l4_dport_start = range->start_value;
+        match_spec.l3_metadata_egress_l4_dport_end = range->end_value;
+        action_spec.action_range_id = range_id;
+        status =
+            p4_pd_dc_egress_l4_dst_port_table_add_with_set_egress_dst_port_range_id(
+                g_sess_hdl,
+                p4_pd_device,
+                &match_spec,
+                1000,
+                &action_spec,
+                entry_hdl);
+#endif /* P4_EGRESS_ACL_ENABLE */
+      }
+    } break;
+    default:
+      return SWITCH_STATUS_NOT_SUPPORTED;
+  }
+
+#endif /* P4_ACL_RANGE_DISABLE */
+
+  return status;
+}
+
+p4_pd_status_t switch_pd_range_entry_update(switch_device_t device,
+                                            switch_direction_t direction,
+                                            uint16_t range_id,
+                                            switch_range_type_t range_type,
+                                            switch_range_t *range,
+                                            p4_pd_entry_hdl_t entry_hdl) {
+  p4_pd_status_t status = 0;
+
+#ifndef P4_ACL_RANGE_DISABLE
+
+  switch (range_type) {
+    case SWITCH_RANGE_TYPE_SRC_PORT: {
+      if (direction == SWITCH_API_DIRECTION_INGRESS) {
+        p4_pd_dc_set_ingress_src_port_range_id_action_spec_t action_spec;
+        memset(&action_spec, 0x0, sizeof(action_spec));
+        action_spec.action_range_id = range_id;
+        status =
+            p4_pd_dc_ingress_l4_src_port_table_modify_with_set_ingress_src_port_range_id(
+                g_sess_hdl, device, entry_hdl, &action_spec);
+      } else {
+#ifdef P4_EGRESS_ACL_ENABLE
+        p4_pd_dc_set_egress_src_port_range_id_action_spec_t action_spec;
+        memset(&action_spec, 0x0, sizeof(action_spec));
+        action_spec.action_range_id = range_id;
+        status =
+            p4_pd_dc_egress_l4_src_port_table_modify_with_set_egress_src_port_range_id(
+                g_sess_hdl, device, entry_hdl, &action_spec);
+#endif /* P4_EGRESS_ACL_ENABLE */
+      }
+    } break;
+
+    case SWITCH_RANGE_TYPE_DST_PORT: {
+      if (direction == SWITCH_API_DIRECTION_INGRESS) {
+        p4_pd_dc_set_ingress_dst_port_range_id_action_spec_t action_spec;
+        memset(&action_spec, 0x0, sizeof(action_spec));
+        action_spec.action_range_id = range_id;
+        status =
+            p4_pd_dc_ingress_l4_dst_port_table_modify_with_set_ingress_dst_port_range_id(
+                g_sess_hdl, device, entry_hdl, &action_spec);
+      } else {
+#ifdef P4_EGRESS_ACL_ENABLE
+        p4_pd_dc_set_egress_dst_port_range_id_action_spec_t action_spec;
+        memset(&action_spec, 0x0, sizeof(action_spec));
+        action_spec.action_range_id = range_id;
+        status =
+            p4_pd_dc_egress_l4_dst_port_table_modify_with_set_egress_dst_port_range_id(
+                g_sess_hdl, device, entry_hdl, &action_spec);
+#endif /* P4_EGRESS_ACL_ENABLE */
+      }
+    } break;
+    default:
+      return SWITCH_STATUS_NOT_SUPPORTED;
+  }
+
+#endif /* P4_ACL_RANGE_DISABLE */
+
+  return status;
+}
+
+p4_pd_status_t switch_pd_range_entry_delete(switch_device_t device,
+                                            switch_direction_t direction,
+                                            switch_range_type_t range_type,
+                                            p4_pd_entry_hdl_t entry_hdl) {
+  p4_pd_status_t status = 0;
+
+#ifndef P4_ACL_RANGE_DISABLE
+
+  switch (range_type) {
+    case SWITCH_RANGE_TYPE_SRC_PORT: {
+      if (direction == SWITCH_API_DIRECTION_INGRESS) {
+        status = p4_pd_dc_ingress_l4_src_port_table_delete(
+            g_sess_hdl, device, entry_hdl);
+      } else {
+#ifdef P4_EGRESS_ACL_ENABLE
+        status = p4_pd_dc_egress_l4_src_port_table_delete(
+            g_sess_hdl, device, entry_hdl);
+#endif /* P4_EGRESS_ACL_ENABLE */
+      }
+      break;
+
+      case SWITCH_RANGE_TYPE_DST_PORT: {
+        if (direction == SWITCH_API_DIRECTION_INGRESS) {
+          status = p4_pd_dc_ingress_l4_dst_port_table_delete(
+              g_sess_hdl, device, entry_hdl);
+        } else {
+#ifdef P4_EGRESS_ACL_ENABLE
+          status = p4_pd_dc_egress_l4_dst_port_table_delete(
+              g_sess_hdl, device, entry_hdl);
+#endif /* P4_EGRESS_ACL_ENABLE */
+        }
+      } break;
+      default:
+        return SWITCH_STATUS_NOT_SUPPORTED;
+    }
+  }
+
+#endif /* P4_ACL_RANGE_DISABLE */
+
+  return status;
+}
+
+p4_pd_status_t switch_pd_egress_l4port_fields_init_entry(
+    switch_device_t device) {
+  p4_pd_status_t status = 0;
+
+#ifdef P4_EGRESS_ACL_ENABLE
+  p4_pd_dev_target_t p4_pd_device;
+
+  p4_pd_device.device_id = device;
+  p4_pd_device.dev_pipe_id = SWITCH_DEV_PIPE_ID;
+
+  p4_pd_entry_hdl_t entry_hdl;
+  p4_pd_dc_egress_l4port_fields_match_spec_t match_spec;
+
+  status = p4_pd_dc_egress_l4port_fields_set_default_action_nop(
+      g_sess_hdl, p4_pd_device, &entry_hdl);
+
+  memset(&match_spec, 0x0, sizeof(match_spec));
+  match_spec.tcp_valid = 1;
+  status =
+      p4_pd_dc_egress_l4port_fields_table_add_with_set_egress_tcp_port_fields(
+          g_sess_hdl, p4_pd_device, &match_spec, &entry_hdl);
+
+  memset(&match_spec, 0x0, sizeof(match_spec));
+  match_spec.udp_valid = 1;
+  status =
+      p4_pd_dc_egress_l4port_fields_table_add_with_set_egress_udp_port_fields(
+          g_sess_hdl, p4_pd_device, &match_spec, &entry_hdl);
+
+  memset(&match_spec, 0x0, sizeof(match_spec));
+  match_spec.icmp_valid = 1;
+  status =
+      p4_pd_dc_egress_l4port_fields_table_add_with_set_egress_icmp_port_fields(
+          g_sess_hdl, p4_pd_device, &match_spec, &entry_hdl);
+
+#endif /* P4_EGRESS_ACL_ENABLE */
+
+  return status;
+}
+
+p4_pd_status_t switch_pd_l4port_default_entry_add(switch_device_t device) {
+  p4_pd_status_t status = 0;
+
+#ifndef P4_ACL_RANGE_DISABLE
+  p4_pd_entry_hdl_t entry_hdl;
+  p4_pd_dev_target_t p4_pd_device;
+
+  p4_pd_device.device_id = device;
+  p4_pd_device.dev_pipe_id = SWITCH_DEV_PIPE_ID;
+
+  status = p4_pd_dc_ingress_l4_src_port_set_default_action_nop(
+      g_sess_hdl, p4_pd_device, &entry_hdl);
+
+  status = p4_pd_dc_ingress_l4_dst_port_set_default_action_nop(
+      g_sess_hdl, p4_pd_device, &entry_hdl);
+
+#ifdef P4_EGRESS_ACL_ENABLE
+  status = p4_pd_dc_egress_l4_src_port_set_default_action_nop(
+      g_sess_hdl, p4_pd_device, &entry_hdl);
+
+  status = p4_pd_dc_egress_l4_dst_port_set_default_action_nop(
+      g_sess_hdl, p4_pd_device, &entry_hdl);
+
+#endif /* P4_EGRESS_ACL_ENABLE */
+#endif /* P4_ACL_RANGE_DISABLE */
 
   return status;
 }

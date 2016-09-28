@@ -10274,7 +10274,7 @@ class NatTest(api_base_tests.ThriftInterfaceDataPlane):
                                                                 neighbor_entry)
 
         # create NAT ACL (permit all)
-        self.acl = self.client.switcht_api_acl_list_create(device, 0)
+        self.acl = self.client.switcht_api_acl_list_create(device, SWITCH_API_DIRECTION_INGRESS, 0)
         kvp = []
         acl_priority = 10
         action = 2

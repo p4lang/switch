@@ -298,12 +298,14 @@ def crc16_regular(buff, crc = 0, poly = 0xa001):
         i += 1
     return crc
 
-def entropy_hash(pkt, layer='ipv4'):
-    buff = pkt[Ether].src.translate(None, ':')
+def entropy_hash(pkt, layer='ipv4', ifindex=0):
+    buff=''
+    if layer == 'ether':
+        buff += str(ifindex).zfill(4)
+    buff += pkt[Ether].src.translate(None, ':')
     buff += pkt[Ether].dst.translate(None, ':')
     if layer == 'ether':
-        #buff += str(hex(pkt[Ether].type)[2:]).zfill(4)
-        buff += ''.zfill(26)
+        buff += str(hex(pkt[Ether].type)[2:]).zfill(4)
     elif layer == 'ipv4':
         buff += socket.inet_aton(pkt[IP].src).encode('hex')
         buff += socket.inet_aton(pkt[IP].dst).encode('hex')

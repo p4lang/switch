@@ -10,6 +10,7 @@ from mc_pd_rpc.ttypes import *
 default_entries = {}
 stats_enabled = 1
 nat_enabled = 1
+egress_acl_enabled = 1
 
 def port_to_pipe(port):
     return port >> 7
@@ -135,6 +136,16 @@ def populate_default_fabric_entries(client, sess_hdl, dev_tgt, ipv6_enabled=0,
         client.nat_dst_set_default_action_on_miss(sess_hdl, dev_tgt)
         client.nat_src_set_default_action_on_miss(sess_hdl, dev_tgt)
         client.nat_flow_set_default_action_nop(sess_hdl, dev_tgt)
+
+    if egress_acl_enabled:
+        client.egress_mac_acl_set_default_action_nop(sess_hdl, dev_tgt)
+        client.egress_ip_acl_set_default_action_nop(sess_hdl, dev_tgt)
+        client.egress_ipv6_acl_set_default_action_nop(sess_hdl, dev_tgt)
+        client.ingress_l4_src_port_set_default_action_nop(sess_hdl, dev_tgt)
+        client.ingress_l4_dst_port_set_default_action_nop(sess_hdl, dev_tgt)
+        client.egress_l4_src_port_set_default_action_nop(sess_hdl, dev_tgt)
+        client.egress_l4_dst_port_set_default_action_nop(sess_hdl, dev_tgt)
+        client.egress_l4port_fields_set_default_action_nop(sess_hdl, dev_tgt)
 
 def populate_default_entries(client, sess_hdl, dev_tgt, ipv6_enabled,
     acl_enabled, tunnel_enabled, multicast_enabled, int_enabled):
@@ -321,6 +332,16 @@ def populate_default_entries(client, sess_hdl, dev_tgt, ipv6_enabled,
         client.nat_dst_set_default_action_on_miss(sess_hdl, dev_tgt)
         client.nat_src_set_default_action_on_miss(sess_hdl, dev_tgt)
         client.nat_flow_set_default_action_nop(sess_hdl, dev_tgt)
+
+    if egress_acl_enabled:
+        client.egress_mac_acl_set_default_action_nop(sess_hdl, dev_tgt)
+        client.egress_ip_acl_set_default_action_nop(sess_hdl, dev_tgt)
+        client.egress_ipv6_acl_set_default_action_nop(sess_hdl, dev_tgt)
+        client.ingress_l4_src_port_set_default_action_nop(sess_hdl, dev_tgt)
+        client.ingress_l4_dst_port_set_default_action_nop(sess_hdl, dev_tgt)
+        client.egress_l4_src_port_set_default_action_nop(sess_hdl, dev_tgt)
+        client.egress_l4_dst_port_set_default_action_nop(sess_hdl, dev_tgt)
+        client.egress_l4port_fields_set_default_action_nop(sess_hdl, dev_tgt)
 
 def delete_default_entries(client, sess_hdl, dev_id):
     return
@@ -654,7 +675,8 @@ def program_ports(client, sess_hdl, dev_tgt, port_count):
                              standard_metadata_egress_port=count)
         action_spec = dc_egress_port_type_normal_action_spec_t(
                              action_ifindex=count,
-                             action_qos_group=0)
+                             action_qos_group=0,
+                             action_if_label=0)
         egress_hdl = client.egress_port_mapping_table_add_with_egress_port_type_normal(
                              sess_hdl,
                              dev_tgt,
@@ -705,7 +727,8 @@ def program_emulation_ports(client, sess_hdl, dev_tgt, port_count):
                              eg_intr_md_egress_port=count)
         action_spec = dc_egress_port_type_normal_action_spec_t(
                              action_ifindex=count,
-                             action_qos_group=0)
+                             action_qos_group=0,
+                             action_if_label=0)
         egress_hdl = client.egress_port_mapping_table_add_with_egress_port_type_normal(
                              sess_hdl,
                              dev_tgt,
@@ -834,7 +857,7 @@ def program_vlan(client, sess_hdl, dev_tgt, vrf, inner_rmac_group,
 def program_egress_bd_map(client, sess_hdl, dev_tgt, smac_index, vlan):
     match_spec = dc_egress_bd_map_match_spec_t(egress_metadata_bd=vlan)
     action_spec = dc_set_egress_bd_properties_action_spec_t(
-        action_smac_idx=smac_index, action_nat_mode=0)
+        action_smac_idx=smac_index, action_nat_mode=0, action_bd_label=0)
     client.egress_bd_map_table_add_with_set_egress_bd_properties(
         sess_hdl, dev_tgt, match_spec, action_spec)
 

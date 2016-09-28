@@ -275,7 +275,7 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
       return switch_api_port_qos_group_egress_set(device, port_handle, qos_handle);
   }
 
-  switcht_status_t switcht_api_vrf_create(const switcht_device_t device, const switcht_vrf_id_t vrf) {
+  switcht_handle_t switcht_api_vrf_create(const switcht_device_t device, const switcht_vrf_id_t vrf) {
     printf("switcht_api_l3_vrf_create\n");
     return switch_api_vrf_create(device, vrf);
   }
@@ -529,7 +529,7 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     return;
   }
 
-  switcht_status_t switcht_api_mac_table_entry_create(const switcht_device_t device, const switcht_handle_t vlan_handle, const switcht_mac_addr_t& mac, const int8_t entry_type, const switcht_interface_handle_t interface_handle) {
+  switcht_status_t switcht_api_mac_table_entry_create(const switcht_device_t device, const switcht_handle_t vlan_handle, const switcht_mac_addr_t& mac, const int8_t entry_type, const switcht_handle_t interface_handle) {
     switch_api_mac_entry_t mac_entry;
     switch_string_to_mac(mac, mac_entry.mac.mac_addr);
     printf("switcht_api_l2_mac_add\n");
@@ -539,7 +539,7 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     return switch_api_mac_table_entry_add(device, &mac_entry);
   }
 
-  switcht_status_t switcht_api_mac_table_entry_update(const switcht_device_t device, const switcht_handle_t vlan_handle, const switcht_mac_addr_t& mac, const int8_t entry_type, const switcht_interface_handle_t interface_handle) {
+  switcht_status_t switcht_api_mac_table_entry_update(const switcht_device_t device, const switcht_handle_t vlan_handle, const switcht_mac_addr_t& mac, const int8_t entry_type, const switcht_handle_t interface_handle) {
     switch_api_mac_entry_t mac_entry;
     switch_string_to_mac(mac, mac_entry.mac.mac_addr);
     printf("switcht_api_l2_mac_update\n");
@@ -974,9 +974,12 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
 
   // ACL
 
-  switcht_handle_t switcht_api_acl_list_create(const switcht_device_t device, const switcht_acl_type_t type) {
+  switcht_handle_t switcht_api_acl_list_create(
+          const switcht_device_t device,
+          const switcht_direction_t direction,
+          const switcht_acl_type_t type) {
     printf("switcht_api_acl_list_create\n");
-    return switch_api_acl_list_create(device, (switch_acl_type_t)type);
+    return switch_api_acl_list_create(device, (switch_direction_t) direction, (switch_acl_type_t)type);
   }
 
   switcht_status_t switcht_api_acl_list_delete(const switcht_device_t device, const switcht_handle_t handle) {
@@ -1000,7 +1003,7 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
 
     std::vector<switcht_acl_mac_key_value_pair_t>::const_iterator f=acl_kvp.begin();
 
-    void *fields = calloc(sizeof(switch_acl_ip_key_value_pair_t)*acl_kvp.size(), 1);
+    void *fields = calloc(sizeof(switch_acl_mac_key_value_pair_t)*acl_kvp.size(), 1);
     for(uint32_t i=0;i<acl_kvp.size();i++,f++) {
         ((switch_acl_mac_key_value_pair_t *)fields+i)->field = (switch_acl_mac_field_t)f->field;
         switch ((switch_acl_mac_field_t) f->field) {
@@ -1009,7 +1012,7 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
             {
                 unsigned char *mac = (unsigned char *) (((switch_acl_mac_key_value_pair_t *) fields + i)->value.source_mac.mac_addr);
                 switch_string_to_mac(f->value.value_str, mac);
-                unsigned char *mac_mask = (unsigned char *) (((switch_acl_mac_key_value_pair_t *) fields + i)->mask.u.mask);
+                unsigned char *mac_mask = (unsigned char *) (&(((switch_acl_mac_key_value_pair_t *) fields + i)->mask.u.mask));
                 switch_string_to_mac(f->mask.value_str, mac_mask);
                 break;
             }
@@ -1381,6 +1384,51 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     _counter.num_bytes = counter.num_bytes;
     return;
   }
+
+  switcht_handle_t
+  switcht_api_acl_range_create(
+          const switcht_device_t device,
+          const switcht_direction_t direction,
+          const int8_t range_type,
+          const switcht_range_t& range) {
+      switch_handle_t range_handle = 0;
+      switch_status_t status = SWITCH_STATUS_SUCCESS;
+      switch_range_t api_range;
+      memset(&api_range, 0x0, sizeof(api_range));
+      api_range.start_value = range.start_value;
+      api_range.end_value = range.end_value;
+      status = switch_api_acl_range_create(
+                             device,
+                             (switch_direction_t) direction,
+                             (switch_range_type_t) range_type,
+                             &api_range,
+                             &range_handle);
+      return range_handle;
+  }
+
+  switcht_status_t
+  switcht_api_acl_range_update(
+          const switcht_device_t device,
+          const switcht_handle_t range_handle,
+          const switcht_range_t& range) {
+      switch_range_t api_range;
+      switch_status_t status = SWITCH_STATUS_SUCCESS;
+      memset(&api_range, 0x0, sizeof(api_range));
+      api_range.start_value = range.start_value;
+      api_range.end_value = range.end_value;
+      status = switch_api_acl_range_update(
+                             device,
+                             range_handle,
+                             &api_range);
+      return status;
+  }
+
+  switcht_status_t switcht_api_acl_range_delete(
+          const switcht_device_t device,
+          const switcht_handle_t range_handle) {
+      return switch_api_acl_range_delete(device, range_handle);
+  }
+
 
   switcht_handle_t switcht_api_multicast_tree_create(const switcht_device_t device) {
     printf("switcht_api_multicast_tree_create\n");
