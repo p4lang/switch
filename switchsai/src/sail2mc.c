@@ -155,7 +155,8 @@ sai_status_t sai_create_l2mc_entry(_In_ const sai_l2mc_entry_t *l2mc_entry,
 
   switch_vlan_interface_t *mbrs;
   mbrs = switch_malloc(sizeof(switch_vlan_interface_t), port_list_count);
-  for (int i = 0; i < port_list_count; i++) {
+  int i = 0;
+  for (i = 0; i < port_list_count; i++) {
     mbrs[i].vlan_handle = vlan_handle;
     mbrs[i].intf_handle = port_list_handle[i];
   }

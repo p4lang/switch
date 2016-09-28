@@ -47,6 +47,9 @@ limitations under the License.
 #define INGRESS_MAC_ACL_TABLE_SIZE             MIN_TCAM_TABLE_SIZE
 #define INGRESS_IP_ACL_TABLE_SIZE              MIN_TCAM_TABLE_SIZE
 #define INGRESS_IPV6_ACL_TABLE_SIZE            MIN_TCAM_TABLE_SIZE
+#define EGRESS_MAC_ACL_TABLE_SIZE              MIN_TCAM_TABLE_SIZE
+#define EGRESS_IP_ACL_TABLE_SIZE               MIN_TCAM_TABLE_SIZE
+#define EGRESS_IPV6_ACL_TABLE_SIZE             MIN_TCAM_TABLE_SIZE
 #define INGRESS_IP_RACL_TABLE_SIZE             MIN_TCAM_TABLE_SIZE
 #define INGRESS_IPV6_RACL_TABLE_SIZE           MIN_TCAM_TABLE_SIZE
 #define IP_NAT_TABLE_SIZE                      MIN_SRAM_TABLE_SIZE
@@ -83,6 +86,8 @@ limitations under the License.
 #define SPANNING_TREE_TABLE_SIZE               MIN_SRAM_TABLE_SIZE
 #define FABRIC_REWRITE_TABLE_SIZE              MIN_TCAM_TABLE_SIZE
 #define EGRESS_ACL_TABLE_SIZE                  MIN_TCAM_TABLE_SIZE
+#define INGRESS_ACL_RANGE_TABLE_SIZE           MIN_TCAM_TABLE_SIZE
+#define EGRESS_ACL_RANGE_TABLE_SIZE            MIN_TCAM_TABLE_SIZE
 #define VLAN_DECAP_TABLE_SIZE                  MIN_SRAM_TABLE_SIZE
 #define TUNNEL_HEADER_TABLE_SIZE               MIN_SRAM_TABLE_SIZE
 #define TUNNEL_REWRITE_TABLE_SIZE              MIN_SRAM_TABLE_SIZE
@@ -110,3 +115,5 @@ limitations under the License.
 #define PCP_TO_TC_AND_COLOR_TABLE_SIZE         64
 
 #define COPP_TABLE_SIZE                        128
+
+#define EGRESS_PORT_LKP_FIELD_SIZE             4

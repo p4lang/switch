@@ -21,6 +21,7 @@ limitations under the License.
 #define OUTER_PIM_BIDIR_OPTIMIZATION
 #define PIM_BIDIR_OPTIMIZATION
 #define SFLOW_ENABLE
+#define EGRESS_ACL_ENABLE
 
 #ifdef MULTICAST_DISABLE
 #define L2_MULTICAST_DISABLE
@@ -112,6 +113,10 @@ limitations under the License.
 #define P4_SFLOW_ENABLE
 #endif
 
-#ifdef METER_DISABLE
-#define P4_METER_DISABLE
+#ifdef EGRESS_ACL_ENABLE
+#define P4_EGRESS_ACL_ENABLE
+#endif
+
+#ifdef ACL_RANGE_DISABLE
+#define P4_ACL_RANGE_DISABLE
 #endif

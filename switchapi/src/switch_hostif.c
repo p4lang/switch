@@ -170,7 +170,8 @@ switch_status_t switch_api_hostif_reason_code_create(
   switch (rcode_api_info->reason_code) {
     case SWITCH_HOSTIF_REASON_CODE_STP: {
       // stp bpdu, redirect to cpu
-      acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_MAC);
+      acl_handle = switch_api_acl_list_create(
+          device, SWITCH_API_DIRECTION_INGRESS, SWITCH_ACL_TYPE_MAC);
       switch_acl_mac_key_value_pair_t acl_kvp[SWITCH_ACL_MAC_FIELD_MAX];
       memset(&acl_kvp, 0, sizeof(acl_kvp));
       field_count = 0;
@@ -196,8 +197,8 @@ switch_status_t switch_api_hostif_reason_code_create(
                                  &ace_handle);
       switch_api_acl_reference(device, acl_handle, 0);
 
-      system_acl_handle =
-          switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
+      system_acl_handle = switch_api_acl_list_create(
+          device, SWITCH_API_DIRECTION_INGRESS, SWITCH_ACL_TYPE_SYSTEM);
       switch_acl_system_key_value_pair_t
           system_acl_kvp[SWITCH_ACL_SYSTEM_FIELD_MAX];
       memset(&system_acl_kvp, 0, sizeof(system_acl_kvp));
@@ -230,7 +231,8 @@ switch_status_t switch_api_hostif_reason_code_create(
     }
     case SWITCH_HOSTIF_REASON_CODE_LACP: {
       // lacp bpdu, redirect to cpu
-      acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_MAC);
+      acl_handle = switch_api_acl_list_create(
+          device, SWITCH_API_DIRECTION_INGRESS, SWITCH_ACL_TYPE_MAC);
       switch_acl_mac_key_value_pair_t acl_kvp[SWITCH_ACL_MAC_FIELD_MAX];
       memset(&acl_kvp, 0, sizeof(acl_kvp));
       field_count = 0;
@@ -256,8 +258,8 @@ switch_status_t switch_api_hostif_reason_code_create(
                                  &ace_handle);
       switch_api_acl_reference(device, acl_handle, 0);
 
-      system_acl_handle =
-          switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
+      system_acl_handle = switch_api_acl_list_create(
+          device, SWITCH_API_DIRECTION_INGRESS, SWITCH_ACL_TYPE_SYSTEM);
       switch_acl_system_key_value_pair_t
           system_acl_kvp[SWITCH_ACL_SYSTEM_FIELD_MAX];
       memset(&system_acl_kvp, 0, sizeof(system_acl_kvp));
@@ -290,7 +292,8 @@ switch_status_t switch_api_hostif_reason_code_create(
     }
     case SWITCH_HOSTIF_REASON_CODE_LLDP: {
       // lacp frame, redirect to cpu
-      acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_MAC);
+      acl_handle = switch_api_acl_list_create(
+          device, SWITCH_API_DIRECTION_INGRESS, SWITCH_ACL_TYPE_MAC);
       switch_acl_mac_key_value_pair_t acl_kvp[SWITCH_ACL_MAC_FIELD_MAX];
       memset(&acl_kvp, 0, sizeof(acl_kvp));
       field_count = 0;
@@ -374,8 +377,8 @@ switch_status_t switch_api_hostif_reason_code_create(
                                  &ace_handle);
       switch_api_acl_reference(device, acl_handle, 0);
 
-      system_acl_handle =
-          switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
+      system_acl_handle = switch_api_acl_list_create(
+          device, SWITCH_API_DIRECTION_INGRESS, SWITCH_ACL_TYPE_SYSTEM);
       switch_acl_system_key_value_pair_t
           system_acl_kvp[SWITCH_ACL_SYSTEM_FIELD_MAX];
       memset(&system_acl_kvp, 0, sizeof(system_acl_kvp));
@@ -406,7 +409,8 @@ switch_status_t switch_api_hostif_reason_code_create(
       break;
     }
     case SWITCH_HOSTIF_REASON_CODE_OSPF: {
-      acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_IP);
+      acl_handle = switch_api_acl_list_create(
+          device, SWITCH_API_DIRECTION_INGRESS, SWITCH_ACL_TYPE_IP);
       switch_acl_ip_key_value_pair_t acl_kvp[SWITCH_ACL_IP_FIELD_MAX];
 
       // All OSPF routers 224.0.0.5, copy to cpu
@@ -457,8 +461,8 @@ switch_status_t switch_api_hostif_reason_code_create(
 
       switch_api_acl_reference(device, acl_handle, 0);
 
-      system_acl_handle =
-          switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
+      system_acl_handle = switch_api_acl_list_create(
+          device, SWITCH_API_DIRECTION_INGRESS, SWITCH_ACL_TYPE_SYSTEM);
       switch_acl_system_key_value_pair_t
           system_acl_kvp[SWITCH_ACL_SYSTEM_FIELD_MAX];
       memset(&system_acl_kvp, 0, sizeof(system_acl_kvp));
@@ -494,7 +498,8 @@ switch_status_t switch_api_hostif_reason_code_create(
     }
     case SWITCH_HOSTIF_REASON_CODE_OSPFV6: {
       // All OSPFv3 routers ff02::5, copy to cpu
-      acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_IPV6);
+      acl_handle = switch_api_acl_list_create(
+          device, SWITCH_API_DIRECTION_INGRESS, SWITCH_ACL_TYPE_IPV6);
       switch_acl_ipv6_key_value_pair_t acl_kvp[SWITCH_ACL_IPV6_FIELD_MAX];
 
       memset(&acl_kvp, 0, sizeof(acl_kvp));
@@ -546,8 +551,8 @@ switch_status_t switch_api_hostif_reason_code_create(
 
       switch_api_acl_reference(device, acl_handle, 0);
 
-      system_acl_handle =
-          switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
+      system_acl_handle = switch_api_acl_list_create(
+          device, SWITCH_API_DIRECTION_INGRESS, SWITCH_ACL_TYPE_SYSTEM);
       switch_acl_system_key_value_pair_t
           system_acl_kvp[SWITCH_ACL_SYSTEM_FIELD_MAX];
       memset(&system_acl_kvp, 0, sizeof(system_acl_kvp));
@@ -583,7 +588,8 @@ switch_status_t switch_api_hostif_reason_code_create(
     }
     case SWITCH_HOSTIF_REASON_CODE_IPV6_NEIGHBOR_DISCOVERY: {
       // IPV6 ND packet, copy to cpu
-      acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_IPV6);
+      acl_handle = switch_api_acl_list_create(
+          device, SWITCH_API_DIRECTION_INGRESS, SWITCH_ACL_TYPE_IPV6);
       switch_acl_ipv6_key_value_pair_t acl_kvp[SWITCH_ACL_IPV6_FIELD_MAX];
 
       memset(&acl_kvp, 0, sizeof(acl_kvp));
@@ -648,8 +654,8 @@ switch_status_t switch_api_hostif_reason_code_create(
 
       switch_api_acl_reference(device, acl_handle, 0);
 
-      system_acl_handle =
-          switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
+      system_acl_handle = switch_api_acl_list_create(
+          device, SWITCH_API_DIRECTION_INGRESS, SWITCH_ACL_TYPE_SYSTEM);
       switch_acl_system_key_value_pair_t
           system_acl_kvp[SWITCH_ACL_SYSTEM_FIELD_MAX];
       memset(&system_acl_kvp, 0, sizeof(system_acl_kvp));
@@ -685,7 +691,8 @@ switch_status_t switch_api_hostif_reason_code_create(
     }
     case SWITCH_HOSTIF_REASON_CODE_PIM: {
       // PIM packet, copy to cpu
-      acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_IP);
+      acl_handle = switch_api_acl_list_create(
+          device, SWITCH_API_DIRECTION_INGRESS, SWITCH_ACL_TYPE_IP);
       switch_acl_ip_key_value_pair_t acl_kvp[SWITCH_ACL_IP_FIELD_MAX];
       memset(&acl_kvp, 0, sizeof(acl_kvp));
       field_count = 0;
@@ -706,8 +713,8 @@ switch_status_t switch_api_hostif_reason_code_create(
                                  &ace_handle);
       switch_api_acl_reference(device, acl_handle, 0);
 
-      system_acl_handle =
-          switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
+      system_acl_handle = switch_api_acl_list_create(
+          device, SWITCH_API_DIRECTION_INGRESS, SWITCH_ACL_TYPE_SYSTEM);
       switch_acl_system_key_value_pair_t
           system_acl_kvp[SWITCH_ACL_SYSTEM_FIELD_MAX];
       memset(&system_acl_kvp, 0, sizeof(system_acl_kvp));
@@ -743,7 +750,8 @@ switch_status_t switch_api_hostif_reason_code_create(
     }
     case SWITCH_HOSTIF_REASON_CODE_IGMP_TYPE_V2_REPORT: {
       // IGMPv2 report packet, copy to cpu
-      acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_IP);
+      acl_handle = switch_api_acl_list_create(
+          device, SWITCH_API_DIRECTION_INGRESS, SWITCH_ACL_TYPE_IP);
       switch_acl_ip_key_value_pair_t acl_kvp[SWITCH_ACL_IP_FIELD_MAX];
       memset(&acl_kvp, 0, sizeof(acl_kvp));
       field_count = 0;
@@ -764,8 +772,8 @@ switch_status_t switch_api_hostif_reason_code_create(
                                  &ace_handle);
       switch_api_acl_reference(device, acl_handle, 0);
 
-      system_acl_handle =
-          switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
+      system_acl_handle = switch_api_acl_list_create(
+          device, SWITCH_API_DIRECTION_INGRESS, SWITCH_ACL_TYPE_SYSTEM);
       switch_acl_system_key_value_pair_t
           system_acl_kvp[SWITCH_ACL_SYSTEM_FIELD_MAX];
       memset(&system_acl_kvp, 0, sizeof(system_acl_kvp));
@@ -796,7 +804,8 @@ switch_status_t switch_api_hostif_reason_code_create(
       break;
     }
     case SWITCH_HOSTIF_REASON_CODE_ARP_REQUEST: {
-      acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_MAC);
+      acl_handle = switch_api_acl_list_create(
+          device, SWITCH_API_DIRECTION_INGRESS, SWITCH_ACL_TYPE_MAC);
       switch_acl_mac_key_value_pair_t acl_kvp[SWITCH_ACL_MAC_FIELD_MAX];
       memset(&acl_kvp, 0, sizeof(acl_kvp));
       field_count = 0;
@@ -826,8 +835,8 @@ switch_status_t switch_api_hostif_reason_code_create(
                                  &ace_handle);
       switch_api_acl_reference(device, acl_handle, 0);
 
-      system_acl_handle =
-          switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
+      system_acl_handle = switch_api_acl_list_create(
+          device, SWITCH_API_DIRECTION_INGRESS, SWITCH_ACL_TYPE_SYSTEM);
       switch_acl_system_key_value_pair_t
           system_acl_kvp[SWITCH_ACL_SYSTEM_FIELD_MAX];
       memset(&system_acl_kvp, 0, sizeof(system_acl_kvp));
@@ -862,7 +871,8 @@ switch_status_t switch_api_hostif_reason_code_create(
       break;
     }
     case SWITCH_HOSTIF_REASON_CODE_ARP_RESPONSE: {
-      acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_MAC);
+      acl_handle = switch_api_acl_list_create(
+          device, SWITCH_API_DIRECTION_INGRESS, SWITCH_ACL_TYPE_MAC);
       switch_acl_mac_key_value_pair_t acl_kvp[SWITCH_ACL_MAC_FIELD_MAX];
       memset(&acl_kvp, 0, sizeof(acl_kvp));
       field_count = 0;
@@ -883,8 +893,8 @@ switch_status_t switch_api_hostif_reason_code_create(
                                  &ace_handle);
       switch_api_acl_reference(device, acl_handle, 0);
 
-      system_acl_handle =
-          switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
+      system_acl_handle = switch_api_acl_list_create(
+          device, SWITCH_API_DIRECTION_INGRESS, SWITCH_ACL_TYPE_SYSTEM);
       switch_acl_system_key_value_pair_t
           system_acl_kvp[SWITCH_ACL_SYSTEM_FIELD_MAX];
       memset(&system_acl_kvp, 0, sizeof(system_acl_kvp));
@@ -923,7 +933,8 @@ switch_status_t switch_api_hostif_reason_code_create(
       break;
     }
     case SWITCH_HOSTIF_REASON_CODE_TTL_ERROR: {
-      acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
+      acl_handle = switch_api_acl_list_create(
+          device, SWITCH_API_DIRECTION_INGRESS, SWITCH_ACL_TYPE_SYSTEM);
       switch_acl_system_key_value_pair_t acl_kvp[SWITCH_ACL_SYSTEM_FIELD_MAX];
       memset(&acl_kvp, 0, sizeof(acl_kvp));
       field_count = 0;
@@ -971,7 +982,8 @@ switch_status_t switch_api_hostif_reason_code_create(
       break;
     }
     case SWITCH_HOSTIF_REASON_CODE_BROADCAST: {
-      acl_handle = switch_api_acl_list_create(device, SWITCH_ACL_TYPE_MAC);
+      acl_handle = switch_api_acl_list_create(
+          device, SWITCH_API_DIRECTION_INGRESS, SWITCH_ACL_TYPE_MAC);
       switch_acl_mac_key_value_pair_t acl_kvp[SWITCH_ACL_MAC_FIELD_MAX];
       memset(&acl_kvp, 0, sizeof(acl_kvp));
       field_count = 0;
@@ -997,8 +1009,8 @@ switch_status_t switch_api_hostif_reason_code_create(
                                  &ace_handle);
       switch_api_acl_reference(device, acl_handle, 0);
 
-      system_acl_handle =
-          switch_api_acl_list_create(device, SWITCH_ACL_TYPE_SYSTEM);
+      system_acl_handle = switch_api_acl_list_create(
+          device, SWITCH_API_DIRECTION_INGRESS, SWITCH_ACL_TYPE_SYSTEM);
       switch_acl_system_key_value_pair_t
           system_acl_kvp[SWITCH_ACL_SYSTEM_FIELD_MAX];
       memset(&system_acl_kvp, 0, sizeof(system_acl_kvp));

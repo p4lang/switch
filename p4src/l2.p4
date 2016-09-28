@@ -299,9 +299,10 @@ control process_egress_bd_stats {
 #endif /* STATS_DISABLE */
 }
 
-action set_egress_bd_properties(smac_idx, nat_mode) {
+action set_egress_bd_properties(smac_idx, nat_mode, bd_label) {
     modify_field(egress_metadata.smac_idx, smac_idx);
     modify_field(nat_metadata.egress_nat_mode, nat_mode);
+    modify_field(acl_metadata.egress_bd_label, bd_label);
 }
 
 table egress_bd_map {

@@ -304,6 +304,7 @@ def sai_thrift_create_hostif(client, rif_or_port_id, intf_name):
     return hif_id
 
 def sai_thrift_create_acl_table(client,
+                                acl_stage = SAI_ACL_STAGE_INGRESS,
                                 addr_family = False,
                                 ip_src = False,
                                 ip_dst = False,
@@ -313,6 +314,12 @@ def sai_thrift_create_acl_table(client,
                                 in_port = False,
                                 out_port = False):
     acl_attr_list = []
+
+    attribute_value = sai_thrift_attribute_value_t(s32=acl_stage)
+    attribute = sai_thrift_attribute_t(id=SAI_ACL_TABLE_ATTR_STAGE,
+                                       value=attribute_value)
+    acl_attr_list.append(attribute)
+
     if ip_src:
         attribute_value = sai_thrift_attribute_value_t(booldata=1)
         attribute = sai_thrift_attribute_t(id=SAI_ACL_TABLE_ATTR_FIELD_SRC_IP,
@@ -364,6 +371,7 @@ def sai_thrift_create_acl_entry(client, acl_table_id,
                                 out_ports = None,
                                 in_port = None,
                                 out_port = None,
+                                range_list = None,
                                 packet_action = None,
                                 ingress_mirror_id = None,
                                 egress_mirror_id = None,
@@ -423,6 +431,13 @@ def sai_thrift_create_acl_entry(client, acl_table_id,
     if out_port != None:
         attribute_value = sai_thrift_attribute_value_t(aclfield=sai_thrift_acl_field_data_t(data = sai_thrift_acl_data_t(oid=out_port)))
         attribute = sai_thrift_attribute_t(id=SAI_ACL_ENTRY_ATTR_FIELD_OUT_PORT,
+                                           value=attribute_value)
+        acl_attr_list.append(attribute)
+
+    if range_list != None:
+        acl_range_list = sai_thrift_object_list_t(count=len(range_list), object_id_list=range_list)
+        attribute_value = sai_thrift_attribute_value_t(aclfield=sai_thrift_acl_field_data_t(data = sai_thrift_acl_data_t(objlist=acl_range_list)))
+        attribute = sai_thrift_attribute_t(id=SAI_ACL_ENTRY_ATTR_FIELD_RANGE,
                                            value=attribute_value)
         acl_attr_list.append(attribute)
 
@@ -500,6 +515,24 @@ def sai_thrift_create_acl_counter(client, acl_table_id, packet_enable = True, by
 
     acl_counter_id = client.sai_thrift_create_acl_counter(attr_list)
     return acl_counter_id
+
+def sai_thrift_create_acl_range(client, range_type, range_value):
+    attr_list = []
+
+    attribute1_value = sai_thrift_attribute_value_t(s32=range_type)
+    attribute1 = sai_thrift_attribute_t(
+                             id=SAI_ACL_RANGE_ATTR_TYPE,
+                             value=attribute1_value)
+    attr_list.append(attribute1)
+
+    attribute2_value = sai_thrift_attribute_value_t(u32range=range_value)
+    attribute2 = sai_thrift_attribute_t(
+                             id=SAI_ACL_RANGE_ATTR_LIMIT,
+                             value=attribute2_value)
+    attr_list.append(attribute2)
+
+    acl_range_id = client.sai_thrift_create_acl_range(attr_list)
+    return acl_range_id
 
 def sai_thrift_create_mirror_session(client, mirror_type, port,
                                      vlan, vlan_priority, vlan_tpid,

@@ -331,7 +331,7 @@ switch_status_t switch_api_ppg_delete(switch_device_t device,
     ppg_info = switch_ppg_get(ppg_handle);
     if (!ppg_info) {
       SWITCH_API_ERROR("failed to allocate port_priority group");
-      return SWITCH_API_INVALID_HANDLE;
+      return SWITCH_STATUS_INVALID_HANDLE;
     }
 
     status = switch_pd_ppg_delete(device, ppg_handle);
@@ -419,7 +419,7 @@ switch_status_t switch_api_port_qos_group_ingress_set(
     qos_map_list = switch_qos_map_get(qos_handle);
     if (!qos_map_list) {
       SWITCH_API_ERROR("qos map get failed\n");
-      return SWITCH_API_INVALID_HANDLE;
+      return SWITCH_STATUS_INVALID_HANDLE;
     }
     port_info->ingress_qos_group = qos_map_list->qos_group;
   }

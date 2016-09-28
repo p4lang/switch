@@ -29,159 +29,199 @@ scheme will allow for having multiple actions be speicifed in any
 combination in response to a match
 */
 
-typedef int sai_acl_table_match_qualifiers[SAI_ACL_TABLE_ATTR_FIELD_END -
-                                           SAI_ACL_TABLE_ATTR_FIELD_START + 1];
-
 typedef struct sai_handle_node_ {
   tommy_node node;
   switch_handle_t handle;
 } sai_handle_node_t;
 
-static sai_acl_table_match_qualifiers ip_acl = {
-    -1,
-    -1,  // v6
-    -1,
-    -1,  // MAC
-    SWITCH_ACL_IP_FIELD_IPV4_SRC,
-    SWITCH_ACL_IP_FIELD_IPV4_DEST,  // v4
-    -2,
-    -2,
-    -2,
-    -1,
-    -1,  // ports
-    -1,
-    -1,
-    -1,
-    -1,
-    -1,
-    -1,  // VLAN outer and inner
-    SWITCH_ACL_IP_FIELD_L4_SOURCE_PORT,
-    SWITCH_ACL_IP_FIELD_L4_DEST_PORT,  // l4 ports
-    -1,
-    SWITCH_ACL_IP_FIELD_IP_PROTO,
-    -1,                       // dscp
-    -1,                       // ecn
-    SWITCH_ACL_IP_FIELD_TTL,  // ttl
-    -1,                       // tos
-    SWITCH_ACL_IP_FIELD_IP_FLAGS,
-    SWITCH_ACL_IP_FIELD_TCP_FLAGS,  // tcp flags
-    -1,                             // ip type
-    -1,                             // ip frag
-    -1,                             // ipv6 flow
-    -1                              // tc
-};
+#define SAI_ACL_FIELD_NOT_SUPPORTED -1
+int switch_acl[SWITCH_ACL_TYPE_MAX][SAI_ACL_TABLE_ATTR_FIELD_END -
+                                    SAI_ACL_TABLE_ATTR_FIELD_START + 1];
 
-static sai_acl_table_match_qualifiers ipv6_acl = {
-    SWITCH_ACL_IPV6_FIELD_IPV6_SRC,
-    SWITCH_ACL_IPV6_FIELD_IPV6_DEST,
-    -1,
-    -1,  // MAC
-    -1,
-    -1,  // v4
-    -2,
-    -2,
-    -1,
-    -1,
-    -1,  // ports
-    -1,
-    -1,
-    -1,
-    -1,
-    -1,
-    -1,  // VLAN outer and inner
-    SWITCH_ACL_IPV6_FIELD_L4_SOURCE_PORT,
-    SWITCH_ACL_IPV6_FIELD_L4_DEST_PORT,  // l4 ports
-    -1,
-    SWITCH_ACL_IPV6_FIELD_IP_PROTO,
-    -1,                               // dscp
-    -1,                               // ecn
-    SWITCH_ACL_IPV6_FIELD_TTL,        // ttl
-    -1,                               // tos
-    -1,                               // ip flags
-    SWITCH_ACL_IPV6_FIELD_TCP_FLAGS,  // tcp flags
-    -1,                               // ip type
-    -1,                               // ip frag
-    SWITCH_ACL_IPV6_FIELD_FLOW_LABEL,
-    -1  // tc
-};
+void sai_acl_qualifiers_load() {
+  switch_acl_type_t acl_type = SWITCH_ACL_TYPE_IP;
+  sai_acl_table_attr_t acl_table_field = SAI_ACL_TABLE_ATTR_FIELD_START;
+  int acl_attr_index = 0;
 
-static sai_acl_table_match_qualifiers mac_acl = {
-    -1,
-    -1,  // v6
-    SWITCH_ACL_MAC_FIELD_SOURCE_MAC,
-    SWITCH_ACL_MAC_FIELD_DEST_MAC,  // MAC
-    -1,
-    -1,  // v4
-    -2,
-    -2,
-    -1,
-    -1,
-    -1,  // ports
-    -1,
-    SWITCH_ACL_MAC_FIELD_VLAN_PRI,
-    SWITCH_ACL_MAC_FIELD_VLAN_CFI,
-    -1,
-    -1,
-    -1,  // VLAN outer and inner
-    -1,
-    -1,  // l4 ports
-    SWITCH_ACL_MAC_FIELD_ETH_TYPE,
-    -1,
-    -1,
-    -1,  // ecn
-    -1,  // ttl
-    -1,
-    -1,
-    -1,  // tcp flags
-    -1,  // ip type
-    -1,  // ip frag
-    -1,  // ipv6 flow
-    -1   // tc
-};
+  for (acl_type = SWITCH_ACL_TYPE_IP; acl_type < SWITCH_ACL_TYPE_MAX;
+       acl_type++) {
+    acl_attr_index = 0;
+    for (acl_table_field = SAI_ACL_TABLE_ATTR_FIELD_START;
+         acl_table_field < SAI_ACL_TABLE_ATTR_FIELD_END;
+         acl_table_field++, acl_attr_index++) {
+      switch (acl_type) {
+        case SWITCH_ACL_TYPE_IP: {
+          switch (acl_table_field) {
+            case SAI_ACL_TABLE_ATTR_FIELD_SRC_IP:
+              switch_acl[acl_type][acl_attr_index] =
+                  SWITCH_ACL_IP_FIELD_IPV4_SRC;
+              break;
 
-static sai_acl_table_match_qualifiers egress_acl = {
-    -1,
-    -1,  // v6
-    -1,
-    -1,  // MAC
-    -1,
-    -1,  // v4
-    -2,
-    -2,
-    -1,
-    SWITCH_ACL_EGR_DEST_PORT,  // ports
-    -1,
-    -1,
-    -1,
-    -1,
-    -1,
-    -1,  // VLAN outer and inner
-    -1,
-    -1,  // l4 ports
-    -1,
-    -1,
-    -1,
-    -1,  // ecn
-    -1,  // ttl
-    -1,
-    -1,
-    -1,  // tcp flags
-    -1,  // ip type
-    -1,  // ip frag
-    -1,  // ipv6 flow
-    -1   // tc
-};
+            case SAI_ACL_TABLE_ATTR_FIELD_DST_IP:
+              switch_acl[acl_type][acl_attr_index] =
+                  SWITCH_ACL_IP_FIELD_IPV4_DEST;
+              break;
+
+            case SAI_ACL_TABLE_ATTR_FIELD_IP_PROTOCOL:
+              switch_acl[acl_type][acl_attr_index] =
+                  SWITCH_ACL_IP_FIELD_IP_PROTO;
+              break;
+
+            case SAI_ACL_TABLE_ATTR_FIELD_TTL:
+              switch_acl[acl_type][acl_attr_index] = SWITCH_ACL_IP_FIELD_TTL;
+              break;
+
+            case SAI_ACL_TABLE_ATTR_FIELD_IP_FLAGS:
+              switch_acl[acl_type][acl_attr_index] =
+                  SWITCH_ACL_IP_FIELD_IP_FLAGS;
+              break;
+
+            case SAI_ACL_TABLE_ATTR_FIELD_TCP_FLAGS:
+              switch_acl[acl_type][acl_attr_index] =
+                  SWITCH_ACL_IP_FIELD_TCP_FLAGS;
+              break;
+
+            case SAI_ACL_TABLE_ATTR_FIELD_RANGE:
+              switch_acl[acl_type][acl_attr_index] =
+                  SWITCH_ACL_IP_FIELD_L4_SOURCE_PORT_RANGE;
+              break;
+
+            case SAI_ACL_TABLE_ATTR_FIELD_IN_PORTS:
+            case SAI_ACL_TABLE_ATTR_FIELD_OUT_PORTS:
+            case SAI_ACL_TABLE_ATTR_FIELD_IN_PORT:
+              switch_acl[acl_type][acl_attr_index] = -2;
+              break;
+
+            default:
+              switch_acl[acl_type][acl_attr_index] =
+                  SAI_ACL_FIELD_NOT_SUPPORTED;
+              break;
+          }
+        } break;
+
+        case SWITCH_ACL_TYPE_IPV6: {
+          switch (acl_table_field) {
+            case SAI_ACL_TABLE_ATTR_FIELD_SRC_IPv6:
+              switch_acl[acl_type][acl_attr_index] =
+                  SWITCH_ACL_IPV6_FIELD_IPV6_SRC;
+              break;
+
+            case SAI_ACL_TABLE_ATTR_FIELD_DST_IPv6:
+              switch_acl[acl_type][acl_attr_index] =
+                  SWITCH_ACL_IPV6_FIELD_IPV6_DEST;
+              break;
+
+            case SAI_ACL_TABLE_ATTR_FIELD_IP_PROTOCOL:
+              switch_acl[acl_type][acl_attr_index] =
+                  SWITCH_ACL_IPV6_FIELD_IP_PROTO;
+              break;
+
+            case SAI_ACL_TABLE_ATTR_FIELD_TTL:
+              switch_acl[acl_type][acl_attr_index] = SWITCH_ACL_IPV6_FIELD_TTL;
+              break;
+
+            case SAI_ACL_TABLE_ATTR_FIELD_TCP_FLAGS:
+              switch_acl[acl_type][acl_attr_index] =
+                  SWITCH_ACL_IPV6_FIELD_TCP_FLAGS;
+              break;
+
+            case SAI_ACL_TABLE_ATTR_FIELD_RANGE:
+              switch_acl[acl_type][acl_attr_index] =
+                  SWITCH_ACL_IPV6_FIELD_L4_SOURCE_PORT_RANGE;
+              break;
+
+            case SAI_ACL_TABLE_ATTR_FIELD_IPv6_FLOW_LABEL:
+              switch_acl[acl_type][acl_attr_index] =
+                  SWITCH_ACL_IPV6_FIELD_FLOW_LABEL;
+              break;
+
+            case SAI_ACL_TABLE_ATTR_FIELD_IN_PORTS:
+            case SAI_ACL_TABLE_ATTR_FIELD_OUT_PORTS:
+            case SAI_ACL_TABLE_ATTR_FIELD_IN_PORT:
+              switch_acl[acl_type][acl_attr_index] = -2;
+              break;
+
+            default:
+              switch_acl[acl_type][acl_attr_index] =
+                  SAI_ACL_FIELD_NOT_SUPPORTED;
+              break;
+          }
+        } break;
+
+        case SWITCH_ACL_TYPE_MAC: {
+          switch (acl_table_field) {
+            case SAI_ACL_TABLE_ATTR_FIELD_SRC_MAC:
+              switch_acl[acl_type][acl_attr_index] =
+                  SWITCH_ACL_MAC_FIELD_SOURCE_MAC;
+              break;
+
+            case SAI_ACL_TABLE_ATTR_FIELD_DST_MAC:
+              switch_acl[acl_type][acl_attr_index] =
+                  SWITCH_ACL_MAC_FIELD_DEST_MAC;
+              break;
+
+            case SAI_ACL_TABLE_ATTR_FIELD_OUTER_VLAN_PRI:
+              switch_acl[acl_type][acl_attr_index] =
+                  SWITCH_ACL_MAC_FIELD_VLAN_PRI;
+              break;
+
+            case SAI_ACL_TABLE_ATTR_FIELD_OUTER_VLAN_CFI:
+              switch_acl[acl_type][acl_attr_index] =
+                  SWITCH_ACL_MAC_FIELD_VLAN_CFI;
+              break;
+
+            case SAI_ACL_TABLE_ATTR_FIELD_ETHER_TYPE:
+              switch_acl[acl_type][acl_attr_index] =
+                  SWITCH_ACL_MAC_FIELD_ETH_TYPE;
+              break;
+
+            case SAI_ACL_TABLE_ATTR_FIELD_IN_PORTS:
+            case SAI_ACL_TABLE_ATTR_FIELD_OUT_PORTS:
+            case SAI_ACL_TABLE_ATTR_FIELD_IN_PORT:
+              switch_acl[acl_type][acl_attr_index] = -2;
+              break;
+
+            default:
+              switch_acl[acl_type][acl_attr_index] =
+                  SAI_ACL_FIELD_NOT_SUPPORTED;
+              break;
+          }
+        } break;
+
+        case SWITCH_ACL_TYPE_EGRESS_SYSTEM: {
+          switch (acl_table_field) {
+            case SAI_ACL_TABLE_ATTR_FIELD_OUT_PORT:
+              switch_acl[acl_type][acl_attr_index] = SWITCH_ACL_EGR_DEST_PORT;
+              break;
+
+            case SAI_ACL_TABLE_ATTR_FIELD_IN_PORTS:
+            case SAI_ACL_TABLE_ATTR_FIELD_OUT_PORTS:
+            case SAI_ACL_TABLE_ATTR_FIELD_IN_PORT:
+              switch_acl[acl_type][acl_attr_index] = -2;
+              break;
+
+            default:
+              switch_acl[acl_type][acl_attr_index] =
+                  SAI_ACL_FIELD_NOT_SUPPORTED;
+              break;
+          }
+        } break;
+
+        default:
+          switch_acl[acl_type][acl_attr_index] = SAI_ACL_FIELD_NOT_SUPPORTED;
+          break;
+      }
+    }
+  }
+}
 
 static int *sai_acl_p4_match_table_get(switch_acl_type_t table_type) {
   switch (table_type) {
     case SWITCH_ACL_TYPE_IP:
-      return ip_acl;
     case SWITCH_ACL_TYPE_IPV6:
-      return ipv6_acl;
     case SWITCH_ACL_TYPE_MAC:
-      return mac_acl;
     case SWITCH_ACL_TYPE_EGRESS_SYSTEM:
-      return egress_acl;
+      return switch_acl[table_type];
     default:
       return NULL;
   }
@@ -211,11 +251,9 @@ static sai_status_t sai_acl_match_table_type_get(
         case SAI_ACL_TABLE_ATTR_PRIORITY:
         case SAI_ACL_TABLE_ATTR_SIZE:
         case SAI_ACL_TABLE_ATTR_GROUP_ID:
-        case SAI_ACL_ENTRY_ATTR_FIELD_IN_PORTS:
-        case SAI_ACL_ENTRY_ATTR_FIELD_OUT_PORTS:
-        case SAI_ACL_ENTRY_ATTR_FIELD_IN_PORT:
-        case SAI_ACL_ENTRY_ATTR_FIELD_OUTER_VLAN_ID:
-        case SAI_ACL_ENTRY_ATTR_FIELD_INNER_VLAN_ID:
+        case SAI_ACL_TABLE_ATTR_FIELD_IN_PORTS:
+        case SAI_ACL_TABLE_ATTR_FIELD_OUT_PORTS:
+        case SAI_ACL_TABLE_ATTR_FIELD_IN_PORT:
           break;
         // ignore above for matching fields
         default:
@@ -272,6 +310,8 @@ static sai_status_t sai_acl_xform_field_value(
     _In_ int field,
     _In_ void *dest,
     _In_ const sai_acl_field_data_t *source) {
+  sai_object_id_t *objlist = NULL;
+  uint32_t index = 0;
   switch (acl_type) {
     case SWITCH_ACL_TYPE_IP: {
       switch_acl_ip_key_value_pair_t *kvp =
@@ -287,14 +327,6 @@ static sai_status_t sai_acl_xform_field_value(
           break;
         case SWITCH_ACL_IP_FIELD_IP_PROTO:
           kvp->value.ip_proto = source->data.u16;
-          kvp->mask.u.mask = source->mask.u16;
-          break;
-        case SWITCH_ACL_IP_FIELD_L4_SOURCE_PORT:
-          kvp->value.l4_source_port = source->data.u16;
-          kvp->mask.u.mask = source->mask.u16;
-          break;
-        case SWITCH_ACL_IP_FIELD_L4_DEST_PORT:
-          kvp->value.l4_dest_port = source->data.u16;
           kvp->mask.u.mask = source->mask.u16;
           break;
         case SWITCH_ACL_IP_FIELD_ICMP_TYPE:
@@ -315,22 +347,70 @@ static sai_status_t sai_acl_xform_field_value(
           kvp->value.ip_frag = source->data.u8;
           kvp->mask.u.mask = source->mask.u8;
           break;
+
+        case SWITCH_ACL_IP_FIELD_L4_SOURCE_PORT_RANGE:
+        case SWITCH_ACL_IP_FIELD_L4_DEST_PORT_RANGE:
+          objlist = source->data.objlist.list;
+          for (index = 0; index < source->data.objlist.count; index++) {
+            switch_handle_t range_handle = 0;
+            range_handle = (switch_handle_t)objlist[index];
+            switch_range_type_t range_type = SWITCH_RANGE_TYPE_NONE;
+            switch_api_acl_range_type_get(device, range_handle, &range_type);
+            if (range_type == SWITCH_RANGE_TYPE_SRC_PORT) {
+              kvp->value.sport_range_handle = range_handle;
+            }
+            if (range_type == SWITCH_RANGE_TYPE_DST_PORT) {
+              kvp->value.dport_range_handle = range_handle;
+            }
+          }
+          break;
         default:
           break;
       }
     } break;
     case SWITCH_ACL_TYPE_IPV6: {
+      switch_acl_ipv6_key_value_pair_t *kvp =
+          (switch_acl_ipv6_key_value_pair_t *)dest;
       switch (field) {
         case SWITCH_ACL_IPV6_FIELD_IPV6_SRC:
+          memcpy(kvp->value.ipv6_source.u.addr8, source->data.ip6, 16);
+          memcpy(kvp->mask.u.mask.u.addr8, source->mask.ip6, 16);
+          break;
         case SWITCH_ACL_IPV6_FIELD_IPV6_DEST:
+          memcpy(kvp->value.ipv6_dest.u.addr8, source->data.ip6, 16);
+          memcpy(kvp->mask.u.mask.u.addr8, source->mask.ip6, 16);
+          break;
         case SWITCH_ACL_IPV6_FIELD_IP_PROTO:
-        case SWITCH_ACL_IPV6_FIELD_L4_SOURCE_PORT:
-        case SWITCH_ACL_IPV6_FIELD_L4_DEST_PORT:
+          kvp->value.ip_proto = source->data.u16;
+          kvp->mask.u.mask.u.addr8[0] = source->mask.u16;
+          break;
         case SWITCH_ACL_IPV6_FIELD_ICMP_TYPE:
         case SWITCH_ACL_IPV6_FIELD_ICMP_CODE:
         case SWITCH_ACL_IPV6_FIELD_TCP_FLAGS:
+          kvp->value.tcp_flags = source->data.u8;
+          kvp->mask.u.mask.u.addr8[0] = source->mask.u8;
+          break;
         case SWITCH_ACL_IPV6_FIELD_TTL:
+          kvp->value.ttl = source->data.u8;
+          kvp->mask.u.mask.u.addr8[0] = source->mask.u8;
+          break;
         case SWITCH_ACL_IPV6_FIELD_FLOW_LABEL:
+          break;
+        case SWITCH_ACL_IP_FIELD_L4_SOURCE_PORT_RANGE:
+        case SWITCH_ACL_IP_FIELD_L4_DEST_PORT_RANGE:
+          objlist = source->data.objlist.list;
+          for (index = 0; index < source->data.objlist.count; index++) {
+            switch_handle_t range_handle = 0;
+            range_handle = (switch_handle_t)objlist[index];
+            switch_range_type_t range_type = SWITCH_RANGE_TYPE_NONE;
+            switch_api_acl_range_type_get(device, range_handle, &range_type);
+            if (range_type == SWITCH_RANGE_TYPE_SRC_PORT) {
+              kvp->value.sport_range_handle = range_handle;
+            }
+            if (range_type == SWITCH_RANGE_TYPE_DST_PORT) {
+              kvp->value.dport_range_handle = range_handle;
+            }
+          }
           break;
         default:
           break;
@@ -382,6 +462,34 @@ static sai_status_t sai_acl_xform_field_value(
   return SAI_STATUS_SUCCESS;
 }
 
+sai_status_t sai_acl_direction_get(uint32_t attr_count,
+                                   const sai_attribute_t *attr_list,
+                                   switch_direction_t *direction) {
+  sai_status_t status = SAI_STATUS_SUCCESS;
+  uint32_t index = 0;
+  *direction = SWITCH_API_DIRECTION_INGRESS;
+
+  for (index = 0; index < attr_count; index++) {
+    // skip ports and VLAN attributes on check
+    switch (attr_list[index].id) {
+      case SAI_ACL_TABLE_ATTR_STAGE: {
+        sai_acl_stage_t acl_stage = attr_list[index].value.s32;
+        switch (acl_stage) {
+          case SAI_ACL_STAGE_EGRESS:
+            *direction = SWITCH_API_DIRECTION_EGRESS;
+            break;
+          case SAI_ACL_STAGE_INGRESS:
+          default:
+            *direction = SWITCH_API_DIRECTION_INGRESS;
+            break;
+        }
+      }
+    }
+  }
+
+  return status;
+}
+
 /*
 * Routine Description:
 *   Create an ACL table
@@ -402,6 +510,7 @@ sai_status_t sai_create_acl_table(_Out_ sai_object_id_t *acl_table_id,
 
   sai_status_t status = SAI_STATUS_SUCCESS;
   switch_acl_type_t acl_type = 0;
+  switch_direction_t direction = SWITCH_API_DIRECTION_INGRESS;
 
   if (!attr_list) {
     status = SAI_STATUS_INVALID_PARAMETER;
@@ -417,7 +526,16 @@ sai_status_t sai_create_acl_table(_Out_ sai_object_id_t *acl_table_id,
     return status;
   }
 
-  *acl_table_id = (sai_object_id_t)switch_api_acl_list_create(device, acl_type);
+  status = sai_acl_direction_get(attr_count, attr_list, &direction);
+  if (status != SAI_STATUS_SUCCESS) {
+    status = SAI_STATUS_INVALID_PARAMETER;
+    SAI_LOG_ERROR("failed to get acl direction: %s",
+                  sai_status_to_string(status));
+    return status;
+  }
+
+  *acl_table_id =
+      (sai_object_id_t)switch_api_acl_list_create(device, direction, acl_type);
 
   status = (*acl_table_id == SWITCH_API_INVALID_HANDLE) ? SAI_STATUS_FAILURE
                                                         : SAI_STATUS_SUCCESS;
@@ -927,6 +1045,198 @@ sai_status_t sai_get_acl_counter_attribute(_In_ sai_object_id_t acl_counter_id,
   return (sai_status_t)status;
 }
 
+sai_status_t sai_acl_range_attribute_to_switch_acl_range_attrbute(
+    sai_acl_range_type_t range_type, switch_range_type_t *switch_range_type) {
+  sai_status_t status = SAI_STATUS_SUCCESS;
+  switch (range_type) {
+    case SAI_ACL_RANGE_L4_SRC_PORT_RANGE:
+      *switch_range_type = SWITCH_RANGE_TYPE_SRC_PORT;
+      break;
+
+    case SAI_ACL_RANGE_L4_DST_PORT_RANGE:
+      *switch_range_type = SWITCH_RANGE_TYPE_DST_PORT;
+      break;
+
+    case SAI_ACL_RANGE_OUTER_VLAN:
+    case SAI_ACL_RANGE_INNER_VLAN:
+      *switch_range_type = SWITCH_RANGE_TYPE_VLAN;
+      break;
+
+    case SAI_ACL_RANGE_PACKET_LENGTH:
+      *switch_range_type = SWITCH_RANGE_TYPE_PACKET_LENGTH;
+      break;
+
+    default:
+      *switch_range_type = SWITCH_RANGE_TYPE_NONE;
+  }
+
+  return status;
+}
+
+/**
+ *   Routine Description:
+ *     @brief Create an ACL Range
+ *
+ *  Arguments:
+ *  @param[out] acl_range_id - the acl range id
+ *  @param[in] attr_count - number of attributes
+ *  @param[in] attr_list - array of attributes
+ *
+ *  Return Values:
+ *    @return  SAI_STATUS_SUCCESS on success
+ *             Failure status code on error
+ */
+sai_status_t sai_create_acl_range(_Out_ sai_object_id_t *acl_range_id,
+                                  _In_ uint32_t attr_count,
+                                  _In_ const sai_attribute_t *attr_list) {
+  const sai_attribute_t *attribute = NULL;
+  sai_status_t status = SAI_STATUS_SUCCESS;
+  switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
+  switch_range_type_t range_type = SWITCH_RANGE_TYPE_NONE;
+  switch_range_t switch_range;
+  switch_direction_t direction = SWITCH_API_DIRECTION_INGRESS;
+  switch_handle_t range_handle = 0;
+  uint32_t i = 0;
+
+  SAI_LOG_ENTER();
+
+  if (!attr_list) {
+    status = SAI_STATUS_INVALID_PARAMETER;
+    SAI_LOG_ERROR("null attribute: %s", sai_status_to_string(status));
+    return status;
+  }
+
+  for (i = 0; i < attr_count; i++) {
+    attribute = &attr_list[i];
+    switch (attribute->id) {
+      case SAI_ACL_RANGE_ATTR_TYPE:
+        sai_acl_range_attribute_to_switch_acl_range_attrbute(
+            attribute->value.s32, &range_type);
+        break;
+
+      case SAI_ACL_RANGE_ATTR_LIMIT:
+        switch_range.start_value = attribute->value.s32range.min;
+        switch_range.end_value = attribute->value.s32range.max;
+        break;
+    }
+  }
+
+  *acl_range_id = 0;
+
+  switch_status = switch_api_acl_range_create(
+      device, direction, range_type, &switch_range, &range_handle);
+  status = sai_switch_status_to_sai_status(switch_status);
+
+  if (status != SAI_STATUS_SUCCESS) {
+    SAI_LOG_ERROR("failed to create acl range : %s",
+                  sai_status_to_string(status));
+  }
+
+  *acl_range_id = (sai_object_id_t)range_handle;
+
+  SAI_LOG_EXIT();
+
+  return status;
+}
+
+/**
+ *  Routine Description:
+ *    @brief Remove an ACL Range
+ *
+ *  Arguments:
+ *    @param[in] acl_range_id - the acl range id
+ *
+ *  Return Values:
+ *    @return  SAI_STATUS_SUCCESS on success
+ *             Failure status code on error
+ */
+sai_status_t sai_remove_acl_range(_In_ sai_object_id_t acl_range_id) {
+  SAI_LOG_ENTER();
+
+  sai_status_t status = SAI_STATUS_SUCCESS;
+  switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
+
+  SAI_ASSERT(sai_object_type_query(acl_range_id) == SAI_OBJECT_TYPE_ACL_RANGE);
+
+  switch_status =
+      switch_api_acl_range_delete(device, (switch_handle_t)acl_range_id);
+  status = sai_switch_status_to_sai_status(switch_status);
+
+  if (status != SAI_STATUS_SUCCESS) {
+    SAI_LOG_ERROR("failed to delete acl range%lx : %s",
+                  acl_range_id,
+                  sai_status_to_string(status));
+  }
+
+  SAI_LOG_EXIT();
+
+  return (sai_status_t)status;
+}
+
+/**
+ * Routine Description:
+ *   @brief Set ACL range attribute
+ *
+ * Arguments:
+ *    @param[in] acl_range_id - the acl range id
+ *    @param[in] attr - attribute
+ *
+ * Return Values:
+ *    @return  SAI_STATUS_SUCCESS on success
+ *             Failure status code on error
+ */
+sai_status_t sai_set_acl_range_attribute(_In_ sai_object_id_t acl_range_id,
+                                         _In_ const sai_attribute_t *attr) {
+  SAI_LOG_ENTER();
+
+  sai_status_t status = SAI_STATUS_SUCCESS;
+
+  SAI_ASSERT(sai_object_type_query(acl_range_id) == SAI_OBJECT_TYPE_ACL_RANGE);
+
+  if (!attr) {
+    status = SAI_STATUS_INVALID_PARAMETER;
+    SAI_LOG_ERROR("null attribute: %s", sai_status_to_string(status));
+    return status;
+  }
+
+  SAI_LOG_EXIT();
+
+  return (sai_status_t)status;
+}
+
+/**
+ * Routine Description:
+ *   @brief Get ACL range attribute
+ *
+ * Arguments:
+ *    @param[in] acl_range_id - acl range id
+ *    @param[in] attr_count - number of attributes
+ *    @param[out] attr_list - array of attributes
+ *
+ * Return Values:
+ *    @return  SAI_STATUS_SUCCESS on success
+ *             Failure status code on error
+ */
+sai_status_t sai_get_acl_range_attribute(_In_ sai_object_id_t acl_range_id,
+                                         _In_ uint32_t attr_count,
+                                         _Out_ sai_attribute_t *attr_list) {
+  SAI_LOG_ENTER();
+
+  sai_status_t status = SAI_STATUS_SUCCESS;
+
+  SAI_ASSERT(sai_object_type_query(acl_range_id) == SAI_OBJECT_TYPE_ACL_RANGE);
+
+  if (!attr_list) {
+    status = SAI_STATUS_INVALID_PARAMETER;
+    SAI_LOG_ERROR("null attribute list: %s", sai_status_to_string(status));
+    return status;
+  }
+
+  SAI_LOG_EXIT();
+
+  return (sai_status_t)status;
+}
+
 /*
 *  ACL methods table retrieved with sai_api_query()
 */
@@ -938,12 +1248,17 @@ sai_acl_api_t acl_api = {
     .create_acl_counter = sai_create_acl_counter,
     .delete_acl_counter = sai_delete_acl_counter,
     .set_acl_counter_attribute = sai_set_acl_counter_attribute,
-    .get_acl_counter_attribute = sai_get_acl_counter_attribute
+    .get_acl_counter_attribute = sai_get_acl_counter_attribute,
+    .create_acl_range = sai_create_acl_range,
+    .remove_acl_range = sai_remove_acl_range,
+    .set_acl_range_attribute = sai_set_acl_range_attribute,
+    .get_acl_range_attribute = sai_get_acl_range_attribute
 
 };
 
 sai_status_t sai_acl_initialize(sai_api_service_t *sai_api_service) {
   SAI_LOG_DEBUG("Initializing acl");
   sai_api_service->acl_api = acl_api;
+  sai_acl_qualifiers_load();
   return SAI_STATUS_SUCCESS;
 }

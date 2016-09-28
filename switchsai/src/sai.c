@@ -242,6 +242,9 @@ sai_object_type_t sai_object_type_query(_In_ sai_object_id_t sai_object_id) {
     case SWITCH_HANDLE_TYPE_ACE:
       object_type = SAI_OBJECT_TYPE_ACL_ENTRY;
       break;
+    case SWITCH_HANDLE_TYPE_RANGE:
+      object_type = SAI_OBJECT_TYPE_ACL_RANGE;
+      break;
     case SWITCH_HANDLE_TYPE_HOSTIF:
       object_type = SAI_OBJECT_TYPE_HOST_INTERFACE;
       break;

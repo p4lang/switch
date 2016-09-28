@@ -1475,11 +1475,6 @@ class IPAclTest(sai_base_test.ThriftInterfaceDataPlane):
                                 ip_src='192.168.0.1',
                                 ip_id=105,
                                 ip_ttl=63)
-#         try:
-#             send_packet(self, 2, str(pkt))
-#             verify_packets(self, exp_pkt, [1])
-#
-#         finally:
         if True:
 
             # setup ACL to block based on Source IP
@@ -1491,6 +1486,198 @@ class IPAclTest(sai_base_test.ThriftInterfaceDataPlane):
 
             acl_table_id = sai_thrift_create_acl_table(
                              client = self.client,
+                             ip_src = True,
+                             in_ports = True)
+
+            acl_entry_id = sai_thrift_create_acl_entry(
+                             client = self.client,
+                             acl_table_id = acl_table_id,
+                             action_list = action_list,
+                             ip_src = ip_src,
+                             ip_src_mask = ip_src_mask,
+                             in_ports = in_ports)
+
+            # send the same packet
+            failed = 0
+            send_packet(self, 2, str(pkt))
+
+            # ensure packet is dropped
+            # check for absence of packet here!
+            try:
+                verify_packets(self, exp_pkt, [1])
+                print 'FAILED - did not expect packet'
+                failed = 1
+            except:
+                print 'Success'
+
+            finally:
+                if failed == 1:
+                    self.assertFalse()
+
+
+            # delete ACL
+            self.client.sai_thrift_delete_acl_entry(acl_entry_id)
+            self.client.sai_thrift_delete_acl_table(acl_table_id)
+
+            # cleanup
+            sai_thrift_remove_neighbor(self.client, addr_family, rif_id1, ip_addr1, dmac1)
+            sai_thrift_remove_route(self.client, vr_id, addr_family, ip_addr1, ip_mask1, nhop1)
+            self.client.sai_thrift_remove_next_hop(nhop1)
+
+            self.client.sai_thrift_remove_router_interface(rif_id1)
+            self.client.sai_thrift_remove_router_interface(rif_id2)
+
+            self.client.sai_thrift_remove_virtual_router(vr_id)
+
+class IPIngressAclRangeTcamTest(sai_base_test.ThriftInterfaceDataPlane):
+    def runTest(self):
+        print
+        print "Sending packet port 1 -> port 2 (192.168.0.1 -> 10.10.10.1 [id = 101])"
+        switch_init(self.client)
+        port1 = port_list[1]
+        port2 = port_list[2]
+        v4_enabled = 1
+        v6_enabled = 1
+        mac = ''
+
+        vr_id = sai_thrift_create_virtual_router(self.client, v4_enabled, v6_enabled)
+
+        rif_id1 = sai_thrift_create_router_interface(self.client, vr_id, 1, port1, 0, v4_enabled, v6_enabled, mac)
+        rif_id2 = sai_thrift_create_router_interface(self.client, vr_id, 1, port2, 0, v4_enabled, v6_enabled, mac)
+
+        addr_family = SAI_IP_ADDR_FAMILY_IPV4
+        ip_addr1 = '10.10.10.1'
+        ip_mask1 = '255.255.255.255'
+        dmac1 = '00:11:22:33:44:55'
+        nhop1 = sai_thrift_create_nhop(self.client, addr_family, ip_addr1, rif_id1)
+        sai_thrift_create_route(self.client, vr_id, addr_family, ip_addr1, ip_mask1, nhop1)
+        sai_thrift_create_neighbor(self.client, addr_family, rif_id1, ip_addr1, dmac1)
+
+        # send the test packet(s)
+        pkt = simple_tcp_packet(eth_dst='00:77:66:55:44:33',
+                                eth_src='00:22:22:22:22:22',
+                                ip_dst='10.10.10.1',
+                                ip_src='192.168.0.1',
+                                ip_id=105,
+                                ip_ttl=64)
+        exp_pkt = simple_tcp_packet(
+                                eth_dst='00:11:22:33:44:55',
+                                eth_src='00:77:66:55:44:33',
+                                ip_dst='10.10.10.1',
+                                ip_src='192.168.0.1',
+                                ip_id=105,
+                                ip_ttl=63)
+        if True:
+
+            u32range = sai_thrift_range_t(min=1000, max=2000)
+            acl_range_id = sai_thrift_create_acl_range(self.client, SAI_ACL_RANGE_L4_SRC_PORT_RANGE, u32range)
+            range_list = [acl_range_id]
+
+            # setup ACL to block based on Source IP
+            action_list = [SAI_ACL_ENTRY_ATTR_PACKET_ACTION]
+            packet_action = SAI_PACKET_ACTION_DROP
+            in_ports = [port1, port2]
+            ip_src = "192.168.0.1"
+            ip_src_mask = "255.255.255.0"
+
+            acl_table_id = sai_thrift_create_acl_table(
+                             client = self.client,
+                             ip_src = True,
+                             in_ports = True)
+
+            acl_entry_id = sai_thrift_create_acl_entry(
+                             client = self.client,
+                             acl_table_id = acl_table_id,
+                             action_list = action_list,
+                             range_list = range_list,
+                             ip_src = ip_src,
+                             ip_src_mask = ip_src_mask,
+                             in_ports = in_ports)
+
+            # send the same packet
+            failed = 0
+            send_packet(self, 2, str(pkt))
+
+            # ensure packet is dropped
+            # check for absence of packet here!
+            try:
+                verify_packets(self, exp_pkt, [1])
+                print 'FAILED - did not expect packet'
+                failed = 1
+            except:
+                print 'Success'
+
+            finally:
+                if failed == 1:
+                    self.assertFalse()
+
+
+            # delete ACL
+            self.client.sai_thrift_delete_acl_entry(acl_entry_id)
+            self.client.sai_thrift_delete_acl_table(acl_table_id)
+            self.client.sai_thrift_delete_acl_range(acl_range_id)
+
+            # cleanup
+            sai_thrift_remove_neighbor(self.client, addr_family, rif_id1, ip_addr1, dmac1)
+            sai_thrift_remove_route(self.client, vr_id, addr_family, ip_addr1, ip_mask1, nhop1)
+            self.client.sai_thrift_remove_next_hop(nhop1)
+
+            self.client.sai_thrift_remove_router_interface(rif_id1)
+            self.client.sai_thrift_remove_router_interface(rif_id2)
+
+            self.client.sai_thrift_remove_virtual_router(vr_id)
+
+class IPEgressAclTest(sai_base_test.ThriftInterfaceDataPlane):
+    def runTest(self):
+        print
+
+        print "Sending packet port 1 -> port 2 (192.168.0.1 -> 10.10.10.1 [id = 101])"
+        switch_init(self.client)
+        port1 = port_list[1]
+        port2 = port_list[2]
+        v4_enabled = 1
+        v6_enabled = 1
+        mac = ''
+
+        vr_id = sai_thrift_create_virtual_router(self.client, v4_enabled, v6_enabled)
+
+        rif_id1 = sai_thrift_create_router_interface(self.client, vr_id, 1, port1, 0, v4_enabled, v6_enabled, mac)
+        rif_id2 = sai_thrift_create_router_interface(self.client, vr_id, 1, port2, 0, v4_enabled, v6_enabled, mac)
+
+        addr_family = SAI_IP_ADDR_FAMILY_IPV4
+        ip_addr1 = '10.10.10.1'
+        ip_mask1 = '255.255.255.255'
+        dmac1 = '00:11:22:33:44:55'
+        nhop1 = sai_thrift_create_nhop(self.client, addr_family, ip_addr1, rif_id1)
+        sai_thrift_create_route(self.client, vr_id, addr_family, ip_addr1, ip_mask1, nhop1)
+        sai_thrift_create_neighbor(self.client, addr_family, rif_id1, ip_addr1, dmac1)
+
+        # send the test packet(s)
+        pkt = simple_tcp_packet(eth_dst='00:77:66:55:44:33',
+                                eth_src='00:22:22:22:22:22',
+                                ip_dst='10.10.10.1',
+                                ip_src='192.168.0.1',
+                                ip_id=105,
+                                ip_ttl=64)
+        exp_pkt = simple_tcp_packet(
+                                eth_dst='00:11:22:33:44:55',
+                                eth_src='00:77:66:55:44:33',
+                                ip_dst='10.10.10.1',
+                                ip_src='192.168.0.1',
+                                ip_id=105,
+                                ip_ttl=63)
+        if True:
+
+            # setup ACL to block based on Source IP
+            action_list = [SAI_ACL_ENTRY_ATTR_PACKET_ACTION]
+            packet_action = SAI_PACKET_ACTION_DROP
+            in_ports = [port1, port2]
+            ip_src = "192.168.0.1"
+            ip_src_mask = "255.255.255.0"
+
+            acl_table_id = sai_thrift_create_acl_table(
+                             client = self.client,
+                             acl_stage = SAI_ACL_STAGE_EGRESS,
                              ip_src = True,
                              in_ports = True)
 
@@ -1925,6 +2112,7 @@ class EgressLocalMirrorTest(sai_base_test.ThriftInterfaceDataPlane):
 
         acl_table_id = sai_thrift_create_acl_table(
                              client = self.client,
+                             acl_stage = SAI_ACL_STAGE_EGRESS,
                              out_port = True)
 
         acl_entry_id = sai_thrift_create_acl_entry(
@@ -2013,6 +2201,7 @@ class EgressERSpanMirrorTest(sai_base_test.ThriftInterfaceDataPlane):
 
         acl_table_id = sai_thrift_create_acl_table(
                              client = self.client,
+                             acl_stage=SAI_ACL_STAGE_EGRESS,
                              out_port = True)
 
         acl_entry_id = sai_thrift_create_acl_entry(
@@ -2293,7 +2482,6 @@ class IPAclStatsTest(sai_base_test.ThriftInterfaceDataPlane):
 
 class NexthopGetSetTest(sai_base_test.ThriftInterfaceDataPlane):
     def runTest(self):
-        return
         switch_init(self.client)
         port1 = port_list[1]
         port2 = port_list[2]

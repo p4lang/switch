@@ -58,15 +58,16 @@ typedef enum {
   SWITCH_HANDLE_TYPE_BUFFER_PROFILE,
   SWITCH_HANDLE_TYPE_VLAN_MEMBER,
   SWITCH_HANDLE_TYPE_SCHEDULER,
+  SWITCH_HANDLE_TYPE_RANGE,
 
-  SWITCH_HANDLE_TYPE_MAX = 32
+  SWITCH_HANDLE_TYPE_MAX = 64
 } switch_handle_type_t;
 
 /**
  Generic handle to encode different types of objects
  handle impicitly encodes the device, type and type specific
  */
-typedef unsigned long switch_handle_t;
+typedef uint64_t switch_handle_t;
 
 /** Handle related information */
 typedef struct {
@@ -140,8 +141,11 @@ switch_handle_type_t switch_handle_get_type(switch_handle_t handle);
 #define SWITCH_HOSTIF_HANDLE_VALID(handle) \
   SWITCH_HANDLE_VALID(handle, SWITCH_HANDLE_TYPE_HOSTIF)
 
+#define SWITCH_RANGE_HANDLE_VALID(handle) \
+  SWITCH_HANDLE_VALID(handle, SWITCH_HANDLE_TYPE_RANGE)
+
 // Easy use macros
-#define SWITCH_API_INVALID_HANDLE 0xFFFFFFFF
+#define SWITCH_API_INVALID_HANDLE ((uint64_t) ~(0))
 #define SWITCH_HW_INVALID_HANDLE 0xFFFFFFFF
 
 #define _switch_handle_create(_type, _info, _judy, _init, _handle) \

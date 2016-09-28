@@ -111,18 +111,22 @@ void switch_handle_free(switch_handle_t handle) {
   switch_handle_type_t type = SWITCH_HANDLE_TYPE_NONE;
   switch_handle_info_t *handle_info = NULL;
   void *p = NULL;
+  uint32_t handle_id_mask = ((1 << HANDLE_TYPE_SHIFT) - 1);
+  uint32_t handle_type_mask = ~(handle_id_mask);
 
-  type = (handle & 0xF8000000) >> HANDLE_TYPE_SHIFT;
+  type = (handle & handle_type_mask) >> HANDLE_TYPE_SHIFT;
   JLG(p, switch_handle_array, (unsigned int)type);
   if ((handle_info = (switch_handle_info_t *)(*(unsigned long *)p))) {
     switch_api_id_allocator_release(handle_info->allocator,
-                                    handle & 0x00FFFFFF);
+                                    handle & handle_id_mask);
     handle_info->num_in_use--;
   }
 }
 
 switch_handle_type_t switch_handle_get_type(switch_handle_t handle) {
-  switch_handle_type_t type = (handle & 0xF8000000) >> HANDLE_TYPE_SHIFT;
+  uint32_t handle_id_mask = ((1 << HANDLE_TYPE_SHIFT) - 1);
+  uint32_t handle_type_mask = ~(handle_id_mask);
+  switch_handle_type_t type = (handle & handle_type_mask) >> HANDLE_TYPE_SHIFT;
   return type;
 }
 
