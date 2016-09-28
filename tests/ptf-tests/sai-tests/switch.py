@@ -1630,9 +1630,6 @@ class IPIngressAclRangeTcamTest(sai_base_test.ThriftInterfaceDataPlane):
 class IPEgressAclTest(sai_base_test.ThriftInterfaceDataPlane):
     def runTest(self):
         print
-        if ((test_param_get('device_type') == 'asic') or
-           (test_param_get('device_type') != 'asic' and test_param_get('bm_type') == 'tofino')):
-            return
 
         print "Sending packet port 1 -> port 2 (192.168.0.1 -> 10.10.10.1 [id = 101])"
         switch_init(self.client)

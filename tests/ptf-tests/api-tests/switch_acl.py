@@ -148,9 +148,6 @@ class IPAclTest(api_base_tests.ThriftInterfaceDataPlane):
 class IPEgressAclTest(api_base_tests.ThriftInterfaceDataPlane):
     def runTest(self):
         print
-        if ((test_param_get('device_type') == 'asic') or
-           (test_param_get('device_type') != 'asic' and test_param_get('bm_type') == 'tofino')):
-            return
 
         print "Sending packet port %d" % swports[1], "  -> port %d" % swports[2], "  (192.168.0.1 -> 10.0.0.1 [id = 101])"
         self.client.switcht_api_init(0)
@@ -946,9 +943,6 @@ class IPIngressAclRangeTcamTest(api_base_tests.ThriftInterfaceDataPlane):
 class IPEgressAclRangeTcamTest(api_base_tests.ThriftInterfaceDataPlane):
     def runTest(self):
         print
-        if ((test_param_get('device_type') == 'asic') or
-           (test_param_get('device_type') != 'asic' and test_param_get('bm_type') == 'tofino')):
-            return
 
         print "Sending packet port %d" % swports[1], "  -> port %d" % swports[2], "  (192.168.0.1 -> 10.0.0.1 [id = 101])"
         self.client.switcht_api_init(0)
