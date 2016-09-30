@@ -51,6 +51,9 @@ header_type l3_metadata_t {
         mtu_index : 8;                         /* index into mtu table */
         l3_copy : 1;                           /* copy packet to CPU */
         l3_mtu_check : 16 (saturating);        /* result of mtu check */
+
+        egress_l4_sport : 16;
+        egress_l4_dport : 16;
     }
 }
 

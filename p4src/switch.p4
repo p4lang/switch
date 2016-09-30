@@ -139,9 +139,11 @@ control ingress {
 #ifndef MPLS_DISABLE
         if (not (valid(mpls[0]) and (l3_metadata.fib_hit == TRUE))) {
 #endif /* MPLS_DISABLE */
-
             /* validate packet */
             process_validate_packet();
+
+            /* perform ingress l4 port range */
+            process_ingress_l4port();
 
             /* l2 lookups */
             process_mac();
@@ -292,9 +294,15 @@ control egress {
                     process_egress_bd_stats();
                 }
             }
-    
+
+            /* perform egress l4 port range */
+            process_egress_l4port();
+
             /* perform tunnel encap */
             process_tunnel_encap();
+
+            /* egress acl */
+            process_egress_acl();
 
             /* update underlay header based on INT information inserted */
             process_int_outer_encap();
@@ -309,7 +317,7 @@ control egress {
         }
 
         /* apply egress acl */
-        process_egress_acl();
+        process_egress_system_acl();
 #ifdef OPENFLOW_ENABLE
     }
 #endif /* OPENFLOW_ENABLE */

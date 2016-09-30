@@ -34,6 +34,12 @@ header_type acl_metadata_t {
         if_label : 16;                         /* if label for acls */
         bd_label : 16;                         /* bd label for acls */
         acl_stats_index : 14;                  /* acl stats index */
+        egress_if_label : 16;                  /* if label for egress acls */
+        egress_bd_label : 16;                  /* bd label for egress acls */
+        ingress_src_port_range_id : 8;         /* ingress src port range id */
+        ingress_dst_port_range_id : 8;         /* ingress dst port range id */
+        egress_src_port_range_id : 8;          /* egress src port range id */
+        egress_dst_port_range_id : 8;          /* egress dst port range id */
     }
 }
 
@@ -46,6 +52,125 @@ header_type i2e_metadata_t {
 
 metadata acl_metadata_t acl_metadata;
 metadata i2e_metadata_t i2e_metadata;
+
+/*****************************************************************************/
+/* Egress ACL l4 port range                                                  */
+/*****************************************************************************/
+#ifdef EGRESS_ACL_ENABLE
+action set_egress_tcp_port_fields() {
+    modify_field(l3_metadata.egress_l4_sport, tcp.srcPort);
+    modify_field(l3_metadata.egress_l4_dport, tcp.dstPort);
+}
+
+action set_egress_udp_port_fields() {
+    modify_field(l3_metadata.egress_l4_sport, udp.srcPort);
+    modify_field(l3_metadata.egress_l4_dport, udp.dstPort);
+}
+
+action set_egress_icmp_port_fields() {
+    modify_field(l3_metadata.egress_l4_sport, icmp.typeCode);
+}
+
+table egress_l4port_fields {
+    reads {
+        tcp : valid;
+        udp : valid;
+        icmp : valid;
+    }
+    actions {
+        nop;
+        set_egress_tcp_port_fields;
+        set_egress_udp_port_fields;
+        set_egress_icmp_port_fields;
+    }
+    size: EGRESS_PORT_LKP_FIELD_SIZE;
+}
+
+#ifndef ACL_RANGE_DISABLE
+action set_egress_src_port_range_id(range_id) {
+    modify_field(acl_metadata.egress_src_port_range_id, range_id);
+}
+
+table egress_l4_src_port {
+    reads {
+        l3_metadata.egress_l4_sport : range;
+    }
+    actions {
+        nop;
+        set_egress_src_port_range_id;
+    }
+    size: EGRESS_ACL_RANGE_TABLE_SIZE;
+}
+
+action set_egress_dst_port_range_id(range_id) {
+    modify_field(acl_metadata.egress_dst_port_range_id, range_id);
+}
+
+table egress_l4_dst_port {
+    reads {
+        l3_metadata.egress_l4_dport : range;
+    }
+    actions {
+        nop;
+        set_egress_dst_port_range_id;
+    }
+    size: EGRESS_ACL_RANGE_TABLE_SIZE;
+}
+
+#endif /* ACL_RANGE_DISABLE */
+#endif /* EGRESS_ACL_ENABLE */
+
+control process_egress_l4port {
+#ifdef EGRESS_ACL_ENABLE
+    apply(egress_l4port_fields);
+#ifndef ACL_RANGE_DISABLE
+    apply(egress_l4_src_port);
+    apply(egress_l4_dst_port);
+#endif /* ACL_RANGE_DISABLE */
+#endif /* EGRESS_ACL_ENABLE */
+}
+
+/*****************************************************************************/
+/* Ingress ACL l4 port range                                                 */
+/*****************************************************************************/
+#ifndef ACL_RANGE_DISABLE
+action set_ingress_src_port_range_id(range_id) {
+    modify_field(acl_metadata.ingress_src_port_range_id, range_id);
+}
+
+table ingress_l4_src_port {
+    reads {
+        l3_metadata.lkp_l4_sport : range;
+    }
+    actions {
+        nop;
+        set_ingress_src_port_range_id;
+    }
+    size: INGRESS_ACL_RANGE_TABLE_SIZE;
+}
+
+action set_ingress_dst_port_range_id(range_id) {
+    modify_field(acl_metadata.ingress_dst_port_range_id, range_id);
+}
+
+table ingress_l4_dst_port {
+    reads {
+        l3_metadata.lkp_l4_dport : range;
+    }
+    actions {
+        nop;
+        set_ingress_dst_port_range_id;
+    }
+    size: INGRESS_ACL_RANGE_TABLE_SIZE;
+}
+#endif /* ACL_RANGE_DISABLE */
+
+control process_ingress_l4port {
+#ifndef ACL_RANGE_DISABLE
+    apply(ingress_l4_src_port);
+    apply(ingress_l4_dst_port);
+#endif /* ACL_RANGE_DISABLE */
+}
 
 /*****************************************************************************/
 /* ACL Actions                                                               */
@@ -185,8 +310,8 @@ table ip_acl {
         ipv4_metadata.lkp_ipv4_sa : ternary;
         ipv4_metadata.lkp_ipv4_da : ternary;
         l3_metadata.lkp_ip_proto : ternary;
-        l3_metadata.lkp_l4_sport : ternary;
-        l3_metadata.lkp_l4_dport : ternary;
+        acl_metadata.ingress_src_port_range_id : exact;
+        acl_metadata.ingress_dst_port_range_id : exact;
 
         tcp.flags : ternary;
         l3_metadata.lkp_ip_ttl : ternary;
@@ -218,8 +343,8 @@ table ipv6_acl {
         ipv6_metadata.lkp_ipv6_sa : ternary;
         ipv6_metadata.lkp_ipv6_da : ternary;
         l3_metadata.lkp_ip_proto : ternary;
-        l3_metadata.lkp_l4_sport : ternary;
-        l3_metadata.lkp_l4_dport : ternary;
+        acl_metadata.ingress_src_port_range_id : exact;
+        acl_metadata.ingress_dst_port_range_id : exact;
 
         tcp.flags : ternary;
         l3_metadata.lkp_ip_ttl : ternary;
@@ -326,8 +451,8 @@ table ipv4_racl {
         ipv4_metadata.lkp_ipv4_sa : ternary;
         ipv4_metadata.lkp_ipv4_da : ternary;
         l3_metadata.lkp_ip_proto : ternary;
-        l3_metadata.lkp_l4_sport : ternary;
-        l3_metadata.lkp_l4_dport : ternary;
+        acl_metadata.ingress_src_port_range_id : exact;
+        acl_metadata.ingress_dst_port_range_id : exact;
     }
     actions {
         nop;
@@ -346,7 +471,6 @@ control process_ipv4_racl {
 #endif /* IPV4_DISABLE */
 }
 
-
 /*****************************************************************************/
 /* IPv6 RACL                                                                 */
 /*****************************************************************************/
@@ -358,8 +482,8 @@ table ipv6_racl {
         ipv6_metadata.lkp_ipv6_sa : ternary;
         ipv6_metadata.lkp_ipv6_da : ternary;
         l3_metadata.lkp_ip_proto : ternary;
-        l3_metadata.lkp_l4_sport : ternary;
-        l3_metadata.lkp_l4_dport : ternary;
+        acl_metadata.ingress_src_port_range_id : exact;
+        acl_metadata.ingress_dst_port_range_id : exact;
     }
     actions {
         nop;
@@ -567,6 +691,112 @@ control process_system_acl {
 /*****************************************************************************/
 /* Egress ACL                                                                */
 /*****************************************************************************/
+
+#ifdef EGRESS_ACL_ENABLE
+
+/*****************************************************************************/
+/* Egress ACL Actions                                                        */
+/*****************************************************************************/
+action egress_acl_deny(acl_copy_reason) {
+    modify_field(acl_metadata.acl_deny, TRUE);
+    modify_field(fabric_metadata.reason_code, acl_copy_reason);
+}
+
+action egress_acl_permit(acl_copy_reason) {
+    modify_field(fabric_metadata.reason_code, acl_copy_reason);
+}
+
+/*****************************************************************************/
+/* Egress Mac ACL                                                            */
+/*****************************************************************************/
+
+#ifndef L2_DISABLE
+table egress_mac_acl {
+    reads {
+        acl_metadata.egress_if_label : ternary;
+        acl_metadata.egress_bd_label : ternary;
+
+        ethernet.srcAddr : ternary;
+        ethernet.dstAddr : ternary;
+        ethernet.etherType: ternary;
+    }
+    actions {
+        nop;
+        egress_acl_deny;
+        egress_acl_permit;
+    }
+    size : EGRESS_MAC_ACL_TABLE_SIZE;
+}
+#endif /* L2_DISABLE */
+
+/*****************************************************************************/
+/* Egress IPv4 ACL                                                           */
+/*****************************************************************************/
+#ifndef IPV4_DISABLE
+table egress_ip_acl {
+    reads {
+        acl_metadata.egress_if_label : ternary;
+        acl_metadata.egress_bd_label : ternary;
+
+        ipv4.srcAddr : ternary;
+        ipv4.dstAddr : ternary;
+        ipv4.protocol : ternary;
+        acl_metadata.egress_src_port_range_id : exact;
+        acl_metadata.egress_dst_port_range_id : exact;
+    }
+    actions {
+        nop;
+        egress_acl_deny;
+        egress_acl_permit;
+    }
+    size : EGRESS_IP_ACL_TABLE_SIZE;
+}
+#endif /* IPV4_DISABLE */
+
+/*****************************************************************************/
+/* Egress IPv6 ACL                                                           */
+/*****************************************************************************/
+#ifndef IPV6_DISABLE
+table egress_ipv6_acl {
+    reads {
+        acl_metadata.egress_if_label : ternary;
+        acl_metadata.egress_bd_label : ternary;
+
+        ipv6.srcAddr : ternary;
+        ipv6.dstAddr : ternary;
+        ipv6.nextHdr : ternary;
+        acl_metadata.egress_src_port_range_id : exact;
+        acl_metadata.egress_dst_port_range_id : exact;
+    }
+    actions {
+        nop;
+        egress_acl_deny;
+        egress_acl_permit;
+    }
+    size : EGRESS_IPV6_ACL_TABLE_SIZE;
+}
+
+#endif /* IPV6_DISABLE */
+#endif /* EGRESS_ACL_ENABLE */
+
+control process_egress_acl {
+#ifdef EGRESS_ACL_ENABLE
+    if (valid(ipv4)) {
+#ifndef IPV4_DISABLE
+        apply(egress_ip_acl);
+#endif /* IPV4_DISABLE */
+    } else {
+        if (valid(ipv6)) {
+#ifndef IPV6_DISABLE
+            apply(egress_ipv6_acl);
+#endif /* IPV6_DISABLE */
+        } else {
+            apply(egress_mac_acl);
+        }
+    }
+#endif /* EGRESS_ACL_ENABLE */
+}
+
 action egress_mirror(session_id) {
     modify_field(i2e_metadata.mirror_session_id, session_id);
     clone_egress_pkt_to_egress(session_id, e2e_mirror_info);
@@ -577,33 +807,47 @@ action egress_mirror_drop(session_id) {
     drop();
 }
 
-action egress_redirect_to_cpu(reason_code) {
-    egress_copy_to_cpu(reason_code);
-    drop();
-}
-
-action egress_copy_to_cpu(reason_code) {
-    modify_field(fabric_metadata.reason_code, reason_code);
+action egress_copy_to_cpu() {
     clone_egress_pkt_to_egress(CPU_MIRROR_SESSION_ID, cpu_info);
 }
 
-table egress_acl {
+action egress_redirect_to_cpu() {
+    egress_copy_to_cpu();
+    drop();
+}
+
+action egress_copy_to_cpu_with_reason(reason_code) {
+    modify_field(fabric_metadata.reason_code, reason_code);
+    egress_copy_to_cpu();
+}
+
+action egress_redirect_to_cpu_with_reason(reason_code) {
+    egress_copy_to_cpu_with_reason(reason_code);
+    drop();
+}
+table egress_system_acl {
     reads {
+        fabric_metadata.reason_code : ternary;
         standard_metadata.egress_port : ternary;
         intrinsic_metadata.deflection_flag : ternary;
         l3_metadata.l3_mtu_check : ternary;
+        acl_metadata.acl_deny : ternary;
     }
     actions {
         nop;
+        drop_packet;
+        egress_copy_to_cpu;
+        egress_redirect_to_cpu;
+        egress_copy_to_cpu_with_reason;
+        egress_redirect_to_cpu_with_reason;
         egress_mirror;
         egress_mirror_drop;
-        egress_redirect_to_cpu;
     }
     size : EGRESS_ACL_TABLE_SIZE;
 }
 
-control process_egress_acl {
+control process_egress_system_acl {
     if (egress_metadata.bypass == FALSE) {
-        apply(egress_acl);
+        apply(egress_system_acl);
     }
 }

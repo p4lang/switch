@@ -131,8 +131,8 @@ switch_handle_t switch_api_sflow_session_create(
   tommy_list_init(&sflow_info->match_list);
 
   sflow_info->mirror_hdl = SWITCH_API_INVALID_HANDLE;
-  sflow_info->mirror_table_ent_hdl = SWITCH_API_INVALID_HANDLE;
-  sflow_info->ing_take_sample_table_ent_hdl = SWITCH_API_INVALID_HANDLE;
+  sflow_info->mirror_table_ent_hdl = SWITCH_HW_INVALID_HANDLE;
+  sflow_info->ing_take_sample_table_ent_hdl = SWITCH_HW_INVALID_HANDLE;
 
   // Create a mirror session to send sampled pkts to CPU.
   // SWITCH_CPU_MIRROR_SESSION_ID mirror-session can be used, except

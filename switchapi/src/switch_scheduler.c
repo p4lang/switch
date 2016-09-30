@@ -143,7 +143,7 @@ switch_status_t switch_api_scheduler_delete(switch_device_t device,
   scheduler_info = switch_scheduler_info_get(scheduler_handle);
   if (!scheduler_info) {
     SWITCH_API_ERROR("scheduler create failed");
-    return SWITCH_API_INVALID_HANDLE;
+    return SWITCH_STATUS_INVALID_HANDLE;
   }
 
   status = switch_scheduler_handle_delete(scheduler_handle);

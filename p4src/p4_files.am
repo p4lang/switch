@@ -1,0 +1,29 @@
+p4_files = \
+$(top_srcdir)/p4src/acl.p4 \
+$(top_srcdir)/p4src/archdeps.p4 \
+$(top_srcdir)/p4src/egress_filter.p4 \
+$(top_srcdir)/p4src/fabric.p4 \
+$(top_srcdir)/p4src/hashes.p4 \
+$(top_srcdir)/p4src/int_transit.p4 \
+$(top_srcdir)/p4src/ipv4.p4 \
+$(top_srcdir)/p4src/ipv6.p4 \
+$(top_srcdir)/p4src/l2.p4 \
+$(top_srcdir)/p4src/l3.p4 \
+$(top_srcdir)/p4src/meter.p4 \
+$(top_srcdir)/p4src/mirror.p4 \
+$(top_srcdir)/p4src/multicast.p4 \
+$(top_srcdir)/p4src/nexthop.p4 \
+$(top_srcdir)/p4src/openflow.p4 \
+$(top_srcdir)/p4src/port.p4 \
+$(top_srcdir)/p4src/rewrite.p4 \
+$(top_srcdir)/p4src/security.p4 \
+$(top_srcdir)/p4src/switch_config.p4 \
+$(top_srcdir)/p4src/switch.p4 \
+$(top_srcdir)/p4src/tunnel.p4 \
+$(top_srcdir)/p4src/includes/defines.p4 \
+$(top_srcdir)/p4src/includes/drop_reasons.h \
+$(top_srcdir)/p4src/includes/headers.p4 \
+$(top_srcdir)/p4src/includes/intrinsic.p4 \
+$(top_srcdir)/p4src/includes/p4features.h \
+$(top_srcdir)/p4src/includes/parser.p4 \
+$(top_srcdir)/p4src/includes/sizes.p4

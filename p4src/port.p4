@@ -354,10 +354,11 @@ control process_lag {
 /*****************************************************************************/
 /* Egress port lookup                                                        */
 /*****************************************************************************/
-action egress_port_type_normal(ifindex, qos_group) {
+action egress_port_type_normal(ifindex, qos_group, if_label) {
     modify_field(egress_metadata.port_type, PORT_TYPE_NORMAL);
     modify_field(egress_metadata.ifindex, ifindex);
     modify_field(qos_metadata.egress_qos_group, qos_group);
+    modify_field(acl_metadata.egress_if_label, if_label);
 }
 
 action egress_port_type_fabric(ifindex) {
