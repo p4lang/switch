@@ -29,16 +29,19 @@ action set_valid_outer_unicast_packet_untagged() {
 action set_valid_outer_unicast_packet_single_tagged() {
     modify_field(l2_metadata.lkp_pkt_type, L2_UNICAST);
     modify_field(l2_metadata.lkp_mac_type, vlan_tag_[0].etherType);
+    modify_field(l2_metadata.lkp_pcp, vlan_tag_[0].pcp);
 }
 
 action set_valid_outer_unicast_packet_double_tagged() {
     modify_field(l2_metadata.lkp_pkt_type, L2_UNICAST);
     modify_field(l2_metadata.lkp_mac_type, vlan_tag_[1].etherType);
+    modify_field(l2_metadata.lkp_pcp, vlan_tag_[0].pcp);
 }
 
 action set_valid_outer_unicast_packet_qinq_tagged() {
     modify_field(l2_metadata.lkp_pkt_type, L2_UNICAST);
     modify_field(l2_metadata.lkp_mac_type, ethernet.etherType);
+    modify_field(l2_metadata.lkp_pcp, vlan_tag_[0].pcp);
 }
 
 action set_valid_outer_multicast_packet_untagged() {
@@ -49,16 +52,19 @@ action set_valid_outer_multicast_packet_untagged() {
 action set_valid_outer_multicast_packet_single_tagged() {
     modify_field(l2_metadata.lkp_pkt_type, L2_MULTICAST);
     modify_field(l2_metadata.lkp_mac_type, vlan_tag_[0].etherType);
+    modify_field(l2_metadata.lkp_pcp, vlan_tag_[0].pcp);
 }
 
 action set_valid_outer_multicast_packet_double_tagged() {
     modify_field(l2_metadata.lkp_pkt_type, L2_MULTICAST);
     modify_field(l2_metadata.lkp_mac_type, vlan_tag_[1].etherType);
+    modify_field(l2_metadata.lkp_pcp, vlan_tag_[0].pcp);
 }
 
 action set_valid_outer_multicast_packet_qinq_tagged() {
     modify_field(l2_metadata.lkp_pkt_type, L2_MULTICAST);
     modify_field(l2_metadata.lkp_mac_type, ethernet.etherType);
+    modify_field(l2_metadata.lkp_pcp, vlan_tag_[0].pcp);
 }
 
 action set_valid_outer_broadcast_packet_untagged() {
@@ -69,16 +75,19 @@ action set_valid_outer_broadcast_packet_untagged() {
 action set_valid_outer_broadcast_packet_single_tagged() {
     modify_field(l2_metadata.lkp_pkt_type, L2_BROADCAST);
     modify_field(l2_metadata.lkp_mac_type, vlan_tag_[0].etherType);
+    modify_field(l2_metadata.lkp_pcp, vlan_tag_[0].pcp);
 }
 
 action set_valid_outer_broadcast_packet_double_tagged() {
     modify_field(l2_metadata.lkp_pkt_type, L2_BROADCAST);
     modify_field(l2_metadata.lkp_mac_type, vlan_tag_[1].etherType);
+    modify_field(l2_metadata.lkp_pcp, vlan_tag_[0].pcp);
 }
 
 action set_valid_outer_broadcast_packet_qinq_tagged() {
     modify_field(l2_metadata.lkp_pkt_type, L2_BROADCAST);
     modify_field(l2_metadata.lkp_mac_type, ethernet.etherType);
+    modify_field(l2_metadata.lkp_pcp, vlan_tag_[0].pcp);
 }
 
 action malformed_outer_ethernet_packet(drop_reason) {
@@ -153,13 +162,20 @@ table ingress_port_mapping {
     size : PORTMAP_TABLE_SIZE;
 }
 
-action set_ingress_port_properties(if_label) {
+action set_ingress_port_properties(if_label, qos_group, tc_qos_group,
+                                   tc, color, trust_dscp, trust_pcp) {
     modify_field(acl_metadata.if_label, if_label);
+    modify_field(qos_metadata.ingress_qos_group, qos_group);
+    modify_field(qos_metadata.tc_qos_group, tc_qos_group);
+    modify_field(qos_metadata.lkp_tc, tc);
+    modify_field(meter_metadata.packet_color, color);
+    modify_field(qos_metadata.trust_dscp, trust_dscp);
+    modify_field(qos_metadata.trust_pcp, trust_pcp);
 }
 
 table ingress_port_properties {
     reads {
-        ingress_input_port : exact;
+        standard_metadata.ingress_port : exact;
     }
     actions {
         set_ingress_port_properties;
@@ -240,6 +256,10 @@ table port_vlan_mapping {
 
 control process_port_vlan_mapping {
     apply(port_vlan_mapping);
+#ifdef TUNNEL_DISABLE
+    apply(adjust_lkp_fields);
+#endif
+
 }
 
 
@@ -300,7 +320,7 @@ action set_lag_remote_port(device, port) {
 #endif /* FABRIC_ENABLE */
 
 action set_lag_port(port) {
-    modify_field(ingress_egress_port, port);
+    modify_field(standard_metadata.egress_spec, port);
 }
 
 action set_lag_miss() {
@@ -334,29 +354,30 @@ control process_lag {
 /*****************************************************************************/
 /* Egress port lookup                                                        */
 /*****************************************************************************/
-action egress_port_type_normal(ifindex) {
+action egress_port_type_normal(ifindex, qos_group, if_label) {
     modify_field(egress_metadata.port_type, PORT_TYPE_NORMAL);
     modify_field(egress_metadata.ifindex, ifindex);
+    modify_field(qos_metadata.egress_qos_group, qos_group);
+    modify_field(acl_metadata.egress_if_label, if_label);
 }
 
 action egress_port_type_fabric(ifindex) {
     modify_field(egress_metadata.port_type, PORT_TYPE_FABRIC);
     modify_field(egress_metadata.ifindex, ifindex);
     modify_field(tunnel_metadata.egress_tunnel_type, EGRESS_TUNNEL_TYPE_FABRIC);
-    modify_field(egress_metadata.ifindex, ifindex);
 }
 
 action egress_port_type_cpu(ifindex) {
     modify_field(egress_metadata.port_type, PORT_TYPE_CPU);
     modify_field(egress_metadata.ifindex, ifindex);
     modify_field(tunnel_metadata.egress_tunnel_type, EGRESS_TUNNEL_TYPE_CPU);
-    modify_field(egress_metadata.ifindex, ifindex);
 }
 
 table egress_port_mapping {
     reads {
-	egress_egress_port : exact;
+	    standard_metadata.egress_port : exact;
     }
+
     actions {
         egress_port_type_normal;
         egress_port_type_fabric;

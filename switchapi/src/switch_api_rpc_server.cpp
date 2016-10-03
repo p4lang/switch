@@ -28,6 +28,7 @@ limitations under the License.
 #include "switchapi/switch_tunnel.h"
 #include "switchapi/switch_vrf.h"
 #include "switchapi/switch_nhop.h"
+#include "switchapi/switch_nat.h"
 #include "switchapi/switch_hostif.h"
 #include "switchapi/switch_acl.h"
 #include "switchapi/switch_mcast.h"
@@ -38,6 +39,10 @@ limitations under the License.
 #include "switchapi/switch_protocol.h"
 #include "switchapi/switch_meter.h"
 #include "switchapi/switch_sflow.h"
+#include "switchapi/switch_capability.h"
+#include "switchapi/switch_qos.h"
+#include "switchapi/switch_buffer.h"
+#include "switchapi/switch_queue.h"
 #include "arpa/inet.h"
 
 #define SWITCH_API_RPC_SERVER_PORT (9091)
@@ -192,7 +197,85 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     return;
   }
 
-  switcht_status_t switcht_api_vrf_create(const switcht_device_t device, const switcht_vrf_id_t vrf) {
+  switcht_status_t
+  switcht_api_port_trust_dscp_set(
+          const switcht_device_t device,
+          const switcht_handle_t port_handle,
+          const bool trust_dscp) {
+      return switch_api_port_trust_dscp_set(device, port_handle, trust_dscp);
+  }
+
+  switcht_status_t
+  switcht_api_port_trust_pcp_set(
+          const switcht_device_t device,
+          const switcht_handle_t port_handle,
+          const bool trust_pcp) {
+      return switch_api_port_trust_dscp_set(device, port_handle, trust_pcp);
+  }
+
+  switcht_status_t switcht_api_port_drop_limit_set(
+          const switcht_device_t device,
+          const switcht_handle_t port_handle,
+          const int32_t num_bytes) {
+      return switch_api_port_drop_limit_set(
+                             device,
+                             port_handle,
+                             num_bytes);
+  }
+
+  switcht_status_t switcht_api_port_drop_hysteresis_set(
+          const switcht_device_t device,
+          const switcht_handle_t port_handle,
+          const int32_t num_bytes) {
+      return switch_api_port_drop_hysteresis_set(
+                             device,
+                             port_handle,
+                             num_bytes);
+  }
+
+  switcht_status_t switcht_api_port_pfc_cos_mapping(
+          const switcht_device_t device,
+          const switcht_handle_t port_handle,
+          const std::vector<int8_t> & cos_to_icos) {
+      return 0;
+  }
+
+  switcht_status_t switcht_api_port_tc_default_set(
+          const switcht_device_t device,
+          const switcht_handle_t port_handle,
+          const int16_t tc) {
+      return switch_api_port_tc_default_set(device, port_handle, tc);
+  }
+
+  switcht_status_t switcht_api_port_color_default_set(
+          const switcht_device_t device,
+          const switcht_handle_t port_handle,
+          const switcht_color_t color) {
+      return switch_api_port_color_default_set(device, port_handle, (switch_color_t) color);
+  }
+
+  switcht_status_t switcht_api_port_qos_group_ingress_set(
+          const switcht_device_t device,
+          const switcht_handle_t port_handle,
+          const switcht_handle_t qos_handle) {
+      return switch_api_port_qos_group_ingress_set(device, port_handle, qos_handle);
+  }
+
+  switcht_status_t switcht_api_port_qos_group_tc_set(
+          const switcht_device_t device,
+          const switcht_handle_t port_handle,
+          const switcht_handle_t qos_handle) {
+      return switch_api_port_qos_group_tc_set(device, port_handle, qos_handle);
+  }
+
+  switcht_status_t switcht_api_port_qos_group_egress_set(
+          const switcht_device_t device,
+          const switcht_handle_t port_handle,
+          const switcht_handle_t qos_handle) {
+      return switch_api_port_qos_group_egress_set(device, port_handle, qos_handle);
+  }
+
+  switcht_handle_t switcht_api_vrf_create(const switcht_device_t device, const switcht_vrf_id_t vrf) {
     printf("switcht_api_l3_vrf_create\n");
     return switch_api_vrf_create(device, vrf);
   }
@@ -200,6 +283,11 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   switcht_status_t switcht_api_vrf_delete(const switcht_device_t device, const switcht_handle_t vrf_handle) {
     printf("switcht_api_l3_vrf_delete\n");
     return switch_api_vrf_delete(device, vrf_handle);
+  }
+
+  switcht_handle_t switcht_api_default_vrf_get() {
+    printf("switcht_api_l3_default_vrf_get\n");
+    return switch_api_default_vrf_internal();
   }
 
   switcht_handle_t switcht_api_router_mac_group_create(const switcht_device_t device) {
@@ -239,6 +327,7 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     i_info.rmac_handle = interface_info.rmac_handle;
     i_info.flags.core_intf = interface_info.flags.core_intf;
     i_info.ipv4_urpf_mode = (switch_urpf_mode_t) interface_info.v4_urpf_mode;
+    i_info.nat_mode = interface_info.nat_mode;
 
     if (i_info.type == SWITCH_API_INTERFACE_L3_PORT_VLAN || i_info.type == SWITCH_API_INTERFACE_L2_PORT_VLAN) {
         i_info.u.port_vlan.port_lag_handle = interface_info.u.port_vlan.port_lag_handle;
@@ -290,6 +379,16 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   switcht_status_t switcht_api_interface_ipv6_urpf_mode_set(const switcht_handle_t interface_handle, const int64_t value) {
     printf("switcht_api_set_interface_attribute\n");
     return switch_api_interface_ipv6_urpf_mode_set(interface_handle, (uint64_t) value);
+  }
+
+  switcht_handle_t switcht_api_l3_route_nhop_intf_get(const switcht_device_t device, const switcht_handle_t vrf, const switcht_ip_addr_t& ip_addr) {
+    printf("switcht_api_l3_route_nhop_intf_get\n");
+    switch_handle_t intf_handle = SWITCH_API_INVALID_HANDLE;
+    switch_status_t status;
+    switch_ip_addr_t lip_addr;
+    switch_parse_ip_address(ip_addr, &lip_addr);
+    status = switch_api_l3_route_nhop_intf_get(device, vrf, &lip_addr, &intf_handle);
+    return intf_handle;
   }
 
   switcht_status_t switcht_api_l3_interface_address_add(const switcht_device_t device, const switcht_interface_handle_t interface_handle, const switcht_handle_t vrf, const switcht_ip_addr_t& ip_addr) {
@@ -365,6 +464,16 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     return switch_api_l3_route_delete(device, vrf, &lip_addr, nhop_handle);
   }
 
+  switcht_handle_t switcht_api_l3_route_lookup(const switcht_device_t device, const switcht_handle_t vrf, const switcht_ip_addr_t& ip_addr) {
+    switch_handle_t nhop_handle = SWITCH_API_INVALID_HANDLE;
+    switch_status_t status;
+    switch_ip_addr_t lip_addr;
+    printf("switcht_api_l3_route_lookup\n");
+    switch_parse_ip_address(ip_addr, &lip_addr);
+    status = switch_api_l3_route_lookup(device, vrf, &lip_addr, &nhop_handle);
+    return nhop_handle;
+  }
+
   switcht_status_t switcht_api_l3_routes_print_all() {
     printf("switcht_api_l3_routes_print_all\n");
     return switch_api_l3_routes_print_all();
@@ -420,7 +529,7 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     return;
   }
 
-  switcht_status_t switcht_api_mac_table_entry_create(const switcht_device_t device, const switcht_handle_t vlan_handle, const switcht_mac_addr_t& mac, const int8_t entry_type, const switcht_interface_handle_t interface_handle) {
+  switcht_status_t switcht_api_mac_table_entry_create(const switcht_device_t device, const switcht_handle_t vlan_handle, const switcht_mac_addr_t& mac, const int8_t entry_type, const switcht_handle_t interface_handle) {
     switch_api_mac_entry_t mac_entry;
     switch_string_to_mac(mac, mac_entry.mac.mac_addr);
     printf("switcht_api_l2_mac_add\n");
@@ -430,7 +539,7 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     return switch_api_mac_table_entry_add(device, &mac_entry);
   }
 
-  switcht_status_t switcht_api_mac_table_entry_update(const switcht_device_t device, const switcht_handle_t vlan_handle, const switcht_mac_addr_t& mac, const int8_t entry_type, const switcht_interface_handle_t interface_handle) {
+  switcht_status_t switcht_api_mac_table_entry_update(const switcht_device_t device, const switcht_handle_t vlan_handle, const switcht_mac_addr_t& mac, const int8_t entry_type, const switcht_handle_t interface_handle) {
     switch_api_mac_entry_t mac_entry;
     switch_string_to_mac(mac, mac_entry.mac.mac_addr);
     printf("switcht_api_l2_mac_update\n");
@@ -752,11 +861,125 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     return switch_api_stp_port_state_clear(device, stg_handle, intf_handle);
   }
 
+  switcht_status_t switcht_api_nat_create(const switcht_device_t device,
+                                          const switcht_nat_info_t& info) {
+    printf("switcht_api_nat_create\n");
+    switch_api_nat_info_t nat_info;
+    memset(&nat_info, 0, sizeof(switch_api_nat_info_t));
+
+    nat_info.nat_rw_type = (switch_nat_rw_type_t) info.nat_rw_type;
+    switch (nat_info.nat_rw_type) {
+        case SWITCH_NAT_RW_TYPE_SRC_TCP:
+        case SWITCH_NAT_RW_TYPE_SRC_UDP:
+            nat_info.protocol = info.protocol;
+            nat_info.src_port = info.src_port;
+            nat_info.rw_src_port = info.rw_src_port;
+        case SWITCH_NAT_RW_TYPE_SRC:
+            nat_info.src_ip.type = SWITCH_API_IP_ADDR_V4;
+            switch_string_to_v4_ip(info.src_ip.ipaddr,
+                                   &nat_info.src_ip.ip.v4addr);
+            nat_info.rw_src_ip.type = SWITCH_API_IP_ADDR_V4;
+            switch_string_to_v4_ip(info.rw_src_ip.ipaddr,
+                                   &nat_info.rw_src_ip.ip.v4addr);
+            break;
+
+        case SWITCH_NAT_RW_TYPE_DST_TCP:
+        case SWITCH_NAT_RW_TYPE_DST_UDP:
+            nat_info.protocol = info.protocol;
+            nat_info.dst_port = info.dst_port;
+            nat_info.rw_dst_port = info.rw_dst_port;
+        case SWITCH_NAT_RW_TYPE_DST:
+            nat_info.dst_ip.type = SWITCH_API_IP_ADDR_V4;
+            switch_string_to_v4_ip(info.dst_ip.ipaddr,
+                                   &nat_info.dst_ip.ip.v4addr);
+            nat_info.rw_dst_ip.type = SWITCH_API_IP_ADDR_V4;
+            switch_string_to_v4_ip(info.rw_dst_ip.ipaddr,
+                                   &nat_info.rw_dst_ip.ip.v4addr);
+            break;
+
+        case SWITCH_NAT_RW_TYPE_SRC_DST_TCP:
+        case SWITCH_NAT_RW_TYPE_SRC_DST_UDP:
+            nat_info.protocol = info.protocol;
+            nat_info.src_port = info.src_port;
+            nat_info.dst_port = info.dst_port;
+            nat_info.rw_src_port = info.rw_src_port;
+            nat_info.rw_dst_port = info.rw_dst_port;
+        case SWITCH_NAT_RW_TYPE_SRC_DST:
+            nat_info.src_ip.type = SWITCH_API_IP_ADDR_V4;
+            switch_string_to_v4_ip(info.src_ip.ipaddr,
+                                   &nat_info.src_ip.ip.v4addr);
+            nat_info.dst_ip.type = SWITCH_API_IP_ADDR_V4;
+            switch_string_to_v4_ip(info.dst_ip.ipaddr,
+                                   &nat_info.dst_ip.ip.v4addr);
+            nat_info.rw_src_ip.type = SWITCH_API_IP_ADDR_V4;
+            switch_string_to_v4_ip(info.rw_src_ip.ipaddr,
+                                   &nat_info.rw_src_ip.ip.v4addr);
+            nat_info.rw_dst_ip.type = SWITCH_API_IP_ADDR_V4;
+            switch_string_to_v4_ip(info.rw_dst_ip.ipaddr,
+                                   &nat_info.rw_dst_ip.ip.v4addr);
+            break;
+    }
+
+    nat_info.vrf_handle = info.vrf_handle;
+    nat_info.nhop_handle = info.nhop_handle;
+    return (switch_api_nat_add(device, &nat_info));
+  }
+
+  switcht_status_t switcht_api_nat_delete(const switcht_device_t device,
+                                          const switcht_nat_info_t& info) {
+    printf("switcht_api_nat_delete\n");
+    switch_api_nat_info_t nat_info;
+    memset(&nat_info, 0, sizeof(switch_api_nat_info_t));
+
+    nat_info.nat_rw_type = (switch_nat_rw_type_t) info.nat_rw_type;
+    switch (nat_info.nat_rw_type) {
+        case SWITCH_NAT_RW_TYPE_SRC_TCP:
+        case SWITCH_NAT_RW_TYPE_SRC_UDP:
+            nat_info.protocol = info.protocol;
+            nat_info.src_port = info.src_port;
+        case SWITCH_NAT_RW_TYPE_SRC:
+            nat_info.src_ip.type = SWITCH_API_IP_ADDR_V4;
+            switch_string_to_v4_ip(info.src_ip.ipaddr,
+                                   &nat_info.src_ip.ip.v4addr);
+            break;
+
+        case SWITCH_NAT_RW_TYPE_DST_TCP:
+        case SWITCH_NAT_RW_TYPE_DST_UDP:
+            nat_info.protocol = info.protocol;
+            nat_info.dst_port = info.dst_port;
+        case SWITCH_NAT_RW_TYPE_DST:
+            nat_info.dst_ip.type = SWITCH_API_IP_ADDR_V4;
+            switch_string_to_v4_ip(info.dst_ip.ipaddr,
+                                   &nat_info.dst_ip.ip.v4addr);
+            break;
+
+        case SWITCH_NAT_RW_TYPE_SRC_DST_TCP:
+        case SWITCH_NAT_RW_TYPE_SRC_DST_UDP:
+            nat_info.protocol = info.protocol;
+            nat_info.src_port = info.src_port;
+            nat_info.dst_port = info.dst_port;
+        case SWITCH_NAT_RW_TYPE_SRC_DST:
+            nat_info.src_ip.type = SWITCH_API_IP_ADDR_V4;
+            switch_string_to_v4_ip(info.src_ip.ipaddr,
+                                   &nat_info.src_ip.ip.v4addr);
+            nat_info.dst_ip.type = SWITCH_API_IP_ADDR_V4;
+            switch_string_to_v4_ip(info.dst_ip.ipaddr,
+                                   &nat_info.dst_ip.ip.v4addr);
+            break;
+    }
+
+    nat_info.vrf_handle = info.vrf_handle;
+    return (switch_api_nat_delete(device, &nat_info));
+  }
+
   // ACL
 
-  switcht_handle_t switcht_api_acl_list_create(const switcht_device_t device, const switcht_acl_type_t type) {
+  switcht_handle_t switcht_api_acl_list_create(
+          const switcht_device_t device,
+          const switcht_direction_t direction,
+          const switcht_acl_type_t type) {
     printf("switcht_api_acl_list_create\n");
-    return switch_api_acl_list_create(device, (switch_acl_type_t)type);
+    return switch_api_acl_list_create(device, (switch_direction_t) direction, (switch_acl_type_t)type);
   }
 
   switcht_status_t switcht_api_acl_list_delete(const switcht_device_t device, const switcht_handle_t handle) {
@@ -780,23 +1003,23 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
 
     std::vector<switcht_acl_mac_key_value_pair_t>::const_iterator f=acl_kvp.begin();
 
-    void *fields = calloc(sizeof(switch_acl_ip_key_value_pair_t)*acl_kvp.size(), 1);
+    void *fields = calloc(sizeof(switch_acl_mac_key_value_pair_t)*acl_kvp.size(), 1);
     for(uint32_t i=0;i<acl_kvp.size();i++,f++) {
         ((switch_acl_mac_key_value_pair_t *)fields+i)->field = (switch_acl_mac_field_t)f->field;
         switch ((switch_acl_mac_field_t) f->field) {
             case SWITCH_ACL_MAC_FIELD_SOURCE_MAC:
             case SWITCH_ACL_MAC_FIELD_DEST_MAC:
             {
-                unsigned char *mac = (unsigned char *) (((switch_acl_mac_key_value_pair_t *) fields + i)->value.source_mac);
+                unsigned char *mac = (unsigned char *) (((switch_acl_mac_key_value_pair_t *) fields + i)->value.source_mac.mac_addr);
                 switch_string_to_mac(f->value.value_str, mac);
-                unsigned char *mac_mask = (unsigned char *) (((switch_acl_mac_key_value_pair_t *) fields + i)->mask.u.mac_mask);
+                unsigned char *mac_mask = (unsigned char *) (&(((switch_acl_mac_key_value_pair_t *) fields + i)->mask.u.mask));
                 switch_string_to_mac(f->mask.value_str, mac_mask);
                 break;
             }
             default:
             {
                 unsigned long long v = (unsigned long long)((switch_acl_mac_field_t)f->value.value_num);
-                memcpy((((switch_acl_mac_key_value_pair_t *)fields+i)->value.source_mac), &v, sizeof(switch_acl_mac_value));
+                memcpy((((switch_acl_mac_key_value_pair_t *)fields+i)->value.source_mac.mac_addr), &v, sizeof(switch_acl_mac_value));
                 ((switch_acl_mac_key_value_pair_t *)fields+i)->mask.u.mask16 = (switch_acl_mac_field_t)f->mask.value_num;
                 break;
             }
@@ -912,6 +1135,7 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
             break;
     }
 
+    memset(&oap, 0, sizeof(switch_acl_opt_action_params_t));
     oap.mirror_handle = opt_action_params.mirror_handle;
     oap.meter_handle = opt_action_params.meter_handle;
     oap.counter_handle = opt_action_params.counter_handle;
@@ -1160,6 +1384,51 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     _counter.num_bytes = counter.num_bytes;
     return;
   }
+
+  switcht_handle_t
+  switcht_api_acl_range_create(
+          const switcht_device_t device,
+          const switcht_direction_t direction,
+          const int8_t range_type,
+          const switcht_range_t& range) {
+      switch_handle_t range_handle = 0;
+      switch_status_t status = SWITCH_STATUS_SUCCESS;
+      switch_range_t api_range;
+      memset(&api_range, 0x0, sizeof(api_range));
+      api_range.start_value = range.start_value;
+      api_range.end_value = range.end_value;
+      status = switch_api_acl_range_create(
+                             device,
+                             (switch_direction_t) direction,
+                             (switch_range_type_t) range_type,
+                             &api_range,
+                             &range_handle);
+      return range_handle;
+  }
+
+  switcht_status_t
+  switcht_api_acl_range_update(
+          const switcht_device_t device,
+          const switcht_handle_t range_handle,
+          const switcht_range_t& range) {
+      switch_range_t api_range;
+      switch_status_t status = SWITCH_STATUS_SUCCESS;
+      memset(&api_range, 0x0, sizeof(api_range));
+      api_range.start_value = range.start_value;
+      api_range.end_value = range.end_value;
+      status = switch_api_acl_range_update(
+                             device,
+                             range_handle,
+                             &api_range);
+      return status;
+  }
+
+  switcht_status_t switcht_api_acl_range_delete(
+          const switcht_device_t device,
+          const switcht_handle_t range_handle) {
+      return switch_api_acl_range_delete(device, range_handle);
+  }
+
 
   switcht_handle_t switcht_api_multicast_tree_create(const switcht_device_t device) {
     printf("switcht_api_multicast_tree_create\n");
@@ -1443,6 +1712,31 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
                                 (switch_handle_t)((uint32_t)entry_handle));
   }
 
+  switcht_status_t switcht_api_sflow_session_sample_count_reset(
+                             const switcht_device_t device,
+                             const switcht_handle_t sflow_handle,
+                             const switcht_handle_t entry_handle) {
+      return switch_api_sflow_session_sample_count_reset(device,
+                              (switch_handle_t)((uint32_t)sflow_handle),
+                              (switch_handle_t)((uint32_t)entry_handle));
+  }
+
+  void switcht_api_sflow_session_sample_count_get(
+                             switcht_counter_t& _counter,
+                             const switcht_device_t device,
+                             const switcht_handle_t sflow_handle,
+                             const switcht_handle_t entry_handle) {
+    switch_counter_t counter;
+    printf("switcht_api_sflow_session_sample_count_get\n");
+    switch_api_sflow_session_sample_count_get(device,
+                              (switch_handle_t)((uint32_t)sflow_handle),
+                              (switch_handle_t)((uint32_t)entry_handle),
+                              &counter);
+
+    _counter.num_packets = counter.num_packets;
+    _counter.num_bytes = counter.num_bytes;
+  }
+
   switcht_status_t switcht_api_mac_table_set_learning_timeout(const switcht_device_t device, const int32_t timeout) {
     printf("switcht_api_mac_table_set_learning_timeout\n");
     return (switch_api_mac_table_set_learning_timeout(device, timeout));
@@ -1539,8 +1833,9 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
   switcht_handle_t switcht_api_hostif_group_create(const switcht_device_t device, const switcht_hostif_group_t& hostif_group) {
     printf("switcht_api_hostif_group_create\n");
     switch_hostif_group_t lhostif_group;
-    lhostif_group.egress_queue = hostif_group.egress_queue;
+    lhostif_group.queue_id = hostif_group.queue_id;
     lhostif_group.priority = hostif_group.priority;
+    lhostif_group.policer_handle = hostif_group.policer_handle;
     return switch_api_hostif_group_create(device, &lhostif_group);
   }
 
@@ -1577,6 +1872,34 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     return switch_api_hostif_delete(device, hostif_handle);
   }
 
+  switcht_handle_t switcht_api_hostif_meter_create(
+          const switcht_device_t device,
+          const switcht_api_meter_info_t& api_meter_info) {
+    printf("switcht_api_hostif_meter_create\n");
+    switch_handle_t meter_handle = 0;
+    switch_api_meter_t api_meter;
+    memset(&api_meter, 0, sizeof(switch_api_meter_t));
+    api_meter.meter_mode = (switch_meter_mode_t) api_meter_info.meter_mode;
+    api_meter.color_source = (switch_meter_color_source_t) api_meter_info.color_source;
+    api_meter.meter_type = (switch_meter_type_t) api_meter_info.meter_type;
+    api_meter.cbs = api_meter_info.cbs;
+    api_meter.pbs = api_meter_info.pbs;
+    api_meter.cir = api_meter_info.cir;
+    api_meter.pir = api_meter_info.pir;
+    api_meter.action[SWITCH_COLOR_GREEN] = (switch_acl_action_t) api_meter_info.green_action;
+    api_meter.action[SWITCH_COLOR_YELLOW] = (switch_acl_action_t) api_meter_info.yellow_action;
+    api_meter.action[SWITCH_COLOR_RED] = (switch_acl_action_t) api_meter_info.red_action;
+    switch_api_hostif_meter_create(device, &api_meter, &meter_handle);
+    return meter_handle;
+  }
+
+  switcht_status_t switcht_api_hostif_meter_delete(
+          const switcht_device_t device,
+          const switcht_handle_t meter_handle) {
+    printf("switcht_api_hostif_meter_delete\n");
+    return switch_api_hostif_meter_delete(device, meter_handle);
+  }
+
   switcht_handle_t switcht_api_meter_create(
           const switcht_device_t device,
           const switcht_api_meter_info_t& api_meter_info) {
@@ -1590,9 +1913,9 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     api_meter.pbs = api_meter_info.pbs;
     api_meter.cir = api_meter_info.cir;
     api_meter.pir = api_meter_info.pir;
-    api_meter.action[SWITCH_METER_COLOR_GREEN] = (switch_acl_action_t) api_meter_info.green_action;
-    api_meter.action[SWITCH_METER_COLOR_YELLOW] = (switch_acl_action_t) api_meter_info.yellow_action;
-    api_meter.action[SWITCH_METER_COLOR_RED] = (switch_acl_action_t) api_meter_info.red_action;
+    api_meter.action[SWITCH_COLOR_GREEN] = (switch_acl_action_t) api_meter_info.green_action;
+    api_meter.action[SWITCH_COLOR_YELLOW] = (switch_acl_action_t) api_meter_info.yellow_action;
+    api_meter.action[SWITCH_COLOR_RED] = (switch_acl_action_t) api_meter_info.red_action;
     return switch_api_meter_create(device, &api_meter);
   }
 
@@ -1610,9 +1933,9 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     api_meter.pbs = api_meter_info.pbs;
     api_meter.cir = api_meter_info.cir;
     api_meter.pir = api_meter_info.pir;
-    api_meter.action[SWITCH_METER_COLOR_GREEN] = (switch_acl_action_t) api_meter_info.green_action;
-    api_meter.action[SWITCH_METER_COLOR_YELLOW] = (switch_acl_action_t) api_meter_info.yellow_action;
-    api_meter.action[SWITCH_METER_COLOR_RED] = (switch_acl_action_t) api_meter_info.red_action;
+    api_meter.action[SWITCH_COLOR_GREEN] = (switch_acl_action_t) api_meter_info.green_action;
+    api_meter.action[SWITCH_COLOR_YELLOW] = (switch_acl_action_t) api_meter_info.yellow_action;
+    api_meter.action[SWITCH_COLOR_RED] = (switch_acl_action_t) api_meter_info.red_action;
     return switch_api_meter_update(device, meter_handle, &api_meter);
   }
 
@@ -1648,6 +1971,401 @@ class switch_api_rpcHandler : virtual public switch_api_rpcIf {
     return;
   }
 
+  switcht_status_t
+  switcht_api_port_cos_mapping(
+          const switcht_device_t device,
+          const switcht_handle_t port_handle,
+          const switcht_handle_t ppg_handle,
+          const int8_t cos_bmp) {
+      return switch_api_port_cos_mapping(
+                             device,
+                             port_handle,
+                             ppg_handle,
+                             cos_bmp);
+  }
+
+  switcht_status_t
+  switcht_api_ppg_lossless_enable(
+          const switcht_device_t device,
+          const switcht_handle_t ppg_handle,
+          const bool enable) {
+      return switch_api_ppg_lossless_enable(device, ppg_handle, enable);
+  }
+
+  void switcht_api_ppg_get(
+          std::vector<switcht_handle_t> & ppg_handles,
+          const switcht_device_t device,
+          const switcht_handle_t port_handle) {
+
+    switch_handle_t *ppg_handles_tmp = NULL;
+    switch_status_t status = SWITCH_STATUS_SUCCESS;
+    uint8_t num_ppg = 0;
+
+    ppg_handles_tmp = (switch_handle_t *) switch_malloc(sizeof(switch_handle_t), SWITCH_MAX_PPG);
+    status = switch_api_ppg_get(
+                             device,
+                             port_handle,
+                             &num_ppg,
+                             ppg_handles_tmp);
+    for (uint32_t i = 0; i < num_ppg; i++) {
+        ppg_handles.push_back(ppg_handles_tmp[i]);
+    }
+
+    free(ppg_handles_tmp);
+    return;
+  }
+
+  switcht_status_t switcht_api_ppg_guaranteed_limit_set(
+          const switcht_device_t device,
+          const switcht_handle_t ppg_handle,
+          const int32_t num_bytes) {
+      return switch_api_ppg_guaranteed_limit_set(
+                             device,
+                             ppg_handle,
+                             num_bytes);
+  }
+
+  switcht_status_t switcht_api_ppg_skid_limit_set(
+          const switcht_device_t device,
+          const switcht_handle_t ppg_handle,
+          const int32_t num_bytes) {
+      return switch_api_ppg_skid_limit_set(
+                             device,
+                             ppg_handle,
+                             num_bytes);
+  }
+
+  switcht_status_t switcht_api_ppg_skid_hysteresis_set(
+          const switcht_device_t device,
+          const switcht_handle_t ppg_handle,
+          const int32_t num_bytes) {
+      return switch_api_ppg_skid_hysteresis_set(
+                             device,
+                             ppg_handle,
+                             num_bytes);
+  }
+
+  switcht_handle_t switcht_api_buffer_pool_create(
+          const switcht_device_t device,
+          const switcht_direction_t direction,
+          const int16_t pool_size) {
+      return switch_api_buffer_pool_create(
+                             device,
+                             (switch_direction_t) direction,
+                             pool_size);
+  }
+
+  switcht_status_t switcht_api_buffer_pool_delete(
+          const switcht_device_t device,
+          const switcht_handle_t buffer_pool_handle) {
+      return switch_api_buffer_pool_delete(device, buffer_pool_handle);
+  }
+
+  switcht_handle_t switcht_api_buffer_profile_create(
+          const switcht_device_t device,
+          const switcht_api_buffer_profile_t& api_buffer_info) {
+      switch_api_buffer_profile_t buffer_profile;
+      memset(&buffer_profile, 0x0, sizeof(buffer_profile));
+      buffer_profile.threshold_mode = (switch_buffer_threshold_mode_t) api_buffer_info.threshold_mode;
+      buffer_profile.threshold = api_buffer_info.threshold;
+      buffer_profile.pool_handle = api_buffer_info.pool_handle;
+      buffer_profile.buffer_size = api_buffer_info.buffer_size;
+      buffer_profile.xoff_threshold = api_buffer_info.xoff_threshold;
+      buffer_profile.xon_threshold = api_buffer_info.xon_threshold;
+      return switch_api_buffer_profile_create(device, &buffer_profile);
+  }
+
+  switcht_status_t switcht_api_buffer_profile_delete(
+          const switcht_device_t device,
+          const switcht_handle_t buffer_profile_handle) {
+      return switch_api_buffer_profile_delete(device, buffer_profile_handle);
+  }
+
+  switcht_status_t switcht_api_ppg_buffer_profile_set(
+          const switcht_device_t device,
+          const switcht_handle_t ppg_handle,
+          const switcht_handle_t buffer_profile_handle) {
+      return switch_api_priority_group_buffer_profile_set(device, ppg_handle, buffer_profile_handle);
+  }
+
+  switcht_status_t switcht_api_queue_buffer_profile_set(
+          const switcht_device_t device,
+          const switcht_handle_t queue_handle,
+          const switcht_handle_t buffer_profile_handle) {
+      return switch_api_queue_buffer_profile_set(device, queue_handle, buffer_profile_handle);
+  }
+
+  switcht_status_t switcht_api_buffer_skid_limit_set(
+          const switcht_device_t device,
+          const int32_t num_bytes) {
+      return switch_api_buffer_skid_limit_set(device, num_bytes);
+  }
+
+  switcht_status_t switcht_api_buffer_skid_hysteresis_set(
+          const switcht_device_t device,
+          const int32_t num_bytes) {
+      return switch_api_buffer_skid_hysteresis_set(device, num_bytes);
+  }
+
+  switcht_status_t switcht_api_buffer_pool_pfc_limit(
+          const switcht_device_t device,
+          const switcht_handle_t pool_handle,
+          const int8_t icos,
+          const int32_t num_bytes) {
+      return switch_api_buffer_pool_pfc_limit(device, pool_handle, icos, num_bytes);
+  }
+
+  switcht_status_t switcht_api_buffer_pool_color_drop_enable(
+          const switcht_device_t device,
+          const switcht_handle_t pool_handle,
+          const bool enable) {
+      return switch_api_buffer_pool_color_drop_enable(device, pool_handle, enable);
+  }
+
+  switcht_status_t switcht_api_buffer_pool_color_limit_set(
+          const switcht_device_t device,
+          const switcht_handle_t pool_handle,
+          const switcht_color_t color,
+          const int32_t num_bytes) {
+      return switch_api_buffer_pool_color_limit_set(
+                             device,
+                             pool_handle,
+                             (switch_color_t) color,
+                             num_bytes);
+  }
+
+  switcht_status_t switcht_api_buffer_pool_color_hysteresis_set(
+          const switcht_device_t device,
+          const switcht_color_t color,
+          const int32_t num_bytes) {
+      return switch_api_buffer_pool_color_hysteresis_set(
+                             device,
+                             (switch_color_t) color,
+                             num_bytes);
+  }
+
+  switcht_handle_t switcht_api_qos_map_ingress_create(
+          const switcht_device_t device,
+          const switcht_qos_map_type_t qos_map_type,
+          const std::vector<switcht_qos_map_t> &qos_map) {
+    switch_status_t status=0;
+    switcht_handle_t qos_map_handle = 0;
+    std::vector<switcht_qos_map_t>::const_iterator it = qos_map.begin();
+
+    switch_qos_map_t *qos_map_list = (switch_qos_map_t *) malloc(sizeof(switch_qos_map_t) * qos_map.size());
+    memset(qos_map_list, 0x0, sizeof(switch_qos_map_t) * qos_map.size());
+
+    for(uint32_t i = 0; i < qos_map.size(); i++, it++) {
+        const switcht_qos_map_t qos_map_tmp = *it;
+        switch (qos_map_type) {
+            case SWITCH_QOS_MAP_INGRESS_DSCP_TO_TC:
+                qos_map_list[i].dscp = qos_map_tmp.dscp;
+                qos_map_list[i].tc = qos_map_tmp.tc;
+                break;
+            case SWITCH_QOS_MAP_INGRESS_PCP_TO_TC:
+                qos_map_list[i].pcp = qos_map_tmp.pcp;
+                qos_map_list[i].tc = qos_map_tmp.tc;
+                break;
+            case SWITCH_QOS_MAP_INGRESS_DSCP_TO_COLOR:
+                qos_map_list[i].dscp = qos_map_tmp.dscp;
+                qos_map_list[i].color = (switch_color_t) qos_map_tmp.color;
+                break;
+            case SWITCH_QOS_MAP_INGRESS_PCP_TO_COLOR:
+                qos_map_list[i].pcp = qos_map_tmp.pcp;
+                qos_map_list[i].color = (switch_color_t) qos_map_tmp.color;
+                break;
+            case SWITCH_QOS_MAP_INGRESS_DSCP_TO_TC_AND_COLOR:
+                qos_map_list[i].dscp = qos_map_tmp.dscp;
+                qos_map_list[i].tc = qos_map_tmp.tc;
+                qos_map_list[i].color = (switch_color_t) qos_map_tmp.color;
+                break;
+            case SWITCH_QOS_MAP_INGRESS_PCP_TO_TC_AND_COLOR:
+                qos_map_list[i].pcp = qos_map_tmp.pcp;
+                qos_map_list[i].tc = qos_map_tmp.tc;
+                qos_map_list[i].color = (switch_color_t) qos_map_tmp.color;
+                break;
+            case SWITCH_QOS_MAP_INGRESS_TC_TO_ICOS:
+                qos_map_list[i].tc = qos_map_tmp.tc;
+                qos_map_list[i].icos = qos_map_tmp.icos;
+                break;
+            case SWITCH_QOS_MAP_INGRESS_TC_TO_QUEUE:
+                qos_map_list[i].tc = qos_map_tmp.tc;
+                qos_map_list[i].qid = qos_map_tmp.qid;
+                break;
+            case SWITCH_QOS_MAP_INGRESS_TC_TO_ICOS_AND_QUEUE:
+                qos_map_list[i].tc = qos_map_tmp.tc;
+                qos_map_list[i].icos = qos_map_tmp.icos;
+                qos_map_list[i].qid = qos_map_tmp.qid;
+                break;
+        }
+    }
+    qos_map_handle = switch_api_qos_map_ingress_create(
+                             device,
+                             (switch_qos_map_ingress_t) qos_map_type,
+                             qos_map.size(),
+                             qos_map_list);
+    free(qos_map_list);
+    return qos_map_handle;
+  }
+
+  switcht_status_t switcht_api_qos_map_ingress_delete(
+          const switcht_device_t device,
+          const switcht_handle_t qos_map_handle) {
+    return switch_api_qos_map_ingress_delete(device, qos_map_handle);
+  }
+
+  switcht_handle_t switcht_api_qos_map_egress_create(
+          const switcht_device_t device,
+          const switcht_qos_map_type_t qos_map_type,
+          const std::vector<switcht_qos_map_t> &qos_map) {
+    switch_status_t status=0;
+    switcht_handle_t qos_map_handle = 0;
+    std::vector<switcht_qos_map_t>::const_iterator it = qos_map.begin();
+
+    switch_qos_map_t *qos_map_list = (switch_qos_map_t *) malloc(sizeof(switch_qos_map_t) * qos_map.size());
+    memset(qos_map_list, 0x0, sizeof(switch_qos_map_t) * qos_map.size());
+
+    for(uint32_t i = 0; i < qos_map.size(); i++, it++) {
+        const switcht_qos_map_t qos_map_tmp = *it;
+        switch (qos_map_type) {
+            case SWITCH_QOS_MAP_EGRESS_TC_TO_DSCP:
+                qos_map_list[i].dscp = qos_map_tmp.dscp;
+                qos_map_list[i].tc = qos_map_tmp.tc;
+                break;
+            case SWITCH_QOS_MAP_EGRESS_TC_TO_PCP:
+                qos_map_list[i].pcp = qos_map_tmp.pcp;
+                qos_map_list[i].tc = qos_map_tmp.tc;
+                break;
+            case SWITCH_QOS_MAP_EGRESS_COLOR_TO_DSCP:
+                qos_map_list[i].dscp = qos_map_tmp.dscp;
+                qos_map_list[i].color = (switch_color_t) qos_map_tmp.color;
+                break;
+            case SWITCH_QOS_MAP_EGRESS_COLOR_TO_PCP:
+                qos_map_list[i].pcp = qos_map_tmp.pcp;
+                qos_map_list[i].color = (switch_color_t) qos_map_tmp.color;
+                break;
+            case SWITCH_QOS_MAP_EGRESS_TC_AND_COLOR_TO_DSCP:
+                qos_map_list[i].dscp = qos_map_tmp.dscp;
+                qos_map_list[i].tc = qos_map_tmp.tc;
+                qos_map_list[i].color = (switch_color_t) qos_map_tmp.color;
+                break;
+            case SWITCH_QOS_MAP_EGRESS_TC_AND_COLOR_TO_PCP:
+                qos_map_list[i].pcp = qos_map_tmp.pcp;
+                qos_map_list[i].tc = qos_map_tmp.tc;
+                qos_map_list[i].color = (switch_color_t) qos_map_tmp.color;
+                break;
+        }
+    }
+    qos_map_handle = switch_api_qos_map_egress_create(
+                             device,
+                             (switch_qos_map_egress_t) qos_map_type,
+                             qos_map.size(),
+                             qos_map_list);
+    free(qos_map_list);
+    return qos_map_handle;
+  }
+
+  switcht_status_t switcht_api_qos_map_egress_delete(
+          const switcht_device_t device,
+          const switcht_handle_t qos_map_handle) {
+    return switch_api_qos_map_egress_delete(device, qos_map_handle);
+  }
+
+  switcht_handle_t switcht_api_scheduler_create(
+          const switcht_device_t device,
+          const switcht_scheduler_info_t& api_scheduler_info) {
+    printf("switcht_api_scheduler_create\n");
+    return 0;
+  }
+
+  switcht_status_t switcht_api_scheduler_delete(
+          const switcht_device_t device,
+          const switcht_handle_t scheduler_handle) {
+    printf("switcht_api_scheduler_delete\n");
+    return 0;
+  }
+
+  void switcht_api_queues_get(
+          std::vector<switcht_handle_t> & queue_handles,
+          const switcht_device_t device,
+          const switcht_handle_t port_handle) {
+
+    switch_handle_t *queue_handles_tmp = NULL;
+    switch_status_t status = SWITCH_STATUS_SUCCESS;
+    uint32_t num_queues = 0;
+
+    queue_handles_tmp = (switch_handle_t *) switch_malloc(sizeof(switch_handle_t), SWITCH_MAX_QUEUE);
+    status = switch_api_queues_get(
+                             device,
+                             port_handle,
+                             &num_queues,
+                             queue_handles_tmp);
+    for (uint32_t i = 0; i < num_queues; i++) {
+        queue_handles.push_back(queue_handles_tmp[i]);
+    }
+
+    free(queue_handles_tmp);
+    return;
+  }
+
+  switcht_status_t switcht_api_queue_color_drop_enable(
+          const switcht_device_t device,
+          const switcht_handle_t port_handle,
+          const switcht_handle_t queue_handle,
+          const bool enable) {
+      return switch_api_queue_color_drop_enable(
+                             device,
+                             port_handle,
+                             queue_handle,
+                             enable);
+  }
+
+  switcht_status_t switcht_api_queue_color_limit_set(
+          const switcht_device_t device,
+          const switcht_handle_t port_handle,
+          const switcht_handle_t queue_handle,
+          const switcht_color_t color,
+          const int32_t limit) {
+      return switch_api_queue_color_limit_set(
+                             device,
+                             port_handle,
+                             queue_handle,
+                             (switch_color_t) color,
+                             limit);
+  }
+
+  switcht_status_t switcht_api_queue_color_hysteresis_set(
+          const switcht_device_t device,
+          const switcht_handle_t port_handle,
+          const switcht_handle_t queue_handle,
+          const switcht_color_t color,
+          const int32_t limit) {
+      return switch_api_queue_color_hysteresis_set(
+                             device,
+                             port_handle,
+                             queue_handle,
+                             (switch_color_t) color,
+                             limit);
+  }
+
+  switcht_status_t switcht_api_queue_pfc_cos_mapping(
+          const switcht_device_t device,
+          const switcht_handle_t port_handle,
+          const switcht_handle_t queue_handle,
+          const int8_t cos) {
+      return switch_api_queue_pfc_cos_mapping(
+                             device,
+                             port_handle,
+                             queue_handle,
+                             cos);
+  }
+
+  switcht_status_t switcht_api_mtu_entry_create(
+          const switcht_device_t device,
+          const int16_t mtu_index,
+          const int32_t mtu) {
+      return switch_api_mtu_create_entry(device, mtu_index, mtu);
+  }
 };
 
 static void *api_rpc_server_thread(void *args) {
@@ -1680,4 +2398,3 @@ extern "C" {
             return start_switch_api_rpc_server();
         }
 }
-

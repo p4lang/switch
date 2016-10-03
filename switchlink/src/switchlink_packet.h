@@ -17,8 +17,8 @@ limitations under the License.
 #ifndef __SWITCHLINK_PACKET_H__
 #define __SWITCHLINK_PACKET_H__
 
-extern void
-switchlink_packet_from_hardware(const void *buf, uint32_t buf_size,
-                                uint16_t port_id);
+extern void switchlink_packet_from_hardware(const void *buf,
+                                            uint32_t buf_size,
+                                            uint16_t port_id);
 
 #endif /* __SWITCH_PACKET_H__ */

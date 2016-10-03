@@ -20,87 +20,71 @@ extern "C" {
 
 typedef uint16_t switch_stats_idx_t;
 
-#define SWITCH_DEV_ID          0x0
-#define SWITCH_DEV_PIPE_ID     0xFFFF
+#define SWITCH_DEV_ID 0x0
+#define SWITCH_DEV_PIPE_ID 0xFFFF
 
-#define SWITCH_LOGICAL_IFINDEX_SHIFT      12 
-#define SWITCH_INTF_TUNNEL_IFINDEX        1
+#define SWITCH_LOGICAL_IFINDEX_SHIFT 12
+#define SWITCH_INTF_TUNNEL_IFINDEX 1
 
-//IP Encap defines
-#define SWITCH_IP_ENCAP_SRC_IP_TYPE(ip_encap) \
-    ip_encap->src_ip.type
+// IP Encap defines
+#define SWITCH_IP_ENCAP_SRC_IP_TYPE(ip_encap) ip_encap->src_ip.type
 
-#define SWITCH_IP_ENCAP_DST_IP_TYPE(ip_encap) \
-    ip_encap->dst_ip.type
+#define SWITCH_IP_ENCAP_DST_IP_TYPE(ip_encap) ip_encap->dst_ip.type
 
-#define SWITCH_IP_ENCAP_IPV4_SRC_IP(ip_encap) \
-    ip_encap->src_ip.ip.v4addr
+#define SWITCH_IP_ENCAP_IPV4_SRC_IP(ip_encap) ip_encap->src_ip.ip.v4addr
 
-#define SWITCH_IP_ENCAP_IPV4_DST_IP(ip_encap) \
-    ip_encap->dst_ip.ip.v4addr
+#define SWITCH_IP_ENCAP_IPV4_DST_IP(ip_encap) ip_encap->dst_ip.ip.v4addr
 
-#define SWITCH_IP_ENCAP_IPV6_SRC_IP(ip_encap) \
-    ip_encap->src_ip.ip.v6addr
+#define SWITCH_IP_ENCAP_IPV6_SRC_IP(ip_encap) ip_encap->src_ip.ip.v6addr
 
-#define SWITCH_IP_ENCAP_IPV6_DST_IP(ip_encap) \
-    ip_encap->dst_ip.ip.v6addr
+#define SWITCH_IP_ENCAP_IPV6_DST_IP(ip_encap) ip_encap->dst_ip.ip.v6addr
 
-#define SWITCH_IP_ENCAP_UDP_DST_PORT(ip_encap) \
-    ip_encap->u.udp.dst_port
+#define SWITCH_IP_ENCAP_UDP_DST_PORT(ip_encap) ip_encap->u.udp.dst_port
 
-//Encap Info defines
-#define SWITCH_ENCAP_VXLAN_VNI(encap_info) \
-    encap_info->u.vxlan_info.vnid
+// Encap Info defines
+#define SWITCH_ENCAP_VXLAN_VNI(encap_info) encap_info->u.vxlan_info.vnid
 
-#define SWITCH_ENCAP_NVGRE_VNI(encap_info) \
-    encap_info->u.nvgre_info.tnid
+#define SWITCH_ENCAP_NVGRE_VNI(encap_info) encap_info->u.nvgre_info.tnid
 
-#define SWITCH_ENCAP_GENEVE_VNI(encap_info) \
-    encap_info->u.geneve_info.vni
+#define SWITCH_ENCAP_GENEVE_VNI(encap_info) encap_info->u.geneve_info.vni
 
-#define SWITCH_ENCAP_VLAN_ID(encap_info) \
-    encap_info->u.vlan_id
+#define SWITCH_ENCAP_VLAN_ID(encap_info) encap_info->u.vlan_id
 
 // Tunnel defines
 #define SWITCH_INTF_TUNNEL_INFO(intf_info) \
-    intf_info->api_intf_info.u.tunnel_info
+  intf_info->api_intf_info.u.tunnel_info
 
 #define SWITCH_INTF_TUNNEL_ENCAP_INFO(intf_info) \
-    intf_info->api_intf_info.u.tunnel_info.encap_info
+  intf_info->api_intf_info.u.tunnel_info.encap_info
 
 // MPLS defines
-#define SWITCH_MPLS_POP_HEADER_COUNT(mpls_encap) \
-    mpls_encap->u.pop_info.count
+#define SWITCH_MPLS_POP_HEADER_COUNT(mpls_encap) mpls_encap->u.pop_info.count
 
-#define SWITCH_MPLS_PUSH_HEADER_COUNT(mpls_encap) \
-    mpls_encap->u.push_info.count
+#define SWITCH_MPLS_PUSH_HEADER_COUNT(mpls_encap) mpls_encap->u.push_info.count
 
 #define SWITCH_MPLS_SWAP_HEADER_COUNT(mpls_encap) 1
 
 #define SWITCH_MPLS_SWAP_PUSH_HEADER_COUNT(mpls_encap) \
-    mpls_encap->u.swap_push_info.count
+  mpls_encap->u.swap_push_info.count
 
-#define SWITCH_MPLS_PUSH_HEADER(mpls_encap) \
-    mpls_encap->u.push_info.tag
+#define SWITCH_MPLS_PUSH_HEADER(mpls_encap) mpls_encap->u.push_info.tag
 
 #define SWITCH_MPLS_SWAP_NEW_LABEL(mpls_encap) \
-    mpls_encap->u.swap_info.new_tag.label
+  mpls_encap->u.swap_info.new_tag.label
 
 #define SWITCH_MPLS_SWAP_PUSH_HEADER(mpls_encap) \
-    mpls_encap->u.swap_push_info.new_tag
+  mpls_encap->u.swap_push_info.new_tag
 
 #define SWITCH_MPLS_SWAP_OLD_LABEL(mpls_encap) \
-    mpls_encap->u.swap_info.old_tag.label
+  mpls_encap->u.swap_info.old_tag.label
 
 #define SWITCH_MPLS_SWAP_PUSH_OLD_LABEL(mpls_encap) \
-    mpls_encap->u.swap_push_info.old_tag.label
+  mpls_encap->u.swap_push_info.old_tag.label
 
 // LN defines
-#define SWITCH_LN_ENCAP_INFO(bd_info) \
-    bd_info->ln_info.encap_info
+#define SWITCH_LN_ENCAP_INFO(bd_info) bd_info->ln_info.encap_info
 
-#define SWITCH_LN_TUNNEL_VNI(bd_info) \
-    bd_info->ln_info.encap_info.u.tunnel_vni
+#define SWITCH_LN_TUNNEL_VNI(bd_info) bd_info->ln_info.encap_info.u.tunnel_vni
 
 #ifdef __cplusplus
 }

@@ -17,28 +17,33 @@ limitations under the License.
 #ifndef __SWITCHLINK_H__
 #define __SWITCHLINK_H__
 
-#define switchlink_malloc(x, c) malloc(x * c)
+#include <stdlib.h>
+#define switchlink_malloc(x, c) malloc(x *c)
 #define switchlink_free(x) free(x)
 
-#define SWITCHLINK_LOG_ERR   1
-#define SWITCHLINK_LOG_WARN  2
-#define SWITCHLINK_LOG_INFO  3
+#define SWITCHLINK_LOG_ERR 1
+#define SWITCHLINK_LOG_WARN 2
+#define SWITCHLINK_LOG_INFO 3
 #define SWITCHLINK_LOG_DEBUG 4
 
-#define NL_LOG_DEBUG(_x) if (g_log_level >= SWITCHLINK_LOG_DEBUG) printf _x
-#define NL_LOG_INFO(_x)  if (g_log_level >= SWITCHLINK_LOG_INFO)  printf _x
-#define NL_LOG_WARN(_x)  if (g_log_level >= SWITCHLINK_LOG_WARN)  printf _x
-#define NL_LOG_ERROR(_x) if (g_log_level >= SWITCHLINK_LOG_ERR)   printf _x
+#define NL_LOG_DEBUG(_x) \
+  if (g_log_level >= SWITCHLINK_LOG_DEBUG) printf _x
+#define NL_LOG_INFO(_x) \
+  if (g_log_level >= SWITCHLINK_LOG_INFO) printf _x
+#define NL_LOG_WARN(_x) \
+  if (g_log_level >= SWITCHLINK_LOG_WARN) printf _x
+#define NL_LOG_ERROR(_x) \
+  if (g_log_level >= SWITCHLINK_LOG_ERR) printf _x
 
 typedef uint64_t switchlink_handle_t;
 typedef uint8_t switchlink_mac_addr_t[6];
 typedef struct switchlink_ip_addr_ {
-    uint8_t family;
-    uint8_t prefix_len;
-    union {
-        struct in_addr v4addr;
-        struct in6_addr v6addr;
-    } ip;
+  uint8_t family;
+  uint8_t prefix_len;
+  union {
+    struct in_addr v4addr;
+    struct in6_addr v6addr;
+  } ip;
 } switchlink_ip_addr_t;
 
 extern uint8_t g_log_level;
@@ -47,7 +52,7 @@ extern switchlink_handle_t g_default_bridge_h;
 extern switchlink_handle_t g_default_stp_h;
 extern switchlink_handle_t g_cpu_rx_nhop_h;
 
-extern struct nl_sock * switchlink_get_nl_sock();
+extern struct nl_sock *switchlink_get_nl_sock();
 
 #define SWITCHLINK_DEFAULT_VRF_ID 1
 

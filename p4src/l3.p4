@@ -27,7 +27,7 @@ header_type l3_metadata_t {
         lkp_ip_type : 2;
         lkp_ip_version : 4;
         lkp_ip_proto : 8;
-        lkp_ip_tc : 8;
+        lkp_dscp : 8;
         lkp_ip_ttl : 8;
         lkp_l4_sport : 16;
         lkp_l4_dport : 16;
@@ -43,7 +43,7 @@ header_type l3_metadata_t {
         urpf_bd_group : BD_BIT_WIDTH;          /* urpf bd group */
         fib_hit : 1;                           /* fib hit */
         fib_nexthop : 16;                      /* next hop from fib */
-        fib_nexthop_type : 1;                  /* ecmp or nexthop */
+        fib_nexthop_type : 2;                  /* ecmp or nexthop */
         same_bd_check : BD_BIT_WIDTH;          /* ingress bd xor egress bd */
         nexthop_index : 16;                    /* nexthop/rewrite index */
         routed : 1;                            /* is packet routed? */
@@ -51,6 +51,9 @@ header_type l3_metadata_t {
         mtu_index : 8;                         /* index into mtu table */
         l3_copy : 1;                           /* copy packet to CPU */
         l3_mtu_check : 16 (saturating);        /* result of mtu check */
+
+        egress_l4_sport : 16;
+        egress_l4_dport : 16;
     }
 }
 
@@ -153,21 +156,33 @@ table smac_rewrite {
 action ipv4_unicast_rewrite() {
     modify_field(ethernet.dstAddr, egress_metadata.mac_da);
     add_to_field(ipv4.ttl, -1);
+#ifndef QOS_DISABLE
+    modify_field(ipv4.diffserv, l3_metadata.lkp_dscp);
+#endif /* QOS_DISABLE */
 }
 
 action ipv4_multicast_rewrite() {
     bit_or(ethernet.dstAddr, ethernet.dstAddr, 0x01005E000000);
     add_to_field(ipv4.ttl, -1);
+#ifndef QOS_DISABLE
+    modify_field(ipv4.diffserv, l3_metadata.lkp_dscp);
+#endif /* QOS_DISABLE */
 }
 
 action ipv6_unicast_rewrite() {
     modify_field(ethernet.dstAddr, egress_metadata.mac_da);
     add_to_field(ipv6.hopLimit, -1);
+#ifndef QOS_DISABLE
+    modify_field(ipv6.trafficClass, l3_metadata.lkp_dscp);
+#endif /* QOS_DISABLE */
 }
 
 action ipv6_multicast_rewrite() {
     bit_or(ethernet.dstAddr, ethernet.dstAddr, 0x333300000000);
     add_to_field(ipv6.hopLimit, -1);
+#ifndef QOS_DISABLE
+    modify_field(ipv6.trafficClass, l3_metadata.lkp_dscp);
+#endif /* QOS_DISABLE */
 }
 
 action mpls_rewrite() {
@@ -208,10 +223,12 @@ table l3_rewrite {
 }
 
 control process_mac_rewrite {
+#if !defined(L3_DISABLE)
     if (egress_metadata.routed == TRUE) {
         apply(l3_rewrite);
         apply(smac_rewrite);
     }
+#endif /* L3_DISABLE */
 }
 
 

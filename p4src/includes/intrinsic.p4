@@ -45,9 +45,18 @@ header_type ingress_intrinsic_metadata_t {
                                         // enqueue and dequeue time.
 
         mcast_hash : 13;                // multicast hashing
+
         egress_rid : 16;                // Replication ID for multicast
+
         lf_field_list : 32;             // Learn filter field list
+
         priority : 3;                   // set packet priority
+
+        ingress_cos: 3;                 // ingress cos
+
+        packet_color: 2;                // packet color
+
+        qid: 5;                         // queue id
     }
 }
 metadata ingress_intrinsic_metadata_t intrinsic_metadata;

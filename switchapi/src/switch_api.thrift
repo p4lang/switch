@@ -78,7 +78,7 @@ typedef i32 switcht_handle_type_t
 
 typedef byte switcht_device_t
 typedef i32 switcht_vrf_id_t
-typedef i32 switcht_handle_t
+typedef i64 switcht_handle_t
 typedef string switcht_mac_addr_t
 typedef i32 switcht_port_t
 typedef i16 switcht_vlan_t
@@ -90,6 +90,7 @@ typedef i32 switcht_stp_state_t
 typedef i32 switcht_intf_attr_t
 
 typedef i16 switcht_nat_mode_t
+typedef i16 switcht_nat_rw_type_t
 typedef i16 switcht_mcast_mode_t
 
 typedef i32 switcht_urpf_group_t
@@ -121,6 +122,7 @@ struct switcht_ip_addr_t {
 struct switcht_flow_t {
         1: switcht_ip_addr_t src_ip;
         2: switcht_ip_addr_t dst_ip;
+        3: bool is_local_flow;
 }
 
 typedef list<switcht_flow_t> switcht_flow_list_t
@@ -138,12 +140,12 @@ struct switcht_vlan_interface_t {
 typedef i32 switcht_protocol_t
 
 struct switcht_udp_t {
-    1: i16  src_port;
+    1: i16 src_port;
     2: i16 dst_port;
 }
 
 struct switcht_tcp_t {
-    1: i16  src_port;
+    1: i16 src_port;
     2: i16 dst_port;
 }
 
@@ -215,6 +217,21 @@ struct switcht_neighbor_info_t {
         7: i32 mpls_label;
         8: byte header_count;
         9: switcht_neighbor_rw_type_t rw_type;
+}
+
+struct switcht_nat_info_t {
+    1: switcht_nat_rw_type_t nat_rw_type;
+    2: switcht_ip_addr_t src_ip;
+    3: switcht_ip_addr_t dst_ip;
+    4: i32 src_port;
+    5: i32 dst_port;
+    6: i16 protocol;
+    7: switcht_handle_t vrf_handle;
+    9: switcht_handle_t nhop_handle;
+    10: switcht_ip_addr_t rw_src_ip;
+    11: switcht_ip_addr_t rw_dst_ip;
+    12: i32 rw_src_port;
+    13: i32 rw_dst_port;
 }
 
 struct switcht_vxlan_id_t {
@@ -382,8 +399,9 @@ struct switcht_nhop_key_t {
 }
 
 struct switcht_hostif_group_t {
-    1: i32 egress_queue;
+    1: i32 queue_id;
     2: i32 priority;
+    3: i32 policer_handle;
 }
 
 struct switcht_counter_t {
@@ -473,6 +491,47 @@ struct switcht_api_meter_info_t {
    10: switcht_acl_action_t red_action;
 }
 
+struct switcht_api_buffer_profile_t {
+    1: byte threshold_mode;
+    2: i32 threshold;
+    3: switcht_handle_t pool_handle;
+    4: i32 buffer_size;
+    5: i32 xoff_threshold;
+    6: i32 xon_threshold;
+}
+
+typedef i16 switcht_qos_map_type_t
+typedef byte switcht_color_t
+
+struct switcht_qos_map_t {
+    1: byte dscp;
+    2: byte pcp;
+    3: i16 tc;
+    4: switcht_color_t color;
+    5: byte icos;
+    6: byte qid;
+}
+
+typedef byte switcht_scheduler_type_t
+typedef byte switcht_shaper_type_t
+
+struct switcht_scheduler_info_t {
+    1: switcht_scheduler_type_t scheduler_type;
+    2: switcht_shaper_type_t shaper_type;
+    3: i32 priority;
+    4: i32 rem_bw_priority;
+    5: i32 weight;
+    6: i32 min_burst_size;
+    7: i32 min_rate;
+    8: i32 max_burst_size;
+    9: i32 max_rate;
+}
+
+struct switcht_range_t {
+    1: i32 start_value;
+    2: i32 end_value;
+}
+
 service switch_api_rpc {
     /* init */
     switcht_status_t switcht_api_init(1:switcht_device_t device);
@@ -492,10 +551,51 @@ service switch_api_rpc {
                              1: switcht_device_t device,
                              2: switcht_handle_t meter_handle,
                              3: list<i16> counter_ids);
+    switcht_status_t switcht_api_port_trust_dscp_set(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t port_handle,
+                             3: bool trust_dscp);
+    switcht_status_t switcht_api_port_trust_pcp_set(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t port_handle,
+                             3: bool trust_pcp);
+    switcht_status_t switcht_api_port_drop_limit_set(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t port_handle,
+                             3: i32 num_bytes);
+    switcht_status_t switcht_api_port_drop_hysteresis_set(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t port_handle,
+                             3: i32 num_bytes);
+    switcht_status_t switcht_api_port_pfc_cos_mapping(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t port_handle,
+                             3: list<byte> cos_to_icos);
+    switcht_status_t switcht_api_port_tc_default_set(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t port_handle,
+                             3: i16 tc);
+    switcht_status_t switcht_api_port_color_default_set(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t port_handle,
+                             3: switcht_color_t color);
+    switcht_status_t switcht_api_port_qos_group_ingress_set(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t port_handle,
+                             3: switcht_handle_t qos_handle);
+    switcht_status_t switcht_api_port_qos_group_tc_set(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t port_handle,
+                             3: switcht_handle_t qos_handle);
+    switcht_status_t switcht_api_port_qos_group_egress_set(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t port_handle,
+                             3: switcht_handle_t qos_handle);
 
     /* vpn */
     switcht_handle_t switcht_api_vrf_create(1:switcht_device_t device, 2:switcht_vrf_id_t vrf);
     switcht_status_t switcht_api_vrf_delete(1:switcht_device_t device, 2:switcht_handle_t vrf_handle);
+    switcht_handle_t switcht_api_default_vrf_get();
 
     /* router mac */
     switcht_handle_t switcht_api_router_mac_group_create(1:switcht_device_t device);
@@ -514,6 +614,9 @@ service switch_api_rpc {
     switcht_status_t switcht_api_interface_ipv4_urpf_mode_set(1: switcht_handle_t intf_handle, 2: i64 value);
     switcht_status_t switcht_api_interface_ipv6_urpf_mode_set(1: switcht_handle_t intf_handle, 2: i64 value);
 
+    /* get interface handle by vrf + ip */
+    switcht_handle_t switcht_api_l3_route_nhop_intf_get(1:switcht_device_t device, 2:switcht_handle_t vrf, 3:switcht_ip_addr_t ip_addr);
+
     /* ip address */
     switcht_status_t switcht_api_l3_interface_address_add(1:switcht_device_t device, 2:switcht_interface_handle_t interface_handle, 3:switcht_handle_t vrf, 4:switcht_ip_addr_t ip_addr);
     switcht_status_t switcht_api_l3_interface_address_delete(1:switcht_device_t device, 2:switcht_interface_handle_t interface_handle, 3:switcht_handle_t vrf, 4:switcht_ip_addr_t ip_addr);
@@ -531,6 +634,7 @@ service switch_api_rpc {
     /* L3 */
     switcht_status_t switcht_api_l3_route_add(1:switcht_device_t device, 2:switcht_handle_t vrf, 3:switcht_ip_addr_t ip_addr, 4: switcht_handle_t nhop_handle);
     switcht_status_t switcht_api_l3_route_delete(1:switcht_device_t device, 2:switcht_handle_t vrf, 3:switcht_ip_addr_t ip_addr, 4: switcht_handle_t nhop_handle);
+    switcht_handle_t switcht_api_l3_route_lookup(1:switcht_device_t device, 2:switcht_handle_t vrf, 3:switcht_ip_addr_t ip_addr);
     switcht_status_t switcht_api_l3_routes_print_all()
 
     /* VLAN */
@@ -598,8 +702,15 @@ service switch_api_rpc {
                                               3:switcht_handle_t intf_handle);
     switcht_status_t switcht_api_stp_group_print_all();
 
+    /* NAT API */
+    switcht_status_t switcht_api_nat_create(1:switcht_device_t device, 2:switcht_nat_info_t nat_info);
+    switcht_status_t switcht_api_nat_delete(1:switcht_device_t device, 2:switcht_nat_info_t nat_info);
+
     /* ACL API */
-    switcht_handle_t switcht_api_acl_list_create(1:switcht_device_t device, 2:switcht_acl_type_t type);
+    switcht_handle_t switcht_api_acl_list_create(
+                             1:switcht_device_t device,
+                             2:switcht_direction_t direction,
+                             3:switcht_acl_type_t type);
     switcht_status_t switcht_api_acl_list_delete(1:switcht_device_t device, 2:switcht_handle_t handle);
     switcht_handle_t switcht_api_acl_mac_rule_create(
                              1:switcht_device_t device,
@@ -693,6 +804,18 @@ service switch_api_rpc {
     switcht_counter_t switcht_api_acl_stats_get(
                              1: switcht_device_t device,
                              2: switcht_handle_t counter_handle);
+    switcht_handle_t switcht_api_acl_range_create(
+                             1: switcht_device_t device,
+                             2: switcht_direction_t direction,
+                             3: byte range_type,
+                             4: switcht_range_t range);
+    switcht_status_t switcht_api_acl_range_update(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t range_handle,
+                             3: switcht_range_t range);
+    switcht_status_t switcht_api_acl_range_delete(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t range_handle);
 
     /* HOSTIF API */
     switcht_handle_t switcht_api_hostif_group_create(1:switcht_device_t device, 2:switcht_hostif_group_t hostif_group);
@@ -701,6 +824,14 @@ service switch_api_rpc {
     switcht_status_t switcht_api_hostif_reason_code_delete(1:switcht_device_t device, 2:switcht_hostif_reason_code_t reason_code);
     switcht_handle_t switcht_api_hostif_create(1:switcht_device_t device, 2:switcht_hostif_t hostif);
     switcht_status_t switcht_api_hostif_delete(1:switcht_device_t device, 2:switcht_handle_t hostif_handle);
+
+    switcht_handle_t switcht_api_hostif_meter_create(
+                             1: switcht_device_t device,
+                             2: switcht_api_meter_info_t api_meter_info);
+
+    switcht_status_t switcht_api_hostif_meter_delete(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t meter_handle);
 
     /* Multicast API */
     switcht_handle_t switcht_api_multicast_tree_create(1:switcht_device_t device);
@@ -772,7 +903,7 @@ service switch_api_rpc {
 
     switcht_status_t switcht_api_sflow_session_delete(1:switcht_device_t device, 2:switcht_handle_t sflow_hdl, 3:bool all_cleanup);
 
-    switcht_status_t switcht_api_sflow_session_attach(
+    switcht_handle_t switcht_api_sflow_session_attach(
                              1:switcht_device_t device,
                              2:switcht_handle_t sflow_handle,
                              3:switcht_direction_t direction,
@@ -784,4 +915,145 @@ service switch_api_rpc {
                              1:switcht_device_t device,
                              2:switcht_handle_t sflow_handle
                              3:switcht_handle_t entry_hdl);
+
+    switcht_status_t switcht_api_sflow_session_sample_count_reset(
+                             1:switcht_device_t device,
+                             2:switcht_handle_t sflow_handle,
+                             3:switcht_handle_t entry_handle);
+
+    switcht_counter_t switcht_api_sflow_session_sample_count_get(
+                             1:switcht_device_t device,
+                             2:switcht_handle_t sflow_handle,
+                             3:switcht_handle_t entry_handle);
+
+
+    /* PPG */
+    switcht_status_t switcht_api_port_cos_mapping(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t port_handle,
+                             3: switcht_handle_t ppg_handle,
+                             4: byte cos_bmp);
+    switcht_status_t switcht_api_ppg_lossless_enable(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t ppg_handle,
+                             3: bool enabled);
+    list<switcht_handle_t> switcht_api_ppg_get(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t port_handle);
+    switcht_status_t switcht_api_ppg_guaranteed_limit_set(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t ppg_handle,
+                             3: i32 num_bytes);
+    switcht_status_t switcht_api_ppg_skid_limit_set(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t ppg_handle,
+                             3: i32 num_bytes);
+    switcht_status_t switcht_api_ppg_skid_hysteresis_set(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t ppg_handle,
+                             3: i32 num_bytes);
+
+    /* Buffer */
+    switcht_handle_t switcht_api_buffer_pool_create(
+                             1: switcht_device_t device,
+                             2: switcht_direction_t direction,
+                             3: i16 pool_size);
+    switcht_status_t switcht_api_buffer_pool_delete(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t buffer_pool_handle);
+    switcht_handle_t switcht_api_buffer_profile_create(
+                             1: switcht_device_t device,
+                             2: switcht_api_buffer_profile_t api_buffer_info);
+    switcht_status_t switcht_api_buffer_profile_delete(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t buffer_profile_handle);
+    switcht_status_t switcht_api_ppg_buffer_profile_set(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t ppg_handle,
+                             3: switcht_handle_t buffer_profile_handle);
+    switcht_status_t switcht_api_queue_buffer_profile_set(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t queue_handle,
+                             3: switcht_handle_t buffer_profile_handle);
+    switcht_status_t switcht_api_buffer_skid_limit_set(
+                             1: switcht_device_t device,
+                             2: i32 num_bytes);
+    switcht_status_t switcht_api_buffer_skid_hysteresis_set(
+                             1: switcht_device_t device,
+                             2: i32 num_bytes);
+    switcht_status_t switcht_api_buffer_pool_pfc_limit(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t pool_handle,
+                             3: byte icos,
+                             4: i32 num_bytes);
+    switcht_status_t switcht_api_buffer_pool_color_drop_enable(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t pool_handle,
+                             3: bool enable);
+    switcht_status_t switcht_api_buffer_pool_color_limit_set(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t pool_handle,
+                             3: switcht_color_t color,
+                             4: i32 num_bytes);
+    switcht_status_t switcht_api_buffer_pool_color_hysteresis_set(
+                             1: switcht_device_t device,
+                             2: switcht_color_t color,
+                             3: i32 num_bytes);
+
+
+    /* Qos */
+    switcht_handle_t switcht_api_qos_map_ingress_create(
+                             1: switcht_device_t device,
+                             2: switcht_qos_map_type_t qos_map_type,
+                             3: list<switcht_qos_map_t> qos_map);
+    switcht_status_t switcht_api_qos_map_ingress_delete(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t qos_map_handle);
+    switcht_handle_t switcht_api_qos_map_egress_create(
+                             1: switcht_device_t device,
+                             2: switcht_qos_map_type_t qos_map_type,
+                             3: list<switcht_qos_map_t> qos_map);
+    switcht_status_t switcht_api_qos_map_egress_delete(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t qos_map_handle);
+
+    /* Scheduler */
+    switcht_handle_t switcht_api_scheduler_create(
+                             1: switcht_device_t device,
+                             2: switcht_scheduler_info_t api_scheduler_info);
+    switcht_status_t switcht_api_scheduler_delete(
+                             1: switcht_device_t device,
+                             2: switcht_handle_t scheduler_handle);
+
+    /* Queues */
+    list<switcht_handle_t> switcht_api_queues_get(
+                            1: switcht_device_t device,
+                            2: switcht_handle_t port_handle);
+    switcht_status_t switcht_api_queue_color_drop_enable(
+                            1: switcht_device_t device,
+                            2: switcht_handle_t port_handle,
+                            3: switcht_handle_t queue_handle,
+                            4: bool enable);
+    switcht_status_t switcht_api_queue_color_limit_set(
+                            1: switcht_device_t device,
+                            2: switcht_handle_t port_handle,
+                            3: switcht_handle_t queue_handle,
+                            4: switcht_color_t color,
+                            5: i32 limit);
+    switcht_status_t switcht_api_queue_color_hysteresis_set(
+                            1: switcht_device_t device,
+                            2: switcht_handle_t port_handle,
+                            3: switcht_handle_t queue_handle,
+                            4: switcht_color_t color,
+                            5: i32 limit);
+    switcht_status_t switcht_api_queue_pfc_cos_mapping(
+                            1: switcht_device_t device,
+                            2: switcht_handle_t port_handle,
+                            3: switcht_handle_t queue_handle,
+                            4: byte cos);
+    /* MTU */
+    switcht_status_t switcht_api_mtu_entry_create(
+                            1: switcht_device_t device,
+                            2: i16 mtu_index,
+                            3: i32 mtu);
 }

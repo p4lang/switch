@@ -609,22 +609,7 @@ parser parse_erspan_t3 {
     return parse_inner_ethernet;
 }
 
-#define ARP_PROTOTYPES_ARP_RARP_IPV4 0x0800
-
-header arp_rarp_t arp_rarp;
-
 parser parse_arp_rarp {
-    extract(arp_rarp);
-    return select(latest.protoType) {
-        ARP_PROTOTYPES_ARP_RARP_IPV4 : parse_arp_rarp_ipv4;
-        default: ingress;
-    }
-}
-
-header arp_rarp_ipv4_t arp_rarp_ipv4;
-
-parser parse_arp_rarp_ipv4 {
-    extract(arp_rarp_ipv4);
     return parse_set_prio_med;
 }
 

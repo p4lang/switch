@@ -63,7 +63,7 @@ class L2Test(pd_base_tests.ThriftInterfaceDataPlane):
         pd_base_tests.ThriftInterfaceDataPlane.__init__(self, "dc")
 
     def runTest(self):
-        sess_hdl = self.conn_mgr.client_init(16)
+        sess_hdl = self.conn_mgr.client_init()
         dev_tgt = DevTarget_t(0, hex_to_i16(0xFFFF))
         device = 0
 
@@ -148,7 +148,7 @@ class L3Ipv4Test(pd_base_tests.ThriftInterfaceDataPlane):
 
     def runTest(self):
         print
-        sess_hdl = self.conn_mgr.client_init(16)
+        sess_hdl = self.conn_mgr.client_init()
         dev_tgt = DevTarget_t(0, hex_to_i16(0xFFFF))
         device = 0
 
@@ -270,7 +270,7 @@ class L3Ipv6Test(pd_base_tests.ThriftInterfaceDataPlane):
             print "ipv6 not enabled"
             return
 
-        sess_hdl = self.conn_mgr.client_init(16)
+        sess_hdl = self.conn_mgr.client_init()
         dev_tgt = DevTarget_t(0, hex_to_i16(0xFFFF))
         device = 0
 
@@ -399,7 +399,7 @@ class L2VxlanTunnelTest(pd_base_tests.ThriftInterfaceDataPlane):
             print "tunnel not enabled"
             return
 
-        sess_hdl = self.conn_mgr.client_init(16)
+        sess_hdl = self.conn_mgr.client_init()
         dev_tgt = DevTarget_t(0, hex_to_i16(0xFFFF))
         device = 0
 
@@ -533,7 +533,6 @@ class L2VxlanTunnelTest(pd_base_tests.ThriftInterfaceDataPlane):
         try:
             send_packet(self, 1, str(pkt1))
             verify_packets(self, vxlan_pkt1, [2])
-
             send_packet(self, 2, str(vxlan_pkt2))
             verify_packets(self, pkt2, [1])
         finally:
@@ -583,7 +582,7 @@ class L3VxlanTunnelTest(pd_base_tests.ThriftInterfaceDataPlane):
         if tunnel_enabled == 0:
             print "tunnel not enabled"
             return
-        sess_hdl = self.conn_mgr.client_init(16)
+        sess_hdl = self.conn_mgr.client_init()
         dev_tgt = DevTarget_t(0, hex_to_i16(0xFFFF))
         device = 0
 
@@ -789,7 +788,7 @@ class L2LearningTest(pd_base_tests.ThriftInterfaceDataPlane):
         pd_base_tests.ThriftInterfaceDataPlane.__init__(self, "dc")
 
     def runTest(self):
-        sess_hdl = self.conn_mgr.client_init(16)
+        sess_hdl = self.conn_mgr.client_init()
         dev_tgt = DevTarget_t(0, hex_to_i16(0xFFFF))
         device = 0
 
@@ -882,7 +881,7 @@ class L2FloodTest(pd_base_tests.ThriftInterfaceDataPlane):
         pd_base_tests.ThriftInterfaceDataPlane.__init__(self, "dc")
 
     def runTest(self):
-        sess_hdl = self.conn_mgr.client_init(16)
+        sess_hdl = self.conn_mgr.client_init()
         mc_sess_hdl = self.mc.mc_create_session()
         dev_tgt = DevTarget_t(0, hex_to_i16(0xFFFF))
         device = 0
@@ -991,7 +990,7 @@ class L2QinQTest(pd_base_tests.ThriftInterfaceDataPlane):
 
     def runTest(self):
         print
-        sess_hdl = self.conn_mgr.client_init(16)
+        sess_hdl = self.conn_mgr.client_init()
         dev_tgt = DevTarget_t(0, hex_to_i16(0xFFFF))
         device = 0
 

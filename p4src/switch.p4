@@ -15,13 +15,13 @@ limitations under the License.
 */
 
 #include "includes/p4features.h"
-#include "includes/drop_reasons.h"
+#include "includes/drop_reason_codes.h"
+#include "includes/cpu_reason_codes.h"
+#include "includes/p4_table_sizes.h"
 #include "includes/headers.p4"
 #include "includes/parser.p4"
-#include "includes/sizes.p4"
 #include "includes/defines.p4"
 #include "includes/intrinsic.p4"
-#include "archdeps.p4"
 
 /* METADATA */
 header_type ingress_metadata_t {
@@ -81,6 +81,7 @@ metadata global_config_metadata_t global_config_metadata;
 #include "ipv6.p4"
 #include "tunnel.p4"
 #include "acl.p4"
+#include "nat.p4"
 #include "multicast.p4"
 #include "nexthop.p4"
 #include "rewrite.p4"
@@ -92,6 +93,7 @@ metadata global_config_metadata_t global_config_metadata;
 #include "hashes.p4"
 #include "meter.p4"
 #include "sflow.p4"
+#include "qos.p4"
 
 action nop() {
 }
@@ -106,14 +108,8 @@ control ingress {
     /* process outer packet headers */
     process_validate_outer_header();
 
-    /* read and apply system confuration parametes */
+    /* read and apply system configuration parametes */
     process_global_params();
-
-#ifdef OPENFLOW_ENABLE
-    if (ingress_metadata.port_type == PORT_TYPE_CPU) {
-        apply(packet_out);
-    }
-#endif /* OPENFLOW_ENABLE */
 
     /* derive bd and its properties  */
     process_port_vlan_mapping();
@@ -121,17 +117,20 @@ control ingress {
     /* spanning tree state checks */
     process_spanning_tree();
 
+    /* ingress qos map */
+    process_ingress_qos_map();
+
     /* IPSG */
     process_ip_sourceguard();
 
     /* INT src,sink determination */
     process_int_endpoint();
 
-    /* tunnel termination processing */
-    process_tunnel();
-
     /* ingress sflow determination */
     process_ingress_sflow();
+
+    /* tunnel termination processing */
+    process_tunnel();
 
     /* storm control */
     process_storm_control();
@@ -140,9 +139,11 @@ control ingress {
 #ifndef MPLS_DISABLE
         if (not (valid(mpls[0]) and (l3_metadata.fib_hit == TRUE))) {
 #endif /* MPLS_DISABLE */
-
             /* validate packet */
             process_validate_packet();
+
+            /* perform ingress l4 port range */
+            process_ingress_l4port();
 
             /* l2 lookups */
             process_mac();
@@ -154,8 +155,6 @@ control ingress {
                 process_ip_acl();
             }
 
-            process_qos();
-
             apply(rmac) {
                 rmac_miss {
                     process_multicast();
@@ -166,14 +165,12 @@ control ingress {
                             (ipv4_metadata.ipv4_unicast_enabled == TRUE)) {
                             /* router ACL/PBR */
                             process_ipv4_racl();
-
                             process_ipv4_urpf();
                             process_ipv4_fib();
 
                         } else {
                             if ((l3_metadata.lkp_ip_type == IPTYPE_IPV6) and
                                 (ipv6_metadata.ipv6_unicast_enabled == TRUE)) {
-
                                 /* router ACL/PBR */
                                 process_ipv6_racl();
                                 process_ipv6_urpf();
@@ -184,6 +181,9 @@ control ingress {
                     }
                 }
             }
+
+            /* ingress NAT */
+            process_ingress_nat();
 #ifndef MPLS_DISABLE
         }
 #endif /* MPLS_DISABLE */
@@ -208,6 +208,11 @@ control ingress {
         /* ecmp/nexthop lookup */
         process_nexthop();
 
+#ifdef OPENFLOW_ENABLE
+        /* openflow processing for ingress */
+        process_ofpat_ingress();
+#endif /* OPENFLOW_ENABLE */
+
         if (ingress_metadata.egress_ifindex == IFINDEX_FLOOD) {
             /* resolve multicast index for flooding */
             process_multicast_flooding();
@@ -216,17 +221,15 @@ control ingress {
             process_lag();
         }
 
-#ifdef OPENFLOW_ENABLE
-        /* openflow processing for ingress */
-        process_ofpat_ingress();
-#endif /* OPENFLOW_ENABLE */
-
         /* generate learn notify digest if permitted */
         process_mac_learning();
     }
 
     /* resolve fabric port to destination device */
     process_fabric_lag();
+
+    /* set queue id for tm */
+    process_traffic_class();
 
     if (ingress_metadata.port_type != PORT_TYPE_FABRIC) {
         /* system acls */
@@ -235,7 +238,6 @@ control ingress {
 }
 
 control egress {
-
 #ifdef OPENFLOW_ENABLE
     if (openflow_metadata.ofvalid == TRUE) {
         process_ofpat_egress();
@@ -267,12 +269,14 @@ control egress {
                     /* perform tunnel decap */
                     process_tunnel_decap();
 
-
                     /* apply nexthop_index based packet rewrites */
                     process_rewrite();
 
                     /* egress bd properties */
                     process_egress_bd();
+
+                    /* egress qos map */
+                    process_egress_qos_map();
 
                     /* rewrite source/destination mac if needed */
                     process_mac_rewrite();
@@ -283,12 +287,22 @@ control egress {
                     /* INT processing */
                     process_int_insertion();
 
+                    /* egress nat processing */
+                    process_egress_nat();
+
+                    /* update egress bd stats */
                     process_egress_bd_stats();
                 }
             }
-    
+
+            /* perform egress l4 port range */
+            process_egress_l4port();
+
             /* perform tunnel encap */
             process_tunnel_encap();
+
+            /* egress acl */
+            process_egress_acl();
 
             /* update underlay header based on INT information inserted */
             process_int_outer_encap();
@@ -303,7 +317,7 @@ control egress {
         }
 
         /* apply egress acl */
-        process_egress_acl();
+        process_egress_system_acl();
 #ifdef OPENFLOW_ENABLE
     }
 #endif /* OPENFLOW_ENABLE */

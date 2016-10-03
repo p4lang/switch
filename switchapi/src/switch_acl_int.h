@@ -19,28 +19,37 @@ limitations under the License.
 
 #include "switchapi/switch_base_types.h"
 #include "switchapi/switch_handle.h"
+#include "switch_pd_types.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-#define SWITCH_ACL_HASH_TABLE_SIZE (64*1024)
+#define SWITCH_ACL_HASH_TABLE_SIZE (64 * 1024)
 
 typedef struct switch_acl_interface_ {
-    tommy_node node;
-    switch_handle_t interface;
-    void *entries;
+  tommy_node node;
+  switch_handle_t interface;
+  void *entries;
 } switch_acl_interface_t;
 
+typedef struct switch_range_info_ {
+  switch_range_t range;
+  switch_range_type_t range_type;
+  switch_direction_t direction;
+  p4_pd_entry_hdl_t hw_entry;
+} switch_range_info_t;
+
 typedef struct switch_acl_rule_ {
-    switch_handle_t acl_handle;
-    int priority;
-    unsigned int field_count;
-    void *fields;
-    switch_acl_action_t action;
-    unsigned int action_param_size;
-    switch_acl_action_params_t action_params;
-    switch_acl_opt_action_params_t opt_action_params;
+  switch_handle_t acl_handle;
+  int priority;
+  unsigned int field_count;
+  void *fields;
+  switch_acl_action_t action;
+  unsigned int action_param_size;
+  switch_acl_action_params_t action_params;
+  switch_acl_opt_action_params_t opt_action_params;
+  p4_pd_entry_hdl_t hw_entry;
 } switch_acl_rule_t;
 
 switch_status_t switch_acl_init(switch_device_t device);

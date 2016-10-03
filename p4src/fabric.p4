@@ -37,9 +37,10 @@ metadata fabric_metadata_t fabric_metadata;
 /* Fabric header - destination lookup                                        */
 /*****************************************************************************/
 action terminate_cpu_packet() {
-    modify_field(ingress_egress_port,
+    modify_field(standard_metadata.egress_spec,
                  fabric_header.dstPortOrGroup);
     modify_field(egress_metadata.bypass, fabric_header_cpu.txBypass);
+    modify_field(intrinsic_metadata.mcast_grp, fabric_header_cpu.mcast_grp);
 
     modify_field(ethernet.etherType, fabric_payload_header.etherType);
     remove_header(fabric_header);
@@ -49,7 +50,7 @@ action terminate_cpu_packet() {
 
 #ifdef FABRIC_ENABLE
 action terminate_fabric_unicast_packet() {
-    modify_field(ingress_egress_port,
+    modify_field(standard_metadata.egress_spec,
                  fabric_header.dstPortOrGroup);
 
     modify_field(tunnel_metadata.tunnel_terminate,
@@ -85,7 +86,7 @@ action terminate_fabric_multicast_packet() {
     modify_field(l3_metadata.outer_routed,
                  fabric_header_multicast.outerRouted);
 
-    modify_field(intrinsic_mcast_grp,
+    modify_field(intrinsic_metadata.mcast_grp,
                  fabric_header_multicast.mcastGrp);
 
     modify_field(ethernet.etherType, fabric_payload_header.etherType);
@@ -96,7 +97,7 @@ action terminate_fabric_multicast_packet() {
 
 action switch_fabric_multicast_packet() {
     modify_field(fabric_metadata.fabric_header_present, TRUE);
-    modify_field(intrinsic_mcast_grp, fabric_header.dstPortOrGroup);
+    modify_field(intrinsic_metadata.mcast_grp, fabric_header.dstPortOrGroup);
 }
 #endif /* MULTICAST_DISABLE */
 #endif /* FABRIC_ENABLE */
@@ -203,16 +204,16 @@ control process_ingress_fabric {
 /*****************************************************************************/
 #ifdef FABRIC_ENABLE
 action set_fabric_lag_port(port) {
-    modify_field(ingress_egress_port, port);
+    modify_field(standard_metadata.egress_spec, port);
 }
 
 #ifndef MULTICAST_DISABLE
 action set_fabric_multicast(fabric_mgid) {
-    modify_field(multicast_metadata.mcast_grp, intrinsic_mcast_grp);
+    modify_field(multicast_metadata.mcast_grp, intrinsic_metadata.mcast_grp);
 
 #ifdef FABRIC_NO_LOCAL_SWITCHING
     // no local switching, reset fields to send packet on fabric mgid
-    modify_field(intrinsic_mcast_grp, fabric_mgid);
+    modify_field(intrinsic_metadata.mcast_grp, fabric_mgid);
 #endif /* FABRIC_NO_LOCAL_SWITCHING */
 }
 #endif /* MULTICAST_DISABLE */

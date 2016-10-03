@@ -23,8 +23,13 @@ limitations under the License.
 #define OPENFLOW_ENABLE_VLAN
 #define OPENFLOW_ENABLE_L3
 
-/* enables fabric header for non-switch.p4 targets */
+// adds some handy stuff from switch.p4 for packet in/out 
 //#define OPENFLOW_PACKET_IN_OUT 
+
+#define ingress_input_port standard_metadata.ingress_port
+#define ingress_egress_port standard_metadata.egress_spec
+#define egress_egress_port standard_metadata.egress_port
+#define intrinsic_mcast_grp intrinsic_metadata.mcast_grp
 
 header_type openflow_metadata_t {
     fields {
@@ -41,10 +46,13 @@ metadata openflow_metadata_t openflow_metadata;
     #define CPU_PORT_ID 64
 #endif
 
+#define TRUE 1
+
 #ifdef OPENFLOW_PACKET_IN_OUT
 #define ETHERTYPE_BF_FABRIC 0x9000
 
-#define TRUE 1
+#define FABRIC_HEADER_TYPE_MULTICAST   2
+#define FABRIC_HEADER_TYPE_CPU         5
 
 header_type fabric_header_t {
     fields {
@@ -58,6 +66,20 @@ header_type fabric_header_t {
 
         dstDevice : 8;
         dstPortOrGroup : 16;
+    }
+}
+
+header_type fabric_header_multicast_t {
+    fields {
+        routed : 1;
+        outerRouted : 1;
+        tunnelTerminate : 1;
+        ingressTunnelType : 5;
+
+        ingressIfindex : 16;
+        ingressBd : 16;
+
+        mcastGrp : 16;
     }
 }
 
@@ -83,26 +105,86 @@ header_type fabric_payload_header_t {
 
 header fabric_header_t fabric_header;
 header fabric_header_cpu_t fabric_header_cpu;
+header fabric_header_multicast_t fabric_header_multicast;
 header fabric_payload_header_t fabric_payload_header;
 
-parser fabric_header {
+
+parser parse_fabric_header {
     extract(fabric_header);
+    return select(latest.packetType) {
+        FABRIC_HEADER_TYPE_MULTICAST : parse_fabric_header_multicast;
+        FABRIC_HEADER_TYPE_CPU : parse_fabric_header_cpu;
+        default : ingress;
+    }
+}
+
+parser parse_fabric_header_multicast {
+    extract(fabric_header_multicast);
+    return parse_fabric_payload_header;
+}
+
+parser parse_fabric_header_cpu {
     extract(fabric_header_cpu);
+    return parse_fabric_payload_header;
+}
+
+parser parse_fabric_payload_header {
     extract(fabric_payload_header);
-    return ingress;
+    return select(latest.etherType) {
+        // add more ethertypes here if you want
+        default: ingress;
+    }
 }
 
 action nop () {
 }
 
-action terminate_cpu_packet() {
-    modify_field(ingress_egress_port,fabric_header.dstPortOrGroup);
-    modify_field(ethernet.etherType, fabric_payload_header.etherType);
+// remove the comments in "terminate_cpu_packet" and "terminate_fabric_multicast_packet"
+// as necessary. I'm just assuming these features aren't used (Except copying the
+// ethertype from the fabric payload header, that's necessary but I don't want to
+// assume you've named your ethernet header "ethernet" :) )
 
+action terminate_cpu_packet() {
+    modify_field(ingress_egress_port,
+                 fabric_header.dstPortOrGroup);
+//    modify_field(egress_metadata.bypass, fabric_header_cpu.txBypass);
+
+    modify_field(ethernet.etherType, fabric_payload_header.etherType);
     remove_header(fabric_header);
     remove_header(fabric_header_cpu);
     remove_header(fabric_payload_header);
 }
+
+action terminate_fabric_multicast_packet() {
+//    modify_field(tunnel_metadata.tunnel_terminate,
+//                 fabric_header_multicast.tunnelTerminate);
+//    modify_field(tunnel_metadata.ingress_tunnel_type,
+//                 fabric_header_multicast.ingressTunnelType);
+//    modify_field(l3_metadata.nexthop_index, 0);
+//    modify_field(l3_metadata.routed, fabric_header_multicast.routed);
+//    modify_field(l3_metadata.outer_routed,
+//                 fabric_header_multicast.outerRouted);
+
+    modify_field(intrinsic_mcast_grp,
+                 fabric_header_multicast.mcastGrp);
+
+    modify_field(ethernet.etherType, fabric_payload_header.etherType);
+    remove_header(fabric_header);
+    remove_header(fabric_header_multicast);
+    remove_header(fabric_payload_header);
+}
+
+table packet_out {
+    reads {
+        fabric_header.packetType : exact;
+    }
+    actions {
+        nop;
+        terminate_cpu_packet;
+        terminate_fabric_multicast_packet;
+    }
+}
+
 #endif /* OPENFLOW_PACKET_IN_OUT */
 
 /****************************************************************
@@ -119,41 +201,22 @@ action openflow_apply(bmap, index, group_id) {
 }
 
 action openflow_miss(reason, table_id) {
+#ifdef OPENFLOW_PACKET_IN_OUT
+    add_header(fabric_header);
+    add_header(fabric_header_cpu);
+    add_header(fabric_payload_header);
+    
+    modify_field(fabric_metadata.etherType, ethernet.etherType);
+
+    modify_field(fabric_metadata.ingressPort, ingress_input_port);
+#endif
+
     modify_field(fabric_metadata.reason_code, reason);
 
     shift_left(fabric_metadata.reason_code, fabric_metadata.reason_code, 8);
     bit_or(fabric_metadata.reason_code, fabric_metadata.reason_code, table_id);
 
     modify_field(ingress_egress_port, CPU_PORT_ID);
-}
-
-/***************************************************************
- * Packet Out
- ***************************************************************/
-
-action packet_out_eth_flood() {
-    modify_field(intrinsic_metadata.mcast_grp, fabric_header.dstPortOrGroup);
-    terminate_cpu_packet();
-    modify_field(openflow_metadata.ofvalid, TRUE);
-}
-
-action packet_out_unicast() {
-    modify_field(ingress_egress_port, fabric_header.dstPortOrGroup);
-    terminate_cpu_packet();
-    modify_field(openflow_metadata.ofvalid, TRUE);
-}
-
-table packet_out {
-    reads {
-        fabric_header.packetType : exact;
-        fabric_header_cpu.reasonCode : exact;
-    }
-
-    actions {
-        packet_out_eth_flood;
-        packet_out_unicast;
-        nop;
-    }
 }
 
 /****************************************************************
@@ -206,6 +269,7 @@ table ofpat_group_ingress {
 
 action ofpat_output(egress_port) {
     modify_field(ingress_egress_port, egress_port);
+// for switch.p4
     modify_field(ingress_metadata.egress_ifindex, 0);
 }
 

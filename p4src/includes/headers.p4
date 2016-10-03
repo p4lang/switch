@@ -191,7 +191,8 @@ header_type erspan_header_t3_t {
         priority : 6;
         span_id : 10;
         timestamp : 32;
-        sgt_other : 32;
+        sgt       : 16;
+        ft_d_other: 16;
     }
 }
 
@@ -508,8 +509,6 @@ header_type fabric_header_mirror_t {
     }
 }
 
-#define CPU_REASON_CODE_SFLOW   0x106 // must match switch_hostif.h reson_code
-
 header_type fabric_header_cpu_t {
     fields {
         egressQueue : 5;
@@ -521,12 +520,14 @@ header_type fabric_header_cpu_t {
         ingressBd : 16;
 
         reasonCode : 16;
+        mcast_grp : 16;
     }
 }
 
 header_type fabric_header_sflow_t {
     fields {
         sflow_session_id  : 16;
+        sflow_egress_ifindex : 16;
     }
 }
 
