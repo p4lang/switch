@@ -139,31 +139,12 @@ void switch_packet_tx_to_hw(switch_packet_header_t *packet_header,
   //                     packet_header->fabric_header.dst_port_or_group);
 }
 
-static void switch_packet_extract_optional_header(
-    switch_packet_header_t *packet_header,
-    switch_opt_header_t **opt_header,
-    uint16_t *opt_length) {
-  *opt_length = 0;
-  if (packet_header->cpu_header.reason_code ==
-      SWITCH_HOSTIF_REASON_CODE_SFLOW_SAMPLE) {
-    *opt_header =
-        (switch_opt_header_t *)(packet_header + sizeof(switch_packet_header_t));
-    (*opt_header)->sflow_header.sflow_session_id =
-        ntohs((*opt_header)->sflow_header.sflow_session_id);
-    (*opt_header)->sflow_header.sflow_egress_ifindex =
-        ntohs((*opt_header)->sflow_header.sflow_egress_ifindex);
-    *opt_length = sizeof(switch_sflow_header_t);
-  }
-}
-
 static void switch_packet_rx_from_hw() {
   int packet_size = 0;
   switch_packet_header_t *packet_header = NULL;
-  switch_opt_header_t *opt_header = NULL;
   static char in_packet[SWITCH_PACKET_MAX_BUFFER_SIZE];
   static char packet[SWITCH_PACKET_MAX_BUFFER_SIZE];
   switch_status_t status = SWITCH_STATUS_SUCCESS;
-  uint16_t opt_length = 0;
 
   // read packet from cpu port
   while ((packet_size = read(cpu_sock_fd, in_packet, sizeof(in_packet))) > 0) {
@@ -171,29 +152,25 @@ static void switch_packet_rx_from_hw() {
     if (ntohs(ethType) != 0x9000) continue;
     packet_header =
         (switch_packet_header_t *)(in_packet + SWITCH_PACKET_HEADER_OFFSET);
+    packet_size = packet_size - sizeof(switch_packet_header_t);
     memcpy(packet, in_packet, SWITCH_PACKET_HEADER_OFFSET);
+    memcpy(packet + SWITCH_PACKET_HEADER_OFFSET,
+           in_packet + SWITCH_PACKET_HEADER_OFFSET +
+               sizeof(switch_packet_header_t),
+           packet_size - SWITCH_PACKET_HEADER_OFFSET);
     packet_header->cpu_header.reason_code =
         ntohs(packet_header->cpu_header.reason_code);
     if (packet_header->cpu_header.reason_code ==
         SWITCH_HOSTIF_REASON_CODE_NULL_DROP)
       continue;
-
-    switch_packet_extract_optional_header(
-        packet_header, &opt_header, &opt_length);
-    packet_size = packet_size - sizeof(switch_packet_header_t) - opt_length;
-    memcpy(packet + SWITCH_PACKET_HEADER_OFFSET,
-           in_packet + SWITCH_PACKET_HEADER_OFFSET +
-               sizeof(switch_packet_header_t) + opt_length,
-           packet_size - SWITCH_PACKET_HEADER_OFFSET);
-
     packet_header->cpu_header.ingress_port =
         ntohs(packet_header->cpu_header.ingress_port);
     packet_header->cpu_header.ingress_ifindex =
         ntohs(packet_header->cpu_header.ingress_ifindex);
     packet_header->cpu_header.ingress_bd =
         ntohs(packet_header->cpu_header.ingress_bd);
-    status = switch_api_hostif_rx_packet_from_hw(
-        packet_header, opt_header, packet, packet_size);
+    status =
+        switch_api_hostif_rx_packet_from_hw(packet_header, packet, packet_size);
     if (status != SWITCH_STATUS_SUCCESS) {
       return;
     }

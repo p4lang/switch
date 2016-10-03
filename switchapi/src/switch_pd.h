@@ -563,8 +563,22 @@ p4_pd_status_t switch_pd_ipv4_acl_table_add_entry(
     switch_acl_opt_action_params_t *opt_action_params,
     p4_pd_entry_hdl_t *entry_hdl);
 
+p4_pd_status_t switch_pd_egress_ipv4_acl_table_add_entry(
+    switch_device_t device,
+    uint16_t if_label,
+    uint16_t bd_label,
+    uint16_t priority,
+    unsigned int count,
+    switch_acl_ip_key_value_pair_t *ip_acl,
+    switch_acl_ip_action_t action,
+    switch_acl_action_params_t *action_params,
+    switch_acl_opt_action_params_t *opt_action_params,
+    p4_pd_entry_hdl_t *entry_hdl);
+
 p4_pd_status_t switch_pd_ipv4_acl_table_delete_entry(
-    switch_device_t device, p4_pd_entry_hdl_t entry_hdl);
+    switch_device_t device,
+    switch_direction_t direction,
+    p4_pd_entry_hdl_t entry_hdl);
 
 p4_pd_status_t switch_pd_ipv6_acl_table_add_entry(
     switch_device_t device,
@@ -578,8 +592,22 @@ p4_pd_status_t switch_pd_ipv6_acl_table_add_entry(
     switch_acl_opt_action_params_t *opt_action_params,
     p4_pd_entry_hdl_t *entry_hdl);
 
+p4_pd_status_t switch_pd_egress_ipv6_acl_table_add_entry(
+    switch_device_t device,
+    uint16_t if_label,
+    uint16_t bd_label,
+    uint16_t priority,
+    unsigned int count,
+    switch_acl_ipv6_key_value_pair_t *ipv6_acl,
+    switch_acl_ipv6_action_t action,
+    switch_acl_action_params_t *action_params,
+    switch_acl_opt_action_params_t *opt_action_params,
+    p4_pd_entry_hdl_t *entry_hdl);
+
 p4_pd_status_t switch_pd_ipv6_acl_table_delete_entry(
-    switch_device_t device, p4_pd_entry_hdl_t entry_hdl);
+    switch_device_t device,
+    switch_direction_t direction,
+    p4_pd_entry_hdl_t entry_hdl);
 
 p4_pd_status_t switch_pd_ipv4_racl_table_add_entry(
     switch_device_t device,
@@ -594,7 +622,9 @@ p4_pd_status_t switch_pd_ipv4_racl_table_add_entry(
     p4_pd_entry_hdl_t *entry_hdl);
 
 p4_pd_status_t switch_pd_ipv4_racl_table_delete_entry(
-    switch_device_t device, p4_pd_entry_hdl_t entry_hdl);
+    switch_device_t device,
+    switch_direction_t direction,
+    p4_pd_entry_hdl_t entry_hdl);
 
 p4_pd_status_t switch_pd_ipv6_racl_table_add_entry(
     switch_device_t device,
@@ -609,7 +639,9 @@ p4_pd_status_t switch_pd_ipv6_racl_table_add_entry(
     p4_pd_entry_hdl_t *entry_hdl);
 
 p4_pd_status_t switch_pd_ipv6_racl_table_delete_entry(
-    switch_device_t device, p4_pd_entry_hdl_t entry_hdl);
+    switch_device_t device,
+    switch_direction_t direction,
+    p4_pd_entry_hdl_t entry_hdl);
 
 p4_pd_status_t switch_pd_mac_acl_table_add_entry(
     switch_device_t device,
@@ -623,8 +655,22 @@ p4_pd_status_t switch_pd_mac_acl_table_add_entry(
     switch_acl_opt_action_params_t *opt_action_params,
     p4_pd_entry_hdl_t *entry_hdl);
 
+p4_pd_status_t switch_pd_egress_mac_acl_table_add_entry(
+    switch_device_t device,
+    uint16_t if_label,
+    uint16_t bd_label,
+    uint16_t priority,
+    unsigned int count,
+    switch_acl_mac_key_value_pair_t *mac_acl,
+    switch_acl_mac_action_t action,
+    switch_acl_action_params_t *action_params,
+    switch_acl_opt_action_params_t *opt_action_params,
+    p4_pd_entry_hdl_t *entry_hdl);
+
 p4_pd_status_t switch_pd_mac_acl_table_delete_entry(
-    switch_device_t device, p4_pd_entry_hdl_t entry_hdl);
+    switch_device_t device,
+    switch_direction_t direction,
+    p4_pd_entry_hdl_t entry_hdl);
 
 p4_pd_status_t switch_pd_system_acl_table_add_entry(
     switch_device_t device,
@@ -639,7 +685,9 @@ p4_pd_status_t switch_pd_system_acl_table_add_entry(
     p4_pd_entry_hdl_t *entry_hdl);
 
 p4_pd_status_t switch_pd_system_acl_table_delete_entry(
-    switch_device_t device, p4_pd_entry_hdl_t entry_hdl);
+    switch_device_t device,
+    switch_direction_t direction,
+    p4_pd_entry_hdl_t entry_hdl);
 
 p4_pd_status_t switch_pd_egr_acl_table_add_entry(
     switch_device_t device,
@@ -654,7 +702,9 @@ p4_pd_status_t switch_pd_egr_acl_table_add_entry(
     p4_pd_entry_hdl_t *entry_hdl);
 
 p4_pd_status_t switch_pd_egr_acl_table_delete_entry(
-    switch_device_t device, p4_pd_entry_hdl_t entry_hdl);
+    switch_device_t device,
+    switch_direction_t direction,
+    p4_pd_entry_hdl_t entry_hdl);
 
 p4_pd_status_t switch_pd_bd_ingress_stats_get(switch_device_t device,
                                               switch_bd_stats_t *bd_stats);
@@ -1174,6 +1224,29 @@ p4_pd_status_t switch_pd_hostif_meter_set(switch_device_t device,
                                           switch_meter_info_t *meter_info,
                                           bool enable);
 
+p4_pd_status_t switch_pd_range_entry_add(switch_device_t device,
+                                         switch_direction_t direction,
+                                         uint16_t range_id,
+                                         switch_range_type_t range_type,
+                                         switch_range_t *range,
+                                         p4_pd_entry_hdl_t *entry_hdl);
+
+p4_pd_status_t switch_pd_range_entry_update(switch_device_t device,
+                                            switch_direction_t direction,
+                                            uint16_t range_id,
+                                            switch_range_type_t range_type,
+                                            switch_range_t *range,
+                                            p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t switch_pd_range_entry_delete(switch_device_t device,
+                                            switch_direction_t direction,
+                                            switch_range_type_t range_type,
+                                            p4_pd_entry_hdl_t entry_hdl);
+
+p4_pd_status_t switch_pd_egress_l4port_fields_init_entry(
+    switch_device_t device);
+
+p4_pd_status_t switch_pd_l4port_default_entry_add(switch_device_t device);
 #ifdef __cplusplus
 }
 #endif

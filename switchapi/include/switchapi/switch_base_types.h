@@ -44,7 +44,7 @@ extern "C" {
 #define switch_free(x) free(x)
 #define switch_realloc(x, sz) realloc(x, sz)
 
-#define HANDLE_TYPE_SHIFT 27
+#define HANDLE_TYPE_SHIFT 26
 
 #define handle_to_id(x) (x & 0x3FFFFFF)
 #define id_to_handle(t, x) (t << HANDLE_TYPE_SHIFT | (x))

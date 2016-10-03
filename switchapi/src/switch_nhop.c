@@ -421,7 +421,7 @@ switch_status_t switch_api_nhop_update(switch_device_t device,
                                            tunnel,
                                            &spath_info->hw_entry);
   if (status != SWITCH_STATUS_SUCCESS) {
-    return SWITCH_API_INVALID_HANDLE;
+    return status;
   }
 
 #endif

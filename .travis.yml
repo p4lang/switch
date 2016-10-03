@@ -1,0 +1,105 @@
+# Config file for automatic testing at travis-ci.org
+
+sudo: required
+
+dist: trusty
+
+language: c
+
+# My very smart trick to force inclusion of the veth kernel module
+# (even though we do not use docker at all her)
+services:
+  - docker
+
+env:
+  global:
+    - PYP_ADD="/usr/local/lib/python2.7/dist-packages:/usr/local/lib/python2.7/site-packages"
+  matrix:
+    - TEST_SCENARIO=switch
+    - TEST_SCENARIO=of
+
+# There is probably some redundant stuff in this list. If you find one, remove
+# it 
+addons:
+  apt:
+    packages:
+      - libjudy-dev
+      - libgmp-dev
+      - libpcap-dev
+      - libboost-dev
+      - libboost-test-dev
+      - libboost-program-options-dev
+      - libboost-system-dev
+      - libboost-filesystem-dev
+      - libboost-thread-dev
+      - libboost-test-dev
+      - libevent-dev
+      - automake
+      - libtool
+      - flex 
+      - bison
+      - pkg-config
+      - g++
+      - libssl-dev
+      - doxygen
+      - git
+      - libedit-dev
+      - libevent-dev
+      - libfreetype6-dev
+      - libpng-dev
+      - libyaml-0-2
+      - libbz2-dev
+      - libnl-route-3-dev
+      - openssl
+      - pkg-config
+      - python-dev
+      - python-matplotlib
+      - python-numpy
+      - python-pip
+      - python-scipy
+      - python-setuptools
+      - python-yaml
+
+# need to replace github ssh references with https
+before_install:
+  - git submodule update --init --recursive
+  - sudo apt-get install ethtool
+  - sudo pip install --upgrade pip
+  - sudo pip install --upgrade thrift
+  - sudo pip install ctypesgen
+  - sudo pip install crc16
+
+# install bmv2 before p4c-bmv2 to get nanomsg
+install:
+  - wget https://s3-us-west-2.amazonaws.com/p4lang/thrift_bin.tar.gz
+  - tar -xzvf thrift_bin.tar.gz -C $HOME/
+  - export PATH=$PATH:$HOME/thrift/bin/
+  - export LDFLAGS="$LDFLAGS -L$HOME/thrift/lib"
+  - export CPPFLAGS="$CPPFLAGS -I$HOME/thrift/include"
+  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/thrift/lib
+  - mkdir install_tmp && cd install_tmp/
+  - sudo apt-get remove python-scapy
+  - git clone https://github.com/p4lang/scapy-vxlan.git && cd scapy-vxlan && sudo python setup.py install && cd ..
+  - cd .. && sudo rm -rf install_tmp/
+  - bash CI/travis/install-ptf.sh
+  - bash CI/travis/install-bmv2.sh
+  - bash CI/travis/install-p4c-bmv2.sh
+  - bash CI/travis/install-p4ofagent.sh
+  - export CPPFLAGS="$CPPFLAGS -I$HOME/p4ofagent/include"
+  - export LDFLAGS="$LDFLAGS -L$HOME/p4ofagent/lib"
+  - git clone https://github.com/floodlight/oftest.git oftest_tmp
+  - export PYTHONPATH=$PYP_ADD:$PYTHONPATH
+  - sudo ldconfig
+  - ./autogen.sh
+
+before_script:
+  - cp CI/travis/veth_setup.sh tools/
+  - cd tools; sudo ./veth_setup.sh; sudo ./veth_disable_ipv6.sh; cd ..
+
+script:
+  - if  [ "$TEST_SCENARIO" = "switch" ] ; then ./configure --with-bmv2 --with-switchsai; fi
+  - if  [ "$TEST_SCENARIO" = "of" ] ; then ./configure --with-bmv2 --with-of; fi
+  - make -j2
+  - if  [ "$TEST_SCENARIO" = "switch" ] ; then ./CI/travis/run_switch_tests.sh; fi
+  - if  [ "$TEST_SCENARIO" = "of" ] ; then ./CI/travis/run_of_tests.sh; fi
+

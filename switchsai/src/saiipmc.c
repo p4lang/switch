@@ -126,7 +126,8 @@ static switch_handle_t sai_ipmc_tree_create(
   mbrs = switch_malloc(sizeof(switch_vlan_interface_t), oif_list_count);
 
   mcast_handle = switch_api_multicast_tree_create(device);
-  for (int i = 0; i < oif_list_count; i++) {
+  int i = 0;
+  for (i = 0; i < oif_list_count; i++) {
     switch_handle_t intf_handle = oif_list_handle[i];
     switch_interface_type_t type;
     status = switch_api_interface_get_type(intf_handle, &type);

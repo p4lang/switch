@@ -1276,6 +1276,10 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
           attribute = (sai_thrift_attribute_t)*it;
           attr_list[i].id = attribute.id;
           switch (attribute.id) {
+            case SAI_ACL_TABLE_ATTR_STAGE:
+                attr_list[i].value.s32 = attribute.value.s32;
+                break;
+
             case SAI_ACL_TABLE_ATTR_FIELD_SRC_IPv6:
             case SAI_ACL_TABLE_ATTR_FIELD_DST_IPv6:
             case SAI_ACL_TABLE_ATTR_FIELD_SRC_MAC:
@@ -1410,8 +1414,40 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
             case SAI_ACL_ENTRY_ATTR_PACKET_ACTION:
                 attr_list[i].value.aclfield.data.s32 = attribute.value.aclfield.data.s32;
                 break;
+            case SAI_ACL_ENTRY_ATTR_FIELD_RANGE:
+                {
+                    int count = attribute.value.aclfield.data.objlist.object_id_list.size();
+                    sai_object_id_t *oid_list = NULL;
+                    std::vector<sai_thrift_object_id_t>::const_iterator it = attribute.value.aclfield.data.objlist.object_id_list.begin();
+                    oid_list = (sai_object_id_t *) malloc(sizeof(sai_object_id_t) * count);
+                    for(int j = 0; j < count; j++, it++)
+                        *(oid_list + j) = (sai_object_id_t) *it;
+                    attr_list[i].value.aclfield.data.objlist.list = oid_list;
+                    attr_list[i].value.aclfield.data.objlist.count =  count;
+                }
+                break;
               default:
                 break;
+          }
+      }
+  }
+
+  void sai_thrift_convert_to_acl_range_attributes(
+          const std::vector<sai_thrift_attribute_t> &thrift_attr_list,
+          sai_attribute_t *attr_list) {
+      std::vector<sai_thrift_attribute_t>::const_iterator it = thrift_attr_list.begin();
+      sai_thrift_attribute_t attribute;
+      for(uint32_t i = 0; i < thrift_attr_list.size(); i++, it++) {
+          attribute = (sai_thrift_attribute_t)*it;
+          attr_list[i].id = attribute.id;
+          switch (attribute.id) {
+              case SAI_ACL_RANGE_ATTR_TYPE:
+                  attr_list[i].value.s32 = attribute.value.s32;
+                  break;
+              case SAI_ACL_RANGE_ATTR_LIMIT:
+                  attr_list[i].value.u32range.min = attribute.value.u32range.min;
+                  attr_list[i].value.u32range.max = attribute.value.u32range.max;
+                  break;
           }
       }
   }
@@ -1443,7 +1479,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
           }
       }
   }
-
   void sai_thrift_convert_to_acl_thrift_counter_attributes(
           sai_attribute_t *attr_list,
           uint32_t attr_count,
@@ -1586,6 +1621,34 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
                              attr_count,
                              thrift_attr_values);
       return;
+  }
+
+  sai_thrift_object_id_t sai_thrift_create_acl_range(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
+      sai_object_id_t acl_range_id = 0ULL;
+      sai_acl_api_t *acl_api;
+      sai_status_t status = SAI_STATUS_SUCCESS;
+      status = sai_api_query(SAI_API_ACL, (void **) &acl_api);
+      if (status != SAI_STATUS_SUCCESS) {
+          return status;
+      }
+      sai_attribute_t *attr_list = (sai_attribute_t *) malloc(sizeof(sai_attribute_t) * thrift_attr_list.size());
+      sai_thrift_convert_to_acl_range_attributes(thrift_attr_list, attr_list);
+      uint32_t attr_count = thrift_attr_list.size();
+      status = acl_api->create_acl_range(&acl_range_id, attr_count, attr_list);
+      free(attr_list);
+      return acl_range_id;
+  }
+
+  sai_thrift_status_t sai_thrift_delete_acl_range(const sai_thrift_object_id_t acl_range_id) {
+      sai_object_id_t acl_entry = 0ULL;
+      sai_acl_api_t *acl_api;
+      sai_status_t status = SAI_STATUS_SUCCESS;
+      status = sai_api_query(SAI_API_ACL, (void **) &acl_api);
+      if (status != SAI_STATUS_SUCCESS) {
+          return status;
+      }
+      status = acl_api->remove_acl_range(acl_range_id);
+      return status;
   }
 
   void sai_thrift_parse_mirror_session_attributes(const std::vector<sai_thrift_attribute_t> &thrift_attr_list, sai_attribute_t *attr_list) {

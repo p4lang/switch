@@ -33,6 +33,13 @@ typedef struct switch_acl_interface_ {
   void *entries;
 } switch_acl_interface_t;
 
+typedef struct switch_range_info_ {
+  switch_range_t range;
+  switch_range_type_t range_type;
+  switch_direction_t direction;
+  p4_pd_entry_hdl_t hw_entry;
+} switch_range_info_t;
+
 typedef struct switch_acl_rule_ {
   switch_handle_t acl_handle;
   int priority;

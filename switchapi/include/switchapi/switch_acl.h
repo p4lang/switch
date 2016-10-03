@@ -46,66 +46,66 @@ typedef enum switch_acl_type_ {
 
 /** Acl IP field enum */
 typedef enum switch_acl_ip_field_ {
-  SWITCH_ACL_IP_FIELD_IPV4_SRC,       /**< IPv4 Source address */
-  SWITCH_ACL_IP_FIELD_IPV4_DEST,      /**< IPv4 Dest address */
-  SWITCH_ACL_IP_FIELD_IP_PROTO,       /**< IP Protocol */
-  SWITCH_ACL_IP_FIELD_L4_SOURCE_PORT, /**< L4 source port UDP/TCP */
-  SWITCH_ACL_IP_FIELD_L4_DEST_PORT,   /**< L4 dest port UDP/TCP */
-  SWITCH_ACL_IP_FIELD_ICMP_TYPE,      /**< ICMP type */
-  SWITCH_ACL_IP_FIELD_ICMP_CODE,      /**< ICMP code */
-  SWITCH_ACL_IP_FIELD_TCP_FLAGS,      /**< TCP flags */
-  SWITCH_ACL_IP_FIELD_TTL,            /**< TTL */
-  SWITCH_ACL_IP_FIELD_IP_FLAGS,       /**< IP flags */
-  SWITCH_ACL_IP_FIELD_IP_FRAGMENT,    /**< IP FRAG */
+  SWITCH_ACL_IP_FIELD_IPV4_SRC,             /**< IPv4 Source address */
+  SWITCH_ACL_IP_FIELD_IPV4_DEST,            /**< IPv4 Dest address */
+  SWITCH_ACL_IP_FIELD_IP_PROTO,             /**< IP Protocol */
+  SWITCH_ACL_IP_FIELD_L4_SOURCE_PORT_RANGE, /**< L4 source port UDP/TCP */
+  SWITCH_ACL_IP_FIELD_L4_DEST_PORT_RANGE,   /**< L4 dest port UDP/TCP */
+  SWITCH_ACL_IP_FIELD_ICMP_TYPE,            /**< ICMP type */
+  SWITCH_ACL_IP_FIELD_ICMP_CODE,            /**< ICMP code */
+  SWITCH_ACL_IP_FIELD_TCP_FLAGS,            /**< TCP flags */
+  SWITCH_ACL_IP_FIELD_TTL,                  /**< TTL */
+  SWITCH_ACL_IP_FIELD_IP_FLAGS,             /**< IP flags */
+  SWITCH_ACL_IP_FIELD_IP_FRAGMENT,          /**< IP FRAG */
 
   SWITCH_ACL_IP_FIELD_MAX
 } switch_acl_ip_field_t;
 
 /** Acl IPv6 field enum */
 typedef enum switch_acl_ipv6_field_ {
-  SWITCH_ACL_IPV6_FIELD_IPV6_SRC,       /**< IPv6 Source address */
-  SWITCH_ACL_IPV6_FIELD_IPV6_DEST,      /**< IPv6 Destination address */
-  SWITCH_ACL_IPV6_FIELD_IP_PROTO,       /**< IP protocol */
-  SWITCH_ACL_IPV6_FIELD_L4_SOURCE_PORT, /**< L4 source port (UDP/TCP) */
-  SWITCH_ACL_IPV6_FIELD_L4_DEST_PORT,   /**< L4 Dest port (UDP/TCP) */
-  SWITCH_ACL_IPV6_FIELD_ICMP_TYPE,      /**< ICMP type */
-  SWITCH_ACL_IPV6_FIELD_ICMP_CODE,      /**< ICMP code */
-  SWITCH_ACL_IPV6_FIELD_TCP_FLAGS,      /**< TCP flags */
-  SWITCH_ACL_IPV6_FIELD_TTL,            /**< TTL */
-  SWITCH_ACL_IPV6_FIELD_FLOW_LABEL,     /**< Flow Label */
+  SWITCH_ACL_IPV6_FIELD_IPV6_SRC,             /**< IPv6 Source address */
+  SWITCH_ACL_IPV6_FIELD_IPV6_DEST,            /**< IPv6 Destination address */
+  SWITCH_ACL_IPV6_FIELD_IP_PROTO,             /**< IP protocol */
+  SWITCH_ACL_IPV6_FIELD_L4_SOURCE_PORT_RANGE, /**< L4 source port (UDP/TCP) */
+  SWITCH_ACL_IPV6_FIELD_L4_DEST_PORT_RANGE,   /**< L4 Dest port (UDP/TCP) */
+  SWITCH_ACL_IPV6_FIELD_ICMP_TYPE,            /**< ICMP type */
+  SWITCH_ACL_IPV6_FIELD_ICMP_CODE,            /**< ICMP code */
+  SWITCH_ACL_IPV6_FIELD_TCP_FLAGS,            /**< TCP flags */
+  SWITCH_ACL_IPV6_FIELD_TTL,                  /**< TTL */
+  SWITCH_ACL_IPV6_FIELD_FLOW_LABEL,           /**< Flow Label */
 
   SWITCH_ACL_IPV6_FIELD_MAX
 } switch_acl_ipv6_field_t;
 
 /** Acl IP field list */
 typedef union switch_acl_ip_value_ {
-  unsigned int ipv4_source;      /**< v4 source IP */
-  unsigned int ipv4_dest;        /**< v4 destination IP */
-  unsigned char ip_proto;        /**< protocol */
-  unsigned short l4_source_port; /**< souce port */
-  unsigned short l4_dest_port;   /**< destination port */
-  unsigned char icmp_type;       /**< icmp type */
-  unsigned char icmp_code;       /**< icmp code */
-  unsigned char tcp_flags;       /**< tcp flags */
-  unsigned char ttl;             /**< time to live */
-  unsigned char dscp;            /**< DSCP */
-  unsigned char ip_flags;        /**< IP flags */
-  unsigned char tos;             /**< TOS */
-  unsigned char ip_frag;         /**< IP FRAG */
+  unsigned int ipv4_source;           /**< v4 source IP */
+  unsigned int ipv4_dest;             /**< v4 destination IP */
+  unsigned char ip_proto;             /**< protocol */
+  unsigned char icmp_type;            /**< icmp type */
+  unsigned char icmp_code;            /**< icmp code */
+  unsigned char tcp_flags;            /**< tcp flags */
+  unsigned char ttl;                  /**< time to live */
+  unsigned char dscp;                 /**< DSCP */
+  unsigned char ip_flags;             /**< IP flags */
+  unsigned char tos;                  /**< TOS */
+  unsigned char ip_frag;              /**< IP FRAG */
+  switch_handle_t sport_range_handle; /**< sport range handle */
+  switch_handle_t dport_range_handle; /**< dport range handle */
 } switch_acl_ip_value;
 
 /** Acl IPv6 field list */
 typedef union switch_acl_ipv6_value_ {
-  uint128_t ipv6_source;         /**< v6 souce IP */
-  uint128_t ipv6_dest;           /**< v6 destination IP */
-  unsigned char ip_proto;        /**< protocol */
-  unsigned short l4_source_port; /**< source port */
-  unsigned short l4_dest_port;   /**< destination port */
-  unsigned char icmp_type;       /**< icmp type */
-  unsigned char icmp_code;       /**< icmp code */
-  unsigned char tcp_flags;       /**< tcp flags */
-  unsigned char ttl;             /**< time to live */
-  uint32_t flow_label;           /**< flow label */
+  uint128_t ipv6_source;              /**< v6 souce IP */
+  uint128_t ipv6_dest;                /**< v6 destination IP */
+  unsigned char ip_proto;             /**< protocol */
+  unsigned char icmp_type;            /**< icmp type */
+  unsigned char icmp_code;            /**< icmp code */
+  unsigned char tcp_flags;            /**< tcp flags */
+  unsigned char ttl;                  /**< time to live */
+  uint32_t flow_label;                /**< flow label */
+  switch_handle_t sport_range_handle; /**< sport range handle */
+  switch_handle_t dport_range_handle; /**< dport range handle */
 } switch_acl_ipv6_value;
 
 /** Acl IP mask */
@@ -196,42 +196,42 @@ typedef struct switch_acl_mac_key_value_pair_ {
 
 /** ACL ip racl field enum */
 typedef enum switch_acl_ip_racl_field_ {
-  SWITCH_ACL_IP_RACL_FIELD_IPV4_SRC,       /**< IPv4 Source address */
-  SWITCH_ACL_IP_RACL_FIELD_IPV4_DEST,      /**< IPv4 Dest address */
-  SWITCH_ACL_IP_RACL_FIELD_IP_PROTO,       /**< IP protocol (TCP/UDP) */
-  SWITCH_ACL_IP_RACL_FIELD_L4_SOURCE_PORT, /**< L4 source port */
-  SWITCH_ACL_IP_RACL_FIELD_L4_DEST_PORT,   /**< L4 dest port */
+  SWITCH_ACL_IP_RACL_FIELD_IPV4_SRC,             /**< IPv4 Source address */
+  SWITCH_ACL_IP_RACL_FIELD_IPV4_DEST,            /**< IPv4 Dest address */
+  SWITCH_ACL_IP_RACL_FIELD_IP_PROTO,             /**< IP protocol (TCP/UDP) */
+  SWITCH_ACL_IP_RACL_FIELD_L4_SOURCE_PORT_RANGE, /**< L4 source port */
+  SWITCH_ACL_IP_RACL_FIELD_L4_DEST_PORT_RANGE,   /**< L4 dest port */
 
   SWITCH_ACL_IP_RACL_FIELD_MAX
 } switch_acl_ip_racl_field_t;
 
 /** ACL ipv6 racl field enum */
 typedef enum switch_acl_ipv6_racl_field_ {
-  SWITCH_ACL_IPV6_RACL_FIELD_IPV6_SRC,       /**< IPv6 source address */
-  SWITCH_ACL_IPV6_RACL_FIELD_IPV6_DEST,      /**< IPv6 dest address */
-  SWITCH_ACL_IPV6_RACL_FIELD_IP_PROTO,       /**< IPv6 protocol */
-  SWITCH_ACL_IPV6_RACL_FIELD_L4_SOURCE_PORT, /**< L4 source port */
-  SWITCH_ACL_IPV6_RACL_FIELD_L4_DEST_PORT,   /**< L4 dest port */
+  SWITCH_ACL_IPV6_RACL_FIELD_IPV6_SRC,             /**< IPv6 source address */
+  SWITCH_ACL_IPV6_RACL_FIELD_IPV6_DEST,            /**< IPv6 dest address */
+  SWITCH_ACL_IPV6_RACL_FIELD_IP_PROTO,             /**< IPv6 protocol */
+  SWITCH_ACL_IPV6_RACL_FIELD_L4_SOURCE_PORT_RANGE, /**< L4 source port */
+  SWITCH_ACL_IPV6_RACL_FIELD_L4_DEST_PORT_RANGE,   /**< L4 dest port */
 
   SWITCH_ACL_IPV6_RACL_FIELD_MAX
 } switch_acl_ipv6_racl_field_t;
 
 /** Acl ip racl field list */
 typedef union switch_acl_ip_racl_value_ {
-  unsigned int ipv4_source;      /**< v4 source IP */
-  unsigned int ipv4_dest;        /**< v4 destination IP */
-  unsigned short ip_proto;       /**< protocol */
-  unsigned short l4_source_port; /**< source port */
-  unsigned short l4_dest_port;   /**< destination port */
+  unsigned int ipv4_source;           /**< v4 source IP */
+  unsigned int ipv4_dest;             /**< v4 destination IP */
+  unsigned short ip_proto;            /**< protocol */
+  switch_handle_t sport_range_handle; /**< sport range handle */
+  switch_handle_t dport_range_handle; /**< dport range handle */
 } switch_acl_ip_racl_value;
 
 /** Acl ipv6 racl field list */
 typedef union switch_acl_ipv6_racl_value_ {
-  uint128_t ipv6_source;         /**< v6 source IP */
-  uint128_t ipv6_dest;           /**< v6 destination IP */
-  unsigned short ip_proto;       /**< protocol */
-  unsigned short l4_source_port; /**< source port */
-  unsigned short l4_dest_port;   /**< destination port */
+  uint128_t ipv6_source;              /**< v6 source IP */
+  uint128_t ipv6_dest;                /**< v6 destination IP */
+  unsigned short ip_proto;            /**< protocol */
+  switch_handle_t sport_range_handle; /**< sport range handle */
+  switch_handle_t dport_range_handle; /**< dport range handle */
 } switch_acl_ipv6_racl_value;
 
 /** Acl ip racl mask */
@@ -413,6 +413,7 @@ typedef enum switch_acl_egr_field_ {
   SWITCH_ACL_EGR_DEST_PORT,
   SWITCH_ACL_EGR_DEFLECT,
   SWITCH_ACL_EGR_L3_MTU_CHECK,
+  SWITCH_ACL_EGR_ACL_DENY,
   SWITCH_ACL_EGR_FIELD_MAX
 } switch_acl_egr_field_t;
 
@@ -421,6 +422,7 @@ typedef union switch_acl_egr_value_ {
   switch_handle_t egr_port;    /**< egress port */
   bool deflection_flag;        /**< deflection flag */
   unsigned short l3_mtu_check; /**< L3 MTU check */
+  bool acl_deny;               /**< acl deny */
 } switch_acl_egr_value_t;
 
 /** Egress ACL match mask */
@@ -445,6 +447,8 @@ typedef enum switch_acl_egr_action_ {
   SWITCH_ACL_EGR_ACTION_SET_MIRROR,      /**< Set mirror session */
   SWITCH_ACL_EGR_ACTION_REDIRECT_TO_CPU, /**< redirect to cpu */
   SWITCH_ACL_EGR_MIRROR_DROP,            /**< negative mirror */
+  SWITCH_ACL_EGR_ACTION_DROP,            /**< drop packets */
+  SWITCH_ACL_EGR_ACTION_PERMIT           /**< permit packets */
 } switch_acl_egr_action_t;
 
 typedef switch_acl_action_t switch_acl_ip_action_t;   /**< acl action */
@@ -455,10 +459,24 @@ typedef switch_acl_action_t
 
 /** Acl info struct */
 typedef struct switch_acl_info_ {
-  switch_acl_type_t type;    /**< acl type */
-  void *rules;               /**< set of rules */
-  tommy_list interface_list; /**< list of interface handles */
+  switch_acl_type_t type;       /**< acl type */
+  switch_direction_t direction; /**< acl direction */
+  void *rules;                  /**< set of rules */
+  tommy_list interface_list;    /**< list of interface handles */
 } switch_acl_info_t;
+
+typedef enum switch_range_type_ {
+  SWITCH_RANGE_TYPE_NONE = 0x0,
+  SWITCH_RANGE_TYPE_SRC_PORT = 0x1,
+  SWITCH_RANGE_TYPE_DST_PORT = 0x2,
+  SWITCH_RANGE_TYPE_VLAN = 0x3,
+  SWITCH_RANGE_TYPE_PACKET_LENGTH = 0x4
+} switch_range_type_t;
+
+typedef struct switch_range_ {
+  uint32_t start_value;
+  uint32_t end_value;
+} switch_range_t;
 
 /**
  ACL Key list create
@@ -466,6 +484,7 @@ typedef struct switch_acl_info_ {
  @param type - acl type
 */
 switch_handle_t switch_api_acl_list_create(switch_device_t device,
+                                           switch_direction_t direction,
                                            switch_acl_type_t type);
 
 /**
@@ -596,6 +615,27 @@ switch_status_t switch_api_acl_stats_get(switch_device_t device,
 */
 switch_acl_type_t switch_acl_type_get(switch_device_t device,
                                       switch_handle_t acl_handle);
+
+switch_status_t switch_api_acl_range_create(switch_device_t device,
+                                            switch_direction_t direction,
+                                            switch_range_type_t range_type,
+                                            switch_range_t *range,
+                                            switch_handle_t *range_handle);
+
+switch_status_t switch_api_acl_range_update(switch_device_t device,
+                                            switch_handle_t range_handle,
+                                            switch_range_t *range);
+
+switch_status_t switch_api_acl_range_type_get(switch_device_t device,
+                                              switch_handle_t range_handle,
+                                              switch_range_type_t *range_type);
+
+switch_status_t switch_api_acl_range_get(switch_device_t device,
+                                         switch_handle_t range_handle,
+                                         switch_range_t *range);
+
+switch_status_t switch_api_acl_range_delete(switch_device_t device,
+                                            switch_handle_t range_handle);
 
 /** @} */  // end of ACL API
 
