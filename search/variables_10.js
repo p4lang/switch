@@ -1,0 +1,24 @@
+var searchData=
+[
+  ['racl_5fdeny',['racl_deny',['../unionswitch__acl__system__value__.html#a4ffecd47cc2bfa9441046803bf126877',1,'switch_acl_system_value_']]],
+  ['reason_5fcode',['reason_code',['../unionswitch__acl__system__value__.html#aa8c2b01986a2e4e28c6faa96048f2b34',1,'switch_acl_system_value_::reason_code()'],['../unionswitch__acl__action__params__.html#a9746d0286a4eb88231f052f4cd82e6d7',1,'switch_acl_action_params_::reason_code()'],['../unionswitch__acl__action__params__.html#a1269fcd1fc7d6d7cf761499bd62954ff',1,'switch_acl_action_params_::reason_code()'],['../structswitch__api__hostif__rcode__info__.html#a2727e5872f3c254f4cf21a2137215175',1,'switch_api_hostif_rcode_info_::reason_code()'],['../structswitch__hostif__packet__.html#a79758d3f61efab12ecbf861e9e9da1b1',1,'switch_hostif_packet_::reason_code()'],['../structswitch__packet__rx__key__.html#a1efb9ba37c14d61c6677d69e75157dd5',1,'switch_packet_rx_key_::reason_code()']]],
+  ['reason_5fcode_5fmask',['reason_code_mask',['../structswitch__packet__rx__key__.html#aa6a38382e88cda4d1df43dca0554afe9',1,'switch_packet_rx_key_']]],
+  ['reason_5fcode_5fvalid',['reason_code_valid',['../structswitch__packet__rx__key__.html#a1be5519b92f73ad4560437d5479878ac',1,'switch_packet_rx_key_']]],
+  ['recursion_5fcontrol',['recursion_control',['../structswitch__gre__t.html#aa49d2fcb5e14be2a66e09d65ac558418',1,'switch_gre_t']]],
+  ['redirect',['redirect',['../unionswitch__acl__action__params__.html#ae70b40dcbcb698dbe46b8f7cff49b743',1,'switch_acl_action_params_']]],
+  ['rem_5fbw_5fpriority',['rem_bw_priority',['../structswitch__scheduler__info__.html#ace4d92c7957ba29dacfca463d8971b9b',1,'switch_scheduler_info_']]],
+  ['rmac_5fhandle',['rmac_handle',['../structswitch__api__interface__info__.html#ac7d3ae2a11976e0ad3706a87294c4688',1,'switch_api_interface_info_::rmac_handle()'],['../structswitch__logical__network__.html#ab59ab0dd64871bebcff4cfc48d67c2f6',1,'switch_logical_network_::rmac_handle()']]],
+  ['rmac_5fhit',['rmac_hit',['../unionswitch__acl__system__value__.html#a8c4e8476703c56658d6ef54753ff663b',1,'switch_acl_system_value_']]],
+  ['routed',['routed',['../unionswitch__acl__system__value__.html#ad9d0a5d44108dabd8a453a20d244dbc3',1,'switch_acl_system_value_']]],
+  ['routing',['routing',['../structswitch__gre__t.html#a8873c341de6fc11deec5671b28716814',1,'switch_gre_t']]],
+  ['routing_5fpresent',['routing_present',['../structswitch__gre__t.html#a91edca3c679c24313455388a9822012e',1,'switch_gre_t']]],
+  ['rsvd',['rsvd',['../structswitch__vxlan__id__t.html#ac2a9414c446e96a21c733292c1a9de87',1,'switch_vxlan_id_t::rsvd()'],['../structswitch__nvgre__id__t.html#a158dfb78f607feb5ef99dab5ef6d2a56',1,'switch_nvgre_id_t::rsvd()'],['../structswitch__geneve__id__t.html#a9bd23c1f9045fa0e28a35cc5886e92a6',1,'switch_geneve_id_t::rsvd()']]],
+  ['rsvd2',['rsvd2',['../structswitch__geneve__id__t.html#a7a7bda3b56ebe532c9cbb01d930fff83',1,'switch_geneve_id_t']]],
+  ['rules',['rules',['../structswitch__acl__info__.html#ad8937e84a6617369e8bb54c9773325de',1,'switch_acl_info_']]],
+  ['rw_5fdst_5fip',['rw_dst_ip',['../structswitch__api__nat__info__.html#a16c2c4d919e561874739f6ec7715bd9e',1,'switch_api_nat_info_']]],
+  ['rw_5fdst_5fport',['rw_dst_port',['../structswitch__api__nat__info__.html#a98ab0cc5dcb9a9de0d3fef9be6037956',1,'switch_api_nat_info_']]],
+  ['rw_5fsrc_5fip',['rw_src_ip',['../structswitch__api__nat__info__.html#a740535fa9b4f5136eebfe39da909b1df',1,'switch_api_nat_info_']]],
+  ['rw_5fsrc_5fport',['rw_src_port',['../structswitch__api__nat__info__.html#aa383bcb2221648697b9ccb4b1566bd57',1,'switch_api_nat_info_']]],
+  ['rw_5ftype',['rw_type',['../structswitch__api__neighbor__.html#a9d59a867e22630a88d24325285ba6f0a',1,'switch_api_neighbor_']]],
+  ['rx',['rx',['../structswitch__port__pause__info__.html#a920238ca28555086724ea12235ec0f3e',1,'switch_port_pause_info_']]]
+];
