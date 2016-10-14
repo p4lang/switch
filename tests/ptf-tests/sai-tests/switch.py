@@ -2519,9 +2519,9 @@ class NexthopGetSetTest(sai_base_test.ThriftInterfaceDataPlane):
 
 # TODO: ip get/set
 
+        self.client.sai_thrift_remove_router_interface(rif_id2)
         self.client.sai_thrift_remove_next_hop(nhop)
         self.client.sai_thrift_remove_router_interface(rif_id)
-        self.client.sai_thrift_remove_router_interface(rif_id2)
         self.client.sai_thrift_remove_virtual_router(vr_id)
 
 class InterfaceGetSetTest(sai_base_test.ThriftInterfaceDataPlane):
