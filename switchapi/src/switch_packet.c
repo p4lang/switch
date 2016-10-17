@@ -41,6 +41,10 @@ limitations under the License.
 #include "switchapi/switch_utils.h"
 
 pthread_t packet_driver_thread;
+static pthread_mutex_t packet_driver_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t packet_driver_cond = PTHREAD_MUTEX_INITIALIZER;
+static bool packet_driver_done = false;
+
 static tommy_list packet_rx_filter_list;
 static tommy_list packet_tx_filter_list;
 
@@ -624,6 +628,12 @@ static void *switch_packet_driver_thread(void *args) {
 
   switch_packet_create_pipe();
 
+  // Signal parent to continue
+  pthread_mutex_lock(&packet_driver_mutex);
+  packet_driver_done = true;
+  pthread_cond_signal(&packet_driver_cond);
+  pthread_mutex_unlock(&packet_driver_mutex );
+
   while (TRUE) {
     FD_ZERO(&read_fds);
     FD_SET(cpu_sock_fd, &read_fds);
@@ -646,8 +656,17 @@ static void *switch_packet_driver_thread(void *args) {
 }
 
 int start_switch_api_packet_driver() {
+
   pthread_create(
       &packet_driver_thread, NULL, switch_packet_driver_thread, NULL);
+
+  // Let switch_packet_driver_thread to finish initializing
+  pthread_mutex_lock(&packet_driver_mutex);
+  while(packet_driver_done == false) {
+    pthread_cond_wait(&packet_driver_cond, &packet_driver_mutex);
+  }
+  pthread_mutex_unlock(&packet_driver_mutex);
+
   return SWITCH_STATUS_SUCCESS;
 }
 
