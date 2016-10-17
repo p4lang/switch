@@ -41,8 +41,8 @@ limitations under the License.
 #include "switchapi/switch_utils.h"
 
 pthread_t packet_driver_thread;
-pthread_mutex_t packet_driver_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t packet_driver_cond = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t packet_driver_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t packet_driver_cond = PTHREAD_COND_INITIALIZER;
 static bool packet_driver_done = false;
 
 static tommy_list packet_rx_filter_list;
