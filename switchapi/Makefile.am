@@ -156,6 +156,9 @@ $(switchapi_ctypesgen) : $(thrift_py) $(switchapi_includes)
 		-I$(srcdir)/third-party/tommyds/include \
 		-I$(includedir) --no-macros \
 	    $(srcdir)/include/switchapi/*.h -o $@ > /dev/null 2>&1
+	mkdir -p @builddir@/switch_api_thrift
+	cp -r @builddir@/gen-py/switch_api/switch_api_headers.py \
+	@builddir@/switch_api_thrift/switch_api_headers.py
 
 # http://www.gnu.org/software/automake/manual/html_node/Multiple-Outputs.html
 switchapi.ts : @srcdir@/src/switch_api.thrift
