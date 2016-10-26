@@ -560,7 +560,7 @@ sai_status_t sai_create_acl_table(_Out_ sai_object_id_t *acl_table_id,
 *    SAI_STATUS_SUCCESS on success
 *    Failure status code on error
 */
-sai_status_t sai_delete_acl_table(_In_ sai_object_id_t acl_table_id) {
+sai_status_t sai_remove_acl_table(_In_ sai_object_id_t acl_table_id) {
   SAI_LOG_ENTER();
 
   sai_status_t status = SAI_STATUS_SUCCESS;
@@ -709,7 +709,7 @@ sai_status_t sai_create_acl_entry(_Out_ sai_object_id_t *acl_entry_id,
         // set the action params
         action_params.redirect.handle = handle;
       } break;
-      case SAI_ACL_ENTRY_ATTR_PACKET_ACTION:
+      case SAI_ACL_ENTRY_ATTR_ACTION_PACKET_ACTION:
         acl_action = 0;
         packet_action = attr_list[index1].value.aclfield.data.s32;
         if (packet_action == SAI_PACKET_ACTION_DROP) {
@@ -859,7 +859,7 @@ sai_status_t sai_create_acl_entry(_Out_ sai_object_id_t *acl_entry_id,
 *    SAI_STATUS_SUCCESS on success
 *    Failure status code on error
 */
-sai_status_t sai_delete_acl_entry(_In_ sai_object_id_t acl_entry_id) {
+sai_status_t sai_remove_acl_entry(_In_ sai_object_id_t acl_entry_id) {
   SAI_LOG_ENTER();
 
   sai_status_t status = SAI_STATUS_SUCCESS;
@@ -933,7 +933,7 @@ sai_status_t sai_create_acl_counter(_Out_ sai_object_id_t *acl_counter_id,
  *    @return  SAI_STATUS_SUCCESS on success
  *             Failure status code on error
  */
-sai_status_t sai_delete_acl_counter(_In_ sai_object_id_t acl_counter_id) {
+sai_status_t sai_remove_acl_counter(_In_ sai_object_id_t acl_counter_id) {
   SAI_LOG_ENTER();
 
   sai_status_t status = SAI_STATUS_SUCCESS;
@@ -1049,20 +1049,20 @@ sai_status_t sai_acl_range_attribute_to_switch_acl_range_attrbute(
     sai_acl_range_type_t range_type, switch_range_type_t *switch_range_type) {
   sai_status_t status = SAI_STATUS_SUCCESS;
   switch (range_type) {
-    case SAI_ACL_RANGE_L4_SRC_PORT_RANGE:
+    case SAI_ACL_RANGE_TYPE_L4_SRC_PORT_RANGE:
       *switch_range_type = SWITCH_RANGE_TYPE_SRC_PORT;
       break;
 
-    case SAI_ACL_RANGE_L4_DST_PORT_RANGE:
+    case SAI_ACL_RANGE_TYPE_L4_DST_PORT_RANGE:
       *switch_range_type = SWITCH_RANGE_TYPE_DST_PORT;
       break;
 
-    case SAI_ACL_RANGE_OUTER_VLAN:
-    case SAI_ACL_RANGE_INNER_VLAN:
+    case SAI_ACL_RANGE_TYPE_OUTER_VLAN:
+    case SAI_ACL_RANGE_TYPE_INNER_VLAN:
       *switch_range_type = SWITCH_RANGE_TYPE_VLAN;
       break;
 
-    case SAI_ACL_RANGE_PACKET_LENGTH:
+    case SAI_ACL_RANGE_TYPE_PACKET_LENGTH:
       *switch_range_type = SWITCH_RANGE_TYPE_PACKET_LENGTH;
       break;
 
@@ -1242,11 +1242,11 @@ sai_status_t sai_get_acl_range_attribute(_In_ sai_object_id_t acl_range_id,
 */
 sai_acl_api_t acl_api = {
     .create_acl_table = sai_create_acl_table,
-    .delete_acl_table = sai_delete_acl_table,
+    .remove_acl_table = sai_remove_acl_table,
     .create_acl_entry = sai_create_acl_entry,
-    .delete_acl_entry = sai_delete_acl_entry,
+    .remove_acl_entry = sai_remove_acl_entry,
     .create_acl_counter = sai_create_acl_counter,
-    .delete_acl_counter = sai_delete_acl_counter,
+    .remove_acl_counter = sai_remove_acl_counter,
     .set_acl_counter_attribute = sai_set_acl_counter_attribute,
     .get_acl_counter_attribute = sai_get_acl_counter_attribute,
     .create_acl_range = sai_create_acl_range,

@@ -57,15 +57,15 @@ char *sai_object_type_to_string(_In_ sai_object_type_t object_type) {
       return "acl entry object";
     case SAI_OBJECT_TYPE_ACL_COUNTER:
       return "acl counter object";
-    case SAI_OBJECT_TYPE_HOST_INTERFACE:
+    case SAI_OBJECT_TYPE_HOSTIF:
       return "host interface object";
-    case SAI_OBJECT_TYPE_MIRROR:
+    case SAI_OBJECT_TYPE_MIRROR_SESSION:
       return "mirror object";
     case SAI_OBJECT_TYPE_SAMPLEPACKET:
       return "sample packet object";
-    case SAI_OBJECT_TYPE_STP_INSTANCE:
+    case SAI_OBJECT_TYPE_STP:
       return "stp instance object";
-    case SAI_OBJECT_TYPE_TRAP_GROUP:
+    case SAI_OBJECT_TYPE_HOSTIF_TRAP_GROUP:
       return "trap group object";
     case SAI_OBJECT_TYPE_ACL_TABLE_GROUP:
       return "acl table group object";
@@ -73,7 +73,7 @@ char *sai_object_type_to_string(_In_ sai_object_type_t object_type) {
       return "policer object";
     case SAI_OBJECT_TYPE_WRED:
       return "wred object";
-    case SAI_OBJECT_TYPE_QOS_MAPS:
+    case SAI_OBJECT_TYPE_QOS_MAP:
       return "qos maps object";
     case SAI_OBJECT_TYPE_QUEUE:
       return "queue object";

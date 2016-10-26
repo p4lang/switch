@@ -20,6 +20,11 @@ limitations under the License.
 
 static sai_api_t api_id = SAI_API_HOST_INTERFACE;
 
+#define SAI_HOSTIF_TRAP_OBJECT(_reason_code)                \
+  ((_reason_code & 0xFFFF) |                                \
+   (SWITCH_HANDLE_TYPE_HOSTIF_TRAP << HANDLE_TYPE_SHIFT)) & \
+      0xFFFFFFFF
+
 /*
 * Routine Description:
 *    Create host interface
@@ -94,7 +99,7 @@ sai_status_t sai_remove_hostif(_In_ sai_object_id_t hif_id) {
   sai_status_t status = SAI_STATUS_SUCCESS;
   switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
 
-  SAI_ASSERT(sai_object_type_query(hif_id) == SAI_OBJECT_TYPE_HOST_INTERFACE);
+  SAI_ASSERT(sai_object_type_query(hif_id) == SAI_OBJECT_TYPE_HOSTIF);
   switch_status = switch_api_hostif_delete(device, hif_id);
   status = sai_switch_status_to_sai_status(switch_status);
 
@@ -131,7 +136,7 @@ sai_status_t sai_set_hostif_attribute(_In_ sai_object_id_t hif_id,
     return status;
   }
 
-  SAI_ASSERT(sai_object_type_query(hif_id) == SAI_OBJECT_TYPE_HOST_INTERFACE);
+  SAI_ASSERT(sai_object_type_query(hif_id) == SAI_OBJECT_TYPE_HOSTIF);
 
   SAI_LOG_EXIT();
 
@@ -163,7 +168,7 @@ sai_status_t sai_get_hostif_attribute(_In_ sai_object_id_t hif_id,
     return status;
   }
 
-  SAI_ASSERT(sai_object_type_query(hif_id) == SAI_OBJECT_TYPE_HOST_INTERFACE);
+  SAI_ASSERT(sai_object_type_query(hif_id) == SAI_OBJECT_TYPE_HOSTIF);
 
   SAI_LOG_EXIT();
 
@@ -249,7 +254,7 @@ sai_status_t sai_remove_hostif_trap_group(_In_ sai_object_id_t
   sai_status_t status = SAI_STATUS_SUCCESS;
 
   SAI_ASSERT(sai_object_type_query(hostif_trap_group_id) ==
-             SAI_OBJECT_TYPE_TRAP_GROUP);
+             SAI_OBJECT_TYPE_HOSTIF_TRAP_GROUP);
 
   status = switch_api_hostif_group_delete(device, hostif_trap_group_id);
 
@@ -283,7 +288,7 @@ sai_status_t sai_set_hostif_trap_group_attribute(
     return status;
   }
   SAI_ASSERT(sai_object_type_query(hostif_trap_group_id) ==
-             SAI_OBJECT_TYPE_TRAP_GROUP);
+             SAI_OBJECT_TYPE_HOSTIF_TRAP_GROUP);
 
   SAI_LOG_EXIT();
 
@@ -319,7 +324,7 @@ sai_status_t sai_get_hostif_trap_group_attribute(
   }
 
   SAI_ASSERT(sai_object_type_query(hostif_trap_group_id) ==
-             SAI_OBJECT_TYPE_TRAP_GROUP);
+             SAI_OBJECT_TYPE_HOSTIF_TRAP_GROUP);
 
   SAI_LOG_EXIT();
 
@@ -327,94 +332,94 @@ sai_status_t sai_get_hostif_trap_group_attribute(
 }
 
 switch_hostif_reason_code_t switch_sai_to_switch_api_reason_code(
-    sai_hostif_trap_id_t trap_id) {
+    sai_hostif_trap_type_t trap_id) {
   switch_hostif_reason_code_t reason_code = SWITCH_HOSTIF_REASON_CODE_NONE;
   switch (trap_id) {
-    case SAI_HOSTIF_TRAP_ID_STP:
+    case SAI_HOSTIF_TRAP_TYPE_STP:
       reason_code = SWITCH_HOSTIF_REASON_CODE_STP;
       break;
-    case SAI_HOSTIF_TRAP_ID_LACP:
+    case SAI_HOSTIF_TRAP_TYPE_LACP:
       reason_code = SWITCH_HOSTIF_REASON_CODE_LACP;
       break;
-    case SAI_HOSTIF_TRAP_ID_EAPOL:
+    case SAI_HOSTIF_TRAP_TYPE_EAPOL:
       reason_code = SWITCH_HOSTIF_REASON_CODE_EAPOL;
       break;
-    case SAI_HOSTIF_TRAP_ID_LLDP:
+    case SAI_HOSTIF_TRAP_TYPE_LLDP:
       reason_code = SWITCH_HOSTIF_REASON_CODE_LLDP;
       break;
-    case SAI_HOSTIF_TRAP_ID_PVRST:
+    case SAI_HOSTIF_TRAP_TYPE_PVRST:
       reason_code = SWITCH_HOSTIF_REASON_CODE_PVRST;
       break;
-    case SAI_HOSTIF_TRAP_ID_IGMP_TYPE_QUERY:
+    case SAI_HOSTIF_TRAP_TYPE_IGMP_TYPE_QUERY:
       reason_code = SWITCH_HOSTIF_REASON_CODE_IGMP_TYPE_QUERY;
       break;
-    case SAI_HOSTIF_TRAP_ID_IGMP_TYPE_LEAVE:
+    case SAI_HOSTIF_TRAP_TYPE_IGMP_TYPE_LEAVE:
       reason_code = SWITCH_HOSTIF_REASON_CODE_IGMP_TYPE_LEAVE;
       break;
-    case SAI_HOSTIF_TRAP_ID_IGMP_TYPE_V1_REPORT:
+    case SAI_HOSTIF_TRAP_TYPE_IGMP_TYPE_V1_REPORT:
       reason_code = SWITCH_HOSTIF_REASON_CODE_IGMP_TYPE_V1_REPORT;
       break;
-    case SAI_HOSTIF_TRAP_ID_IGMP_TYPE_V2_REPORT:
+    case SAI_HOSTIF_TRAP_TYPE_IGMP_TYPE_V2_REPORT:
       reason_code = SWITCH_HOSTIF_REASON_CODE_IGMP_TYPE_V2_REPORT;
       break;
-    case SAI_HOSTIF_TRAP_ID_IGMP_TYPE_V3_REPORT:
+    case SAI_HOSTIF_TRAP_TYPE_IGMP_TYPE_V3_REPORT:
       reason_code = SWITCH_HOSTIF_REASON_CODE_IGMP_TYPE_V3_REPORT;
       break;
-    case SAI_HOSTIF_TRAP_ID_SAMPLEPACKET:
+    case SAI_HOSTIF_TRAP_TYPE_SAMPLEPACKET:
       reason_code = SWITCH_HOSTIF_REASON_CODE_SAMPLEPACKET;
       break;
-    case SAI_HOSTIF_TRAP_ID_ARP_REQUEST:
+    case SAI_HOSTIF_TRAP_TYPE_ARP_REQUEST:
       reason_code = SWITCH_HOSTIF_REASON_CODE_ARP_REQUEST;
       break;
-    case SAI_HOSTIF_TRAP_ID_ARP_RESPONSE:
+    case SAI_HOSTIF_TRAP_TYPE_ARP_RESPONSE:
       reason_code = SWITCH_HOSTIF_REASON_CODE_ARP_RESPONSE;
       break;
-    case SAI_HOSTIF_TRAP_ID_DHCP:
+    case SAI_HOSTIF_TRAP_TYPE_DHCP:
       reason_code = SWITCH_HOSTIF_REASON_CODE_DHCP;
       break;
-    case SAI_HOSTIF_TRAP_ID_OSPF:
+    case SAI_HOSTIF_TRAP_TYPE_OSPF:
       reason_code = SWITCH_HOSTIF_REASON_CODE_OSPF;
       break;
-    case SAI_HOSTIF_TRAP_ID_PIM:
+    case SAI_HOSTIF_TRAP_TYPE_PIM:
       reason_code = SWITCH_HOSTIF_REASON_CODE_PIM;
       break;
-    case SAI_HOSTIF_TRAP_ID_VRRP:
+    case SAI_HOSTIF_TRAP_TYPE_VRRP:
       reason_code = SWITCH_HOSTIF_REASON_CODE_VRRP;
       break;
-    case SAI_HOSTIF_TRAP_ID_BGP:
+    case SAI_HOSTIF_TRAP_TYPE_BGP:
       reason_code = SWITCH_HOSTIF_REASON_CODE_BGP;
       break;
-    case SAI_HOSTIF_TRAP_ID_DHCPV6:
+    case SAI_HOSTIF_TRAP_TYPE_DHCPV6:
       reason_code = SWITCH_HOSTIF_REASON_CODE_DHCPV6;
       break;
-    case SAI_HOSTIF_TRAP_ID_OSPFV6:
+    case SAI_HOSTIF_TRAP_TYPE_OSPFV6:
       reason_code = SWITCH_HOSTIF_REASON_CODE_OSPFV6;
       break;
-    case SAI_HOSTIF_TRAP_ID_VRRPV6:
+    case SAI_HOSTIF_TRAP_TYPE_VRRPV6:
       reason_code = SWITCH_HOSTIF_REASON_CODE_VRRPV6;
       break;
-    case SAI_HOSTIF_TRAP_ID_BGPV6:
+    case SAI_HOSTIF_TRAP_TYPE_BGPV6:
       reason_code = SWITCH_HOSTIF_REASON_CODE_BGPV6;
       break;
-    case SAI_HOSTIF_TRAP_ID_IPV6_NEIGHBOR_DISCOVERY:
+    case SAI_HOSTIF_TRAP_TYPE_IPV6_NEIGHBOR_DISCOVERY:
       reason_code = SWITCH_HOSTIF_REASON_CODE_IPV6_NEIGHBOR_DISCOVERY;
       break;
-    case SAI_HOSTIF_TRAP_ID_IPV6_MLD_V1_V2:
+    case SAI_HOSTIF_TRAP_TYPE_IPV6_MLD_V1_V2:
       reason_code = SWITCH_HOSTIF_REASON_CODE_IPV6_MLD_V1_V2;
       break;
-    case SAI_HOSTIF_TRAP_ID_IPV6_MLD_V1_REPORT:
+    case SAI_HOSTIF_TRAP_TYPE_IPV6_MLD_V1_REPORT:
       reason_code = SWITCH_HOSTIF_REASON_CODE_IPV6_MLD_V1_REPORT;
       break;
-    case SAI_HOSTIF_TRAP_ID_IPV6_MLD_V1_DONE:
+    case SAI_HOSTIF_TRAP_TYPE_IPV6_MLD_V1_DONE:
       reason_code = SWITCH_HOSTIF_REASON_CODE_IPV6_MLD_V1_DONE;
       break;
-    case SAI_HOSTIF_TRAP_ID_MLD_V2_REPORT:
+    case SAI_HOSTIF_TRAP_TYPE_MLD_V2_REPORT:
       reason_code = SWITCH_HOSTIF_REASON_CODE_MLD_V2_REPORT;
       break;
-    case SAI_HOSTIF_TRAP_ID_L3_MTU_ERROR:
+    case SAI_HOSTIF_TRAP_TYPE_L3_MTU_ERROR:
       reason_code = SWITCH_HOSTIF_REASON_CODE_L3_MTU_ERROR;
       break;
-    case SAI_HOSTIF_TRAP_ID_TTL_ERROR:
+    case SAI_HOSTIF_TRAP_TYPE_TTL_ERROR:
       reason_code = SWITCH_HOSTIF_REASON_CODE_TTL_ERROR;
       break;
     default:
@@ -476,7 +481,7 @@ switch_hostif_channel_t switch_sai_channel_to_switch_api_channel(
 *    SAI_STATUS_SUCCESS on success
 *    Failure status code on error
 */
-sai_status_t sai_create_hostif_trap(_In_ sai_hostif_trap_id_t hostif_trapid,
+sai_status_t sai_create_hostif_trap(_In_ sai_object_id_t *hostif_trapid,
                                     _In_ uint32_t attr_count,
                                     _In_ const sai_attribute_t *attr_list) {
   SAI_LOG_ENTER();
@@ -494,13 +499,15 @@ sai_status_t sai_create_hostif_trap(_In_ sai_hostif_trap_id_t hostif_trapid,
   }
 
   memset(&rcode_api_info, 0, sizeof(switch_api_hostif_rcode_info_t));
-  rcode_api_info.reason_code =
-      switch_sai_to_switch_api_reason_code(hostif_trapid);
   rcode_api_info.priority = 1000;
   rcode_api_info.channel = SWITCH_HOSTIF_CHANNEL_NETDEV;
   for (index = 0; index < attr_count; index++) {
     attribute = &attr_list[index];
     switch (attribute->id) {
+      case SAI_HOSTIF_TRAP_ATTR_TRAP_TYPE:
+        rcode_api_info.reason_code =
+            switch_sai_to_switch_api_reason_code(attribute->value.s32);
+        break;
       case SAI_HOSTIF_TRAP_ATTR_PACKET_ACTION:
         rcode_api_info.action =
             switch_sai_action_to_switch_api_action(attribute->value.u32);
@@ -527,6 +534,8 @@ sai_status_t sai_create_hostif_trap(_In_ sai_hostif_trap_id_t hostif_trapid,
                   sai_status_to_string(status));
   }
 
+  *hostif_trapid = SAI_HOSTIF_TRAP_OBJECT(rcode_api_info.reason_code);
+
   SAI_LOG_EXIT();
 
   return status;
@@ -543,14 +552,14 @@ sai_status_t sai_create_hostif_trap(_In_ sai_hostif_trap_id_t hostif_trapid,
 *    SAI_STATUS_SUCCESS on success
 *    Failure status code on error
 */
-sai_status_t sai_remove_hostif_trap(_In_ sai_hostif_trap_id_t hostif_trapid) {
+sai_status_t sai_remove_hostif_trap(_In_ sai_object_id_t hostif_trapid) {
   SAI_LOG_ENTER();
 
-  switch_hostif_reason_code_t reason_code;
+  switch_hostif_reason_code_t reason_code = 0;
   sai_status_t status = SAI_STATUS_SUCCESS;
   switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
 
-  reason_code = switch_sai_to_switch_api_reason_code(hostif_trapid);
+  reason_code = hostif_trapid & 0xFFFF;
   switch_status = switch_api_hostif_reason_code_delete(device, reason_code);
   status = sai_switch_status_to_sai_status(switch_status);
   if (status != SAI_STATUS_SUCCESS) {
@@ -576,8 +585,7 @@ sai_status_t sai_remove_hostif_trap(_In_ sai_hostif_trap_id_t hostif_trapid) {
 *    SAI_STATUS_SUCCESS on success
 *    Failure status code on error
 */
-sai_status_t sai_set_hostif_trap_attribute(_In_ sai_hostif_trap_id_t
-                                               hostif_trapid,
+sai_status_t sai_set_hostif_trap_attribute(_In_ sai_object_id_t hostif_trapid,
                                            _In_ const sai_attribute_t *attr) {
   SAI_LOG_ENTER();
 
@@ -639,8 +647,7 @@ sai_status_t sai_set_hostif_trap_attribute(_In_ sai_hostif_trap_id_t
 *    SAI_STATUS_SUCCESS on success
 *    Failure status code on error
 */
-sai_status_t sai_get_hostif_trap_attribute(_In_ sai_hostif_trap_id_t
-                                               hostif_trapid,
+sai_status_t sai_get_hostif_trap_attribute(_In_ sai_object_id_t hostif_trapid,
                                            _In_ uint32_t attr_count,
                                            _Inout_ sai_attribute_t *attr_list) {
   SAI_LOG_ENTER();
@@ -755,7 +762,7 @@ sai_status_t sai_recv_hostif_packet(_In_ sai_object_id_t hif_id,
     return status;
   }
 
-  SAI_ASSERT(sai_object_type_query(hif_id) == SAI_OBJECT_TYPE_HOST_INTERFACE);
+  SAI_ASSERT(sai_object_type_query(hif_id) == SAI_OBJECT_TYPE_HOSTIF);
 
   SAI_LOG_EXIT();
 
@@ -877,7 +884,7 @@ void sai_recv_hostif_packet_cb(switch_hostif_packet_t *hostif_packet) {
   sai_attribute_t attr_list[max_attr_count];
   sai_attribute_t *attribute;
   attribute = &attr_list[attr_count];
-  attribute->id = SAI_HOSTIF_PACKET_ATTR_TRAP_ID;
+  attribute->id = SAI_HOSTIF_PACKET_ATTR_TRAP_TYPE;
   attribute->value.u32 = hostif_packet->reason_code;
   attr_count++;
   attribute = &attr_list[attr_count];
@@ -907,6 +914,8 @@ sai_hostif_api_t hostif_api = {
     .remove_hostif_trap_group = sai_remove_hostif_trap_group,
     .set_trap_group_attribute = sai_set_hostif_trap_group_attribute,
     .get_trap_group_attribute = sai_get_hostif_trap_group_attribute,
+    .create_trap = sai_create_hostif_trap,
+    .remove_trap = sai_remove_hostif_trap,
     .set_trap_attribute = sai_set_hostif_trap_attribute,
     .get_trap_attribute = sai_get_hostif_trap_attribute,
     .set_user_defined_trap_attribute =

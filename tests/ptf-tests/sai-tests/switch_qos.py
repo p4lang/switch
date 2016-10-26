@@ -97,15 +97,15 @@ class L3IPv4QosDscpRewriteTest(sai_base_test.ThriftInterfaceDataPlane):
 
         ingress_dscp_list = [1, 2, 3, 4]
         ingress_tc_list = [11, 12, 13, 14]
-        ingress_qos_map_id = sai_thrift_create_qos_map(self.client, SAI_QOS_MAP_DSCP_TO_TC, ingress_dscp_list, ingress_tc_list)
+        ingress_qos_map_id = sai_thrift_create_qos_map(self.client, SAI_QOS_MAP_TYPE_DSCP_TO_TC, ingress_dscp_list, ingress_tc_list)
 
         ingress_tc_list = [11, 12, 13, 14]
         ingress_queue_list = [1, 2, 3, 4]
-        tc_qos_map_id = sai_thrift_create_qos_map(self.client, SAI_QOS_MAP_TC_TO_QUEUE, ingress_tc_list, ingress_queue_list)
+        tc_qos_map_id = sai_thrift_create_qos_map(self.client, SAI_QOS_MAP_TYPE_TC_TO_QUEUE, ingress_tc_list, ingress_queue_list)
 
         egress_tc_and_color_list = [[11, 0], [12, 0], [13, 0,], [14, 0]]
         egress_dscp_list = [10, 20, 30, 40]
-        egress_qos_map_id = sai_thrift_create_qos_map(self.client, SAI_QOS_MAP_TC_AND_COLOR_TO_DSCP, egress_tc_and_color_list, egress_dscp_list)
+        egress_qos_map_id = sai_thrift_create_qos_map(self.client, SAI_QOS_MAP_TYPE_TC_AND_COLOR_TO_DSCP, egress_tc_and_color_list, egress_dscp_list)
 
         sai_thrift_set_port_attribute(self.client, port1, SAI_PORT_ATTR_QOS_DSCP_TO_TC_MAP, ingress_qos_map_id)
         sai_thrift_set_port_attribute(self.client, port1, SAI_PORT_ATTR_QOS_TC_TO_QUEUE_MAP, tc_qos_map_id)

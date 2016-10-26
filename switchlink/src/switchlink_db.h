@@ -45,6 +45,7 @@ typedef struct switchlink_db_interface_info_ {
   switchlink_handle_t lag_h;
   switchlink_handle_t vlan_member_h;
   switchlink_stp_state_t stp_state;
+  switchlink_handle_t stp_port_h;
   switchlink_mac_addr_t mac_addr;
   struct interface_flags {
     bool ipv4_unicast_enabled;
@@ -75,6 +76,7 @@ typedef struct switchlink_db_ecmp_info_ {
   switchlink_handle_t ecmp_h;
   uint8_t num_nhops;
   switchlink_handle_t nhops[SWITCHLINK_ECMP_NUM_MEMBERS_MAX];
+  switchlink_handle_t nhop_member_handles[SWITCHLINK_ECMP_NUM_MEMBERS_MAX];
 } switchlink_db_ecmp_info_t;
 
 typedef struct switchlink_db_route_info_ {

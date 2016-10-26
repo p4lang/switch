@@ -35,7 +35,7 @@ sai_status_t sai_set_ingress_priority_group_attribute(
   sai_status_t status = SAI_STATUS_SUCCESS;
 
   SAI_ASSERT(sai_object_type_query(ingress_pg_id) ==
-             SAI_OBJECT_TYPE_PRIORITY_GROUP);
+             SAI_OBJECT_TYPE_INGRESS_PRIORITY_GROUP);
   SAI_ASSERT(sai_object_type_query(attr->value.oid) ==
              SAI_OBJECT_TYPE_BUFFER_PROFILE);
 
@@ -87,7 +87,7 @@ static void sai_buffer_pool_attribute_parse(
       case SAI_BUFFER_POOL_ATTR_SHARED_SIZE:
         break;
       case SAI_BUFFER_POOL_ATTR_TYPE:
-        if (attribute->value.u32 == SAI_BUFFER_POOL_INGRESS) {
+        if (attribute->value.u32 == SAI_BUFFER_POOL_TYPE_INGRESS) {
           *direction = SWITCH_API_DIRECTION_INGRESS;
         } else {
           *direction = SWITCH_API_DIRECTION_EGRESS;
@@ -210,7 +210,7 @@ static void sai_buffer_profile_attribute_parse(
     switch_api_buffer_profile_t *buffer_profile_info) {
   const sai_attribute_t *attribute;
   uint32_t i = 0;
-  sai_buffer_threshold_mode_t threshold_mode;
+  sai_buffer_profile_threshold_mode_t threshold_mode;
 
   for (i = 0; i < attr_count; i++) {
     attribute = &attr_list[i];
@@ -227,13 +227,13 @@ static void sai_buffer_profile_attribute_parse(
           break;
      */
       case SAI_BUFFER_PROFILE_ATTR_SHARED_DYNAMIC_TH:
-        SAI_ASSERT(threshold_mode == SAI_BUFFER_THRESHOLD_MODE_DYNAMIC);
+        SAI_ASSERT(threshold_mode == SAI_BUFFER_PROFILE_THRESHOLD_MODE_DYNAMIC);
         buffer_profile_info->threshold_mode =
             SWITCH_BUFFER_THRESHOLD_MODE_DYNAMIC;
         buffer_profile_info->threshold = attribute->value.u32;
         break;
       case SAI_BUFFER_PROFILE_ATTR_SHARED_STATIC_TH:
-        SAI_ASSERT(threshold_mode == SAI_BUFFER_THRESHOLD_MODE_STATIC);
+        SAI_ASSERT(threshold_mode == SAI_BUFFER_PROFILE_THRESHOLD_MODE_STATIC);
         buffer_profile_info->threshold_mode =
             SWITCH_BUFFER_THRESHOLD_MODE_STATIC;
         buffer_profile_info->threshold = attribute->value.u32;

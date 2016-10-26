@@ -31,36 +31,36 @@ static sai_status_t sai_qos_map_type_to_switch_qos_map_type(
   *egress_qos_map_type = SWITCH_QOS_MAP_EGRESS_NONE;
 
   switch (qos_map_type) {
-    case SAI_QOS_MAP_DOT1P_TO_TC:
+    case SAI_QOS_MAP_TYPE_DOT1P_TO_TC:
       *ingress_qos_map_type = SWITCH_QOS_MAP_INGRESS_PCP_TO_TC;
       *direction = SWITCH_API_DIRECTION_INGRESS;
       break;
-    case SAI_QOS_MAP_DOT1P_TO_COLOR:
+    case SAI_QOS_MAP_TYPE_DOT1P_TO_COLOR:
       *ingress_qos_map_type = SWITCH_QOS_MAP_INGRESS_PCP_TO_COLOR;
       *direction = SWITCH_API_DIRECTION_INGRESS;
       break;
-    case SAI_QOS_MAP_DSCP_TO_TC:
+    case SAI_QOS_MAP_TYPE_DSCP_TO_TC:
       *ingress_qos_map_type = SWITCH_QOS_MAP_INGRESS_DSCP_TO_TC;
       *direction = SWITCH_API_DIRECTION_INGRESS;
       break;
-    case SAI_QOS_MAP_DSCP_TO_COLOR:
+    case SAI_QOS_MAP_TYPE_DSCP_TO_COLOR:
       *ingress_qos_map_type = SWITCH_QOS_MAP_INGRESS_DSCP_TO_COLOR;
       *direction = SWITCH_API_DIRECTION_INGRESS;
       break;
-    case SAI_QOS_MAP_TC_TO_QUEUE:
+    case SAI_QOS_MAP_TYPE_TC_TO_QUEUE:
       *ingress_qos_map_type = SWITCH_QOS_MAP_INGRESS_TC_TO_QUEUE;
       *direction = SWITCH_API_DIRECTION_INGRESS;
       break;
-    case SAI_QOS_MAP_TC_AND_COLOR_TO_DSCP:
+    case SAI_QOS_MAP_TYPE_TC_AND_COLOR_TO_DSCP:
       *egress_qos_map_type = SWITCH_QOS_MAP_EGRESS_TC_AND_COLOR_TO_DSCP;
       *direction = SWITCH_API_DIRECTION_EGRESS;
       break;
-    case SAI_QOS_MAP_TC_AND_COLOR_TO_DOT1P:
+    case SAI_QOS_MAP_TYPE_TC_AND_COLOR_TO_DOT1P:
       *egress_qos_map_type = SWITCH_QOS_MAP_EGRESS_TC_AND_COLOR_TO_PCP;
       *direction = SWITCH_API_DIRECTION_EGRESS;
       break;
-    case SAI_QOS_MAP_TC_TO_PRIORITY_GROUP:
-    case SAI_QOS_MAP_PFC_PRIORITY_TO_QUEUE:
+    case SAI_QOS_MAP_TYPE_TC_TO_PRIORITY_GROUP:
+    case SAI_QOS_MAP_TYPE_PFC_PRIORITY_TO_QUEUE:
     default:
       status = SAI_STATUS_NOT_SUPPORTED;
       break;
@@ -86,32 +86,32 @@ static void sai_qos_map_to_switch_qos_map(sai_qos_map_type_t qos_map_type,
                                           sai_qos_map_t *qos_map,
                                           switch_qos_map_t *switch_qos_map) {
   switch (qos_map_type) {
-    case SAI_QOS_MAP_DOT1P_TO_TC:
+    case SAI_QOS_MAP_TYPE_DOT1P_TO_TC:
       switch_qos_map->pcp = qos_map->key.dot1p;
       switch_qos_map->tc = qos_map->value.tc;
       break;
-    case SAI_QOS_MAP_DOT1P_TO_COLOR:
+    case SAI_QOS_MAP_TYPE_DOT1P_TO_COLOR:
       switch_qos_map->pcp = qos_map->key.dot1p;
       switch_qos_map->color = sai_color_to_switch_color(qos_map->value.color);
       break;
-    case SAI_QOS_MAP_DSCP_TO_TC:
+    case SAI_QOS_MAP_TYPE_DSCP_TO_TC:
       switch_qos_map->dscp = qos_map->key.dscp;
       switch_qos_map->tc = qos_map->value.tc;
       break;
-    case SAI_QOS_MAP_DSCP_TO_COLOR:
+    case SAI_QOS_MAP_TYPE_DSCP_TO_COLOR:
       switch_qos_map->dscp = qos_map->key.dscp;
       switch_qos_map->color = sai_color_to_switch_color(qos_map->value.color);
       break;
-    case SAI_QOS_MAP_TC_TO_QUEUE:
+    case SAI_QOS_MAP_TYPE_TC_TO_QUEUE:
       switch_qos_map->tc = qos_map->key.tc;
       switch_qos_map->qid = qos_map->value.queue_index;
       break;
-    case SAI_QOS_MAP_TC_AND_COLOR_TO_DSCP:
+    case SAI_QOS_MAP_TYPE_TC_AND_COLOR_TO_DSCP:
       switch_qos_map->tc = qos_map->key.tc;
       switch_qos_map->color = sai_color_to_switch_color(qos_map->key.color);
       switch_qos_map->dscp = qos_map->value.dscp;
       break;
-    case SAI_QOS_MAP_TC_AND_COLOR_TO_DOT1P:
+    case SAI_QOS_MAP_TYPE_TC_AND_COLOR_TO_DOT1P:
       switch_qos_map->tc = qos_map->key.tc;
       switch_qos_map->color = sai_color_to_switch_color(qos_map->key.color);
       switch_qos_map->pcp = qos_map->value.dot1p;
@@ -248,7 +248,7 @@ sai_status_t sai_remove_qos_map(_In_ sai_object_id_t qos_map_id) {
 
   sai_status_t status = SAI_STATUS_SUCCESS;
 
-  SAI_ASSERT(sai_object_type_query(qos_map_id) == SAI_OBJECT_TYPE_QOS_MAPS);
+  SAI_ASSERT(sai_object_type_query(qos_map_id) == SAI_OBJECT_TYPE_QOS_MAP);
 
   status = switch_api_qos_map_ingress_delete(device, qos_map_id);
   if (status != SWITCH_STATUS_SUCCESS &&
@@ -286,7 +286,7 @@ sai_status_t sai_set_qos_map_attribute(_In_ sai_object_id_t qos_map_id,
 
   sai_status_t status = SAI_STATUS_SUCCESS;
 
-  SAI_ASSERT(sai_object_type_query(qos_map_id) == SAI_OBJECT_TYPE_QOS_MAPS);
+  SAI_ASSERT(sai_object_type_query(qos_map_id) == SAI_OBJECT_TYPE_QOS_MAP);
 
   SAI_LOG_EXIT();
 
@@ -311,7 +311,7 @@ sai_status_t sai_get_qos_map_attribute(_In_ sai_object_id_t qos_map_id,
 
   sai_status_t status = SAI_STATUS_SUCCESS;
 
-  SAI_ASSERT(sai_object_type_query(qos_map_id) == SAI_OBJECT_TYPE_QOS_MAPS);
+  SAI_ASSERT(sai_object_type_query(qos_map_id) == SAI_OBJECT_TYPE_QOS_MAP);
 
   SAI_LOG_EXIT();
 
