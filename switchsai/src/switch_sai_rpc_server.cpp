@@ -220,9 +220,9 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       }
   }
 
-  void sai_thrift_parse_unicast_route_entry(const sai_thrift_unicast_route_entry_t &thrift_unicast_route_entry, sai_unicast_route_entry_t *unicast_route_entry) {
-      unicast_route_entry->vr_id = (sai_object_id_t) thrift_unicast_route_entry.vr_id;
-      sai_thrift_parse_ip_prefix(thrift_unicast_route_entry.destination, &unicast_route_entry->destination);
+  void sai_thrift_parse_route_entry(const sai_thrift_route_entry_t &thrift_route_entry, sai_route_entry_t *route_entry) {
+      route_entry->vr_id = (sai_object_id_t) thrift_route_entry.vr_id;
+      sai_thrift_parse_ip_prefix(thrift_route_entry.destination, &route_entry->destination);
   }
 
   void sai_thrift_parse_neighbor_entry(const sai_thrift_neighbor_entry_t &thrift_neighbor_entry, sai_neighbor_entry_t *neighbor_entry) {
@@ -297,7 +297,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
           attribute = (sai_thrift_attribute_t)*it;
           attr_list[i].id = attribute.id;
           switch (attribute.id) {
-              case SAI_ROUTE_ATTR_NEXT_HOP_ID:
+              case SAI_ROUTE_ENTRY_ATTR_NEXT_HOP_ID:
                   attr_list[i].value.oid = attribute.value.oid;
                   break;
               default:
@@ -420,7 +420,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
               case SAI_NEXT_HOP_GROUP_ATTR_NEXT_HOP_COUNT:
                   attr_list[i].value.u32 = attribute.value.u32;
                   break;
-              case SAI_NEXT_HOP_GROUP_ATTR_NEXT_HOP_LIST:
+              case SAI_NEXT_HOP_GROUP_ATTR_NEXT_HOP_MEMBER_LIST:
                   *nhop_list = (sai_object_id_t *) malloc(sizeof(sai_object_id_t) * attribute.value.objlist.count);
                   std::vector<sai_thrift_object_id_t>::const_iterator it2 = attribute.value.objlist.object_id_list.begin();
                   for (uint32_t j = 0; j < attribute.value.objlist.object_id_list.size(); j++, *it2++) {
@@ -428,6 +428,26 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
                   }
                   attr_list[i].value.objlist.count = attribute.value.objlist.count;
                   attr_list[i].value.objlist.list = *nhop_list;
+                  break;
+          }
+      }
+  }
+
+  void sai_thrift_parse_next_hop_group_member_attributes(const std::vector<sai_thrift_attribute_t> &thrift_attr_list, sai_attribute_t *attr_list) {
+      std::vector<sai_thrift_attribute_t>::const_iterator it1 = thrift_attr_list.begin();
+      sai_thrift_attribute_t attribute;
+      for(uint32_t i = 0; i < thrift_attr_list.size(); i++, it1++) {
+          attribute = (sai_thrift_attribute_t)*it1;
+          attr_list[i].id = attribute.id;
+          switch (attribute.id) {
+              case SAI_NEXT_HOP_GROUP_MEMBER_ATTR_NEXT_HOP_GROUP_ID:
+                  attr_list[i].value.oid = attribute.value.oid;
+                  break;
+              case SAI_NEXT_HOP_GROUP_MEMBER_ATTR_NEXT_HOP_ID:
+                  attr_list[i].value.oid = attribute.value.oid;
+                  break;
+              case SAI_NEXT_HOP_GROUP_MEMBER_ATTR_WEIGHT:
+                  attr_list[i].value.u32 = attribute.value.u32;
                   break;
           }
       }
@@ -474,6 +494,26 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       }
   }
 
+  void sai_thrift_parse_stp_port_attributes(const std::vector<sai_thrift_attribute_t> &thrift_attr_list, sai_attribute_t *attr_list) {
+      std::vector<sai_thrift_attribute_t>::const_iterator it1 = thrift_attr_list.begin();
+      sai_thrift_attribute_t attribute;
+      for(uint32_t i = 0; i < thrift_attr_list.size(); i++, it1++) {
+          attribute = (sai_thrift_attribute_t)*it1;
+          attr_list[i].id = attribute.id;
+          switch (attribute.id) {
+              case SAI_STP_PORT_ATTR_STP:
+                  attr_list[i].value.oid = attribute.value.oid;
+                  break;
+              case SAI_STP_PORT_ATTR_PORT:
+                  attr_list[i].value.oid = attribute.value.oid;
+                  break;
+              case SAI_STP_PORT_ATTR_STATE:
+                  attr_list[i].value.u32 = attribute.value.u32;
+                  break;
+          }
+      }
+  }
+
   void sai_thrift_parse_stp_attributes(const std::vector<sai_thrift_attribute_t> &thrift_attr_list, sai_attribute_t *attr_list, sai_vlan_id_t **vlan_list) {
       std::vector<sai_thrift_attribute_t>::const_iterator it1 = thrift_attr_list.begin();
       sai_thrift_attribute_t attribute;
@@ -501,7 +541,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
           attribute = (sai_thrift_attribute_t)*it1;
           attr_list[i].id = attribute.id;
           switch (attribute.id) {
-              case SAI_NEIGHBOR_ATTR_DST_MAC_ADDRESS:
+              case SAI_NEIGHBOR_ENTRY_ATTR_DST_MAC_ADDRESS:
                   sai_thrift_string_to_mac(attribute.value.mac, attr_list[i].value.mac);
                   break;
           }
@@ -564,6 +604,9 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
               case SAI_HOSTIF_TRAP_ATTR_TRAP_GROUP:
                   attr_list[i].value.oid = attribute.value.oid;
                   break;
+              case SAI_HOSTIF_TRAP_ATTR_TRAP_TYPE:
+                  attr_list[i].value.u32 = attribute.value.u32;
+                  break;
               default:
                   break;
           }
@@ -591,7 +634,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   int32_t sai_thrift_set_port_attribute(const sai_thrift_object_id_t port_id, const sai_thrift_attribute_t &thrift_attr) {
-      printf("sai_thrift_set_port\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_port_api_t *port_api;
       status = sai_api_query(SAI_API_PORT, (void **) &port_api);
@@ -607,7 +649,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   int32_t sai_thrift_create_fdb_entry(const sai_thrift_fdb_entry_t& thrift_fdb_entry, const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
-      printf("sai_thrift_create_fdb_entry\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_fdb_api_t *fdb_api;
       sai_fdb_entry_t fdb_entry;
@@ -625,7 +666,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   int32_t sai_thrift_delete_fdb_entry(const sai_thrift_fdb_entry_t& thrift_fdb_entry) {
-      printf("sai_thrift_delete_fdb_entry\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_fdb_api_t *fdb_api;
       sai_fdb_entry_t fdb_entry;
@@ -639,7 +679,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   int32_t sai_thrift_flush_fdb_entries(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
-      printf("sai_thrift_flush_fdb_entries\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_fdb_api_t *fdb_api;
       status = sai_api_query(SAI_API_FDB, (void **) &fdb_api);
@@ -655,7 +694,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   int32_t sai_thrift_create_vlan(const sai_thrift_vlan_id_t vlan_id) {
-      printf("sai_thrift_create_vlan\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_vlan_api_t *vlan_api;
       status = sai_api_query(SAI_API_VLAN, (void **) &vlan_api);
@@ -667,7 +705,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   int32_t sai_thrift_delete_vlan(const sai_thrift_vlan_id_t vlan_id) {
-      printf("sai_thrift_delete_vlan\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_vlan_api_t *vlan_api;
       status = sai_api_query(SAI_API_VLAN, (void **) &vlan_api);
@@ -679,7 +716,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   sai_thrift_object_id_t sai_thrift_create_vlan_member(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
-      printf("sai_thrift_create_vlan_member\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_vlan_api_t *vlan_api;
       sai_object_id_t vlan_member_id = 0;
@@ -695,7 +731,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   sai_thrift_status_t sai_thrift_remove_vlan_member(const sai_thrift_object_id_t vlan_member_id) {
-      printf("sai_thrift_remove_vlan_member\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_vlan_api_t *vlan_api;
       status = sai_api_query(SAI_API_VLAN, (void **) &vlan_api);
@@ -709,20 +744,19 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   void sai_thrift_get_vlan_stats(
           std::vector<int64_t> & thrift_counters,
           const sai_thrift_vlan_id_t vlan_id,
-          const std::vector<sai_thrift_vlan_stat_counter_t> & thrift_counter_ids,
+          const std::vector<sai_thrift_vlan_stat_t> & thrift_counter_ids,
           const int32_t number_of_counters) {
-      printf("sai_thrift_get_vlan_stats\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_vlan_api_t *vlan_api;
       status = sai_api_query(SAI_API_VLAN, (void **) &vlan_api);
       if (status != SAI_STATUS_SUCCESS) {
           return;
       }
-      sai_vlan_stat_counter_t *counter_ids = (sai_vlan_stat_counter_t *) malloc(sizeof(sai_vlan_stat_counter_t) * thrift_counter_ids.size());
+      sai_vlan_stat_t *counter_ids = (sai_vlan_stat_t *) malloc(sizeof(sai_vlan_stat_t) * thrift_counter_ids.size());
       std::vector<int32_t>::const_iterator it = thrift_counter_ids.begin();
       uint64_t *counters = (uint64_t *) malloc(sizeof(uint64_t) * thrift_counter_ids.size());
       for(uint32_t i = 0; i < thrift_counter_ids.size(); i++, it++) {
-          counter_ids[i] = (sai_vlan_stat_counter_t) *it;
+          counter_ids[i] = (sai_vlan_stat_t) *it;
       }
 
       status = vlan_api->get_vlan_stats(
@@ -740,7 +774,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   sai_thrift_object_id_t sai_thrift_create_virtual_router(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
-    printf("sai_thrift_create_virtual_router\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_virtual_router_api_t *vr_api;
       sai_object_id_t vr_id = 0;
@@ -756,7 +789,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   sai_thrift_status_t sai_thrift_remove_virtual_router(const sai_thrift_object_id_t vr_id) {
-    printf("sai_thrift_remove_virtual_router\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_virtual_router_api_t *vr_api;
       status = sai_api_query(SAI_API_VIRTUAL_ROUTER, (void **) &vr_api);
@@ -767,40 +799,37 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       return status;
   }
 
-  sai_thrift_status_t sai_thrift_create_route(const sai_thrift_unicast_route_entry_t& thrift_unicast_route_entry, const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
-      printf("sai_thrift_create_route\n");
+  sai_thrift_status_t sai_thrift_create_route(const sai_thrift_route_entry_t& thrift_route_entry, const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_route_api_t *route_api;
-      sai_unicast_route_entry_t unicast_route_entry;
+      sai_route_entry_t route_entry;
       status = sai_api_query(SAI_API_ROUTE, (void **) &route_api);
       if (status != SAI_STATUS_SUCCESS) {
           return status;
       }
-      sai_thrift_parse_unicast_route_entry(thrift_unicast_route_entry, &unicast_route_entry);
+      sai_thrift_parse_route_entry(thrift_route_entry, &route_entry);
       sai_attribute_t *attr_list = (sai_attribute_t *) malloc(sizeof(sai_attribute_t) * thrift_attr_list.size());
       sai_thrift_parse_route_attributes(thrift_attr_list, attr_list);
       uint32_t attr_count = thrift_attr_list.size();
-      status = route_api->create_route(&unicast_route_entry, attr_count, attr_list);
+      status = route_api->create_route(&route_entry, attr_count, attr_list);
       free(attr_list);
       return status;
   }
 
-  sai_thrift_status_t sai_thrift_remove_route(const sai_thrift_unicast_route_entry_t& thrift_unicast_route_entry) {
-      printf("sai_thrift_remove_route\n");
+  sai_thrift_status_t sai_thrift_remove_route(const sai_thrift_route_entry_t& thrift_route_entry) {
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_route_api_t *route_api;
-      sai_unicast_route_entry_t unicast_route_entry;
+      sai_route_entry_t route_entry;
       status = sai_api_query(SAI_API_ROUTE, (void **) &route_api);
       if (status != SAI_STATUS_SUCCESS) {
           return status;
       }
-      sai_thrift_parse_unicast_route_entry(thrift_unicast_route_entry, &unicast_route_entry);
-      status = route_api->remove_route(&unicast_route_entry);
+      sai_thrift_parse_route_entry(thrift_route_entry, &route_entry);
+      status = route_api->remove_route(&route_entry);
       return status;
   }
 
   sai_thrift_object_id_t sai_thrift_create_router_interface(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
-      printf("sai_thrift_create_router_interface\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_router_interface_api_t *rif_api;
       sai_object_id_t rif_id = 0;
@@ -816,7 +845,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   sai_thrift_status_t sai_thrift_remove_router_interface(const sai_thrift_object_id_t rif_id) {
-      printf("sai_thrift_remove_router_interface\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_router_interface_api_t *rif_api;
       status = sai_api_query(SAI_API_ROUTER_INTERFACE, (void **) &rif_api);
@@ -829,7 +857,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
 
   void sai_thrift_get_router_interface_attribute(sai_thrift_get_response_t& _return, const sai_thrift_object_id_t rif_id,
           const int32_t attr_count, const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
-      printf("sai_thrift_get_router_interface_attribute\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_router_interface_api_t *rif_api;
       status = sai_api_query(SAI_API_ROUTER_INTERFACE, (void **) &rif_api);
@@ -846,7 +873,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   sai_thrift_object_id_t sai_thrift_create_next_hop(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
-      printf("sai_thrift_create_next_hop\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_next_hop_api_t *nhop_api;
       sai_object_id_t nhop_id = 0;
@@ -862,7 +888,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   sai_thrift_status_t sai_thrift_remove_next_hop(const sai_thrift_object_id_t next_hop_id) {
-      printf("sai_thrift_remove_next_hop\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_next_hop_api_t *nhop_api;
       status = sai_api_query(SAI_API_NEXT_HOP, (void **) &nhop_api);
@@ -875,7 +900,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
 
   void sai_thrift_get_next_hop_attribute(sai_thrift_get_response_t & _return, const sai_thrift_object_id_t next_hop_id,
           const int32_t attr_count, const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
-      printf("sai_thrift_get_next_hop_attribute\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_next_hop_api_t *nhop_api;
       status = sai_api_query(SAI_API_NEXT_HOP, (void **) &nhop_api);
@@ -893,7 +917,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   sai_thrift_status_t sai_thrift_set_next_hop_attribute(const sai_thrift_object_id_t next_hop_id, const std::vector<sai_thrift_attribute_t> & single_attribute) {
-      printf("sai_thrift_set_next_hop_attribute\n");
 
       // ensure singleton list
       assert(single_attribute.size() == 1);
@@ -912,11 +935,10 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   sai_thrift_object_id_t sai_thrift_create_next_hop_group(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
-      printf("sai_thrift_create_next_hop_group\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_next_hop_group_api_t *nhop_group_api;
       sai_object_id_t nhop_group_id = 0;
-      sai_object_id_t *nhop_list;
+      sai_object_id_t *nhop_list = NULL;
       status = sai_api_query(SAI_API_NEXT_HOP_GROUP, (void **) &nhop_group_api);
       if (status != SAI_STATUS_SUCCESS) {
           return status;
@@ -931,9 +953,8 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   sai_thrift_status_t sai_thrift_remove_next_hop_group(const sai_thrift_object_id_t next_hop_group_id) {
-      printf("sai_thrift_remove_next_hop_group\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
-      sai_next_hop_group_api_t *nhop_group_api;
+      sai_next_hop_group_api_t *nhop_group_api = NULL;
       status = sai_api_query(SAI_API_NEXT_HOP_GROUP, (void **) &nhop_group_api);
       if (status != SAI_STATUS_SUCCESS) {
           return status;
@@ -942,42 +963,34 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       return status;
   }
 
-  sai_thrift_status_t sai_thrift_add_next_hop_to_group(const sai_thrift_object_id_t next_hop_group_id, const std::vector<sai_thrift_object_id_t> & thrift_nexthops) {
-      printf("sai_thrift_add_next_hop_to_group\n");
+  sai_thrift_object_id_t sai_thrift_create_next_hop_group_member(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
       sai_status_t status = SAI_STATUS_SUCCESS;
-      sai_next_hop_group_api_t *nhop_group_api;
-      sai_object_id_t *nhop_list;
+      sai_next_hop_group_api_t *nhop_group_api = NULL;
+      sai_object_id_t nhop_group_member_id = 0;
       status = sai_api_query(SAI_API_NEXT_HOP_GROUP, (void **) &nhop_group_api);
       if (status != SAI_STATUS_SUCCESS) {
           return status;
       }
-      nhop_list = (sai_object_id_t *) malloc(sizeof(sai_object_id_t) * thrift_nexthops.size());
-      sai_thrift_parse_object_id_list(thrift_nexthops, nhop_list);
-      uint32_t nhop_count = thrift_nexthops.size();
-      status = nhop_group_api->add_next_hop_to_group(next_hop_group_id, nhop_count, nhop_list);
-      free(nhop_list);
-      return status;
+      sai_attribute_t *attr_list = (sai_attribute_t *) malloc(sizeof(sai_attribute_t) * thrift_attr_list.size());
+      sai_thrift_parse_next_hop_group_member_attributes(thrift_attr_list, attr_list);
+      uint32_t attr_count = thrift_attr_list.size();
+      status = nhop_group_api->create_next_hop_group_member(&nhop_group_member_id, attr_count, attr_list);
+      free(attr_list);
+      return nhop_group_member_id;
   }
 
-  sai_thrift_status_t sai_thrift_remove_next_hop_from_group(const sai_thrift_object_id_t next_hop_group_id, const std::vector<sai_thrift_object_id_t> & thrift_nexthops) {
-      printf("sai_thrift_remove_next_hop_from_group\n");
+  sai_thrift_status_t sai_thrift_remove_next_hop_group_member(const sai_thrift_object_id_t next_hop_group_member_id) {
       sai_status_t status = SAI_STATUS_SUCCESS;
-      sai_next_hop_group_api_t *nhop_group_api;
-      sai_object_id_t *nhop_list;
+      sai_next_hop_group_api_t *nhop_group_api = NULL;
       status = sai_api_query(SAI_API_NEXT_HOP_GROUP, (void **) &nhop_group_api);
       if (status != SAI_STATUS_SUCCESS) {
           return status;
       }
-      nhop_list = (sai_object_id_t *) malloc(sizeof(sai_object_id_t) * thrift_nexthops.size());
-      sai_thrift_parse_object_id_list(thrift_nexthops, nhop_list);
-      uint32_t nhop_count = thrift_nexthops.size();
-      status = nhop_group_api->remove_next_hop_from_group(next_hop_group_id, nhop_count, nhop_list);
-      free(nhop_list);
+      status = nhop_group_api->remove_next_hop_group_member(next_hop_group_member_id);
       return status;
   }
 
   sai_thrift_object_id_t sai_thrift_create_lag(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
-      printf("sai_thrift_create_lag\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_lag_api_t *lag_api;
       sai_object_id_t lag_id = 0;
@@ -992,7 +1005,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   sai_thrift_status_t sai_thrift_remove_lag(const sai_thrift_object_id_t lag_id) {
-      printf("sai_thrift_remove_lag\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_lag_api_t *lag_api;
       status = sai_api_query(SAI_API_LAG, (void **) &lag_api);
@@ -1004,7 +1016,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   sai_thrift_object_id_t sai_thrift_create_lag_member(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
-      printf("sai_thrift_create_lag_member\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_lag_api_t *lag_api;
       sai_object_id_t lag_member_id;
@@ -1020,7 +1031,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   sai_thrift_status_t sai_thrift_remove_lag_member(const sai_thrift_object_id_t lag_member_id) {
-      printf("sai_thrift_remove_lag_member\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_lag_api_t *lag_api;
       status = sai_api_query(SAI_API_LAG, (void **) &lag_api);
@@ -1031,8 +1041,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       return status;
   }
 
-  sai_thrift_object_id_t sai_thrift_create_stp_entry(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
-      printf("sai_thrift_create_stp\n");
+  sai_thrift_object_id_t sai_thrift_create_stp(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_stp_api_t *stp_api;
       sai_vlan_id_t *vlan_list;
@@ -1050,8 +1059,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       return stp_id;
   }
 
-  sai_thrift_status_t sai_thrift_remove_stp_entry(const sai_thrift_object_id_t stp_id) {
-      printf("sai_thrift_remove_stp\n");
+  sai_thrift_status_t sai_thrift_remove_stp(const sai_thrift_object_id_t stp_id) {
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_stp_api_t *stp_api;
       status = sai_api_query(SAI_API_STP, (void **) &stp_api);
@@ -1062,37 +1070,34 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       return status;
   }
 
-  sai_thrift_status_t sai_thrift_set_stp_port_state(const sai_thrift_object_id_t stp_id, const sai_thrift_object_id_t port_id, const sai_thrift_port_stp_port_state_t stp_port_state) {
-    printf("sai_thrift_set_stp_port_state\n");
+  sai_thrift_object_id_t sai_thrift_create_stp_port(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
+      sai_status_t status = SAI_STATUS_SUCCESS;
+      sai_stp_api_t *stp_api = NULL;
+      sai_object_id_t stp_port_id = 0;
+      status = sai_api_query(SAI_API_STP, (void **) &stp_api);
+      if (status != SAI_STATUS_SUCCESS) {
+          return status;
+      }
+      sai_attribute_t *attr_list = (sai_attribute_t *) malloc(sizeof(sai_attribute_t) * thrift_attr_list.size());
+      sai_thrift_parse_stp_port_attributes(thrift_attr_list, attr_list);
+      uint32_t attr_count = thrift_attr_list.size();
+      status = (sai_object_id_t) stp_api->create_stp_port(&stp_port_id, attr_count, attr_list);
+      free(attr_list);
+      return stp_port_id;
+  }
+
+  sai_thrift_status_t sai_thrift_remove_stp_port(const sai_thrift_object_id_t stp_port_id) {
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_stp_api_t *stp_api;
       status = sai_api_query(SAI_API_STP, (void **) &stp_api);
       if (status != SAI_STATUS_SUCCESS) {
           return status;
       }
-      status = stp_api->set_stp_port_state((sai_object_id_t) stp_id,
-                                          (sai_object_id_t) port_id,
-                                          (sai_port_stp_port_state_t) stp_port_state);
+      status = (sai_thrift_status_t) stp_api->remove_stp_port(stp_port_id);
       return status;
   }
 
-  sai_thrift_port_stp_port_state_t sai_thrift_get_stp_port_state(const sai_thrift_object_id_t stp_id, const sai_thrift_object_id_t port_id) {
-    printf("sai_thrift_get_stp_port_state\n");
-      sai_status_t status = SAI_STATUS_SUCCESS;
-      sai_stp_api_t *stp_api;
-      status = sai_api_query(SAI_API_STP, (void **) &stp_api);
-      sai_port_stp_port_state_t stp_port_state;
-      if (status != SAI_STATUS_SUCCESS) {
-          return status;
-      }
-      status = stp_api->get_stp_port_state((sai_object_id_t) stp_id,
-                                          (sai_object_id_t) port_id,
-                                          &stp_port_state);
-      return (sai_thrift_port_stp_port_state_t) stp_port_state;
-  }
-
   sai_thrift_status_t sai_thrift_create_neighbor_entry(const sai_thrift_neighbor_entry_t& thrift_neighbor_entry, const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
-      printf("sai_thrift_create_neighbor_entry\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_neighbor_api_t *neighbor_api;
       status = sai_api_query(SAI_API_NEIGHBOR, (void **) &neighbor_api);
@@ -1111,7 +1116,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   sai_thrift_status_t sai_thrift_remove_neighbor_entry(const sai_thrift_neighbor_entry_t& thrift_neighbor_entry) {
-    printf("sai_thrift_remove_neighbor_entry\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_neighbor_api_t *neighbor_api;
       sai_neighbor_entry_t neighbor_entry;
@@ -1126,7 +1130,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   void sai_thrift_get_switch_attribute(sai_thrift_attribute_list_t& thrift_attr_list) {
-      printf("sai_thrift_get_switch_attribute\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_switch_api_t *switch_api;
       sai_attribute_t max_port_attribute;
@@ -1136,7 +1139,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       int max_ports = 0;
       status = sai_api_query(SAI_API_SWITCH, (void **) &switch_api);
       if (status != SAI_STATUS_SUCCESS) {
-          printf("sai_api_query failed!!!\n");
           return;
       }
 
@@ -1161,13 +1163,11 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   sai_thrift_status_t sai_thrift_set_switch_attribute(const sai_thrift_attribute_t& thrift_attr) {
-      printf("sai_thrift_set_switch_attribute\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_switch_api_t *switch_api;
       sai_attribute_t attr;
       status = sai_api_query(SAI_API_SWITCH, (void **) &switch_api);
       if (status != SAI_STATUS_SUCCESS) {
-          printf("sai_api_query failed!!!\n");
           return status;
       }
       attr.id = thrift_attr.id;
@@ -1181,7 +1181,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   sai_thrift_object_id_t sai_thrift_create_hostif(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
-      printf("sai_thrift_create_hostif\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_hostif_api_t *hostif_api;
       sai_object_id_t hif_id;
@@ -1198,7 +1197,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   sai_thrift_status_t sai_thrift_remove_hostif(const sai_thrift_object_id_t hif_id) {
-       printf("sai_thrift_remove_hostif\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_hostif_api_t *hostif_api;
       status = sai_api_query(SAI_API_HOST_INTERFACE, (void **) &hostif_api);
@@ -1210,7 +1208,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   sai_thrift_object_id_t sai_thrift_create_hostif_trap_group(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
-      printf("sai_thrift_create_hostif_trap_group\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_hostif_api_t *hostif_api;
       sai_object_id_t hif_trap_group_id;
@@ -1227,7 +1224,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   sai_thrift_status_t sai_thrift_remove_hostif_trap_group(const sai_thrift_object_id_t hif_trap_group_id) {
-      printf("sai_thrift_remove_hostif_trap_group\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_hostif_api_t *hostif_api;
       status = sai_api_query(SAI_API_HOST_INTERFACE, (void **) &hostif_api);
@@ -1238,35 +1234,31 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       return status;
   }
 
-  sai_thrift_status_t sai_thrift_create_hostif_trap(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
-    printf("sai_thrift_create_hostif_trap\n");
-    return 0;
+  sai_thrift_object_id_t sai_thrift_create_hostif_trap(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
+    sai_status_t status = SAI_STATUS_SUCCESS;
+    sai_hostif_api_t *hostif_api = NULL;
+    sai_object_id_t hif_trap_id = 0;
+    status = sai_api_query(SAI_API_HOST_INTERFACE, (void **) &hostif_api);
+    if (status != SAI_STATUS_SUCCESS) {
+          return status;
+    }
+    sai_attribute_t *attr_list = (sai_attribute_t *) malloc(sizeof(sai_attribute_t) * thrift_attr_list.size());
+    sai_thrift_parse_hostif_trap_attributes(thrift_attr_list, attr_list);
+    uint32_t attr_count = thrift_attr_list.size();
+    status = hostif_api->create_trap(&hif_trap_id, attr_count, attr_list);
+    free(attr_list);
+    return hif_trap_id;
   }
 
-  sai_thrift_status_t sai_thrift_remove_hostif_trap(const sai_thrift_hostif_trap_id_t trap_id) {
-    printf("sai_thrift_remove_hostif_trap\n");
+  sai_thrift_status_t sai_thrift_remove_hostif_trap(const sai_thrift_object_id_t hif_trap_id) {
     sai_status_t status = SAI_STATUS_SUCCESS;
     sai_hostif_api_t *hostif_api = NULL;
     status = sai_api_query(SAI_API_HOST_INTERFACE, (void **) &hostif_api);
     if (status != SAI_STATUS_SUCCESS) {
           return status;
     }
-    status = hostif_api->set_trap_attribute((sai_hostif_trap_id_t) trap_id, NULL);
+    status = hostif_api->remove_trap(hif_trap_id);
     return status;
-  }
-
-  sai_thrift_status_t sai_thrift_set_hostif_trap(const sai_thrift_hostif_trap_id_t trap_id, const sai_thrift_attribute_t& thrift_attr) {
-      printf("sai_thrift_set_hostif_trap\n");
-      sai_status_t status = SAI_STATUS_SUCCESS;
-      sai_hostif_api_t *hostif_api;
-      sai_attribute_t attr;
-      status = sai_api_query(SAI_API_HOST_INTERFACE, (void **) &hostif_api);
-      if (status != SAI_STATUS_SUCCESS) {
-          return status;
-      }
-      sai_thrift_parse_hostif_trap_attribute(thrift_attr, &attr);
-      status = hostif_api->set_trap_attribute((sai_hostif_trap_id_t) trap_id, &attr);
-      return status;
   }
 
   void sai_thrift_parse_acl_table_attributes(const std::vector<sai_thrift_attribute_t> &thrift_attr_list, sai_attribute_t *attr_list) {
@@ -1411,7 +1403,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
             case SAI_ACL_ENTRY_ATTR_ACTION_COUNTER:
                 attr_list[i].value.aclfield.data.oid = attribute.value.aclfield.data.oid;
                 break;
-            case SAI_ACL_ENTRY_ATTR_PACKET_ACTION:
+            case SAI_ACL_ENTRY_ATTR_ACTION_PACKET_ACTION:
                 attr_list[i].value.aclfield.data.s32 = attribute.value.aclfield.data.s32;
                 break;
             case SAI_ACL_ENTRY_ATTR_FIELD_RANGE:
@@ -1525,14 +1517,14 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       return acl_table;
   }
 
-  sai_thrift_status_t sai_thrift_delete_acl_table(const sai_thrift_object_id_t acl_table_id) {
+  sai_thrift_status_t sai_thrift_remove_acl_table(const sai_thrift_object_id_t acl_table_id) {
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_acl_api_t *acl_api;
       status = sai_api_query(SAI_API_ACL, (void **) &acl_api);
       if (status != SAI_STATUS_SUCCESS) {
           return status;
       }
-      status = acl_api->delete_acl_table(acl_table_id);
+      status = acl_api->remove_acl_table(acl_table_id);
       return status;
   }
 
@@ -1553,14 +1545,14 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       return acl_entry;
   }
 
-  sai_thrift_status_t sai_thrift_delete_acl_entry(const sai_thrift_object_id_t acl_entry) {
+  sai_thrift_status_t sai_thrift_remove_acl_entry(const sai_thrift_object_id_t acl_entry) {
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_acl_api_t *acl_api;
       status = sai_api_query(SAI_API_ACL, (void **) &acl_api);
       if (status != SAI_STATUS_SUCCESS) {
           return status;
       }
-      status = acl_api->delete_acl_entry(acl_entry);
+      status = acl_api->remove_acl_entry(acl_entry);
       return status;
   }
 
@@ -1580,7 +1572,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       return acl_counter_id;
   }
 
-  sai_thrift_status_t sai_thrift_delete_acl_counter(const sai_thrift_object_id_t acl_counter_id) {
+  sai_thrift_status_t sai_thrift_remove_acl_counter(const sai_thrift_object_id_t acl_counter_id) {
       sai_object_id_t acl_entry = 0ULL;
       sai_acl_api_t *acl_api;
       sai_status_t status = SAI_STATUS_SUCCESS;
@@ -1588,7 +1580,7 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
       if (status != SAI_STATUS_SUCCESS) {
           return status;
       }
-      status = acl_api->delete_acl_counter(acl_counter_id);
+      status = acl_api->remove_acl_counter(acl_counter_id);
       return status;
   }
 
@@ -1710,7 +1702,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   sai_thrift_object_id_t sai_thrift_create_mirror_session(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
-      printf("sai_thrift_create_mirror_session\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_mirror_api_t *mirror_api;
       sai_object_id_t session_id = 0;
@@ -1727,7 +1718,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   sai_thrift_status_t sai_thrift_remove_mirror_session(const sai_thrift_object_id_t session_id) {
-      printf("sai_thrift_remove_mirror_session\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_mirror_api_t *mirror_api;
       status = sai_api_query(SAI_API_MIRROR, (void **) &mirror_api);
@@ -1780,7 +1770,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   sai_thrift_object_id_t sai_thrift_create_policer(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
-      printf("sai_thrift_create_policer\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_policer_api_t *policer_api;
       sai_object_id_t policer_id = 0;
@@ -1797,7 +1786,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   sai_thrift_status_t sai_thrift_remove_policer(const sai_thrift_object_id_t policer_id) {
-      printf("sai_thrift_remove_policer\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_policer_api_t *policer_api;
       status = sai_api_query(SAI_API_POLICER, (void **) &policer_api);
@@ -1811,19 +1799,18 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   void sai_thrift_get_policer_stats(
           std::vector<int64_t> & thrift_counters,
           const sai_thrift_object_id_t policer_id,
-          const std::vector<sai_thrift_policer_stat_counter_t> & thrift_counter_ids) {
-      printf("sai_thrift_get_policer_stats\n");
+          const std::vector<sai_thrift_policer_stat_t> & thrift_counter_ids) {
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_policer_api_t *policer_api;
       status = sai_api_query(SAI_API_POLICER, (void **) &policer_api);
       if (status != SAI_STATUS_SUCCESS) {
           return;
       }
-      sai_policer_stat_counter_t *counter_ids = (sai_policer_stat_counter_t *) malloc(sizeof(sai_policer_stat_counter_t) * thrift_counter_ids.size());
+      sai_policer_stat_t *counter_ids = (sai_policer_stat_t *) malloc(sizeof(sai_policer_stat_t) * thrift_counter_ids.size());
       std::vector<int32_t>::const_iterator it = thrift_counter_ids.begin();
       uint64_t *counters = (uint64_t *) malloc(sizeof(uint64_t) * thrift_counter_ids.size());
       for(uint32_t i = 0; i < thrift_counter_ids.size(); i++, it++) {
-          counter_ids[i] = (sai_policer_stat_counter_t) *it;
+          counter_ids[i] = (sai_policer_stat_t) *it;
       }
 
       int32_t number_of_counters = thrift_counter_ids.size();
@@ -1865,7 +1852,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   sai_thrift_object_id_t sai_thrift_create_buffer_pool(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
-      printf("sai_thrift_create_buffer_pool\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_buffer_api_t *buffer_api;
       sai_object_id_t pool_id = 0;
@@ -1882,7 +1868,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   sai_thrift_status_t sai_thrift_remove_buffer_pool(const sai_thrift_object_id_t pool_id) {
-      printf("sai_thrift_remove_buffer_pool\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_buffer_api_t *buffer_api;
       status = sai_api_query(SAI_API_BUFFERS, (void **) &buffer_api);
@@ -1923,7 +1908,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   sai_thrift_object_id_t sai_thrift_create_buffer_profile(const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
-      printf("sai_thrift_create_buffer_profile\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_buffer_api_t *buffer_api;
       sai_object_id_t buffer_profile_id = 0;
@@ -1940,7 +1924,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   }
 
   sai_thrift_status_t sai_thrift_remove_buffer_profile(const sai_thrift_object_id_t buffer_profile_id) {
-      printf("sai_thrift_remove_buffer_profile\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_buffer_api_t *buffer_api;
       status = sai_api_query(SAI_API_BUFFERS, (void **) &buffer_api);
@@ -1954,7 +1937,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   sai_thrift_status_t sai_thrift_set_ingress_priority_group_attribute(
           const sai_thrift_object_id_t ingress_pg_id,
           const sai_thrift_attribute_t& thrift_attr) {
-      printf("sai_thrift_set_ingress_priority_group_attribute\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_buffer_api_t *buffer_api;
       status = sai_api_query(SAI_API_BUFFERS, (void **) &buffer_api);
@@ -2008,7 +1990,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
 
   sai_thrift_object_id_t sai_thrift_create_scheduler_profile(
           const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
-      printf("sai_thrift_create_scheduler_profile\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_scheduler_api_t *scheduler_api;
       sai_object_id_t scheduler_id = 0;
@@ -2026,7 +2007,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
 
   sai_thrift_status_t sai_thrift_remove_scheduler_profile(
           const sai_thrift_object_id_t scheduler_id) {
-      printf("sai_thrift_remove_scheduler_profile\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_scheduler_api_t *scheduler_api;
       status = sai_api_query(SAI_API_SCHEDULER, (void **) &scheduler_api);
@@ -2066,7 +2046,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
 
   sai_thrift_object_id_t sai_thrift_create_scheduler_group(
           const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
-      printf("sai_thrift_create_scheduler_group\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_scheduler_group_api_t *scheduler_group_api;
       sai_object_id_t scheduler_group_id = 0;
@@ -2084,7 +2063,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
 
   sai_thrift_status_t sai_thrift_remove_scheduler_group(
           const sai_thrift_object_id_t scheduler_group_id) {
-      printf("sai_thrift_remove_scheduler_group\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_scheduler_group_api_t *scheduler_group_api;
       status = sai_api_query(SAI_API_SCHEDULER_GROUP, (void **) &scheduler_group_api);
@@ -2092,56 +2070,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
           return status;
       }
       status = scheduler_group_api->remove_scheduler_group(scheduler_group_id);
-      return status;
-  }
-
-  sai_thrift_status_t sai_thrift_add_child_object_to_group(
-          const sai_thrift_object_id_t scheduler_group_id,
-          const std::vector<sai_thrift_object_id_t> & thrift_child_objects) {
-      printf("sai_thrift_add_child_object_to_group\n");
-      sai_status_t status = SAI_STATUS_SUCCESS;
-      sai_scheduler_group_api_t *scheduler_group_api;
-      sai_object_id_t *child_objects;
-      status = sai_api_query(SAI_API_SCHEDULER_GROUP, (void **) &scheduler_group_api);
-      if (status != SAI_STATUS_SUCCESS) {
-          return status;
-      }
-      child_objects = (sai_object_id_t *) malloc(sizeof(sai_object_id_t) * thrift_child_objects.size());
-      std::vector<sai_thrift_object_id_t>::const_iterator it2 = thrift_child_objects.begin();
-      for (uint32_t j = 0; j < thrift_child_objects.size(); j++, *it2++) {
-          child_objects[j] = (sai_object_id_t) *it2;
-      }
-      uint32_t attr_count = thrift_child_objects.size();
-      status = scheduler_group_api->add_child_object_to_group(
-                             scheduler_group_id,
-                             attr_count,
-                             child_objects);
-      free(child_objects);
-      return status;
-  }
-
-  sai_thrift_status_t sai_thrift_remove_child_object_from_group(
-          const sai_thrift_object_id_t scheduler_group_id,
-          const std::vector<sai_thrift_object_id_t> & thrift_child_objects) {
-      printf("sai_thrift_remove_child_object_from_group\n");
-      sai_status_t status = SAI_STATUS_SUCCESS;
-      sai_scheduler_group_api_t *scheduler_group_api;
-      sai_object_id_t *child_objects;
-      status = sai_api_query(SAI_API_SCHEDULER_GROUP, (void **) &scheduler_group_api);
-      if (status != SAI_STATUS_SUCCESS) {
-          return status;
-      }
-      child_objects = (sai_object_id_t *) malloc(sizeof(sai_object_id_t) * thrift_child_objects.size());
-      std::vector<sai_thrift_object_id_t>::const_iterator it2 = thrift_child_objects.begin();
-      for (uint32_t j = 0; j < thrift_child_objects.size(); j++, *it2++) {
-          child_objects[j] = (sai_object_id_t) *it2;
-      }
-      uint32_t attr_count = thrift_child_objects.size();
-      status = scheduler_group_api->remove_child_object_from_group(
-                             scheduler_group_id,
-                             attr_count,
-                             child_objects);
-      free(child_objects);
       return status;
   }
 
@@ -2174,32 +2102,32 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
                       const sai_thrift_qos_map_params_t thrift_data = (sai_thrift_qos_map_params_t) *it2;
 
                       switch (qos_map_type) {
-                          case SAI_QOS_MAP_DOT1P_TO_TC:
+                          case SAI_QOS_MAP_TYPE_DOT1P_TO_TC:
                               key->dot1p = thrift_key.dot1p;
                               data->tc = thrift_data.tc;
                               break;
-                          case SAI_QOS_MAP_DOT1P_TO_COLOR:
+                          case SAI_QOS_MAP_TYPE_DOT1P_TO_COLOR:
                               key->dot1p = thrift_key.dot1p;
                               data->color = (sai_packet_color_t) thrift_data.color;
                               break;
-                          case SAI_QOS_MAP_DSCP_TO_TC:
+                          case SAI_QOS_MAP_TYPE_DSCP_TO_TC:
                               key->dscp = thrift_key.dscp;
                               data->tc = thrift_data.tc;
                               break;
-                          case SAI_QOS_MAP_DSCP_TO_COLOR:
+                          case SAI_QOS_MAP_TYPE_DSCP_TO_COLOR:
                               key->dscp = thrift_key.dscp;
                               data->color = (sai_packet_color_t) thrift_data.color;
                               break;
-                          case SAI_QOS_MAP_TC_TO_QUEUE:
+                          case SAI_QOS_MAP_TYPE_TC_TO_QUEUE:
                               key->tc = thrift_key.tc;
                               data->queue_index = thrift_data.queue_index;
                               break;
-                          case SAI_QOS_MAP_TC_AND_COLOR_TO_DSCP:
+                          case SAI_QOS_MAP_TYPE_TC_AND_COLOR_TO_DSCP:
                               key->tc = thrift_key.tc;
                               key->color = (sai_packet_color_t) thrift_key.color;
                               data->dscp = thrift_data.dscp;
                               break;
-                          case SAI_QOS_MAP_TC_AND_COLOR_TO_DOT1P:
+                          case SAI_QOS_MAP_TYPE_TC_AND_COLOR_TO_DOT1P:
                               key->tc = thrift_key.tc;
                               key->color = (sai_packet_color_t) thrift_key.color;
                               data->dot1p = thrift_data.dot1p;
@@ -2215,7 +2143,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
 
   sai_thrift_object_id_t sai_thrift_create_qos_map(
           const std::vector<sai_thrift_attribute_t> & thrift_attr_list) {
-      printf("sai_thrift_create_qos_map\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_qos_map_api_t *qos_api;
       sai_object_id_t qos_map_id = 0;
@@ -2237,7 +2164,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
 
   sai_thrift_status_t sai_thrift_remove_qos_map(
           const sai_thrift_object_id_t qos_map_id) {
-      printf("sai_thrift_remove_qos_map\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_qos_map_api_t *qos_api;
       status = sai_api_query(SAI_API_QOS_MAPS, (void **) &qos_api);
@@ -2251,7 +2177,6 @@ class switch_sai_rpcHandler : virtual public switch_sai_rpcIf {
   sai_thrift_status_t sai_thrift_set_queue_attribute(
           const sai_thrift_object_id_t queue_id,
           const sai_thrift_attribute_t& thrift_attr) {
-      printf("sai_thrift_set_queue_attribute\n");
       sai_status_t status = SAI_STATUS_SUCCESS;
       sai_queue_api_t *queue_api;
       status = sai_api_query(SAI_API_QUEUE, (void **) &queue_api);

@@ -200,12 +200,12 @@ sai_status_t sai_get_port_attribute(_In_ sai_object_id_t port_id,
 
       case SAI_PORT_ATTR_SUPPORTED_BREAKOUT_MODE:
         attr->value.s32list.count = 1;
-        attr->value.s32list.list[0] = SAI_PORT_BREAKOUT_MODE_1_LANE;
+        attr->value.s32list.list[0] = SAI_PORT_BREAKOUT_MODE_TYPE_1_LANE;
         status = sai_switch_status_to_sai_status(switch_status);
         break;
 
       case SAI_PORT_ATTR_CURRENT_BREAKOUT_MODE:
-        attr->value.s32 = SAI_PORT_BREAKOUT_MODE_1_LANE;
+        attr->value.s32 = SAI_PORT_BREAKOUT_MODE_TYPE_1_LANE;
         status = sai_switch_status_to_sai_status(switch_status);
         break;
       case SAI_PORT_ATTR_OPER_STATUS:
@@ -266,7 +266,7 @@ sai_status_t sai_get_port_attribute(_In_ sai_object_id_t port_id,
 *    Failure status code on error
 */
 sai_status_t sai_get_port_stats(_In_ sai_object_id_t port_id,
-                                _In_ const sai_port_stat_counter_t *counter_ids,
+                                _In_ const sai_port_stat_t *counter_ids,
                                 _In_ uint32_t number_of_counters,
                                 _Out_ uint64_t *counters) {
   SAI_LOG_ENTER();

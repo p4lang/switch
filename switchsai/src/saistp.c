@@ -21,6 +21,21 @@ limitations under the License.
 
 static sai_api_t api_id = SAI_API_STP;
 
+#define SAI_STP_GROUP_PORT_OBJECT(_stp_group_id, _port_id)  \
+  ((_port_id & 0xFFFF) | ((_stp_group_id & 0xFFFF) << 16) | \
+   (SWITCH_HANDLE_TYPE_STP_PORT << HANDLE_TYPE_SHIFT)) &    \
+      0xFFFFFFFF
+
+#define SAI_STP_GROUP_OBJECT(_stp_group_port_id)         \
+  ((((_stp_group_port_id & 0xFFFFFFFF) >> 16) & 0x3FF) | \
+   (SWITCH_HANDLE_TYPE_STP << HANDLE_TYPE_SHIFT)) &      \
+      0xFFFFFFFF
+
+#define SAI_STP_PORT_OBJECT(_stp_group_port_id)      \
+  (((_stp_group_port_id & 0xFFFFFFFF) & 0xFFFF) |    \
+   (SWITCH_HANDLE_TYPE_PORT << HANDLE_TYPE_SHIFT)) & \
+      0xFFFFFFFF
+
 /**
  * @brief Create stp instance with default port state as forwarding.
  *
@@ -118,7 +133,7 @@ sai_status_t sai_remove_stp_entry(_In_ sai_object_id_t stp_id) {
   sai_status_t status = SAI_STATUS_SUCCESS;
   switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
 
-  SAI_ASSERT(sai_object_type_query(stp_id) == SAI_OBJECT_TYPE_STP_INSTANCE);
+  SAI_ASSERT(sai_object_type_query(stp_id) == SAI_OBJECT_TYPE_STP);
 
   switch_status = switch_api_stp_group_delete(device, (switch_handle_t)stp_id);
   status = sai_switch_status_to_sai_status(switch_status);
@@ -154,7 +169,7 @@ sai_status_t sai_set_stp_entry_attribute(_In_ sai_object_id_t stp_id,
     return status;
   }
 
-  SAI_ASSERT(sai_object_type_query(stp_id) == SAI_OBJECT_TYPE_STP_INSTANCE);
+  SAI_ASSERT(sai_object_type_query(stp_id) == SAI_OBJECT_TYPE_STP);
 
   SAI_LOG_EXIT();
 
@@ -183,7 +198,96 @@ sai_status_t sai_get_stp_entry_attribute(_In_ sai_object_id_t stp_id,
     return status;
   }
 
-  SAI_ASSERT(sai_object_type_query(stp_id) == SAI_OBJECT_TYPE_STP_INSTANCE);
+  SAI_ASSERT(sai_object_type_query(stp_id) == SAI_OBJECT_TYPE_STP);
+
+  SAI_LOG_EXIT();
+
+  return SAI_STATUS_SUCCESS;
+}
+
+switch_stp_state_t sai_stp_state_to_switch_stp_state(
+    sai_port_stp_state_t stp_state) {
+  switch_stp_state_t switch_stp_state = SWITCH_PORT_STP_STATE_NONE;
+  switch (stp_state) {
+    case SAI_PORT_STP_STATE_LEARNING:
+      switch_stp_state = SWITCH_PORT_STP_STATE_LEARNING;
+      break;
+    case SAI_PORT_STP_STATE_FORWARDING:
+      switch_stp_state = SWITCH_PORT_STP_STATE_FORWARDING;
+      break;
+    case SAI_PORT_STP_STATE_BLOCKING:
+      switch_stp_state = SWITCH_PORT_STP_STATE_BLOCKING;
+      break;
+    default:
+      switch_stp_state = SWITCH_PORT_STP_STATE_NONE;
+      break;
+  }
+
+  return switch_stp_state;
+}
+
+/**
+ * @brief Create stp port object
+ *
+ * @param[out] stp_port_id stp port id
+ * @param[in] attr_count Number of attributes
+ * @param[in] attr_list Value of attributes
+ * @return SAI_STATUS_SUCCESS if operation is successful otherwise a different
+ *  error code is returned.
+ */
+sai_status_t sai_create_stp_port(_Out_ sai_object_id_t *stp_port_id,
+                                 _In_ uint32_t attr_count,
+                                 _In_ const sai_attribute_t *attr_list) {
+  SAI_LOG_ENTER();
+
+  switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
+  switch_stp_state_t switch_stp_state = SWITCH_PORT_STP_STATE_NONE;
+  sai_status_t status = SAI_STATUS_SUCCESS;
+  sai_object_id_t stp_group_id = 0;
+  sai_object_id_t port_id = 0;
+  sai_attribute_t attribute;
+  uint32_t index = 0;
+
+  if (!attr_list) {
+    status = SAI_STATUS_INVALID_PARAMETER;
+    SAI_LOG_ERROR("null attribute list: %s", sai_status_to_string(status));
+    return status;
+  }
+
+  for (index = 0; index < attr_count; index++) {
+    attribute = attr_list[index];
+    switch (attribute.id) {
+      case SAI_STP_PORT_ATTR_STP:
+        stp_group_id = attribute.value.oid;
+        SAI_ASSERT(sai_object_type_query(stp_group_id) == SAI_OBJECT_TYPE_STP);
+        break;
+
+      case SAI_STP_PORT_ATTR_PORT:
+        port_id = attribute.value.oid;
+        SAI_ASSERT(sai_object_type_query(port_id) == SAI_OBJECT_TYPE_PORT);
+        break;
+
+      case SAI_STP_PORT_ATTR_STATE:
+        switch_stp_state =
+            sai_stp_state_to_switch_stp_state(attribute.value.u32);
+        SAI_ASSERT(switch_stp_state != SWITCH_PORT_STP_STATE_NONE);
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  switch_status = switch_api_stp_port_state_set(
+      device, stp_group_id, port_id, switch_stp_state);
+  status = sai_switch_status_to_sai_status(switch_status);
+  if (status != SAI_STATUS_SUCCESS) {
+    SAI_LOG_ERROR("failed to create stp port entry %lx: %s",
+                  stp_group_id,
+                  sai_status_to_string(status));
+  }
+
+  *stp_port_id = SAI_STP_GROUP_PORT_OBJECT(stp_group_id, port_id);
 
   SAI_LOG_EXIT();
 
@@ -191,24 +295,62 @@ sai_status_t sai_get_stp_entry_attribute(_In_ sai_object_id_t stp_id,
 }
 
 /**
- * @brief Set the attribute of STP instance.
+ * @brief Remove stp port object.
  *
- * @param[in] stp_id stp instance id
+ * @param[in] stp_port_id stp object id
+ * @return SAI_STATUS_SUCCESS if operation is successful otherwise a different
+ *  error code is returned.
+ */
+sai_status_t sai_remove_stp_port(_In_ sai_object_id_t stp_port_id) {
+  SAI_LOG_ENTER();
+
+  sai_object_id_t stp_group_id = 0;
+  sai_object_id_t port_id = 0;
+  switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
+  sai_status_t status = SAI_STATUS_SUCCESS;
+
+  SAI_ASSERT(sai_object_type_query(stp_port_id) == SAI_OBJECT_TYPE_STP_PORT);
+
+  stp_group_id = SAI_STP_GROUP_OBJECT(stp_port_id);
+  SAI_ASSERT(sai_object_type_query(stp_group_id) == SAI_OBJECT_TYPE_STP);
+
+  port_id = SAI_STP_PORT_OBJECT(stp_port_id);
+  SAI_ASSERT(sai_object_type_query(port_id) == SAI_OBJECT_TYPE_PORT);
+
+  switch_status = switch_api_stp_port_state_set(
+      device, stp_group_id, port_id, SWITCH_PORT_STP_STATE_NONE);
+  status = sai_switch_status_to_sai_status(switch_status);
+  if (status != SAI_STATUS_SUCCESS) {
+    SAI_LOG_ERROR("failed to remove stp port entry %lx: %s",
+                  stp_port_id,
+                  sai_status_to_string(status));
+  }
+
+  SAI_LOG_EXIT();
+
+  return status;
+}
+
+/**
+ * @brief Set the attribute of STP port.
+ *
+ * @param[in] stp_port_id stp port id
  * @param[in] attr attribute value
  * @return SAI_STATUS_SUCCESS if operation is successful otherwise a different
  *  error code is returned.
  */
-sai_status_t sai_set_stp_port_state(_In_ sai_object_id_t stp_id,
-                                    _In_ sai_object_id_t port_id,
-                                    _In_ sai_port_stp_port_state_t
-                                        stp_port_state) {
+sai_status_t sai_set_stp_port_attribute(_In_ sai_object_id_t stp_port_id,
+                                        _In_ const sai_attribute_t *attr) {
   SAI_LOG_ENTER();
 
   sai_status_t status = SAI_STATUS_SUCCESS;
   switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
+  sai_port_stp_state_t stp_port_state = SAI_PORT_STP_STATE_FORWARDING;
   switch_stp_state_t switch_stp_state = SWITCH_PORT_STP_STATE_NONE;
 
-  SAI_ASSERT(sai_object_type_query(stp_id) == SAI_OBJECT_TYPE_STP_INSTANCE);
+  (void)switch_stp_state;
+
+  SAI_ASSERT(sai_object_type_query(stp_port_id) == SAI_OBJECT_TYPE_STP_PORT);
 
   switch (stp_port_state) {
     case SAI_PORT_STP_STATE_LEARNING:
@@ -221,12 +363,10 @@ sai_status_t sai_set_stp_port_state(_In_ sai_object_id_t stp_id,
       switch_stp_state = SWITCH_PORT_STP_STATE_BLOCKING;
       break;
   }
-  switch_status =
-      switch_api_stp_port_state_set(device, stp_id, port_id, switch_stp_state);
   status = sai_switch_status_to_sai_status(switch_status);
   if (status != SAI_STATUS_SUCCESS) {
     SAI_LOG_ERROR("failed to set stp port state %lx: %s",
-                  stp_id,
+                  stp_port_id,
                   sai_status_to_string(status));
   }
 
@@ -236,49 +376,49 @@ sai_status_t sai_set_stp_port_state(_In_ sai_object_id_t stp_id,
 }
 
 /**
- * @brief Get the attribute of STP instance.
+ * @brief Get the attribute of STP port.
  *
- * @param[in] stp_id stp instance id
+ * @param[in] stp_port_id stp port id
  * @param[in] attr_count number of the attribute
  * @param[in] attr_list attribute value
  * @return SAI_STATUS_SUCCESS if operation is successful otherwise a different
  *  error code is returned.
  */
-sai_status_t sai_get_stp_port_state(
-    _In_ sai_object_id_t stp_id,
-    _In_ sai_object_id_t port_id,
-    _Out_ sai_port_stp_port_state_t *stp_port_state) {
+sai_status_t sai_get_stp_port_attribute(_In_ sai_object_id_t stp_port_id,
+                                        _In_ uint32_t attr_count,
+                                        _Inout_ sai_attribute_t *attr_list) {
   SAI_LOG_ENTER();
 
   sai_status_t status = SAI_STATUS_SUCCESS;
   switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
+  sai_port_stp_state_t stp_port_state = SAI_PORT_STP_STATE_FORWARDING;
   switch_stp_state_t switch_stp_state = SWITCH_PORT_STP_STATE_NONE;
 
-  SAI_ASSERT(sai_object_type_query(stp_id) == SAI_OBJECT_TYPE_STP_INSTANCE);
+  SAI_ASSERT(sai_object_type_query(stp_port_id) == SAI_OBJECT_TYPE_STP_PORT);
 
-  switch_status =
-      switch_api_stp_port_state_get(device, stp_id, port_id, &switch_stp_state);
   status = sai_switch_status_to_sai_status(switch_status);
   if (status != SAI_STATUS_SUCCESS) {
     SAI_LOG_ERROR("failed to set stp port state %lx: %s",
-                  stp_id,
+                  stp_port_id,
                   sai_status_to_string(status));
     return status;
   }
 
   switch (switch_stp_state) {
     case SWITCH_PORT_STP_STATE_LEARNING:
-      *stp_port_state = SAI_PORT_STP_STATE_LEARNING;
+      stp_port_state = SAI_PORT_STP_STATE_LEARNING;
       break;
     case SWITCH_PORT_STP_STATE_FORWARDING:
-      *stp_port_state = SAI_PORT_STP_STATE_FORWARDING;
+      stp_port_state = SAI_PORT_STP_STATE_FORWARDING;
       break;
     case SWITCH_PORT_STP_STATE_BLOCKING:
-      *stp_port_state = SAI_PORT_STP_STATE_BLOCKING;
+      stp_port_state = SAI_PORT_STP_STATE_BLOCKING;
       break;
     default:
-      *stp_port_state = 0;
+      stp_port_state = 0;
   }
+
+  (void)stp_port_state;
 
   SAI_LOG_EXIT();
 
@@ -292,8 +432,10 @@ sai_stp_api_t stp_api = {.create_stp = sai_create_stp_entry,
                          .remove_stp = sai_remove_stp_entry,
                          .set_stp_attribute = sai_set_stp_entry_attribute,
                          .get_stp_attribute = sai_get_stp_entry_attribute,
-                         .set_stp_port_state = sai_set_stp_port_state,
-                         .get_stp_port_state = sai_get_stp_port_state};
+                         .create_stp_port = sai_create_stp_port,
+                         .remove_stp_port = sai_remove_stp_port,
+                         .set_stp_port_attribute = sai_set_stp_port_attribute,
+                         .get_stp_port_attribute = sai_get_stp_port_attribute};
 
 sai_status_t sai_stp_initialize(sai_api_service_t *sai_api_service) {
   SAI_LOG_DEBUG("Initializing spanning tree");

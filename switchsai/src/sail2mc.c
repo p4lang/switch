@@ -93,10 +93,10 @@ static void sai_l2mc_entry_attribute_parse(
         *port_list_count = attribute->value.objlist.count;
         *port_list_handle = (switch_handle_t *)attribute->value.objlist.list;
         break;
-      case SAI_ROUTE_ATTR_TRAP_PRIORITY:
+      case SAI_ROUTE_ENTRY_ATTR_TRAP_PRIORITY:
         *pri = attribute->value.u8;
         break;
-      case SAI_ROUTE_ATTR_PACKET_ACTION:
+      case SAI_ROUTE_ENTRY_ATTR_PACKET_ACTION:
         *action = attribute->value.s32;
         break;
     }
