@@ -62,14 +62,14 @@ static void sai_neighbor_entry_attribute_parse(
   for (index = 0; index < attr_count; index++) {
     attribute = &attr_list[index];
     switch (attribute->id) {
-      case SAI_NEIGHBOR_ATTR_DST_MAC_ADDRESS:
+      case SAI_NEIGHBOR_ENTRY_ATTR_DST_MAC_ADDRESS:
         memcpy(&api_neighbor->mac_addr,
                attribute->value.mac,
                sizeof(switch_mac_addr_t));
         break;
-      case SAI_NEIGHBOR_ATTR_PACKET_ACTION:
+      case SAI_NEIGHBOR_ENTRY_ATTR_PACKET_ACTION:
         break;
-      case SAI_NEIGHBOR_ATTR_NO_HOST_ROUTE:
+      case SAI_NEIGHBOR_ENTRY_ATTR_NO_HOST_ROUTE:
         *set_host_route = 0;
         break;
     }

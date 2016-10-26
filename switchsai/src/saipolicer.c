@@ -23,11 +23,11 @@ static sai_api_t api_id = SAI_API_POLICER;
 static switch_meter_mode_t sai_meter_mode_to_switch_meter_mode(
     _In_ sai_policer_mode_t policer_mode) {
   switch (policer_mode) {
-    case SAI_POLICER_MODE_Tr_TCM:
+    case SAI_POLICER_MODE_TR_TCM:
       return SWITCH_METER_MODE_TWO_RATE_THREE_COLOR;
     case SAI_POLICER_MODE_STORM_CONTROL:
       return SWITCH_METER_MODE_STORM_CONTROL;
-    case SAI_POLICER_MODE_Sr_TCM:
+    case SAI_POLICER_MODE_SR_TCM:
     default:
       return SWITCH_METER_MODE_NONE;
   }
@@ -233,7 +233,7 @@ sai_status_t sai_get_policer_attribute(_In_ sai_object_id_t policer_id,
 
 static sai_status_t switch_meter_counters_to_sai_meter_counters(
     _In_ uint32_t number_of_counters,
-    _In_ const sai_policer_stat_counter_t *counter_ids,
+    _In_ const sai_policer_stat_t *counter_ids,
     _In_ switch_counter_t *switch_counters,
     _Out_ uint64_t *counters) {
   uint32_t index = 0;
@@ -279,7 +279,7 @@ static sai_status_t switch_meter_counters_to_sai_meter_counters(
 
 sai_status_t sai_get_policer_statistics(
     _In_ sai_object_id_t policer_id,
-    _In_ const sai_policer_stat_counter_t *counter_ids,
+    _In_ const sai_policer_stat_t *counter_ids,
     _In_ uint32_t number_of_counters,
     _Out_ uint64_t *counters) {
   SAI_LOG_ENTER();

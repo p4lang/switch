@@ -48,7 +48,7 @@ static const char *module[] = {
     "LAG",
     "POLICER",
     "WRED",
-    "QOS_MAPS",
+    "QOS_MAP",
     "QUEUE",
     "SCHEDULER",
     "SCHEDULER_GROUP",
@@ -234,7 +234,7 @@ sai_object_type_t sai_object_type_query(_In_ sai_object_id_t sai_object_id) {
       }
       break;
     case SWITCH_HANDLE_TYPE_STP:
-      object_type = SAI_OBJECT_TYPE_STP_INSTANCE;
+      object_type = SAI_OBJECT_TYPE_STP;
       break;
     case SWITCH_HANDLE_TYPE_ACL:
       object_type = SAI_OBJECT_TYPE_ACL_TABLE;
@@ -246,13 +246,13 @@ sai_object_type_t sai_object_type_query(_In_ sai_object_id_t sai_object_id) {
       object_type = SAI_OBJECT_TYPE_ACL_RANGE;
       break;
     case SWITCH_HANDLE_TYPE_HOSTIF:
-      object_type = SAI_OBJECT_TYPE_HOST_INTERFACE;
+      object_type = SAI_OBJECT_TYPE_HOSTIF;
       break;
     case SWITCH_HANDLE_TYPE_HOSTIF_GROUP:
-      object_type = SAI_OBJECT_TYPE_TRAP_GROUP;
+      object_type = SAI_OBJECT_TYPE_HOSTIF_TRAP_GROUP;
       break;
     case SWITCH_HANDLE_TYPE_MIRROR:
-      object_type = SAI_OBJECT_TYPE_MIRROR;
+      object_type = SAI_OBJECT_TYPE_MIRROR_SESSION;
       break;
     case SWITCH_HANDLE_TYPE_MGID:
       object_type = SAI_OBJECT_TYPE_NEXT_HOP_GROUP;
@@ -276,10 +276,19 @@ sai_object_type_t sai_object_type_query(_In_ sai_object_id_t sai_object_id) {
       object_type = SAI_OBJECT_TYPE_BUFFER_PROFILE;
       break;
     case SWITCH_HANDLE_TYPE_QOS_MAP:
-      object_type = SAI_OBJECT_TYPE_QOS_MAPS;
+      object_type = SAI_OBJECT_TYPE_QOS_MAP;
       break;
     case SWITCH_HANDLE_TYPE_PRIORITY_GROUP:
-      object_type = SAI_OBJECT_TYPE_PRIORITY_GROUP;
+      object_type = SAI_OBJECT_TYPE_INGRESS_PRIORITY_GROUP;
+      break;
+    case SWITCH_HANDLE_TYPE_ECMP_MEMBER:
+      object_type = SAI_OBJECT_TYPE_NEXT_HOP_GROUP_MEMBER;
+      break;
+    case SWITCH_HANDLE_TYPE_HOSTIF_TRAP:
+      object_type = SAI_OBJECT_TYPE_HOSTIF_TRAP;
+      break;
+    case SWITCH_HANDLE_TYPE_STP_PORT:
+      object_type = SAI_OBJECT_TYPE_STP_PORT;
       break;
     default:
       object_type = SAI_OBJECT_TYPE_NULL;
@@ -299,7 +308,7 @@ sai_status_t sai_initialize() {
   sai_api_t api = 0;
 
   for (api = 0; api < SAI_API_MAX; api++) {
-    sai_log_set(api, SAI_LOG_CRITICAL);
+    sai_log_set(api, SAI_LOG_LEVEL_CRITICAL);
   }
 
   SAI_LOG_ENTER();

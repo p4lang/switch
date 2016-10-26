@@ -29,7 +29,7 @@ limitations under the License.
 #include <linux/if_ether.h>
 
 extern void sai_initialize();
-extern sai_status_t sai_create_hostif_trap(sai_hostif_trap_id_t hostif_trapid,
+extern sai_status_t sai_create_hostif_trap(sai_object_id_t *hostif_trap_id,
                                            uint32_t attr_count,
                                            const sai_attribute_t *attr_list);
 
@@ -203,98 +203,153 @@ static void register_sai_notifications() {
 }
 
 static void register_sai_traps() {
-  sai_attribute_t attr_list[3];
+  sai_attribute_t attr_list[4];
+  uint32_t num_attr = 0;
   sai_status_t status = SAI_STATUS_SUCCESS;
+  sai_object_id_t sai_trap_object_id = 0;
 
   // STP, redirect to CPU
   memset(attr_list, 0, sizeof(attr_list));
-  attr_list[0].id = SAI_HOSTIF_TRAP_ATTR_PACKET_ACTION;
-  attr_list[0].value.u32 = SAI_PACKET_ACTION_TRAP;
-  attr_list[1].id = SAI_HOSTIF_TRAP_ATTR_TRAP_PRIORITY;
-  attr_list[1].value.u32 = 1;
-  attr_list[2].id = SAI_HOSTIF_TRAP_ATTR_TRAP_CHANNEL;
-  attr_list[2].value.u32 = SAI_HOSTIF_TRAP_CHANNEL_CB;
-  status = sai_create_hostif_trap(SAI_HOSTIF_TRAP_ID_STP, 3, attr_list);
+  num_attr = 0;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_TRAP_TYPE;
+  attr_list[num_attr].value.u32 = SAI_HOSTIF_TRAP_TYPE_STP;
+  num_attr++;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_PACKET_ACTION;
+  attr_list[num_attr].value.u32 = SAI_PACKET_ACTION_TRAP;
+  num_attr++;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_TRAP_PRIORITY;
+  attr_list[num_attr].value.u32 = 1;
+  num_attr++;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_TRAP_CHANNEL;
+  attr_list[num_attr].value.u32 = SAI_HOSTIF_TRAP_CHANNEL_CB;
+  num_attr++;
+  status = sai_create_hostif_trap(&sai_trap_object_id, num_attr, attr_list);
   assert(status == SAI_STATUS_SUCCESS);
 
   // OSPF, copy to CPU
   memset(attr_list, 0, sizeof(attr_list));
-  attr_list[0].id = SAI_HOSTIF_TRAP_ATTR_PACKET_ACTION;
-  attr_list[0].value.u32 = SAI_PACKET_ACTION_LOG;
-  attr_list[1].id = SAI_HOSTIF_TRAP_ATTR_TRAP_PRIORITY;
-  attr_list[1].value.u32 = 101;
-  attr_list[2].id = SAI_HOSTIF_TRAP_ATTR_TRAP_CHANNEL;
-  attr_list[2].value.u32 = SAI_HOSTIF_TRAP_CHANNEL_CB;
-  status = sai_create_hostif_trap(SAI_HOSTIF_TRAP_ID_OSPF, 3, attr_list);
+  num_attr = 0;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_TRAP_TYPE;
+  attr_list[num_attr].value.u32 = SAI_HOSTIF_TRAP_TYPE_OSPF;
+  num_attr++;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_PACKET_ACTION;
+  attr_list[num_attr].value.u32 = SAI_PACKET_ACTION_LOG;
+  num_attr++;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_TRAP_PRIORITY;
+  attr_list[num_attr].value.u32 = 101;
+  num_attr++;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_TRAP_CHANNEL;
+  attr_list[num_attr].value.u32 = SAI_HOSTIF_TRAP_CHANNEL_CB;
+  num_attr++;
+  status = sai_create_hostif_trap(&sai_trap_object_id, num_attr, attr_list);
   assert(status == SAI_STATUS_SUCCESS);
 
   // IPv6 ND, copy to CPU
   memset(attr_list, 0, sizeof(attr_list));
-  attr_list[0].id = SAI_HOSTIF_TRAP_ATTR_PACKET_ACTION;
-  attr_list[0].value.u32 = SAI_PACKET_ACTION_LOG;
-  attr_list[1].id = SAI_HOSTIF_TRAP_ATTR_TRAP_PRIORITY;
-  attr_list[1].value.u32 = 102;
-  attr_list[2].id = SAI_HOSTIF_TRAP_ATTR_TRAP_CHANNEL;
-  attr_list[2].value.u32 = SAI_HOSTIF_TRAP_CHANNEL_CB;
-  status = sai_create_hostif_trap(
-      SAI_HOSTIF_TRAP_ID_IPV6_NEIGHBOR_DISCOVERY, 3, attr_list);
+  num_attr = 0;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_TRAP_TYPE;
+  attr_list[num_attr].value.u32 = SAI_HOSTIF_TRAP_TYPE_IPV6_NEIGHBOR_DISCOVERY;
+  num_attr++;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_PACKET_ACTION;
+  attr_list[num_attr].value.u32 = SAI_PACKET_ACTION_LOG;
+  num_attr++;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_TRAP_PRIORITY;
+  attr_list[num_attr].value.u32 = 102;
+  num_attr++;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_TRAP_CHANNEL;
+  attr_list[num_attr].value.u32 = SAI_HOSTIF_TRAP_CHANNEL_CB;
+  num_attr++;
+  status = sai_create_hostif_trap(&sai_trap_object_id, num_attr, attr_list);
   assert(status == SAI_STATUS_SUCCESS);
 
   // OSPFv3, copy to CPU
   memset(attr_list, 0, sizeof(attr_list));
-  attr_list[0].id = SAI_HOSTIF_TRAP_ATTR_PACKET_ACTION;
-  attr_list[0].value.u32 = SAI_PACKET_ACTION_LOG;
-  attr_list[1].id = SAI_HOSTIF_TRAP_ATTR_TRAP_PRIORITY;
-  attr_list[1].value.u32 = 103;
-  attr_list[2].id = SAI_HOSTIF_TRAP_ATTR_TRAP_CHANNEL;
-  attr_list[2].value.u32 = SAI_HOSTIF_TRAP_CHANNEL_CB;
-  status = sai_create_hostif_trap(SAI_HOSTIF_TRAP_ID_OSPFV6, 3, attr_list);
+  num_attr = 0;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_TRAP_TYPE;
+  attr_list[num_attr].value.u32 = SAI_HOSTIF_TRAP_TYPE_OSPFV6;
+  num_attr++;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_PACKET_ACTION;
+  attr_list[num_attr].value.u32 = SAI_PACKET_ACTION_LOG;
+  num_attr++;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_TRAP_PRIORITY;
+  attr_list[num_attr].value.u32 = 103;
+  num_attr++;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_TRAP_CHANNEL;
+  attr_list[num_attr].value.u32 = SAI_HOSTIF_TRAP_CHANNEL_CB;
+  num_attr++;
+  status = sai_create_hostif_trap(&sai_trap_object_id, num_attr, attr_list);
   assert(status == SAI_STATUS_SUCCESS);
 
   // ARP request, copy to CPU
   memset(attr_list, 0, sizeof(attr_list));
-  attr_list[0].id = SAI_HOSTIF_TRAP_ATTR_PACKET_ACTION;
-  attr_list[0].value.u32 = SAI_PACKET_ACTION_LOG;
-  attr_list[1].id = SAI_HOSTIF_TRAP_ATTR_TRAP_PRIORITY;
-  attr_list[1].value.u32 = 104;
-  attr_list[2].id = SAI_HOSTIF_TRAP_ATTR_TRAP_CHANNEL;
-  attr_list[2].value.u32 = SAI_HOSTIF_TRAP_CHANNEL_CB;
-  status = sai_create_hostif_trap(SAI_HOSTIF_TRAP_ID_ARP_REQUEST, 3, attr_list);
+  num_attr = 0;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_TRAP_TYPE;
+  attr_list[num_attr].value.u32 = SAI_HOSTIF_TRAP_TYPE_ARP_REQUEST;
+  num_attr++;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_PACKET_ACTION;
+  attr_list[num_attr].value.u32 = SAI_PACKET_ACTION_LOG;
+  num_attr++;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_TRAP_PRIORITY;
+  attr_list[num_attr].value.u32 = 104;
+  num_attr++;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_TRAP_CHANNEL;
+  attr_list[num_attr].value.u32 = SAI_HOSTIF_TRAP_CHANNEL_CB;
+  num_attr++;
+  status = sai_create_hostif_trap(&sai_trap_object_id, num_attr, attr_list);
   assert(status == SAI_STATUS_SUCCESS);
 
   // ARP response, redirect to CPU
   memset(attr_list, 0, sizeof(attr_list));
-  attr_list[0].id = SAI_HOSTIF_TRAP_ATTR_PACKET_ACTION;
-  attr_list[0].value.u32 = SAI_PACKET_ACTION_TRAP;
-  attr_list[1].id = SAI_HOSTIF_TRAP_ATTR_TRAP_PRIORITY;
-  attr_list[1].value.u32 = 105;
-  attr_list[2].id = SAI_HOSTIF_TRAP_ATTR_TRAP_CHANNEL;
-  attr_list[2].value.u32 = SAI_HOSTIF_TRAP_CHANNEL_CB;
-  status =
-      sai_create_hostif_trap(SAI_HOSTIF_TRAP_ID_ARP_RESPONSE, 3, attr_list);
+  num_attr = 0;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_TRAP_TYPE;
+  attr_list[num_attr].value.u32 = SAI_HOSTIF_TRAP_TYPE_ARP_RESPONSE;
+  num_attr++;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_PACKET_ACTION;
+  attr_list[num_attr].value.u32 = SAI_PACKET_ACTION_TRAP;
+  num_attr++;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_TRAP_PRIORITY;
+  attr_list[num_attr].value.u32 = 105;
+  num_attr++;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_TRAP_CHANNEL;
+  attr_list[num_attr].value.u32 = SAI_HOSTIF_TRAP_CHANNEL_CB;
+  num_attr++;
+  status = sai_create_hostif_trap(&sai_trap_object_id, num_attr, attr_list);
   assert(status == SAI_STATUS_SUCCESS);
 
   // PIM, copy to CPU
   memset(attr_list, 0, sizeof(attr_list));
-  attr_list[0].id = SAI_HOSTIF_TRAP_ATTR_PACKET_ACTION;
-  attr_list[0].value.u32 = SAI_PACKET_ACTION_LOG;
-  attr_list[1].id = SAI_HOSTIF_TRAP_ATTR_TRAP_PRIORITY;
-  attr_list[1].value.u32 = 106;
-  attr_list[2].id = SAI_HOSTIF_TRAP_ATTR_TRAP_CHANNEL;
-  attr_list[2].value.u32 = SAI_HOSTIF_TRAP_CHANNEL_CB;
-  status = sai_create_hostif_trap(SAI_HOSTIF_TRAP_ID_PIM, 3, attr_list);
+  num_attr = 0;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_TRAP_TYPE;
+  attr_list[num_attr].value.u32 = SAI_HOSTIF_TRAP_TYPE_PIM;
+  num_attr++;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_PACKET_ACTION;
+  attr_list[num_attr].value.u32 = SAI_PACKET_ACTION_LOG;
+  num_attr++;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_TRAP_PRIORITY;
+  attr_list[num_attr].value.u32 = 106;
+  num_attr++;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_TRAP_CHANNEL;
+  attr_list[num_attr].value.u32 = SAI_HOSTIF_TRAP_CHANNEL_CB;
+  num_attr++;
+  status = sai_create_hostif_trap(&sai_trap_object_id, num_attr, attr_list);
   assert(status == SAI_STATUS_SUCCESS);
 
   // IGMPv2 report, copy to CPU
   memset(attr_list, 0, sizeof(attr_list));
-  attr_list[0].id = SAI_HOSTIF_TRAP_ATTR_PACKET_ACTION;
-  attr_list[0].value.u32 = SAI_PACKET_ACTION_LOG;
-  attr_list[1].id = SAI_HOSTIF_TRAP_ATTR_TRAP_PRIORITY;
-  attr_list[1].value.u32 = 106;
-  attr_list[2].id = SAI_HOSTIF_TRAP_ATTR_TRAP_CHANNEL;
-  attr_list[2].value.u32 = SAI_HOSTIF_TRAP_CHANNEL_CB;
-  status = sai_create_hostif_trap(
-      SAI_HOSTIF_TRAP_ID_IGMP_TYPE_V2_REPORT, 3, attr_list);
+  num_attr = 0;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_TRAP_TYPE;
+  attr_list[num_attr].value.u32 = SAI_HOSTIF_TRAP_TYPE_IGMP_TYPE_V2_REPORT;
+  num_attr++;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_PACKET_ACTION;
+  attr_list[num_attr].value.u32 = SAI_PACKET_ACTION_LOG;
+  num_attr++;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_TRAP_PRIORITY;
+  attr_list[num_attr].value.u32 = 106;
+  num_attr++;
+  attr_list[num_attr].id = SAI_HOSTIF_TRAP_ATTR_TRAP_CHANNEL;
+  attr_list[num_attr].value.u32 = SAI_HOSTIF_TRAP_CHANNEL_CB;
+  num_attr++;
+  status = sai_create_hostif_trap(&sai_trap_object_id, num_attr, attr_list);
   assert(status == SAI_STATUS_SUCCESS);
 }
 
@@ -461,9 +516,9 @@ int switchlink_interface_delete(switchlink_db_interface_info_t *intf,
   return ((status == SAI_STATUS_SUCCESS) ? 0 : -1);
 }
 
-static sai_port_stp_port_state_t get_sai_stp_state(
+static sai_port_stp_state_t get_sai_stp_state(
     switchlink_stp_state_t switchlink_stp_state) {
-  sai_port_stp_port_state_t sai_stp_state = SAI_PORT_STP_STATE_FORWARDING;
+  sai_port_stp_state_t sai_stp_state = SAI_PORT_STP_STATE_FORWARDING;
   switch (switchlink_stp_state) {
     case SWITCHLINK_STP_STATE_NONE:
     case SWITCHLINK_STP_STATE_DISABLED:
@@ -482,9 +537,22 @@ static sai_port_stp_port_state_t get_sai_stp_state(
 
 int switchlink_stp_state_update(switchlink_db_interface_info_t *intf) {
   sai_status_t status = SAI_STATUS_SUCCESS;
-  status = stp_api->set_stp_port_state(
-      intf->stp_h, intf->intf_h, get_sai_stp_state(intf->stp_state));
-  return ((status == SAI_STATUS_SUCCESS) ? 0 : -1);
+  if (intf->stp_state != SWITCHLINK_STP_STATE_BLOCKING) {
+    sai_attribute_t attr_list[3];
+    attr_list[0].id = SAI_STP_PORT_ATTR_STP;
+    attr_list[0].value.oid = intf->stp_h;
+    attr_list[1].id = SAI_STP_PORT_ATTR_PORT;
+    attr_list[1].value.oid = intf->intf_h;
+    attr_list[2].id = SAI_STP_PORT_ATTR_STATE;
+    attr_list[2].value.u32 = get_sai_stp_state(intf->stp_state);
+    status = stp_api->create_stp_port(&intf->stp_port_h, 0x3, attr_list);
+    return ((status == SAI_STATUS_SUCCESS) ? 0 : -1);
+  } else {
+    if (intf->stp_port_h) {
+      status = stp_api->remove_stp_port(intf->stp_port_h);
+      return ((status == SAI_STATUS_SUCCESS) ? 0 : -1);
+    }
+  }
 }
 
 int switchlink_add_interface_to_bridge(switchlink_db_interface_info_t *intf) {
@@ -497,7 +565,7 @@ int switchlink_add_interface_to_bridge(switchlink_db_interface_info_t *intf) {
   attr_list[1].id = SAI_VLAN_MEMBER_ATTR_PORT_ID;
   attr_list[1].value.oid = intf->intf_h;
   attr_list[2].id = SAI_VLAN_MEMBER_ATTR_TAGGING_MODE;
-  attr_list[2].value.s32 = SAI_VLAN_PORT_UNTAGGED;
+  attr_list[2].value.s32 = SAI_VLAN_TAGGING_MODE_UNTAGGED;
   status = vlan_api->create_vlan_member(&intf->vlan_member_h, 3, attr_list);
   return ((status == SAI_STATUS_SUCCESS) ? 0 : -1);
 }
@@ -569,7 +637,7 @@ int switchlink_mac_create(switchlink_mac_addr_t mac_addr,
   sai_attribute_t attr_list[3];
   memset(&attr_list, 0, sizeof(attr_list));
   attr_list[0].id = SAI_FDB_ENTRY_ATTR_TYPE;
-  attr_list[0].value.s32 = SAI_FDB_ENTRY_STATIC;
+  attr_list[0].value.s32 = SAI_FDB_ENTRY_TYPE_STATIC;
   attr_list[1].id = SAI_FDB_ENTRY_ATTR_PORT_ID;
   attr_list[1].value.oid = intf_h;
   attr_list[2].id = SAI_FDB_ENTRY_ATTR_PACKET_ACTION;
@@ -615,7 +683,7 @@ int switchlink_nexthop_create(switchlink_db_neigh_info_t *neigh_info) {
   sai_attribute_t attr_list[3];
   memset(attr_list, 0, sizeof(attr_list));
   attr_list[0].id = SAI_NEXT_HOP_ATTR_TYPE;
-  attr_list[0].value.s32 = SAI_NEXT_HOP_IP;
+  attr_list[0].value.s32 = SAI_NEXT_HOP_TYPE_IP;
   attr_list[1].id = SAI_NEXT_HOP_ATTR_IP;
   if (neigh_info->ip_addr.family == AF_INET) {
     attr_list[1].value.ipaddr.addr_family = SAI_IP_ADDR_FAMILY_IPV4;
@@ -644,7 +712,7 @@ int switchlink_neighbor_create(switchlink_db_neigh_info_t *neigh_info) {
 
   sai_attribute_t attr_list[1];
   memset(attr_list, 0, sizeof(attr_list));
-  attr_list[0].id = SAI_NEIGHBOR_ATTR_DST_MAC_ADDRESS;
+  attr_list[0].id = SAI_NEIGHBOR_ENTRY_ATTR_DST_MAC_ADDRESS;
   memcpy(attr_list[0].value.mac, neigh_info->mac_addr, sizeof(sai_mac_t));
 
   sai_neighbor_entry_t neighbor_entry;
@@ -682,23 +750,39 @@ int switchlink_neighbor_delete(switchlink_db_neigh_info_t *neigh_info) {
 
 int switchlink_ecmp_create(switchlink_db_ecmp_info_t *ecmp_info) {
   sai_status_t status = SAI_STATUS_SUCCESS;
+  uint8_t index = 0;
+  sai_attribute_t attr_list[1];
+  sai_attribute_t attr_member_list[2];
 
-  sai_attribute_t attr_list[3];
   memset(attr_list, 0, sizeof(attr_list));
   attr_list[0].id = SAI_NEXT_HOP_GROUP_ATTR_TYPE;
-  attr_list[0].value.s32 = SAI_NEXT_HOP_GROUP_ECMP;
-  attr_list[1].id = SAI_NEXT_HOP_GROUP_ATTR_NEXT_HOP_COUNT;
-  attr_list[1].value.u32 = ecmp_info->num_nhops;
-  attr_list[2].id = SAI_NEXT_HOP_GROUP_ATTR_NEXT_HOP_LIST;
-  attr_list[2].value.objlist.count = ecmp_info->num_nhops;
-  attr_list[2].value.objlist.list = (sai_object_id_t *)ecmp_info->nhops;
-  status =
-      nhop_group_api->create_next_hop_group(&(ecmp_info->ecmp_h), 3, attr_list);
+  attr_list[0].value.s32 = SAI_NEXT_HOP_GROUP_TYPE_ECMP;
+
+  status = nhop_group_api->create_next_hop_group(
+      &(ecmp_info->ecmp_h), 0x1, attr_list);
+  assert(status == SAI_STATUS_SUCCESS);
+
+  for (index = 0; index < ecmp_info->num_nhops; index++) {
+    memset(attr_member_list, 0x0, sizeof(attr_member_list));
+    attr_member_list[0].id = SAI_NEXT_HOP_GROUP_MEMBER_ATTR_NEXT_HOP_GROUP_ID;
+    attr_member_list[0].value.oid = ecmp_info->ecmp_h;
+    attr_member_list[1].id = SAI_NEXT_HOP_GROUP_MEMBER_ATTR_NEXT_HOP_ID;
+    attr_member_list[1].value.oid = ecmp_info->nhops[index];
+    status = nhop_group_api->create_next_hop_group_member(
+        &ecmp_info->nhop_member_handles[index], 0x2, attr_member_list);
+    assert(status == SAI_STATUS_SUCCESS);
+  }
+
   return ((status == SAI_STATUS_SUCCESS) ? 0 : -1);
 }
 
 int switchlink_ecmp_delete(switchlink_db_ecmp_info_t *ecmp_info) {
   sai_status_t status = SAI_STATUS_SUCCESS;
+  uint8_t index = 0;
+  for (index = 0; index < ecmp_info->num_nhops; index++) {
+    status = nhop_group_api->remove_next_hop_group_member(
+        ecmp_info->nhop_member_handles[index]);
+  }
   status = nhop_group_api->remove_next_hop_group(ecmp_info->ecmp_h);
   return ((status == SAI_STATUS_SUCCESS) ? 0 : -1);
 }
@@ -706,7 +790,7 @@ int switchlink_ecmp_delete(switchlink_db_ecmp_info_t *ecmp_info) {
 int switchlink_route_create(switchlink_db_route_info_t *route_info) {
   sai_status_t status = SAI_STATUS_SUCCESS;
 
-  sai_unicast_route_entry_t route_entry;
+  sai_route_entry_t route_entry;
   memset(&route_entry, 0, sizeof(route_entry));
   route_entry.vr_id = route_info->vrf_h;
   if (route_info->ip_addr.family == AF_INET) {
@@ -729,10 +813,10 @@ int switchlink_route_create(switchlink_db_route_info_t *route_info) {
   sai_attribute_t attr_list[1];
   memset(attr_list, 0, sizeof(attr_list));
   if (route_info->nhop_h == g_cpu_rx_nhop_h) {
-    attr_list[0].id = SAI_ROUTE_ATTR_PACKET_ACTION;
+    attr_list[0].id = SAI_ROUTE_ENTRY_ATTR_PACKET_ACTION;
     attr_list[0].value.s32 = SAI_PACKET_ACTION_TRAP;
   } else {
-    attr_list[0].id = SAI_ROUTE_ATTR_NEXT_HOP_ID;
+    attr_list[0].id = SAI_ROUTE_ENTRY_ATTR_NEXT_HOP_ID;
     attr_list[0].value.oid = route_info->nhop_h;
   }
 
@@ -743,7 +827,7 @@ int switchlink_route_create(switchlink_db_route_info_t *route_info) {
 int switchlink_route_delete(switchlink_db_route_info_t *route_info) {
   sai_status_t status = SAI_STATUS_SUCCESS;
 
-  sai_unicast_route_entry_t route_entry;
+  sai_route_entry_t route_entry;
   memset(&route_entry, 0, sizeof(route_entry));
   route_entry.vr_id = route_info->vrf_h;
   if (route_info->ip_addr.family == AF_INET) {

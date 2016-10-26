@@ -54,11 +54,11 @@ static void sai_fdb_entry_attribute_parse(uint32_t attr_count,
     switch (attribute->id) {
       case SAI_FDB_ENTRY_ATTR_TYPE:
         switch (attribute->value.s32) {
-          case SAI_FDB_ENTRY_DYNAMIC:
+          case SAI_FDB_ENTRY_TYPE_DYNAMIC:
             mac_entry->entry_type = SWITCH_MAC_ENTRY_DYNAMIC;
             break;
 
-          case SAI_FDB_ENTRY_STATIC:
+          case SAI_FDB_ENTRY_TYPE_STATIC:
             mac_entry->entry_type = SWITCH_MAC_ENTRY_STATIC;
             break;
         }
@@ -316,8 +316,8 @@ sai_status_t sai_flush_fdb_entries(_In_ uint32_t attr_count,
       case SAI_FDB_FLUSH_ATTR_ENTRY_TYPE:
         entry_type = attribute->value.s32;
         switch (entry_type) {
-          case SAI_FDB_FLUSH_ENTRY_DYNAMIC:
-          case SAI_FDB_FLUSH_ENTRY_STATIC:
+          case SAI_FDB_FLUSH_ENTRY_TYPE_DYNAMIC:
+          case SAI_FDB_FLUSH_ENTRY_TYPE_STATIC:
             break;
         }
         break;
@@ -374,7 +374,7 @@ static void sai_mac_learn_notify_cb(switch_api_mac_entry_t *mac_entry) {
   sai_attribute_t attr_list[3];
   memset(attr_list, 0, sizeof(attr_list));
   attr_list[0].id = SAI_FDB_ENTRY_ATTR_TYPE;
-  attr_list[0].value.s32 = SAI_FDB_ENTRY_DYNAMIC;
+  attr_list[0].value.s32 = SAI_FDB_ENTRY_TYPE_DYNAMIC;
   attr_list[1].id = SAI_FDB_ENTRY_ATTR_PORT_ID;
   attr_list[1].value.oid = intf_h;
   attr_list[2].id = SAI_FDB_ENTRY_ATTR_PACKET_ACTION;

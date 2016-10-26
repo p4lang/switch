@@ -37,7 +37,7 @@ static switch_mirror_type_t sai_session_to_switch_session(_In_ sai_mirror_type_t
 static switch_encap_type_t sai_erspan_encap_to_switch_erspan_encap(
     _In_ sai_erspan_encapsulation_type_t encap_type) {
   switch (encap_type) {
-    case SAI_MIRROR_L3_GRE_TUNNEL:
+    case SAI_ERSPAN_ENCAPSULATION_TYPE_MIRROR_L3_GRE_TUNNEL:
       return SWITCH_API_ENCAP_TYPE_ERSPAN_T3;
     default:
       return SWITCH_API_ENCAP_TYPE_NONE;
@@ -163,7 +163,8 @@ sai_status_t sai_remove_mirror_session(_In_ sai_object_id_t session_id) {
 
   SAI_LOG_ENTER();
 
-  SAI_ASSERT(sai_object_type_query(session_id) == SAI_OBJECT_TYPE_MIRROR);
+  SAI_ASSERT(sai_object_type_query(session_id) ==
+             SAI_OBJECT_TYPE_MIRROR_SESSION);
 
   switch_status = switch_api_mirror_session_delete(device, session_id);
   status = sai_switch_status_to_sai_status(switch_status);
@@ -198,7 +199,8 @@ sai_status_t sai_set_mirror_session_attribute(
     return status;
   }
 
-  SAI_ASSERT(sai_object_type_query(session_id) == SAI_OBJECT_TYPE_MIRROR);
+  SAI_ASSERT(sai_object_type_query(session_id) ==
+             SAI_OBJECT_TYPE_MIRROR_SESSION);
 
   SAI_LOG_EXIT();
 
@@ -228,7 +230,8 @@ sai_status_t sai_get_mirror_session_attribute(
     return status;
   }
 
-  SAI_ASSERT(sai_object_type_query(session_id) == SAI_OBJECT_TYPE_MIRROR);
+  SAI_ASSERT(sai_object_type_query(session_id) ==
+             SAI_OBJECT_TYPE_MIRROR_SESSION);
 
   SAI_LOG_EXIT();
 

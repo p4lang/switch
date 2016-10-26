@@ -56,7 +56,7 @@ def sai_thrift_create_vlan_member(client, vlan_id, port, tagging_mode):
 def sai_thrift_create_fdb(client, vlan_id, mac, port, mac_action):
     fdb_entry = sai_thrift_fdb_entry_t(mac_address=mac, vlan_id=vlan_id)
     #value 0 represents static entry, id=0, represents entry type
-    fdb_attribute1_value = sai_thrift_attribute_value_t(s32=SAI_FDB_ENTRY_STATIC)
+    fdb_attribute1_value = sai_thrift_attribute_value_t(s32=SAI_FDB_ENTRY_TYPE_STATIC)
     fdb_attribute1 = sai_thrift_attribute_t(id=SAI_FDB_ENTRY_ATTR_TYPE,
                                             value=fdb_attribute1_value)
     #value oid represents object id, id=1 represents port id
@@ -78,7 +78,7 @@ def sai_thrift_flush_fdb_by_vlan(client, vlan_id):
     fdb_attribute1_value = sai_thrift_attribute_value_t(u16=vlan_id)
     fdb_attribute1 = sai_thrift_attribute_t(id=SAI_FDB_FLUSH_ATTR_VLAN_ID,
                                             value=fdb_attribute1_value)
-    fdb_attribute2_value = sai_thrift_attribute_value_t(s32=SAI_FDB_FLUSH_ENTRY_STATIC)
+    fdb_attribute2_value = sai_thrift_attribute_value_t(s32=SAI_FDB_FLUSH_ENTRY_TYPE_STATIC)
     fdb_attribute2 = sai_thrift_attribute_t(id=SAI_FDB_FLUSH_ATTR_ENTRY_TYPE,
                                             value=fdb_attribute2_value)
     fdb_attr_list = [fdb_attribute1, fdb_attribute2]
@@ -155,9 +155,9 @@ def sai_thrift_create_route(client, vr_id, addr_family, ip_addr, ip_mask, nhop):
         mask = sai_thrift_ip_t(ip6=ip_mask)
         ip_prefix = sai_thrift_ip_prefix_t(addr_family=SAI_IP_ADDR_FAMILY_IPV6, addr=addr, mask=mask)
     route_attribute1_value = sai_thrift_attribute_value_t(oid=nhop)
-    route_attribute1 = sai_thrift_attribute_t(id=SAI_ROUTE_ATTR_NEXT_HOP_ID,
+    route_attribute1 = sai_thrift_attribute_t(id=SAI_ROUTE_ENTRY_ATTR_NEXT_HOP_ID,
                                               value=route_attribute1_value)
-    route = sai_thrift_unicast_route_entry_t(vr_id, ip_prefix)
+    route = sai_thrift_route_entry_t(vr_id, ip_prefix)
     route_attr_list = [route_attribute1]
     client.sai_thrift_create_route(thrift_unicast_route_entry=route, thrift_attr_list=route_attr_list)
 
@@ -170,7 +170,7 @@ def sai_thrift_remove_route(client, vr_id, addr_family, ip_addr, ip_mask, nhop):
         addr = sai_thrift_ip_t(ip6=ip_addr)
         mask = sai_thrift_ip_t(ip6=ip_mask)
         ip_prefix = sai_thrift_ip_prefix_t(addr_family=SAI_IP_ADDR_FAMILY_IPV6, addr=addr, mask=mask)
-    route = sai_thrift_unicast_route_entry_t(vr_id, ip_prefix)
+    route = sai_thrift_route_entry_t(vr_id, ip_prefix)
     client.sai_thrift_remove_route(thrift_unicast_route_entry=route)
 
 def sai_thrift_create_nhop(client, addr_family, ip_addr, rif_id):
@@ -198,7 +198,7 @@ def sai_thrift_create_neighbor(client, addr_family, rif_id, ip_addr, dmac):
         addr = sai_thrift_ip_t(ip6=ip_addr)
         ipaddr = sai_thrift_ip_address_t(addr_family=SAI_IP_ADDR_FAMILY_IPV6, addr=addr)
     neighbor_attribute1_value = sai_thrift_attribute_value_t(mac=dmac)
-    neighbor_attribute1 = sai_thrift_attribute_t(id=SAI_NEIGHBOR_ATTR_DST_MAC_ADDRESS,
+    neighbor_attribute1 = sai_thrift_attribute_t(id=SAI_NEIGHBOR_ENTRY_ATTR_DST_MAC_ADDRESS,
                                                  value=neighbor_attribute1_value)
     neighbor_attr_list = [neighbor_attribute1]
     neighbor_entry = sai_thrift_neighbor_entry_t(rif_id=rif_id, ip_address=ipaddr)
@@ -210,21 +210,29 @@ def sai_thrift_remove_neighbor(client, addr_family, rif_id, ip_addr, dmac):
         ipaddr = sai_thrift_ip_address_t(addr_family=SAI_IP_ADDR_FAMILY_IPV4, addr=addr)
     else:
         addr = sai_thrift_ip_t(ip6=ip_addr)
-        ipaddr = sai_thrift_ip_address_t(addr_family=SAI_IP_ADDR_FAMILY_IPV4, addr=addr)
+        ipaddr = sai_thrift_ip_address_t(addr_family=SAI_IP_ADDR_FAMILY_IPV6, addr=addr)
     neighbor_entry = sai_thrift_neighbor_entry_t(rif_id=rif_id, ip_address=ipaddr)
     client.sai_thrift_remove_neighbor_entry(neighbor_entry)
 
-def sai_thrift_create_next_hop_group(client, nhop_list):
-    nhop_group_attribute1_value = sai_thrift_attribute_value_t(s32=SAI_NEXT_HOP_GROUP_ECMP)
+def sai_thrift_create_next_hop_group(client):
+    nhop_group_attribute1_value = sai_thrift_attribute_value_t(s32=SAI_NEXT_HOP_GROUP_TYPE_ECMP)
     nhop_group_attribute1 = sai_thrift_attribute_t(id=SAI_NEXT_HOP_GROUP_ATTR_TYPE,
                                                    value=nhop_group_attribute1_value)
-    nhop_objlist = sai_thrift_object_list_t(count=len(nhop_list), object_id_list=nhop_list)
-    nhop_group_attribute2_value = sai_thrift_attribute_value_t(objlist=nhop_objlist)
-    nhop_group_attribute2 = sai_thrift_attribute_t(id=SAI_NEXT_HOP_GROUP_ATTR_NEXT_HOP_LIST,
-                                                   value=nhop_group_attribute2_value)
-    nhop_group_attr_list = [nhop_group_attribute1, nhop_group_attribute2]
+    nhop_group_attr_list = [nhop_group_attribute1]
     nhop_group = client.sai_thrift_create_next_hop_group(thrift_attr_list=nhop_group_attr_list)
     return nhop_group
+
+def sai_thrift_create_next_hop_group_member(client, nhop_group_id, nhop_id):
+    nhop_member_attribute1_value = sai_thrift_attribute_value_t(oid=nhop_group_id)
+    nhop_member_attribute1 = sai_thrift_attribute_t(id=SAI_NEXT_HOP_GROUP_MEMBER_ATTR_NEXT_HOP_GROUP_ID,
+                                                   value=nhop_member_attribute1_value)
+    nhop_member_attribute2_value = sai_thrift_attribute_value_t(oid=nhop_id)
+    nhop_member_attribute2 = sai_thrift_attribute_t(id=SAI_NEXT_HOP_GROUP_MEMBER_ATTR_NEXT_HOP_ID,
+                                                   value=nhop_member_attribute2_value)
+    nhop_member_attr_list = [nhop_member_attribute1, nhop_member_attribute2]
+    nhop_group_member = client.sai_thrift_create_next_hop_group_member(thrift_attr_list=nhop_member_attr_list)
+    return nhop_group_member
+
 
 def sai_thrift_create_lag_member(client, lag_id,  port_id, ingress_disable=False, egress_disable=False):
     attr_list = []
@@ -251,14 +259,28 @@ def sai_thrift_create_lag_member(client, lag_id,  port_id, ingress_disable=False
     lag_member = client.sai_thrift_create_lag_member(attr_list)
     return lag_member
 
-def sai_thrift_create_stp_entry(client, vlan_list):
+def sai_thrift_create_stp(client, vlan_list):
     vlanlist=sai_thrift_vlan_list_t(vlan_count=len(vlan_list), vlan_list=vlan_list)
     stp_attribute1_value = sai_thrift_attribute_value_t(vlanlist=vlanlist)
     stp_attribute1 = sai_thrift_attribute_t(id=SAI_STP_ATTR_VLAN_LIST,
                                             value=stp_attribute1_value)
     stp_attr_list = [stp_attribute1]
-    stp_id = client.sai_thrift_create_stp_entry(stp_attr_list)
+    stp_id = client.sai_thrift_create_stp(stp_attr_list)
     return stp_id
+
+def sai_thrift_create_stp_port(client, stp_id, port_id, stp_state):
+    stp_attribute1_value = sai_thrift_attribute_value_t(oid=stp_id)
+    stp_attribute1 = sai_thrift_attribute_t(id=SAI_STP_PORT_ATTR_STP,
+                                            value=stp_attribute1_value)
+    stp_attribute2_value = sai_thrift_attribute_value_t(oid=port_id)
+    stp_attribute2 = sai_thrift_attribute_t(id=SAI_STP_PORT_ATTR_PORT,
+                                            value=stp_attribute2_value)
+    stp_attribute3_value = sai_thrift_attribute_value_t(u32=stp_state)
+    stp_attribute3 = sai_thrift_attribute_t(id=SAI_STP_PORT_ATTR_STATE,
+                                            value=stp_attribute3_value)
+    stp_attr_list = [stp_attribute1, stp_attribute2, stp_attribute3]
+    stp_port_id = client.sai_thrift_create_stp_port(stp_attr_list)
+    return stp_port_id
 
 def sai_thrift_create_hostif_trap_group(client, queue_id, policer_id):
     attribute1_value = sai_thrift_attribute_value_t(u32=queue_id)
@@ -272,22 +294,24 @@ def sai_thrift_create_hostif_trap_group(client, queue_id, policer_id):
     return trap_group_id
 
 def sai_thrift_create_hostif_trap(client, trap_id, action, priority, channel, trap_group_id):
-    attribute3_value = sai_thrift_attribute_value_t(u32=channel)
-    attribute3 = sai_thrift_attribute_t(id=SAI_HOSTIF_TRAP_ATTR_TRAP_CHANNEL,
-                                        value=attribute3_value)
-    client.sai_thrift_set_hostif_trap(trap_id, attribute3)
-    attribute4_value = sai_thrift_attribute_value_t(oid=trap_group_id)
-    attribute4 = sai_thrift_attribute_t(id=SAI_HOSTIF_TRAP_ATTR_TRAP_GROUP,
-                                        value=attribute4_value)
-    client.sai_thrift_set_hostif_trap(trap_id, attribute4)
-    attribute1_value = sai_thrift_attribute_value_t(u32=action)
-    attribute1 = sai_thrift_attribute_t(id=SAI_HOSTIF_TRAP_ATTR_PACKET_ACTION,
+    attribute1_value = sai_thrift_attribute_value_t(u32=trap_id)
+    attribute1 = sai_thrift_attribute_t(id=SAI_HOSTIF_TRAP_ATTR_TRAP_TYPE,
                                         value=attribute1_value)
-    client.sai_thrift_set_hostif_trap(trap_id, attribute1)
-    attribute2_value = sai_thrift_attribute_value_t(u32=priority)
-    attribute2 = sai_thrift_attribute_t(id=SAI_HOSTIF_TRAP_ATTR_TRAP_PRIORITY,
+    attribute2_value = sai_thrift_attribute_value_t(u32=channel)
+    attribute2 = sai_thrift_attribute_t(id=SAI_HOSTIF_TRAP_ATTR_TRAP_CHANNEL,
                                         value=attribute2_value)
-    client.sai_thrift_set_hostif_trap(trap_id, attribute2)
+    attribute3_value = sai_thrift_attribute_value_t(oid=trap_group_id)
+    attribute3 = sai_thrift_attribute_t(id=SAI_HOSTIF_TRAP_ATTR_TRAP_GROUP,
+                                        value=attribute3_value)
+    attribute4_value = sai_thrift_attribute_value_t(u32=action)
+    attribute4 = sai_thrift_attribute_t(id=SAI_HOSTIF_TRAP_ATTR_PACKET_ACTION,
+                                        value=attribute4_value)
+    attribute5_value = sai_thrift_attribute_value_t(u32=priority)
+    attribute5 = sai_thrift_attribute_t(id=SAI_HOSTIF_TRAP_ATTR_TRAP_PRIORITY,
+                                        value=attribute5_value)
+    attr_list = [attribute1, attribute2, attribute3, attribute4, attribute5]
+    hif_trap_id = client.sai_thrift_create_hostif_trap(attr_list)
+    return hif_trap_id
 
 def sai_thrift_create_hostif(client, rif_or_port_id, intf_name):
     attribute1_value = sai_thrift_attribute_value_t(u32=SAI_HOSTIF_TYPE_NETDEV)
@@ -443,13 +467,13 @@ def sai_thrift_create_acl_entry(client, acl_table_id,
 
     #Packet action
     for action in action_list:
-        if action == SAI_ACL_ENTRY_ATTR_PACKET_ACTION:
+        if action == SAI_ACL_ENTRY_ATTR_ACTION_PACKET_ACTION:
             #Drop
             attribute_value = sai_thrift_attribute_value_t(
                              aclfield = sai_thrift_acl_field_data_t(
                              data = sai_thrift_acl_data_t(s32 = packet_action)))
             attribute = sai_thrift_attribute_t(
-                             id = SAI_ACL_ENTRY_ATTR_PACKET_ACTION,
+                             id = SAI_ACL_ENTRY_ATTR_ACTION_PACKET_ACTION,
                              value=attribute_value)
             acl_attr_list.append(attribute)
 
@@ -684,7 +708,7 @@ def sai_thrift_get_acl_counter_attribute(client, acl_counter_id):
 def sai_thrift_create_policer(
         client,
         meter_type = SAI_METER_TYPE_BYTES,
-        meter_mode = SAI_POLICER_MODE_Tr_TCM,
+        meter_mode = SAI_POLICER_MODE_TR_TCM,
         color_source = SAI_POLICER_COLOR_SOURCE_BLIND,
         cbs = 0,
         cir = 0,
@@ -774,49 +798,49 @@ def sai_thrift_create_qos_map(client, map_type, key_list, data_list):
                                         value=attribute1_value)
     attr_list.append(attribute1)
 
-    if (map_type == SAI_QOS_MAP_DOT1P_TO_TC):
+    if (map_type == SAI_QOS_MAP_TYPE_DOT1P_TO_TC):
         for i in key_list:
             qos_map_key = sai_thrift_qos_map_params_t(dot1p=i)
             qos_map_key_list.append(qos_map_key)
         for j in data_list:
             qos_map_data = sai_thrift_qos_map_params_t(tc=j)
             qos_map_data_list.append(qos_map_data)
-    elif (map_type == SAI_QOS_MAP_DSCP_TO_TC):
+    elif (map_type == SAI_QOS_MAP_TYPE_DSCP_TO_TC):
         for i in key_list:
             qos_map_key = sai_thrift_qos_map_params_t(dscp=i)
             qos_map_key_list.append(qos_map_key)
         for j in data_list:
             qos_map_data = sai_thrift_qos_map_params_t(tc=j)
             qos_map_data_list.append(qos_map_data)
-    elif (map_type == SAI_QOS_MAP_DOT1P_TO_COLOR):
+    elif (map_type == SAI_QOS_MAP_TYPE_DOT1P_TO_COLOR):
         for i in key_list:
             qos_map_key = sai_thrift_qos_map_params_t(dot1p=i)
             qos_map_key_list.append(qos_map_key)
         for j in data_list:
             qos_map_data = sai_thrift_qos_map_params_t(color=j)
             qos_map_data_list.append(qos_map_data)
-    elif (map_type == SAI_QOS_MAP_DSCP_TO_COLOR):
+    elif (map_type == SAI_QOS_MAP_TYPE_DSCP_TO_COLOR):
         for i in key_list:
             qos_map_key = sai_thrift_qos_map_params_t(dscp=i)
             qos_map_key_list.append(qos_map_key)
         for j in data_list:
             qos_map_data = sai_thrift_qos_map_params_t(color=j)
             qos_map_data_list.append(qos_map_data)
-    elif (map_type == SAI_QOS_MAP_TC_TO_QUEUE):
+    elif (map_type == SAI_QOS_MAP_TYPE_TC_TO_QUEUE):
         for i in key_list:
             qos_map_key = sai_thrift_qos_map_params_t(tc=i)
             qos_map_key_list.append(qos_map_key)
         for j in data_list:
             qos_map_data = sai_thrift_qos_map_params_t(queue_index=j)
             qos_map_data_list.append(qos_map_data)
-    elif (map_type == SAI_QOS_MAP_TC_AND_COLOR_TO_DOT1P):
+    elif (map_type == SAI_QOS_MAP_TYPE_TC_AND_COLOR_TO_DOT1P):
         for i in key_list:
             qos_map_key = sai_thrift_qos_map_params_t(tc=i[0], color=i[1])
             qos_map_key_list.append(qos_map_key)
         for j in data_list:
             qos_map_data = sai_thrift_qos_map_params_t(dot1p=j)
             qos_map_data_list.append(qos_map_data)
-    elif (map_type == SAI_QOS_MAP_TC_AND_COLOR_TO_DSCP):
+    elif (map_type == SAI_QOS_MAP_TYPE_TC_AND_COLOR_TO_DSCP):
         for i in key_list:
             qos_map_key = sai_thrift_qos_map_params_t(tc=i[0], color=i[1])
             qos_map_key_list.append(qos_map_key)

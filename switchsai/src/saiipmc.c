@@ -101,10 +101,10 @@ static void sai_ipmc_entry_attribute_parse(
       case SAI_IPMC_ATTR_RPF_ROUTER_INTERFACE_LIST:
         *rpf_list_handle = (switch_handle_t *)attribute->value.objlist.list;
         *rpf_list_count = attribute->value.objlist.count;
-      case SAI_ROUTE_ATTR_TRAP_PRIORITY:
+      case SAI_ROUTE_ENTRY_ATTR_TRAP_PRIORITY:
         *pri = attribute->value.u8;
         break;
-      case SAI_ROUTE_ATTR_PACKET_ACTION:
+      case SAI_ROUTE_ENTRY_ATTR_PACKET_ACTION:
         *action = attribute->value.s32;
         break;
     }

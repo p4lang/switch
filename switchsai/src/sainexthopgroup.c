@@ -22,26 +22,24 @@ limitations under the License.
 
 static sai_api_t api_id = SAI_API_NEXT_HOP_GROUP;
 
-sai_status_t sai_create_next_hop_group_entry(
-    _Out_ sai_object_id_t *next_hop_group_id,
-    _In_ uint32_t attr_count,
-    _In_ const sai_attribute_t *attr_list);
+#define SAI_NHOP_GROUP_MEMBER_OBJECT(_nhop_group_id, _nhop_id) \
+  ((_nhop_id & 0xFFFF) | ((_nhop_group_id & 0xFFFF) << 16) |   \
+   (SWITCH_HANDLE_TYPE_ECMP_MEMBER << HANDLE_TYPE_SHIFT)) &    \
+      0xFFFFFFFF
 
-sai_status_t sai_remove_next_hop_group_entry(_In_ sai_object_id_t
-                                                 next_hop_group_id);
+#define SAI_NHOP_GROUP_OBJECT(_nhop_group_member_id)        \
+  ((((_nhop_group_member_id & 0xFFFFFFFF) >> 16) & 0x3FF) | \
+   (SWITCH_HANDLE_TYPE_NHOP << HANDLE_TYPE_SHIFT)) &        \
+      0xFFFFFFFF
 
-sai_status_t sai_add_next_hop_to_group(_In_ sai_object_id_t next_hop_group_id,
-                                       _In_ uint32_t next_hop_count,
-                                       _In_ const sai_object_id_t *nexthops);
-
-sai_status_t sai_remove_next_hop_from_group(
-    _In_ sai_object_id_t next_hop_group_id,
-    _In_ uint32_t next_hop_count,
-    _In_ const sai_object_id_t *nexthops);
+#define SAI_NHOP_OBJECT(_nhop_group_member_id)       \
+  (((_nhop_group_member_id & 0xFFFFFFFF) & 0xFFFF) | \
+   (SWITCH_HANDLE_TYPE_NHOP << HANDLE_TYPE_SHIFT)) & \
+      0xFFFFFFFF
 
 static sai_next_hop_group_type_t sai_get_next_hop_group_type(
     sai_object_id_t next_hop_group_id) {
-  return SAI_NEXT_HOP_GROUP_ECMP;
+  return SAI_NEXT_HOP_GROUP_TYPE_ECMP;
 }
 
 /*
@@ -65,9 +63,7 @@ sai_status_t sai_create_next_hop_group_entry(
 
   sai_status_t status = SAI_STATUS_SUCCESS;
   sai_attribute_t attribute;
-  sai_object_id_t *nhop_list = NULL;
   sai_next_hop_group_type_t nhgroup_type = -1;
-  uint32_t nhop_count = 0;
   uint32_t index = 0;
 
   if (!attr_list) {
@@ -79,19 +75,13 @@ sai_status_t sai_create_next_hop_group_entry(
   for (index = 0; index < attr_count; index++) {
     attribute = attr_list[index];
     switch (attribute.id) {
-      case SAI_NEXT_HOP_GROUP_ATTR_NEXT_HOP_COUNT:
-        break;
       case SAI_NEXT_HOP_GROUP_ATTR_TYPE:
         nhgroup_type = attribute.value.s32;
-        break;
-      case SAI_NEXT_HOP_GROUP_ATTR_NEXT_HOP_LIST:
-        nhop_list = attribute.value.objlist.list;
-        nhop_count = attribute.value.objlist.count;
         break;
     }
   }
 
-  assert(nhgroup_type == SAI_NEXT_HOP_GROUP_ECMP);
+  SAI_ASSERT(nhgroup_type == SAI_NEXT_HOP_GROUP_TYPE_ECMP);
   *next_hop_group_id = (sai_object_id_t)switch_api_ecmp_create(device);
   status =
       ((*next_hop_group_id == SWITCH_API_INVALID_HANDLE) ? SAI_STATUS_FAILURE
@@ -101,8 +91,6 @@ sai_status_t sai_create_next_hop_group_entry(
                   sai_status_to_string(status));
     return status;
   }
-
-  status = sai_add_next_hop_to_group(*next_hop_group_id, nhop_count, nhop_list);
 
   SAI_LOG_EXIT();
 
@@ -132,7 +120,7 @@ sai_status_t sai_remove_next_hop_group_entry(_In_ sai_object_id_t
 
   sai_next_hop_group_type_t nhgroup_type;
   nhgroup_type = sai_get_next_hop_group_type(next_hop_group_id);
-  assert(nhgroup_type == SAI_NEXT_HOP_GROUP_ECMP);
+  SAI_ASSERT(nhgroup_type == SAI_NEXT_HOP_GROUP_TYPE_ECMP);
   switch_status =
       switch_api_ecmp_delete(device, (switch_handle_t)next_hop_group_id);
   status = sai_switch_status_to_sai_status(switch_status);
@@ -227,110 +215,160 @@ sai_status_t sai_get_next_hop_group_entry_attribute(
   return (sai_status_t)status;
 }
 
-/*
-* Routine Description:
-*    Add next hop to a group
-*
-* Arguments:
-*    [in] next_hop_group_id - next hop group id
-*    [in] next_hop_count - number of next hops
-*    [in] nexthops - array of next hops
-*
-* Return Values:
-*    SAI_STATUS_SUCCESS on success
-*    Failure status code on error
-*/
-sai_status_t sai_add_next_hop_to_group(_In_ sai_object_id_t next_hop_group_id,
-                                       _In_ uint32_t next_hop_count,
-                                       _In_ const sai_object_id_t *nexthops) {
+/**
+ * @brief Create next hop group member
+ *
+ * @param[out] next_hop_group_member_id - next hop group member id
+ * @param[in] attr_count - number of attributes
+ * @param[in] attr_list - array of attributes
+ *
+ * @return #SAI_STATUS_SUCCESS on success Failure status code on error
+ */
+sai_status_t sai_create_next_hop_group_member(
+    _Out_ sai_object_id_t *next_hop_group_member_id,
+    _In_ uint32_t attr_count,
+    _In_ const sai_attribute_t *attr_list) {
   SAI_LOG_ENTER();
 
-  switch_handle_t *nh_list = NULL;
   sai_status_t status = SAI_STATUS_SUCCESS;
   switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
-  uint32_t i = 0;
+  sai_object_id_t nhop_group_id = 0;
+  sai_object_id_t nhop_id = 0;
+  sai_attribute_t attribute;
+  uint32_t index = 0;
 
-  if (!nexthops) {
+  if (!attr_list) {
     status = SAI_STATUS_INVALID_PARAMETER;
-    SAI_LOG_ERROR("null nexthops list: %s", sai_status_to_string(status));
+    SAI_LOG_ERROR("null attribute list: %s", sai_status_to_string(status));
     return status;
   }
 
-  SAI_ASSERT(sai_object_type_query(next_hop_group_id) ==
-             SAI_OBJECT_TYPE_NEXT_HOP_GROUP);
+  for (index = 0; index < attr_count; index++) {
+    attribute = attr_list[index];
+    switch (attribute.id) {
+      case SAI_NEXT_HOP_GROUP_MEMBER_ATTR_NEXT_HOP_GROUP_ID:
+        nhop_group_id = attribute.value.oid;
+        SAI_ASSERT(sai_object_type_query(nhop_group_id) ==
+                   SAI_OBJECT_TYPE_NEXT_HOP_GROUP);
+        break;
 
-  nh_list = SAI_MALLOC(sizeof(switch_handle_t) * next_hop_count);
-  if (!nh_list) return SAI_STATUS_NO_MEMORY;
-  for (i = 0; i < next_hop_count; i++) *(nh_list + i) = nexthops[i];
-  switch_status = switch_api_ecmp_member_add(device,
-                                             (switch_handle_t)next_hop_group_id,
-                                             next_hop_count,
-                                             (switch_handle_t *)nh_list);
+      case SAI_NEXT_HOP_GROUP_MEMBER_ATTR_NEXT_HOP_ID:
+        nhop_id = attribute.value.oid;
+        SAI_ASSERT(sai_object_type_query(nhop_id) == SAI_OBJECT_TYPE_NEXT_HOP);
+        break;
+      default:
+        break;
+    }
+  }
+
+  switch_status = switch_api_ecmp_member_add(
+      device, (switch_handle_t)nhop_group_id, 0x1, (switch_handle_t *)&nhop_id);
   status = sai_switch_status_to_sai_status(switch_status);
   if (status != SAI_STATUS_SUCCESS) {
     SAI_LOG_ERROR("failed to add next hop to group %lx : %s",
-                  next_hop_group_id,
+                  nhop_group_id,
                   sai_status_to_string(status));
   }
 
-  SAI_FREE(nh_list);
+  *next_hop_group_member_id =
+      SAI_NHOP_GROUP_MEMBER_OBJECT(nhop_group_id, nhop_id);
+
   SAI_LOG_EXIT();
 
   return (sai_status_t)status;
 }
 
-/*
-* Routine Description:
-*    Remove next hop from a group
-*
-* Arguments:
-*    [in] next_hop_group_id - next hop group id
-*    [in] next_hop_count - number of next hops
-*    [in] nexthops - array of next hops
-*
-* Return Values:
-*    SAI_STATUS_SUCCESS on success
-*    Failure status code on error
-*/
-sai_status_t sai_remove_next_hop_from_group(
-    _In_ sai_object_id_t next_hop_group_id,
-    _In_ uint32_t next_hop_count,
-    _In_ const sai_object_id_t *nexthops) {
+/**
+ * @brief Remove next hop group member
+ *
+ * @param[in] next_hop_group_member_id - next hop group member id
+ *
+ * @return SAI_STATUS_SUCCESS on success Failure status code on error
+ */
+sai_status_t sai_remove_next_hop_group_member(_In_ sai_object_id_t
+                                                  next_hop_group_member_id) {
   SAI_LOG_ENTER();
+  sai_object_id_t nhop_group_id = 0;
+  sai_object_id_t nhop_id = 0;
 
-  switch_handle_t *nh_list = NULL;
   sai_status_t status = SAI_STATUS_SUCCESS;
   switch_status_t switch_status = SWITCH_STATUS_SUCCESS;
-  uint32_t i = 0;
 
-  if (!nexthops) {
-    status = SAI_STATUS_INVALID_PARAMETER;
-    SAI_LOG_ERROR("null nexthops list: %s", sai_status_to_string(status));
-    return status;
-  }
+  SAI_ASSERT(sai_object_type_query(next_hop_group_member_id) ==
+             SAI_OBJECT_TYPE_NEXT_HOP_GROUP_MEMBER);
 
-  SAI_ASSERT(sai_object_type_query(next_hop_group_id) ==
-             SAI_OBJECT_TYPE_NEXT_HOP_GROUP);
+  nhop_group_id = SAI_NHOP_GROUP_OBJECT(next_hop_group_member_id);
+  nhop_id = SAI_NHOP_OBJECT(next_hop_group_member_id);
 
-  nh_list = SAI_MALLOC(sizeof(switch_handle_t) * next_hop_count);
-  if (!nh_list) return SAI_STATUS_NO_MEMORY;
-  for (i = 0; i < next_hop_count; i++) *(nh_list + i) = nexthops[i];
-  switch_status =
-      switch_api_ecmp_member_delete(device,
-                                    (switch_handle_t)next_hop_group_id,
-                                    next_hop_count,
-                                    (switch_handle_t *)nh_list);
+  switch_status = switch_api_ecmp_member_delete(
+      device, (switch_handle_t)nhop_group_id, 0x1, (switch_handle_t *)&nhop_id);
   status = sai_switch_status_to_sai_status(switch_status);
   if (status != SAI_STATUS_SUCCESS) {
     SAI_LOG_ERROR("failed to remove next hop from group %lx : %s",
-                  next_hop_group_id,
+                  next_hop_group_member_id,
                   sai_status_to_string(status));
   }
 
-  SAI_FREE(nh_list);
   SAI_LOG_EXIT();
 
   return (sai_status_t)status;
+}
+
+/**
+ * @brief Set Next Hop Group attribute
+ *
+ * @param[in] sai_object_id_t - next_hop_group_member_id
+ * @param[in] attr - attribute
+ *
+ * @return #SAI_STATUS_SUCCESS on success Failure status code on error
+ */
+sai_status_t sai_set_next_hop_group_member_attribute(
+    _In_ sai_object_id_t next_hop_group_member_id,
+    _In_ const sai_attribute_t *attr) {
+  sai_status_t status = SAI_STATUS_SUCCESS;
+
+  if (!attr) {
+    status = SAI_STATUS_INVALID_PARAMETER;
+    SAI_LOG_ERROR("null attribute list: %s", sai_status_to_string(status));
+    return status;
+  }
+
+  SAI_ASSERT(sai_object_type_query(next_hop_group_member_id) ==
+             SAI_OBJECT_TYPE_NEXT_HOP_GROUP_MEMBER);
+
+  SAI_LOG_EXIT();
+
+  return (sai_status_t)status;
+}
+
+/**
+ * @brief Get Next Hop Group attribute
+ *
+ * @param[in] sai_object_id_t - next_hop_group_member_id
+ * @param[in] attr_count - number of attributes
+ * @param[inout] attr_list - array of attributes
+ *
+ * @return SAI_STATUS_SUCCESS on success Failure status code on error
+ */
+sai_status_t sai_get_next_hop_group_member_attribute(
+    _In_ sai_object_id_t next_hop_group_member_id,
+    _In_ uint32_t attr_count,
+    _Inout_ sai_attribute_t *attr_list) {
+  SAI_LOG_ENTER();
+
+  sai_status_t status = SAI_STATUS_SUCCESS;
+
+  if (!attr_list) {
+    status = SAI_STATUS_INVALID_PARAMETER;
+    SAI_LOG_ERROR("null attribute list: %s", sai_status_to_string(status));
+    return status;
+  }
+
+  SAI_ASSERT(sai_object_type_query(next_hop_group_member_id) ==
+             SAI_OBJECT_TYPE_NEXT_HOP_GROUP_MEMBER);
+
+  SAI_LOG_EXIT();
+  return status;
 }
 
 /*
@@ -341,8 +379,12 @@ sai_next_hop_group_api_t nhop_group_api = {
     .remove_next_hop_group = sai_remove_next_hop_group_entry,
     .set_next_hop_group_attribute = sai_set_next_hop_group_entry_attribute,
     .get_next_hop_group_attribute = sai_get_next_hop_group_entry_attribute,
-    .add_next_hop_to_group = sai_add_next_hop_to_group,
-    .remove_next_hop_from_group = sai_remove_next_hop_from_group};
+    .create_next_hop_group_member = sai_create_next_hop_group_member,
+    .remove_next_hop_group_member = sai_remove_next_hop_group_member,
+    .set_next_hop_group_member_attribute =
+        sai_set_next_hop_group_member_attribute,
+    .get_next_hop_group_member_attribute =
+        sai_get_next_hop_group_member_attribute};
 
 sai_status_t sai_next_hop_group_initialize(sai_api_service_t *sai_api_service) {
   SAI_LOG_DEBUG("Initializing nexthop group");

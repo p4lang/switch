@@ -92,11 +92,10 @@ sai_status_t sai_get_queue_attribute(_In_ sai_object_id_t queue_id,
  * @return SAI_STATUS_SUCCESS on success
  *         Failure status code on error
  */
-sai_status_t sai_get_queue_stats(
-    _In_ sai_object_id_t queue_id,
-    _In_ const sai_queue_stat_counter_t *counter_ids,
-    _In_ uint32_t number_of_counters,
-    _Out_ uint64_t *counters) {
+sai_status_t sai_get_queue_stats(_In_ sai_object_id_t queue_id,
+                                 _In_ const sai_queue_stat_t *counter_ids,
+                                 _In_ uint32_t number_of_counters,
+                                 _Out_ uint64_t *counters) {
   SAI_LOG_ENTER();
 
   sai_status_t status = SAI_STATUS_SUCCESS;
@@ -118,10 +117,9 @@ sai_status_t sai_get_queue_stats(
  * @return SAI_STATUS_SUCCESS on success
  *         Failure status code on error
  */
-sai_status_t sai_clear_queue_stats(
-    _In_ sai_object_id_t queue_id,
-    _In_ const sai_queue_stat_counter_t *counter_ids,
-    _In_ uint32_t number_of_counters) {
+sai_status_t sai_clear_queue_stats(_In_ sai_object_id_t queue_id,
+                                   _In_ const sai_queue_stat_t *counter_ids,
+                                   _In_ uint32_t number_of_counters) {
   SAI_LOG_ENTER();
 
   sai_status_t status = SAI_STATUS_SUCCESS;

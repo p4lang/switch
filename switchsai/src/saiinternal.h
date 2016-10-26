@@ -38,6 +38,8 @@ limitations under the License.
 
 #define SAI_LOG_BUFFER_SIZE 1000
 
+#define SAI_API_MAX SAI_API_L2MC + 1
+
 #define SAI_ASSERT(x) assert(x)
 
 #define SAI_MALLOC(x) malloc(x)
@@ -58,23 +60,28 @@ void sai_log(int level, sai_api_t api, char *fmt, ...);
   } while (0);
 
 #define SAI_LOG_ENTER() \
-  SAI_LOG(SAI_LOG_DEBUG, api_id, "Entering %s\n", __FUNCTION__)
+  SAI_LOG(SAI_LOG_LEVEL_DEBUG, api_id, "Entering %s\n", __FUNCTION__)
 
 #define SAI_LOG_EXIT() \
-  SAI_LOG(SAI_LOG_DEBUG, api_id, "Exiting %s\n", __FUNCTION__)
+  SAI_LOG(SAI_LOG_LEVEL_DEBUG, api_id, "Exiting %s\n", __FUNCTION__)
 
-#define SAI_LOG_DEBUG(fmt, arg...) SAI_LOG(SAI_LOG_DEBUG, api_id, fmt, ##arg)
+#define SAI_LOG_DEBUG(fmt, arg...) \
+  SAI_LOG(SAI_LOG_LEVEL_DEBUG, api_id, fmt, ##arg)
 
-#define SAI_LOG_INFO(fmt, arg...) SAI_LOG(SAI_LOG_INFO, api_id, fmt, ##arg)
+#define SAI_LOG_INFO(fmt, arg...) \
+  SAI_LOG(SAI_LOG_LEVEL_INFO, api_id, fmt, ##arg)
 
-#define SAI_LOG_NOTICE(fmt, arg...) SAI_LOG(SAI_LOG_NOTICE, api_id, fmt, ##arg)
+#define SAI_LOG_NOTICE(fmt, arg...) \
+  SAI_LOG(SAI_LOG_LEVEL_NOTICE, api_id, fmt, ##arg)
 
-#define SAI_LOG_WARN(fmt, arg...) SAI_LOG(SAI_LOG_WARN, api_id, fmt, ##arg)
+#define SAI_LOG_WARN(fmt, arg...) \
+  SAI_LOG(SAI_LOG_LEVEL_WARN, api_id, fmt, ##arg)
 
-#define SAI_LOG_ERROR(fmt, arg...) SAI_LOG(SAI_LOG_ERROR, api_id, fmt, ##arg)
+#define SAI_LOG_ERROR(fmt, arg...) \
+  SAI_LOG(SAI_LOG_LEVEL_ERROR, api_id, fmt, ##arg)
 
 #define SAI_LOG_CRITICAL(fmt, arg...) \
-  SAI_LOG(SAI_LOG_CRITICAL, api_id, fmt, ##arg)
+  SAI_LOG(SAI_LOG_LEVEL_CRITICAL, api_id, fmt, ##arg)
 
 typedef struct _sai_api_service_t {
   sai_switch_api_t switch_api;

@@ -200,7 +200,7 @@ sai_status_t sai_create_vlan_member(_Out_ sai_object_id_t *vlan_member_id,
   switch_handle_t vlan_handle = 0;
   switch_vlan_port_t switch_port;
   unsigned int index = 0;
-  sai_vlan_tagging_mode_t tag_mode = SAI_VLAN_PORT_UNTAGGED;
+  sai_vlan_tagging_mode_t tag_mode = SAI_VLAN_TAGGING_MODE_UNTAGGED;
   unsigned short vlan_id = 0;
   switch_handle_t port_id = 0;
 
@@ -349,10 +349,9 @@ sai_status_t sai_get_vlan_member_attribute(_In_ sai_object_id_t vlan_member_id,
  *    @return SAI_STATUS_SUCCESS on success
  *            Failure status code on error
  */
-sai_status_t sai_clear_vlan_stats(
-    _In_ sai_vlan_id_t vlan_id,
-    _In_ const sai_vlan_stat_counter_t *counter_ids,
-    _In_ uint32_t number_of_counters) {
+sai_status_t sai_clear_vlan_stats(_In_ sai_vlan_id_t vlan_id,
+                                  _In_ const sai_vlan_stat_t *counter_ids,
+                                  _In_ uint32_t number_of_counters) {
   sai_status_t status = SAI_STATUS_SUCCESS;
   SAI_LOG_ENTER();
 
@@ -363,7 +362,7 @@ sai_status_t sai_clear_vlan_stats(
 
 static sai_status_t switch_vlan_counters_to_sai_vlan_counters(
     _In_ uint32_t number_of_counters,
-    _In_ const sai_vlan_stat_counter_t *counter_ids,
+    _In_ const sai_vlan_stat_t *counter_ids,
     _In_ switch_counter_t *switch_counters,
     _Out_ uint64_t *counters) {
   uint32_t index = 0;
@@ -430,7 +429,7 @@ static sai_status_t switch_vlan_counters_to_sai_vlan_counters(
 *    Failure status code on error
 */
 sai_status_t sai_get_vlan_stats(_In_ sai_vlan_id_t vlan_id,
-                                _In_ const sai_vlan_stat_counter_t *counter_ids,
+                                _In_ const sai_vlan_stat_t *counter_ids,
                                 _In_ uint32_t number_of_counters,
                                 _Out_ uint64_t *counters) {
   SAI_LOG_ENTER();

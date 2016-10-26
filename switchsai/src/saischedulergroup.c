@@ -145,58 +145,6 @@ sai_status_t sai_get_scheduler_group_attribute(
   return (sai_status_t)status;
 }
 
-/**
- * @brief   Add Child queue/group objects to scheduler group
- *
- * @param[in] scheduler_group_id Scheduler group id.
- * @param[in] child_count number of child count
- * @param[in] child_objects array of child objects
- *
- * @return SAI_STATUS_SUCCESS on success
- *        Failure status code on error
- */
-sai_status_t sai_add_child_object_to_group(
-    _In_ sai_object_id_t scheduler_group_id,
-    _In_ uint32_t child_count,
-    _In_ const sai_object_id_t *child_objects) {
-  SAI_LOG_ENTER();
-
-  sai_status_t status = SAI_STATUS_SUCCESS;
-
-  SAI_ASSERT(sai_object_type_query(scheduler_group_id) ==
-             SAI_OBJECT_TYPE_SCHEDULER_GROUP);
-
-  SAI_LOG_EXIT();
-
-  return (sai_status_t)status;
-}
-
-/**
- * @brief   Remove Child queue/group objects from scheduler group
- *
- * @param[in] scheduler_group_id Scheduler group id.
- * @param[in] child_count number of child count
- * @param[in] child_objects array of child objects
- *
- * @return SAI_STATUS_SUCCESS on success
- *        Failure status code on error
- */
-sai_status_t sai_remove_child_object_from_group(
-    _In_ sai_object_id_t scheduler_group_id,
-    _In_ uint32_t child_count,
-    _In_ const sai_object_id_t *child_objects) {
-  SAI_LOG_ENTER();
-
-  sai_status_t status = SAI_STATUS_SUCCESS;
-
-  SAI_ASSERT(sai_object_type_query(scheduler_group_id) ==
-             SAI_OBJECT_TYPE_SCHEDULER_GROUP);
-
-  SAI_LOG_EXIT();
-
-  return (sai_status_t)status;
-}
-
 /*
 *  Scheduler Group methods table retrieved with sai_api_query()
 */
@@ -205,8 +153,7 @@ sai_scheduler_group_api_t scheduler_group_api = {
     .remove_scheduler_group = sai_remove_scheduler_group,
     .set_scheduler_group_attribute = sai_set_scheduler_group_attribute,
     .get_scheduler_group_attribute = sai_get_scheduler_group_attribute,
-    .add_child_object_to_group = sai_add_child_object_to_group,
-    .remove_child_object_from_group = sai_remove_child_object_from_group};
+};
 
 sai_status_t sai_scheduler_group_initialize(
     sai_api_service_t *sai_api_service) {
