@@ -553,6 +553,7 @@ int switchlink_stp_state_update(switchlink_db_interface_info_t *intf) {
       return ((status == SAI_STATUS_SUCCESS) ? 0 : -1);
     }
   }
+  return status;
 }
 
 int switchlink_add_interface_to_bridge(switchlink_db_interface_info_t *intf) {
