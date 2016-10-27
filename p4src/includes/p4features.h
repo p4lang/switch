@@ -28,6 +28,10 @@ limitations under the License.
 #define L3_MULTICAST_DISABLE
 #endif
 
+#ifndef __TARGET_BMV2__
+#define ACL_RANGE_DISABLE
+#endif
+
 // Defines for switchapi library
 #ifdef URPF_DISABLE
 #define P4_URPF_DISABLE
