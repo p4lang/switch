@@ -1,0 +1,96 @@
+#!/usr/bin/python
+import sys
+import os
+
+sys.path.append("/usr/lib/python2.7/site-packages")
+sys.path.append("/usr/local/lib/python2.7/dist-packages/bm/pdfixed")
+
+# this configures for my env, not the docker env
+pd_dir = os.path.join('@abs_top_builddir@',
+                      'p4-build', 'bmv2', 'pd_thrift_gen', 'gen-py')
+utils_dir = os.path.join('@abs_top_builddir@',
+                         'tests', 'of-tests', 'common')
+
+sys.path.append(pd_dir)
+sys.path.append(utils_dir)
+
+from p4_pd_rpc.ttypes import *
+from res_pd_rpc.ttypes import *
+from utils import *
+
+import importlib
+from thrift.transport import TSocket
+from thrift.transport import TTransport
+from thrift.protocol import TBinaryProtocol
+from thrift.protocol import TMultiplexedProtocol
+
+def setup_bd(client, conn_mgr):
+    """
+    Instantiates port_vlan_mapping table entry setting bd == 0
+    for untagged packets on ifindex 1.
+    """
+    sess_hdl = conn_mgr.client_init(16)
+    dev_tgt = DevTarget_t(0, hex_to_i16(0xffff))
+    ifindices = [1, 2, 65]
+
+    for ifindex in ifindices:
+        action_spec = dc_set_bd_properties_action_spec_t(
+                                action_bd=0,
+                                action_vrf=0,
+                                action_rmac_group=0,
+                                action_bd_label=0,
+                                action_ipv4_unicast_enabled=True,
+                                action_ipv6_unicast_enabled=False,
+                                action_ipv4_multicast_enabled=False,
+                                action_ipv6_multicast_enabled=False,
+                                action_igmp_snooping_enabled=0,
+                                action_mld_snooping_enabled=0,
+                                action_ipv4_urpf_mode=0,
+                                action_ipv6_urpf_mode=0,
+                                action_stp_group=0,
+                                action_mrpf_group=0,
+                                action_ipv4_mcast_key_type=0,
+                                action_ipv4_mcast_key=0,
+                                action_ipv6_mcast_key_type=0,
+                                action_ipv6_mcast_key=0,
+                                action_stats_idx=0,
+                                action_learning_enabled=0)
+        
+        mbr_hdl = client.bd_action_profile_add_member_with_set_bd_properties(
+                                sess_hdl, dev_tgt,
+                                action_spec)
+        match_spec = dc_port_vlan_mapping_match_spec_t(
+                                ingress_metadata_ifindex=ifindex,
+                                vlan_tag__0__valid=0,
+                                vlan_tag__0__vid=0,
+                                vlan_tag__1__valid=0,
+                                vlan_tag__1__vid=0)
+        client.port_vlan_mapping_add_entry(
+                                sess_hdl, dev_tgt,
+                                match_spec, mbr_hdl)
+
+def configure_switch():
+    p4_name = "dc"
+    p4_client_module = importlib.import_module(".".join(["p4_pd_rpc", p4_name]))
+    mc_client_module = importlib.import_module(".".join(["mc_pd_rpc", "mc"]))
+    conn_mgr_client_module = importlib.import_module(".".join(["conn_mgr_pd_rpc", "conn_mgr"]))
+
+    transport = TSocket.TSocket('localhost', 9090)
+    transport = TTransport.TBufferedTransport(transport)
+    bprotocol = TBinaryProtocol.TBinaryProtocol(transport)
+
+    mc_protocol = TMultiplexedProtocol.TMultiplexedProtocol(bprotocol, "mc")
+    conn_mgr_protocol = TMultiplexedProtocol.TMultiplexedProtocol(bprotocol, "conn_mgr")
+    p4_protocol = TMultiplexedProtocol.TMultiplexedProtocol(bprotocol, p4_name)
+
+    client = p4_client_module.Client(p4_protocol)
+    mc = mc_client_module.Client(mc_protocol)
+    conn_mgr = conn_mgr_client_module.Client(conn_mgr_protocol)
+    transport.open()
+
+    setup_bd(client, conn_mgr)
+
+    transport.close()
+
+if __name__ == "__main__":
+    configure_switch()
