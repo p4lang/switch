@@ -88,3 +88,12 @@ You can now run all the tests:
     sudo ./bmv2/run_tests.sh  # for the PD tests
     sudo ./bmv2/run_tests.sh --test-dir tests/ptf-tests/api-tests  # for the switchapi tests
     sudo ./bmv2/run_tests.sh --test-dir tests/ptf-tests/sai-tests  # for the switchsai tests
+
+Running switch with an openflow agent
+--------------------------------------
+You can now use [p4ofagent](https://github.com/p4lang/p4ofagent) to control switch.p4 on bmv2.
+To do this, install p4ofagent with `CPPFLAGS=-D_BMV2_`, then configure switch with `--with-bmv2`
+and `--with-of` options. You can run the tests with `sudo ./bmv2/run_of_tests.sh`, and you can also
+play with a mininet-based l2-learning example by first building the switch docker image, then running
+`sudo ./openflow_l2.py --controller-ip <ip>`, where `<ip>` is the ip address of a [Ryu](https://github.com/osrg/ryu)
+instance running the [simple_switch_13](https://github.com/osrg/ryu/blob/master/ryu/app/simple_switch_13.py) app.

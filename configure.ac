@@ -229,6 +229,9 @@ AC_CONFIG_FILES([tests/run_tests.py])
 
 AS_IF([test "$want_of" = yes], [
   AC_CONFIG_FILES([bmv2/run_of_tests.sh], [chmod +x bmv2/run_of_tests.sh])
+  AC_CONFIG_FILES([docker/configure.sh], [chmod +x docker/configure.sh])
+  AC_CONFIG_FILES([docker/run_bm.sh], [chmod +x docker/run_bm.sh])
+  AC_CONFIG_FILES([docker/run_drivers.sh], [chmod +x docker/run_drivers.sh])
 ])
 
 export P4_NAME=switch

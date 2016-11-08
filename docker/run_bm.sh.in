@@ -1,0 +1,16 @@
+#!/bin/bash
+if [[ $EUID -ne 0 ]]; then
+    echo "This script should be run using sudo or as the root user"
+    exit 1
+fi
+if [ x@BM_SIMPLE_SWITCH@ = x ]; then
+    echo "simple_switch executable not found by latest configure run"
+    echo "have you installed bmv2 since? if yes, you need to run configure again"
+    exit 1
+fi
+JSON_FILE=@abs_top_builddir@/p4-build/bmpd/switch.json
+if [ ! -f $JSON_FILE ]; then
+    echo "switch.json not found; did you run 'make'?"
+    exit 1
+fi
+@BM_SIMPLE_SWITCH@ --log-console -i 0@sw1-eth1 -i 1@sw1-eth2 -i 64@veth250 --thrift-port 10001 --pcap $JSON_FILE
