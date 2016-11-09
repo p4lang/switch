@@ -113,11 +113,13 @@ typedef struct switch_api_hostif_rcode_info_ {
 /** hostif tx/rx packet info */
 typedef struct switch_hostif_packet_ {
   switch_hostif_reason_code_t reason_code; /**< reason code */
-  bool is_lag;            /**< handle is lag or port. used in rx */
-  switch_handle_t handle; /**< port or lag. used in tx/rx */
-  bool tx_bypass;         /**< tx type flag to skip pipeline */
-  void *pkt;              /**< packet buffer rx/tx */
-  uint32_t pkt_size;      /**< packet buffer size */
+  bool is_lag;                     /**< handle is lag or port. used in rx */
+  switch_handle_t handle;          /**< port or lag. used in tx/rx */
+  switch_ifindex_t egress_ifindex; /**< egress ifindex */
+  uint16_t sflow_session_id;       /**< sflow session id */
+  bool tx_bypass;                  /**< tx type flag to skip pipeline */
+  void *pkt;                       /**< packet buffer rx/tx */
+  uint32_t pkt_size;               /**< packet buffer size */
 } switch_hostif_packet_t;
 
 /** Host interface name size */
