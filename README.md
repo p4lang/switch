@@ -107,6 +107,7 @@ directory and install. Also configure switch with --prefix pointing to
 the install directory and --with-switchlink.
 
 You can build the base docker image with:
+
     cd switch/docker/bmv2
     make -f docker.mk base-docker-image
 
