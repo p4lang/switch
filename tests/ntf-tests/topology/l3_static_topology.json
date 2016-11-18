@@ -1,0 +1,45 @@
+{
+    "switches": {
+                "sw1": {
+                        "type": "bmv2",
+                        "configs": {
+                                    "startup_config" : "/configs/sw1/l3_static/startup_config.sh",
+                                    "port_map": {
+                                                "25001":"9091",
+                                                "25002":"9092"
+                                    }
+                        }
+                },
+                "sw2": {
+                        "type": "bmv2",
+                        "configs": {
+                                    "startup_config" : "/configs/sw2/l3_static/startup_config.sh",
+                                    "port_map": {
+                                                "26001":"9091",
+                                                "26002":"9092"
+                                    }
+                        }
+                }
+    },
+    "hosts": {
+            "h1": {
+                    "eth0": {
+                                "address": "172.16.101.5",
+                                "prefix": "24",
+                                "mac": "00:04:00:00:00:02"
+                    }
+            },
+            "h2": {
+                    "eth0": {
+                                "address": "172.16.102.5",
+                                "prefix": "24",
+                                "mac": "00:05:00:00:00:02"
+                    }
+            }
+    },
+    "connectivity": {
+                    "sw1:2": "sw2:2",
+                    "sw1:1": "h1:1",
+                    "sw2:1": "h2:1"
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "bmv2": {
+            "type": "docker",
+            "name": "p4dockerswitch",
+            "mounts": {
+                        "/p4lang/install": "/install",
+                        "/p4lang/switch/ntf-tests/configs": "/configs",
+                        "/p4lang/switch/tools": "/tools"
+            }
+    }
+}
