@@ -3,9 +3,9 @@ BUILD P4 Docker Switch
 
 # Required Repositories
 
-behavioral-model: https://github.com/p4lang/behavioral-model.git
-p4c-bm: https://github.com/p4lang/p4c-bm.git
-switch: https://github.com/p4lang/switch.git
+* behavioral-model: https://github.com/p4lang/behavioral-model.git
+* p4c-bm: https://github.com/p4lang/p4c-bm.git
+* switch: https://github.com/p4lang/switch.git
 
 # Build pre-requisities
 
