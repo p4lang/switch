@@ -102,9 +102,9 @@ Building switch docker image
 --------------------------------------
 
 In addition to the setps in "Running switch in bmv2 without p4factory", 
-configure bmv2 and p4c-bm with --prefix pointing to the install
-directory and install. Also configure switch with --prefix pointing to
-the install directory and --with-switchlink.
+configure bmv2 and p4c-bm with `--prefix` pointing to the install
+directory and install. Also configure switch with `--prefix` pointing to
+the install directory and `--with-switchlink`.
 
 You can build the base docker image with:
 
