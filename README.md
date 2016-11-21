@@ -97,3 +97,72 @@ and `--with-of` options. You can run the tests with `sudo ./bmv2/run_of_tests.sh
 play with a mininet-based l2-learning example by first building the switch docker image, then running
 `sudo ./openflow_l2.py --controller-ip <ip>`, where `<ip>` is the ip address of a [Ryu](https://github.com/osrg/ryu)
 instance running the [simple_switch_13](https://github.com/osrg/ryu/blob/master/ryu/app/simple_switch_13.py) app.
+
+Building switch docker image
+--------------------------------------
+
+In addition to the setps in "Running switch in bmv2 without p4factory", 
+configure bmv2 and p4c-bm with `--prefix` pointing to the install
+directory and install. Also configure switch with `--prefix` pointing to
+the install directory and `--with-switchlink`.
+
+You can build the base docker image with:
+
+    cd switch/docker/bmv2
+    make -f docker.mk base-docker-image
+
+This will build the docker image "p4dockerswitch".
+
+    sudo docker images
+    REPOSITORY          TAG                 IMAGE ID            CREATED         SIZE
+    p4dockerswitch      latest              8835deb7979e        2 days ago      1.482 GB
+    ubuntu              14.04               1e0c3dd64ccd        5 weeks ago     187.9 MB
+
+Running switch ntf-tests
+--------------------------------------
+
+Switch NTF tests require NTF (Network Test Framework) and Docker image.
+
+* Clone and install NTF (https://github.com/p4lang/ntf.git).
+* Build switch docker image.
+* Write topology, configs and tests as in switch/tests/ntf-tests.
+
+You can now use NTF to build the topology required using the docker image and
+write tests.
+
+Below are some NTF tests and how to run:
+
+L2: Simple L2 topology with two switches and two hosts. The topology is loop
+    free (no spanning tree protocol).
+
+    sudo ntf --topology switch/tests/ntf-tests/topology/l2_topology.json
+    --config switch/tests/ntf-tests/topology/config.json --test-dir
+    switch/tests/ntf-tests/ --test L2
+
+STP: L2 topology with four switches and two hosts. It runs MSTPD to form a loop
+     free topology.
+
+    sudo ntf --topology switch/tests/ntf-tests/topology/stp_topology.json
+    --config switch/tests/ntf-tests/topology/config.json --test-dir
+    switch/tests/ntf-tests/ --test STP
+
+L3 Static: Simple L3 topology with two switches and two hosts. The setup is
+           statically configured.
+
+    sudo ntf --topology switch/tests/ntf-tests/topology/l3_static_topology.json
+    --config switch/tests/ntf-tests/topology/config.json --test-dir
+    switch/tests/ntf-tests/ --test L3Static
+
+L3 OSPF: Simple L3 topology with two switches and two hosts. The setup runs
+         OSPF (Quagga) to learn and advertise networks.
+
+    sudo ntf --topology switch/tests/ntf-tests/topology/l3_ospf_topology.json
+    --config switch/tests/ntf-tests/topology/config.json --test-dir
+    switch/tests/ntf-tests/ --test L3OSPF
+
+L3 BGP: Simple L3 topology with two switches and two hosts. The setup runs
+        EBGP (Quagga) to learn and advertise networks.
+
+    sudo ntf --topology switch/tests/ntf-tests/topology/l3_bgp_topology.json
+    --config switch/tests/ntf-tests/topology/config.json --test-dir
+    switch/tests/ntf-tests/ --test L3BGP

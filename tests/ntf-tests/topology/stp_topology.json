@@ -1,0 +1,67 @@
+{
+    "switches": {
+                "sw1": {
+                        "type": "bmv2",
+                        "configs": {
+                                    "startup_config" : "/configs/sw1/stp/startup_config.sh",
+                                    "port_map": {
+                                                "25001":"9091",
+                                                "25002":"9092"
+                                    }
+                        }
+                },
+                "sw2": {
+                        "type": "bmv2",
+                        "configs": {
+                                    "startup_config" : "/configs/sw2/stp/startup_config.sh",
+                                    "port_map": {
+                                                "26001":"9091",
+                                                "26002":"9092"
+                                    }
+                        }
+                },
+                "sw3": {
+                        "type": "bmv2",
+                        "configs": {
+                                    "startup_config" : "/configs/sw3/stp/startup_config.sh",
+                                    "port_map": {
+                                                "27001":"9091",
+                                                "27002":"9092"
+                                    }
+                        }
+                },
+                "sw4": {
+                        "type": "bmv2",
+                        "configs": {
+                                    "startup_config" : "/configs/sw4/stp/startup_config.sh",
+                                    "port_map": {
+                                                "28001":"9091",
+                                                "28002":"9092"
+                                    }
+                        }
+                }
+    },
+    "hosts": {
+            "h1": {
+                    "eth0": {
+                                "address": "172.16.10.1",
+                                "prefix": "24"
+                    }
+            },
+            "h2": {
+                    "eth0": {
+                                "address": "172.16.10.2",
+                                "prefix": "24"
+                    }
+            }
+    },
+    "connectivity": {
+                    "sw1:2": "sw3:1",
+                    "sw1:3": "sw4:1",
+                    "sw2:2": "sw3:2",
+                    "sw2:3": "sw4:2",
+                    "sw3:3": "sw4:3",
+                    "sw1:1": "h1:1",
+                    "sw2:1": "h2:1"
+    }
+}
