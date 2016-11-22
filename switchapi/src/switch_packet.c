@@ -147,7 +147,7 @@ static void switch_packet_extract_optional_header(
   if (packet_header->cpu_header.reason_code ==
       SWITCH_HOSTIF_REASON_CODE_SFLOW_SAMPLE) {
     *opt_header =
-        (switch_opt_header_t *)(packet_header + sizeof(switch_packet_header_t));
+        (switch_opt_header_t *)(((char *)packet_header) + sizeof(switch_packet_header_t));
     (*opt_header)->sflow_header.sflow_session_id =
         ntohs((*opt_header)->sflow_header.sflow_session_id);
     (*opt_header)->sflow_header.sflow_egress_ifindex =
