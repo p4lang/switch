@@ -58,6 +58,7 @@ typedef struct {
   unsigned int count;                /**< number of members */
   uint16_t base;                     /**< Base of lag select table */
   switch_device_t device;            /**< device on which lag is set */
+  uint16_t if_label;
 #ifdef SWITCH_PD
   p4_pd_entry_hdl_t hw_entry;   /**< HW entry */
   p4_pd_grp_hdl_t pd_group_hdl; /**< HW entry */

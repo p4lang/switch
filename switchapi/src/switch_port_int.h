@@ -55,6 +55,7 @@ typedef struct switch_port_info_ {
   switch_handle_t *ppg_handles;
   uint8_t max_queues;
   switch_handle_t *queue_handles;
+  uint16_t if_label;
 #ifdef SWITCH_PD
   p4_pd_entry_hdl_t hw_entry[2];     /* port mapping entry */
   p4_pd_entry_hdl_t lg_entry;        /* Lag group entry */

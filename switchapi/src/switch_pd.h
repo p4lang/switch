@@ -318,6 +318,7 @@ p4_pd_status_t switch_pd_egress_vlan_xlate_table_delete_entry(
 p4_pd_status_t switch_pd_ingress_port_mapping_table_add_entry(
     switch_device_t device,
     switch_ifindex_t ifindex,
+    uint16_t if_label,
     switch_port_info_t *port_info);
 
 p4_pd_status_t switch_pd_ingress_port_mapping_table_delete_entry(
@@ -327,6 +328,7 @@ p4_pd_status_t switch_pd_egress_port_mapping_table_add_entry(
     switch_device_t device,
     switch_port_t port_id,
     switch_ifindex_t ifindex,
+    uint16_t if_label,
     switch_port_type_t port_type,
     switch_qos_group_t qos_group,
     p4_pd_entry_hdl_t *entry_hdl);
