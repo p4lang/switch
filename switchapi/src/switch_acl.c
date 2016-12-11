@@ -168,7 +168,8 @@ static switch_status_t switch_acl_ip_set_fields_actions(
       }
       switch (switch_handle_get_type(interface_handle)) {
         case SWITCH_HANDLE_TYPE_INTERFACE:
-          if_label = intf_info->api_intf_info.u.port_lag_handle + 1;
+          if_label =
+              handle_to_id(intf_info->api_intf_info.u.port_lag_handle) + 1;
           break;
         case SWITCH_HANDLE_TYPE_BD:
           bd_label = handle_to_id(interface_handle) + 1;
@@ -233,7 +234,8 @@ static switch_status_t switch_acl_ipv6_set_fields_actions(
       }
       switch (switch_handle_get_type(interface_handle)) {
         case SWITCH_HANDLE_TYPE_INTERFACE:
-          if_label = intf_info->api_intf_info.u.port_lag_handle + 1;
+          if_label =
+              handle_to_id(intf_info->api_intf_info.u.port_lag_handle) + 1;
           break;
         case SWITCH_HANDLE_TYPE_BD:
           bd_label = handle_to_id(interface_handle) + 1;
@@ -291,7 +293,7 @@ static switch_status_t switch_acl_mac_set_fields_actions(
     }
     switch (switch_handle_get_type(interface_handle)) {
       case SWITCH_HANDLE_TYPE_INTERFACE:
-        if_label = intf_info->api_intf_info.u.port_lag_handle + 1;
+        if_label = handle_to_id(intf_info->api_intf_info.u.port_lag_handle) + 1;
         break;
       case SWITCH_HANDLE_TYPE_BD:
         bd_label = handle_to_id(interface_handle) + 1;
@@ -431,7 +433,7 @@ static switch_status_t switch_acl_system_set_fields_actions(
     }
     switch (switch_handle_get_type(interface_handle)) {
       case SWITCH_HANDLE_TYPE_INTERFACE:
-        if_label = intf_info->api_intf_info.u.port_lag_handle + 1;
+        if_label = handle_to_id(intf_info->api_intf_info.u.port_lag_handle) + 1;
         break;
       case SWITCH_HANDLE_TYPE_BD:
         bd_label = handle_to_id(interface_handle) + 1;
@@ -472,7 +474,7 @@ static switch_status_t switch_acl_egr_set_fields_actions(
 
   if (interface_handle) {
     if (switch_handle_get_type(interface_handle) == SWITCH_HANDLE_TYPE_PORT) {
-      if_label = handle_to_id(interface_handle);
+      if_label = handle_to_id(interface_handle) + 1;
     } else {
       intf_info = switch_api_interface_get(interface_handle);
       if (!intf_info) {
@@ -480,7 +482,8 @@ static switch_status_t switch_acl_egr_set_fields_actions(
       }
       switch (switch_handle_get_type(interface_handle)) {
         case SWITCH_HANDLE_TYPE_INTERFACE:
-          if_label = intf_info->api_intf_info.u.port_lag_handle + 1;
+          if_label =
+              handle_to_id(intf_info->api_intf_info.u.port_lag_handle) + 1;
           break;
         case SWITCH_HANDLE_TYPE_BD:
           bd_label = handle_to_id(interface_handle) + 1;

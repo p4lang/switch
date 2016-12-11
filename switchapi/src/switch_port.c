@@ -43,6 +43,7 @@ switch_status_t switch_port_init(switch_device_t device) {
     port_info->tc_qos_group = 0;
     port_info->trust_dscp = FALSE;
     port_info->trust_pcp = FALSE;
+    port_info->if_label = index + 1;
     if (index == CPU_PORT_ID) {
       port_info->port_type = SWITCH_PORT_TYPE_CPU;
     }
@@ -57,11 +58,12 @@ switch_status_t switch_port_init(switch_device_t device) {
     port_info->hw_entry[0] = SWITCH_HW_INVALID_HANDLE;
     port_info->hw_entry[1] = SWITCH_HW_INVALID_HANDLE;
     switch_pd_ingress_port_mapping_table_add_entry(
-        device, port_info->ifindex, port_info);
+        device, port_info->ifindex, port_info->if_label, port_info);
     port_info->eg_port_entry = SWITCH_HW_INVALID_HANDLE;
     switch_pd_egress_port_mapping_table_add_entry(device,
                                                   SWITCH_PORT_ID(port_info),
                                                   port_info->ifindex,
+                                                  port_info->if_label,
                                                   port_info->port_type,
                                                   port_info->egress_qos_group,
                                                   &(port_info->eg_port_entry));
@@ -425,7 +427,7 @@ switch_status_t switch_api_port_qos_group_ingress_set(
   }
 
   status = switch_pd_ingress_port_mapping_table_add_entry(
-      device, port_info->ifindex, port_info);
+      device, port_info->ifindex, port_info->if_label, port_info);
   if (status != SWITCH_STATUS_SUCCESS) {
     SWITCH_API_ERROR("port qos group ingress set failed");
   }
@@ -457,7 +459,7 @@ switch_status_t switch_api_port_qos_group_tc_set(switch_device_t device,
   }
 
   status = switch_pd_ingress_port_mapping_table_add_entry(
-      device, port_info->ifindex, port_info);
+      device, port_info->ifindex, port_info->if_label, port_info);
   if (status != SWITCH_STATUS_SUCCESS) {
     SWITCH_API_ERROR("port qos group tc set failed");
   }
@@ -493,6 +495,7 @@ switch_status_t switch_api_port_qos_group_egress_set(
       device,
       SWITCH_PORT_ID(port_info),
       port_info->ifindex,
+      port_info->if_label,
       port_info->port_type,
       port_info->egress_qos_group,
       &(port_info->eg_port_entry));
@@ -514,7 +517,7 @@ switch_status_t switch_api_port_tc_default_set(switch_device_t device,
   port_info->tc = tc;
 
   status = switch_pd_ingress_port_mapping_table_add_entry(
-      device, port_info->ifindex, port_info);
+      device, port_info->ifindex, port_info->if_label, port_info);
   if (status != SWITCH_STATUS_SUCCESS) {
     SWITCH_API_ERROR("port tc default set failed");
   }
@@ -536,7 +539,7 @@ switch_status_t switch_api_port_color_default_set(switch_device_t device,
   port_info->color = color;
 
   status = switch_pd_ingress_port_mapping_table_add_entry(
-      device, port_info->ifindex, port_info);
+      device, port_info->ifindex, port_info->if_label, port_info);
   if (status != SWITCH_STATUS_SUCCESS) {
     SWITCH_API_ERROR("port color default set failed");
   }
@@ -563,7 +566,7 @@ switch_status_t switch_api_port_trust_dscp_set(switch_device_t device,
   port_info->trust_dscp = trust_dscp;
 
   status = switch_pd_ingress_port_mapping_table_add_entry(
-      device, port_info->ifindex, port_info);
+      device, port_info->ifindex, port_info->if_label, port_info);
   if (status != SWITCH_STATUS_SUCCESS) {
     SWITCH_API_ERROR("port trust dscp set failed");
   }
@@ -590,7 +593,7 @@ switch_status_t switch_api_port_trust_pcp_set(switch_device_t device,
   port_info->trust_pcp = trust_pcp;
 
   status = switch_pd_ingress_port_mapping_table_add_entry(
-      device, port_info->ifindex, port_info);
+      device, port_info->ifindex, port_info->if_label, port_info);
   if (status != SWITCH_STATUS_SUCCESS) {
     SWITCH_API_ERROR("port trust pcp set failed");
   }
