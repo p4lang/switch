@@ -2796,6 +2796,7 @@ p4_pd_status_t switch_pd_egress_vlan_xlate_table_delete_entry(
 p4_pd_status_t switch_pd_ingress_port_mapping_table_add_entry(
     switch_device_t device,
     switch_ifindex_t ifindex,
+    uint16_t if_label,
     switch_port_info_t *port_info) {
   p4_pd_dc_ingress_port_mapping_match_spec_t match1_spec;
   p4_pd_dc_ingress_port_properties_match_spec_t match2_spec;
@@ -2818,7 +2819,7 @@ p4_pd_status_t switch_pd_ingress_port_mapping_table_add_entry(
   action1_spec.action_port_type = port_info->port_type;
 
   match2_spec.standard_metadata_ingress_port = SWITCH_PORT_ID(port_info);
-  action2_spec.action_if_label = SWITCH_PORT_ID(port_info) + 1;
+  action2_spec.action_if_label = if_label;
   action2_spec.action_qos_group = port_info->ingress_qos_group;
   action2_spec.action_tc_qos_group = port_info->tc_qos_group;
   action2_spec.action_tc = port_info->tc;
@@ -2869,6 +2870,7 @@ p4_pd_status_t switch_pd_egress_port_mapping_table_add_entry(
     switch_device_t device,
     switch_port_t port_id,
     switch_ifindex_t ifindex,
+    uint16_t if_label,
     switch_port_type_t port_type,
     switch_qos_group_t qos_group,
     p4_pd_entry_hdl_t *entry_hdl) {
@@ -2890,7 +2892,7 @@ p4_pd_status_t switch_pd_egress_port_mapping_table_add_entry(
       memset(&action_spec, 0, sizeof(action_spec));
       action_spec.action_ifindex = ifindex;
       action_spec.action_qos_group = qos_group;
-      action_spec.action_if_label = port_id + 1;
+      action_spec.action_if_label = if_label;
       status =
           p4_pd_dc_egress_port_mapping_table_add_with_egress_port_type_normal(
               g_sess_hdl, p4_pd_device, &match_spec, &action_spec, entry_hdl);
@@ -2914,7 +2916,7 @@ p4_pd_status_t switch_pd_egress_port_mapping_table_add_entry(
       memset(&action_spec, 0, sizeof(action_spec));
       action_spec.action_ifindex = ifindex;
       action_spec.action_qos_group = qos_group;
-      action_spec.action_if_label = port_id + 1;
+      action_spec.action_if_label = if_label;
       status =
           p4_pd_dc_egress_port_mapping_table_modify_with_egress_port_type_normal(
               g_sess_hdl, device, *entry_hdl, &action_spec);

@@ -251,7 +251,7 @@ control egress {
             if (pkt_is_mirrored) {
                 /* set the nexthop for the mirror id */
                 /* for sflow i2e mirror pkt, result will set required sflow info */
-                apply(mirror);
+                process_mirroring();
             } else {
 
                 /* multi-destination replication */

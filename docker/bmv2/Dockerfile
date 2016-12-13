@@ -122,7 +122,7 @@ RUN cd /third-party; \
 
 
 # install p4-hlir
-RUN git clone git clone https://github.com/p4lang/p4-hlir.git ; \
+RUN git clone https://github.com/p4lang/p4-hlir.git ; \
     cd p4-hlir ;\
     sudo python setup.py install ; \
     cd ..

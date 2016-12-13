@@ -109,6 +109,7 @@ switch_handle_t switch_api_lag_create(switch_device_t device) {
   lag_info->lacp = FALSE;
   lag_info->type = SWITCH_API_LAG_SIMPLE;
   lag_info->ifindex = SWITCH_LAG_COMPUTE_IFINDEX(lag_handle);
+  lag_info->if_label = handle_to_id(lag_handle) + 1;
   tommy_list_init(&(lag_info->ingress));
   tommy_list_init(&(lag_info->egress));
 #ifdef SWITCH_PD
@@ -224,6 +225,7 @@ switch_status_t switch_api_lag_member_add(switch_device_t device,
           device,
           port,
           lag_info->ifindex,
+          lag_info->if_label,
           port_info->port_type,
           port_info->egress_qos_group,
           &port_info->eg_port_entry);
@@ -241,7 +243,7 @@ switch_status_t switch_api_lag_member_add(switch_device_t device,
         return SWITCH_STATUS_INVALID_PORT_NUMBER;
       }
       status = switch_pd_ingress_port_mapping_table_add_entry(
-          device, lag_info->ifindex, port_info);
+          device, lag_info->ifindex, lag_info->if_label, port_info);
       port_info->lag_handle = lag_handle;
       if (status != SWITCH_STATUS_SUCCESS) {
         return status;
@@ -315,6 +317,7 @@ switch_status_t switch_api_lag_member_delete(switch_device_t device,
           device,
           port,
           port_info->ifindex,
+          port_info->if_label,
           port_info->port_type,
           port_info->egress_qos_group,
           &port_info->eg_port_entry);
@@ -344,7 +347,7 @@ switch_status_t switch_api_lag_member_delete(switch_device_t device,
       }
       // part of lag
       status = switch_pd_ingress_port_mapping_table_add_entry(
-          device, port_info->ifindex, port_info);
+          device, port_info->ifindex, port_info->if_label, port_info);
       port_info->lag_handle = 0;
       if (status != SWITCH_STATUS_SUCCESS) {
         return status;
