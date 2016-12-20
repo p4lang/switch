@@ -301,8 +301,10 @@ control egress {
             /* perform tunnel encap */
             process_tunnel_encap();
 
-            /* egress acl */
-            process_egress_acl();
+            if (egress_metadata.port_type == PORT_TYPE_NORMAL) {
+                /* egress acl */
+                process_egress_acl();
+            }
 
             /* update underlay header based on INT information inserted */
             process_int_outer_encap();
@@ -316,8 +318,10 @@ control egress {
             process_egress_filter();
         }
 
-        /* apply egress acl */
-        process_egress_system_acl();
+        if (egress_metadata.port_type == PORT_TYPE_NORMAL) {
+            /* apply egress acl */
+            process_egress_system_acl();
+        }
 #ifdef OPENFLOW_ENABLE
     }
 #endif /* OPENFLOW_ENABLE */

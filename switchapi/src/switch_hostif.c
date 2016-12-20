@@ -598,10 +598,6 @@ switch_status_t switch_api_hostif_reason_code_create(
       acl_kvp[field_count].value.ip_proto = 58;
       acl_kvp[field_count].mask.u.mask.u.addr8[0] = 0xFF;
       field_count++;
-      acl_kvp[field_count].field = SWITCH_ACL_IPV6_FIELD_ICMP_TYPE;
-      acl_kvp[field_count].value.icmp_type = 135;
-      acl_kvp[field_count].mask.u.mask.u.addr8[0] = 0xFF;
-      field_count++;
       acl_kvp[field_count].field = SWITCH_ACL_IPV6_FIELD_IPV6_DEST;
       inet_pton(AF_INET6,
                 "FF02::1:FF00:0",
@@ -615,36 +611,6 @@ switch_status_t switch_api_hostif_reason_code_create(
       switch_api_acl_rule_create(device,
                                  acl_handle,
                                  priority++,
-                                 field_count,
-                                 acl_kvp,
-                                 SWITCH_ACL_ACTION_PERMIT,
-                                 &action_params,
-                                 &opt_action_params,
-                                 &ace_handle);
-
-      memset(&acl_kvp, 0, sizeof(acl_kvp));
-      field_count = 0;
-      acl_kvp[field_count].field = SWITCH_ACL_IPV6_FIELD_IP_PROTO;
-      acl_kvp[field_count].value.ip_proto = 58;
-      acl_kvp[field_count].mask.u.mask.u.addr8[0] = 0xFF;
-      field_count++;
-      acl_kvp[field_count].field = SWITCH_ACL_IPV6_FIELD_ICMP_TYPE;
-      acl_kvp[field_count].value.icmp_type = 136;
-      acl_kvp[field_count].mask.u.mask.u.addr8[0] = 0xFF;
-      field_count++;
-      acl_kvp[field_count].field = SWITCH_ACL_IPV6_FIELD_IPV6_DEST;
-      inet_pton(AF_INET6,
-                "FF02::1:FF00:0",
-                acl_kvp[field_count].value.ipv6_dest.u.addr8);
-      inet_pton(AF_INET6,
-                "FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FF00:0",
-                acl_kvp[field_count].mask.u.mask.u.addr8);
-      field_count++;
-      acl_action = rcode_api_info->action;
-      action_params.cpu_redirect.reason_code = rcode_api_info->reason_code;
-      switch_api_acl_rule_create(device,
-                                 acl_handle,
-                                 priority,
                                  field_count,
                                  acl_kvp,
                                  SWITCH_ACL_ACTION_PERMIT,
