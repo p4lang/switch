@@ -240,6 +240,9 @@ sai_status_t sai_get_port_attribute(_In_ sai_object_id_t port_id,
         // TODO: implement this, should return list of supported port speeds
         attr->value.u32list.count = 0;
         break;
+      case SAI_PORT_ATTR_QOS_NUMBER_OF_SCHEDULER_GROUPS:
+        attr->value.u32list.count = 0;
+        break;
       default:
         status = SAI_STATUS_NOT_SUPPORTED;
         break;
