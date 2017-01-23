@@ -42,6 +42,10 @@ tests/ptf-tests - P4 dependent(PD), SAI and API tests
 tests/of-tests - Openflow tests  
 
 
+**Make sure you pull the p4-build submodule with `git submodule update --init
+  --recursive`.**
+
+
 Running switch in bmv2 without p4factory
 ----------------------------------------
 You can now run `switch.p4` in bmv2 without cloning `p4factory`. In order to do
