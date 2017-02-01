@@ -947,6 +947,7 @@ switch_status_t switch_api_acl_counter_delete(switch_device_t device,
   unsigned int id = 0;
 
   id = handle_to_id(counter_handle);
+  switch_pd_acl_stats_reset(device, id);
   switch_acl_counter_index_free(id);
   return SWITCH_STATUS_SUCCESS;
 }
@@ -958,6 +959,15 @@ switch_status_t switch_api_acl_stats_get(switch_device_t device,
 
   status =
       switch_pd_acl_stats_get(device, handle_to_id(counter_handle), counter);
+  return status;
+}
+
+switch_status_t switch_api_acl_stats_reset(switch_device_t device,
+                                           switch_handle_t counter_handle) {
+  switch_status_t status = SWITCH_STATUS_SUCCESS;
+
+  status =
+      switch_pd_acl_stats_reset(device, handle_to_id(counter_handle));
   return status;
 }
 
