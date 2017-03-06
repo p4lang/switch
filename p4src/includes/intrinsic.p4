@@ -19,7 +19,7 @@ header_type ingress_intrinsic_metadata_t {
         resubmit_flag : 1;              // flag distinguishing original packets
                                         // from resubmitted packets.
 
-        ingress_global_tstamp : 48;     // global timestamp (ns) taken upon
+        ingress_global_timestamp : 48;     // global timestamp (ns) taken upon
                                         // arrival at ingress.
 
         mcast_grp : 16;                 // multicast group id (key for the
@@ -30,19 +30,11 @@ header_type ingress_intrinsic_metadata_t {
         deflect_on_drop : 1;            // flag indicating whether a packet can
                                         // be deflected by TM on congestion drop
 
-        enq_qdepth : 19;                // queue depth at the packet enqueue
-                                        // time.
-        enq_tstamp : 32;                // time snapshot taken when the packet
-                                        // is enqueued (in nsec).
         enq_congest_stat : 2;           // queue congestion status at the packet
                                         // enqueue time.
 
-        deq_qdepth : 19;                // queue depth at the packet dequeue
-                                        // time.
         deq_congest_stat : 2;           // queue congestion status at the packet
                                         // dequeue time.
-        deq_timedelta : 32;             // time delta between the packet's
-                                        // enqueue and dequeue time.
 
         mcast_hash : 13;                // multicast hashing
 
@@ -61,7 +53,18 @@ header_type ingress_intrinsic_metadata_t {
 }
 metadata ingress_intrinsic_metadata_t intrinsic_metadata;
 
-#define _ingress_global_tstamp_         intrinsic_metadata.ingress_global_tstamp
+header_type queueing_metadata_t {
+    fields {
+        enq_timestamp : 48;
+        enq_qdepth : 16;                // queue depth at the packet enqueue
+                                        // time.
+        deq_timedelta : 32;
+        deq_qdepth : 16;
+    }
+}
+metadata queueing_metadata_t queueing_metadata;
+
+#define _ingress_global_tstamp_         intrinsic_metadata.ingress_global_timestamp
 #define modify_field_from_rng(_d, _w)   modify_field_rng_uniform(_d, 0, (1<<(_w))-1)
 
 action deflect_on_drop(enable_dod) {
