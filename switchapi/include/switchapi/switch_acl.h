@@ -609,6 +609,14 @@ switch_status_t switch_api_acl_stats_get(switch_device_t device,
                                          switch_counter_t *counter);
 
 /**
+ reset acl statistics counter
+ @param device device
+ @param counter_handle acl counter handle
+*/
+switch_status_t switch_api_acl_stats_reset(switch_device_t device,
+                                           switch_handle_t counter_handle);
+
+/**
  get acl type
  @param device device
  @param acl_handle acl handle

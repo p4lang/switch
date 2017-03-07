@@ -1035,6 +1035,9 @@ p4_pd_status_t switch_pd_acl_stats_get(switch_device_t device,
                                        uint16_t acl_stats_index,
                                        switch_counter_t *acl_counter);
 
+p4_pd_status_t switch_pd_acl_stats_reset(switch_device_t device,
+                                         uint16_t acl_stats_index);
+
 switch_status_t switch_pd_ingress_pool_init(
     switch_device_t device, switch_buffer_pool_info_t *pool_info);
 

@@ -7741,6 +7741,27 @@ p4_pd_status_t switch_pd_acl_stats_get(switch_device_t device,
   return status;
 }
 
+p4_pd_status_t switch_pd_acl_stats_reset(switch_device_t device,
+                                         uint16_t acl_stats_index) {
+  p4_pd_status_t status = 0;
+#if !defined(P4_STATS_DISABLE) && !defined(P4_ACL_DISABLE)
+  p4_pd_counter_value_t counter;
+  p4_pd_dev_target_t p4_pd_device;
+
+  p4_pd_device.device_id = device;
+  p4_pd_device.dev_pipe_id = SWITCH_DEV_PIPE_ID;
+
+  /* Reset counter to zero */
+  counter.packets = 0;
+  counter.bytes = 0;
+
+  status = p4_pd_dc_counter_write_acl_stats(
+      g_sess_hdl, p4_pd_device, acl_stats_index, counter);
+#endif /* P4_STATS_DISABLE && P4_ACL_DISABLE */
+  p4_pd_complete_operations(g_sess_hdl);
+  return status;
+}
+
 /* Mirror session manager APIs */
 
 // conversion utils
