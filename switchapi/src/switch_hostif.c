@@ -1016,6 +1016,48 @@ switch_status_t switch_api_hostif_reason_code_create(
       rcode_info->acl_handle = SWITCH_API_INVALID_HANDLE;
       break;
     }
+    case SWITCH_HOSTIF_REASON_CODE_ACL_LOG_INGRESS: {
+      // Reasoncode is installed as part of different ACLs, which are created
+      // when user configures an ACL, the acl_handle is not stored here.
+      acl_handle = SWITCH_API_INVALID_HANDLE;
+      system_acl_handle = SWITCH_API_INVALID_HANDLE;
+      system_ace_handle = SWITCH_API_INVALID_HANDLE;
+      break;
+    }
+    case SWITCH_HOSTIF_REASON_CODE_ACL_LOG_EGRESS: {
+      system_acl_handle = switch_api_acl_list_create(
+          device, SWITCH_API_DIRECTION_EGRESS, SWITCH_ACL_TYPE_EGRESS_SYSTEM);
+      switch_acl_egr_key_value_pair_t
+          system_acl_kvp[SWITCH_ACL_EGR_FIELD_MAX];
+      memset(&system_acl_kvp, 0, sizeof(system_acl_kvp));
+      field_count = 0;
+      system_acl_kvp[field_count].field = SWITCH_ACL_EGR_REASON_CODE;
+      system_acl_kvp[field_count].value.reason_code =
+          rcode_api_info->reason_code;
+      system_acl_kvp[field_count].mask.u.mask = 0xFFFF;
+      field_count++;
+      acl_action = rcode_api_info->action;
+      memset(&action_params, 0, sizeof(switch_acl_action_params_t));
+      action_params.cpu_redirect.reason_code = rcode_api_info->reason_code;
+      memset(&opt_action_params, 0, sizeof(switch_acl_opt_action_params_t));
+      hostif_group_info =
+          switch_hostif_group_get(rcode_api_info->hostif_group_id);
+      if (hostif_group_info) {
+        opt_action_params.meter_handle = hostif_group_info->policer_handle;
+        opt_action_params.queue_id = hostif_group_info->queue_id;
+      }
+
+      switch_api_acl_rule_create(device,
+                                 system_acl_handle,
+                                 priority,
+                                 field_count,
+                                 system_acl_kvp,
+                                 acl_action,
+                                 &action_params,
+                                 &opt_action_params,
+                                 &system_ace_handle);
+      break;
+    }
     default:
       status = SWITCH_STATUS_NOT_SUPPORTED;
       break;
@@ -1102,6 +1144,8 @@ switch_status_t switch_api_hostif_reason_code_delete(
     case SWITCH_HOSTIF_REASON_CODE_IPV6_NEIGHBOR_DISCOVERY:
     case SWITCH_HOSTIF_REASON_CODE_PIM:
     case SWITCH_HOSTIF_REASON_CODE_IGMP_TYPE_V2_REPORT:
+    case SWITCH_HOSTIF_REASON_CODE_ACL_LOG_INGRESS:
+    case SWITCH_HOSTIF_REASON_CODE_ACL_LOG_EGRESS:
       status = switch_api_acl_rule_delete(device, rcode_info->acl_handle, 0);
       status = switch_api_acl_remove(device, rcode_info->acl_handle, 0);
       status = switch_api_acl_rule_delete(
@@ -1154,6 +1198,10 @@ const char *switch_api_hostif_code_string(
       return "igmpv2-report";
     case SWITCH_HOSTIF_REASON_CODE_SFLOW_SAMPLE:
       return "sflow-sample";
+    case SWITCH_HOSTIF_REASON_CODE_ACL_LOG_INGRESS:
+      return "acl-log-ingress";
+    case SWITCH_HOSTIF_REASON_CODE_ACL_LOG_EGRESS:
+      return "acl-log-egress";
     default:
       return "unknown";
   }

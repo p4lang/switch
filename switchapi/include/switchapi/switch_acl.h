@@ -414,6 +414,7 @@ typedef enum switch_acl_egr_field_ {
   SWITCH_ACL_EGR_DEFLECT,
   SWITCH_ACL_EGR_L3_MTU_CHECK,
   SWITCH_ACL_EGR_ACL_DENY,
+  SWITCH_ACL_EGR_REASON_CODE,
   SWITCH_ACL_EGR_FIELD_MAX
 } switch_acl_egr_field_t;
 
@@ -423,6 +424,7 @@ typedef union switch_acl_egr_value_ {
   bool deflection_flag;        /**< deflection flag */
   unsigned short l3_mtu_check; /**< L3 MTU check */
   bool acl_deny;               /**< acl deny */
+  uint16_t reason_code;        /**< hostif reason code */
 } switch_acl_egr_value_t;
 
 /** Egress ACL match mask */
