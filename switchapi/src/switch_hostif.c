@@ -26,6 +26,7 @@ limitations under the License.
 #include "switch_hostif_int.h"
 #include "switch_packet_int.h"
 #include "switch_nhop_int.h"
+#include "switch_sflow_int.h"
 #include <arpa/inet.h>
 
 #ifdef __cplusplus
@@ -1215,8 +1216,10 @@ switch_status_t switch_api_hostif_rx_packet_from_hw(
   switch_cpu_header_t *cpu_header = NULL;
   switch_sflow_header_t *sflow_header = NULL;
   switch_hostif_rcode_info_t *rcode_info = NULL;
+  switch_sflow_info_t *sflow_info = NULL;
   void *temp = NULL;
   switch_hostif_packet_t hostif_packet;
+  int extract_length = 0;
 
   memset(&hostif_packet, 0, sizeof(switch_hostif_packet_t));
   cpu_header = &packet_header->cpu_header;
@@ -1243,11 +1246,16 @@ switch_status_t switch_api_hostif_rx_packet_from_hw(
     hostif_packet.pkt_size = packet_size;
     hostif_packet.handle =
         id_to_handle(SWITCH_HANDLE_TYPE_PORT, cpu_header->ingress_port);
+    hostif_packet.ingress_ifindex = cpu_header->ingress_ifindex;
 
     if (cpu_header->reason_code == SWITCH_HOSTIF_REASON_CODE_SFLOW_SAMPLE) {
       sflow_header = &opt_header->sflow_header;
       hostif_packet.sflow_session_id = sflow_header->sflow_session_id;
       hostif_packet.egress_ifindex = sflow_header->sflow_egress_ifindex;
+
+      switch_handle_t sflow_handle = id_to_handle(SWITCH_HANDLE_TYPE_SFLOW, hostif_packet.sflow_session_id);
+      sflow_info = ((switch_sflow_info_t *) switch_sflow_info_get(sflow_handle));
+      extract_length = sflow_info->api_info.extract_len;
     }
 
     if (SWITCH_IS_LAG_IFINDEX(cpu_header->ingress_ifindex)) {
@@ -1260,8 +1268,14 @@ switch_status_t switch_api_hostif_rx_packet_from_hw(
       switch_packet_rx_transform(
           packet_header, in_packet, packet, &packet_size);
 
-      hostif_packet.pkt_size = packet_size;
-      hostif_packet.pkt = in_packet;
+      if((extract_length > 0) && (extract_length < packet_size)) {
+        memcpy(hostif_packet.pkt, in_packet, extract_length);
+        hostif_packet.pkt_size = extract_length;
+      }
+      else {
+        hostif_packet.pkt_size = packet_size;
+        hostif_packet.pkt = in_packet;
+      }
       rx_packet(&hostif_packet);
     }
   }

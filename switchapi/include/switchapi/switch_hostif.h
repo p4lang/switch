@@ -118,6 +118,7 @@ typedef struct switch_hostif_packet_ {
   bool is_lag;                     /**< handle is lag or port. used in rx */
   switch_handle_t handle;          /**< port or lag. used in tx/rx */
   switch_ifindex_t egress_ifindex; /**< egress ifindex */
+  switch_ifindex_t ingress_ifindex;/**< ingress ifindex */
   uint16_t sflow_session_id;       /**< sflow session id */
   bool tx_bypass;                  /**< tx type flag to skip pipeline */
   void *pkt;                       /**< packet buffer rx/tx */
