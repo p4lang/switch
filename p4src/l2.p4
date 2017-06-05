@@ -250,7 +250,7 @@ table validate_packet {
 #ifndef IPV6_DISABLE
         ipv6_metadata.lkp_ipv6_sa mask 0xFFFF0000000000000000000000000000 : ternary;
 #endif /* IPV6_DISABLE */
-    }
+        }
     actions {
         nop;
         set_unicast;
