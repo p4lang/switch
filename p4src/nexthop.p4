@@ -168,7 +168,8 @@ control process_fwd_results {
     if (not (BYPASS_ALL_LOOKUPS)) {
         apply(fwd_result);
     }
-}    
+}
+
 
 /*****************************************************************************/
 /* ECMP lookup                                                               */
