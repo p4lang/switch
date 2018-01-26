@@ -107,7 +107,6 @@ table fabric_ingress_dst_lkp {
         fabric_header.dstDevice : exact;
     }
     actions {
-        nop;
         terminate_cpu_packet;
 #ifdef FABRIC_ENABLE
         switch_fabric_unicast_packet;
