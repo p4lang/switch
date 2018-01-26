@@ -661,9 +661,6 @@ parser parse_geneve {
                  INGRESS_TUNNEL_TYPE_GENEVE);
     return select(genv.ver, genv.optLen, genv.protoType) {
         ETHERTYPE_ETHERNET : parse_inner_ethernet;
-        ETHERTYPE_IPV4 : parse_inner_ipv4;
-        ETHERTYPE_IPV6 : parse_inner_ipv6;
-        default : ingress;
     }
 }
 
