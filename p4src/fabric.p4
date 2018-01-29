@@ -319,10 +319,10 @@ action fabric_multicast_rewrite(fabric_mgid) {
     modify_field(fabric_header.packetType, FABRIC_HEADER_TYPE_MULTICAST);
     modify_field(fabric_header.dstDevice, FABRIC_DEVICE_MULTICAST);
     modify_field(fabric_header.dstPortOrGroup, fabric_mgid);
-    modify_field(fabric_header_multicast.ingressIfindex, ingress_metadata.ifindex);
-    modify_field(fabric_header_multicast.ingressBd, ingress_metadata.bd);
 
     add_header(fabric_header_multicast);
+    modify_field(fabric_header_multicast.ingressIfindex, ingress_metadata.ifindex);
+    modify_field(fabric_header_multicast.ingressBd, ingress_metadata.bd);
     modify_field(fabric_header_multicast.tunnelTerminate,
                  tunnel_metadata.tunnel_terminate);
     modify_field(fabric_header_multicast.routed, l3_metadata.routed);
