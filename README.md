@@ -1,7 +1,7 @@
 Switch
 =========
 
-NOTE: This `switch` repository is no longer under active development
+**NOTE: This `switch` repository is no longer under active development
 or maintenance.  You are welcome to file issues against it, but the
 former maintainers are unlikely to respond.  If you are looking for
 something similar to this project that is open source, works with the
@@ -14,6 +14,7 @@ plane software.  Relevant links are:
 * ONOS tutorial - https://github.com/opennetworkinglab/onos-p4-tutorial
   * fabric,p4 source code - https://github.com/opennetworkinglab/onos/blob/master/pipelines/fabric/impl/src/main/resources/fabric.p4
 * https://wiki.onosproject.org/display/ONOS/fabric.p4%3A+Trellis+support+by+P4+devices
+**
 
 The switch repository contains the switch.p4 sample P4 program along with all the library repos to manipulate the switch using SAI, SwitchAPI and switchlink.
 
