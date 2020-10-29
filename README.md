@@ -7,11 +7,11 @@ former maintainers are unlikely to respond.  If you are looking for
 something similar to this project that is open source, works with the
 open source P4 tools [`p4c`](https://github.com/p4lang/p4c) and
 [`behavioral-model`](https://github.com/p4lang/behavioral-model)
-simple_switch, and actively developed as of 2019, consider instead
+simple_switch, and actively developed as of 2020, consider instead
 looking at ONF's P4 program `fabric.p4` and co-developed ONOS control
 plane software.  Relevant links are:**
 
-* ONOS tutorial - https://github.com/opennetworkinglab/onos-p4-tutorial
+* ONOS tutorial - https://github.com/opennetworkinglab/ngsdn-tutorial
   * fabric,p4 source code - https://github.com/opennetworkinglab/onos/blob/master/pipelines/fabric/impl/src/main/resources/fabric.p4
 * https://wiki.onosproject.org/display/ONOS/fabric.p4%3A+Trellis+support+by+P4+devices
 
