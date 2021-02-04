@@ -13,6 +13,7 @@ import ptf
 from ptf.base_tests import BaseTest
 from ptf import config
 import ptf.dataplane as dataplane
+import ptf.testutils as testutils
 
 ################################################################
 #
@@ -31,7 +32,22 @@ class ThriftInterface(BaseTest):
         BaseTest.setUp(self)
 
         # Set up thrift client and contact server
-        self.transport = TSocket.TSocket('localhost', 9092)
+        test_params   = testutils.test_params_get()
+	print "Test Params: ", test_params
+
+        try:
+          sai_thrift_ip = test_params['sai_thrift_ip']
+        except KeyError:
+          sai_thrift_ip = 'localhost'
+
+        try:
+          sai_thrift_port = test_params['sai_thrift_port']
+        except KeyError:
+          sai_thrift_port = 9092
+
+	print "Connecting to %s:%d" % (sai_thrift_ip, sai_thrift_port)
+
+        self.transport = TSocket.TSocket(sai_thrift_ip, sai_thrift_port)
         self.transport = TTransport.TBufferedTransport(self.transport)
         self.protocol = TBinaryProtocol.TBinaryProtocol(self.transport)
 
