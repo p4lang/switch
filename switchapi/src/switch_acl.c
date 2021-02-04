@@ -779,7 +779,8 @@ switch_status_t switch_api_acl_rule_create(
         node = node->next;
       }
     } else {
-      if ((acl_info->type == SWITCH_ACL_TYPE_SYSTEM)) {
+      if ((acl_info->type == SWITCH_ACL_TYPE_SYSTEM) ||
+          (acl_info->type == SWITCH_ACL_TYPE_EGRESS_SYSTEM)) {
         // update system ACL H/W entries
         acl_hw_set(device, acl_info, p, NULL, 0, ace_handle);
       }

@@ -706,6 +706,13 @@ action egress_acl_permit(acl_copy_reason) {
     modify_field(fabric_metadata.reason_code, acl_copy_reason);
 }
 
+action egress_acl_redirect_nexthop(nexthop_index, acl_copy_reason) {
+    modify_field(acl_metadata.acl_redirect, TRUE);
+    modify_field(acl_metadata.acl_nexthop, nexthop_index);
+    modify_field(acl_metadata.acl_nexthop_type, NEXTHOP_TYPE_SIMPLE);
+    modify_field(fabric_metadata.reason_code, acl_copy_reason);
+}
+
 /*****************************************************************************/
 /* Egress Mac ACL                                                            */
 /*****************************************************************************/
@@ -724,6 +731,7 @@ table egress_mac_acl {
         nop;
         egress_acl_deny;
         egress_acl_permit;
+        egress_acl_redirect_nexthop;
     }
     size : EGRESS_MAC_ACL_TABLE_SIZE;
 }
@@ -748,6 +756,7 @@ table egress_ip_acl {
         nop;
         egress_acl_deny;
         egress_acl_permit;
+        egress_acl_redirect_nexthop;
     }
     size : EGRESS_IP_ACL_TABLE_SIZE;
 }
@@ -772,6 +781,7 @@ table egress_ipv6_acl {
         nop;
         egress_acl_deny;
         egress_acl_permit;
+        egress_acl_redirect_nexthop;
     }
     size : EGRESS_IPV6_ACL_TABLE_SIZE;
 }

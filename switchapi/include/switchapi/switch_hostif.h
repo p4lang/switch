@@ -42,6 +42,8 @@ typedef enum switch_hostif_reason_code_ {
   SWITCH_HOSTIF_REASON_CODE_DROP = 0x2,
   SWITCH_HOSTIF_REASON_CODE_NULL_DROP = 0x3,
   SWITCH_HOSTIF_REASON_CODE_SFLOW_SAMPLE = 0x4,
+  SWITCH_HOSTIF_REASON_CODE_ACL_LOG_INGRESS = 0x5,
+  SWITCH_HOSTIF_REASON_CODE_ACL_LOG_EGRESS = 0x6,
 
   /* L2 reason codes 0x100 - 0x1FF */
   SWITCH_HOSTIF_REASON_CODE_L2_START = 0x100,
@@ -116,6 +118,7 @@ typedef struct switch_hostif_packet_ {
   bool is_lag;                     /**< handle is lag or port. used in rx */
   switch_handle_t handle;          /**< port or lag. used in tx/rx */
   switch_ifindex_t egress_ifindex; /**< egress ifindex */
+  switch_ifindex_t ingress_ifindex;/**< ingress ifindex */
   uint16_t sflow_session_id;       /**< sflow session id */
   bool tx_bypass;                  /**< tx type flag to skip pipeline */
   void *pkt;                       /**< packet buffer rx/tx */

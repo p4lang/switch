@@ -36,4 +36,5 @@ typedef struct switch_sflow_info_ {
 } switch_sflow_info_t;
 
 void switch_sflow_init(switch_device_t device);
+switch_sflow_info_t *switch_sflow_info_get(switch_handle_t sflow_handle);
 #endif /*_SWITCH_SFLOW_INT_H_*/

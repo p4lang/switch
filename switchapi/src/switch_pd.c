@@ -4609,6 +4609,8 @@ p4_pd_status_t switch_pd_ipv4_acl_table_add_entry(
     case SWITCH_ACL_ACTION_REDIRECT_TO_CPU: {
       p4_pd_dc_acl_redirect_nexthop_action_spec_t action_spec;
       memset(&action_spec, 0, sizeof(action_spec));
+      action_spec.action_acl_copy_reason =
+          action_params->cpu_redirect.reason_code;
       action_spec.action_acl_meter_index = meter_index;
       action_spec.action_acl_stats_index = stats_index;
       action_spec.action_nexthop_index =
@@ -4732,6 +4734,22 @@ p4_pd_status_t switch_pd_egress_ipv4_acl_table_add_entry(
                                                                   priority,
                                                                   &action_spec,
                                                                   entry_hdl);
+    } break;
+    case SWITCH_ACL_ACTION_REDIRECT_TO_CPU: {
+      p4_pd_dc_egress_acl_redirect_nexthop_action_spec_t action_spec;
+      memset(&action_spec, 0, sizeof(action_spec));
+      action_spec.action_acl_copy_reason =
+          action_params->cpu_redirect.reason_code;
+      action_spec.action_nexthop_index =
+          switch_api_cpu_nhop_get(SWITCH_HOSTIF_REASON_CODE_GLEAN);
+      status =
+          p4_pd_dc_egress_ip_acl_table_add_with_egress_acl_redirect_nexthop(
+              g_sess_hdl,
+              p4_pd_device,
+              &match_spec,
+              priority,
+              &action_spec,
+              entry_hdl);
     } break;
     default:
       break;
@@ -4893,6 +4911,8 @@ p4_pd_status_t switch_pd_ipv6_acl_table_add_entry(
     case SWITCH_ACL_ACTION_REDIRECT_TO_CPU: {
       p4_pd_dc_acl_redirect_nexthop_action_spec_t action_spec;
       memset(&action_spec, 0, sizeof(action_spec));
+      action_spec.action_acl_copy_reason =
+          action_params->cpu_redirect.reason_code;
       action_spec.action_acl_meter_index = meter_index;
       action_spec.action_acl_stats_index = stats_index;
       action_spec.action_nexthop_index =
@@ -5017,6 +5037,22 @@ p4_pd_status_t switch_pd_egress_ipv6_acl_table_add_entry(
           priority,
           &action_spec,
           entry_hdl);
+    } break;
+    case SWITCH_ACL_ACTION_REDIRECT_TO_CPU: {
+      p4_pd_dc_egress_acl_redirect_nexthop_action_spec_t action_spec;
+      memset(&action_spec, 0, sizeof(action_spec));
+      action_spec.action_acl_copy_reason =
+          action_params->cpu_redirect.reason_code;
+      action_spec.action_nexthop_index =
+          switch_api_cpu_nhop_get(SWITCH_HOSTIF_REASON_CODE_GLEAN);
+      status =
+          p4_pd_dc_egress_ipv6_acl_table_add_with_egress_acl_redirect_nexthop(
+              g_sess_hdl,
+              p4_pd_device,
+              &match_spec,
+              priority,
+              &action_spec,
+              entry_hdl);
     } break;
     default:
       break;
@@ -5559,6 +5595,22 @@ p4_pd_status_t switch_pd_egress_mac_acl_table_add_entry(
                                                                    &action_spec,
                                                                    entry_hdl);
     } break;
+    case SWITCH_ACL_ACTION_REDIRECT_TO_CPU: {
+      p4_pd_dc_egress_acl_redirect_nexthop_action_spec_t action_spec;
+      memset(&action_spec, 0, sizeof(action_spec));
+      action_spec.action_acl_copy_reason =
+          action_params->cpu_redirect.reason_code;
+      action_spec.action_nexthop_index =
+          switch_api_cpu_nhop_get(SWITCH_HOSTIF_REASON_CODE_GLEAN);
+      status =
+          p4_pd_dc_egress_mac_acl_table_add_with_egress_acl_redirect_nexthop(
+              g_sess_hdl,
+              p4_pd_device,
+              &match_spec,
+              priority,
+              &action_spec,
+              entry_hdl);
+    } break;
     default:
       break;
   }
@@ -5630,6 +5682,12 @@ p4_pd_status_t switch_pd_egr_acl_table_add_entry(
       case SWITCH_ACL_EGR_ACL_DENY: {
         match_spec.acl_metadata_acl_deny = egr_acl[i].value.acl_deny;
         match_spec.acl_metadata_acl_deny_mask = 0xFF;
+      } break;
+      case SWITCH_ACL_EGR_REASON_CODE: {
+        match_spec.fabric_metadata_reason_code =
+            egr_acl[i].value.reason_code;
+        match_spec.fabric_metadata_reason_code_mask =
+            egr_acl[i].mask.u.mask & 0xFFFF;
       } break;
       default:
         break;
